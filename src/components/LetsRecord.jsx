@@ -37,33 +37,33 @@ function LetsRecord() {
                         todayRecord.map((record, index) =>
                             <div key={index} className='mb-2'>
                                 <span style={{ fontSize: '12px', fontFamily: 'Hahmlet'}}> {index + 1}R : {record.time}</span>
-                                <div className='flex mt-2 mb-2 gap-2 items-center'>
-                                    <span className='flex justify-center' style={{width: '13%', fontFamily: 'Giants-Inline'}}>골</span>
+                                <div className='flex mt-2 mb-3 gap-2 items-center'>
+                                    <span className='flex justify-center' style={{width: '18%', fontFamily: 'Giants-Inline'}}>GOAL</span>
                                     {record.goal.map((el, index) => <span key={index}
-                                                                          className='border-solid border-2 border-indigo-600'
-                                                                          style={{width: '26%', fontFamily: 'Hahmlet'}}>{el}</span>)}
+                                                                          className='border-solid border-0 border-b-2 border-indigo-600'
+                                                                          style={{width: '24%', fontFamily: 'KBO-Dia-Gothic_bold'}}>{el}</span>)}
                                 </div>
-                                <div className='flex gap-2 items-center'>
-                                    <span className='flex justify-center' style={{width: '13%', fontFamily: 'Giants-Inline'}}>어시</span>
+                                <div className='flex gap-2 items-center mb-5'>
+                                    <span className='flex justify-center' style={{width: '18%', fontFamily: 'Giants-Inline'}}>ASSIST</span>
                                     {record.assist.map((el, index) => <span key={index}
-                                                                            className='border-solid border-2 border-indigo-600'
-                                                                            style={{width: '26%'}}>{el}</span>)}
+                                                                            className='border-solid border-0 border-b-2 border-indigo-600'
+                                                                            style={{width: '24%', fontFamily: 'KBO-Dia-Gothic_bold'}}>{el}</span>)}
                                 </div>
                             </div>
                         )
                     }
                 </div>
-                <hr className='w-1/2 mt-5 mb-5 border-indigo-600'/>
+                <hr className='w-full mt-5 mb-5 border-indigo-600'/>
                 {/*Write Container*/}
                 <div className=''>
                     <span className='flex justify-center mb-3'>{round + 'R'}</span>
                     <div className='flex mb-2 gap-2 items-center'>
-                        <span className='flex justify-center' style={{width: '13%', fontFamily: 'Giants-Inline'}}>골</span>
-                        {scorer.map((el, index) => <input className='border-solid border-2 border-indigo-600' key={index} value={el} style={{width: '26%'}}/>)}
+                        <span className='flex justify-center' style={{width: '18%', fontFamily: 'Giants-Inline'}}>GOAL</span>
+                        {scorer.map((el, index) => <input className='border-solid border-0 border-b-2 border-indigo-600' key={index} value={el} style={{width: '24%'}}/>)}
                     </div>
                     <div className='flex gap-2 items-center'>
-                        <span className='flex justify-center' style={{width: '13%', fontFamily: 'Giants-Inline'}}>어시</span>
-                        {assistant.map((el, index) => <input className='border-solid border-2 border-indigo-600' key={index} value={el} style={{width: '26%'}}/>)}
+                        <span className='flex justify-center' style={{width: '18%', fontFamily: 'Giants-Inline'}}>ASSIST</span>
+                        {assistant.map((el, index) => <input className='border-solid border-0 border-b-2 border-indigo-600' key={index} value={el} style={{width: '24%'}}/>)}
                     </div>
                     <button className='mt-5'>등록</button>
                 </div>
