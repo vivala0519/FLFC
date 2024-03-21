@@ -6,9 +6,9 @@ function LetsRecord() {
   const [assistant, setAssistant] = useState(['', '', ''])
   const [todayRecord, setTodayRecord] = useState([])
   const currentTime = new Date()
-    console.log(currentTime)
-    console.log(currentTime.getDay())
-    console.log(currentTime.getHours())
+    // console.log(currentTime)
+    // console.log(currentTime.getDay())
+    // console.log(currentTime.getHours())
 
   useEffect(() => {
     const dummy = [
@@ -59,11 +59,11 @@ function LetsRecord() {
                     <span className='flex justify-center mb-3'>{round + 'R'}</span>
                     <div className='flex mb-2 gap-2 items-center'>
                         <span className='flex justify-center' style={{width: '18%', fontFamily: 'Giants-Inline'}}>GOAL</span>
-                        {scorer.map((el, index) => <input className='border-solid border-0 border-b-2 border-indigo-600' key={index} value={el} style={{width: '24%'}}/>)}
+                        {scorer.map((el, index) => <input className='border-solid border-0 border-b-2 border-indigo-600' key={index} style={{width: '24%'}}/>)}
                     </div>
                     <div className='flex gap-2 items-center'>
                         <span className='flex justify-center' style={{width: '18%', fontFamily: 'Giants-Inline'}}>ASSIST</span>
-                        {assistant.map((el, index) => <input className='border-solid border-0 border-b-2 border-indigo-600' key={index} value={el} style={{width: '24%'}}/>)}
+                        {assistant.map((el, index) => <input className='border-solid border-0 border-b-2 border-indigo-600' key={index} style={{width: '24%'}}/>)}
                     </div>
                     <button className='mt-5'>등록</button>
                 </div>

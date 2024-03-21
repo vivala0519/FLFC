@@ -2,6 +2,7 @@ import {useEffect, useState} from 'react'
 import LetsRecord from './components/LetsRecord.jsx'
 import RecordRoom from './components/RecordRoom.jsx'
 import WeeklyTeam from './components/WeeklyTeam.jsx'
+import { dataAnalysis } from "./apis/analyzeData.js";
 import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
 import { db } from '../firebase.js'
 import './App.css'
@@ -10,6 +11,7 @@ function App() {
     const [tap, setTap] = useState(0)
     const tapName = ['기록하기', '기록실', '이번 주 팀']
     const [data, setData] = useState([])
+    const [analyzedData, setAnalyzedData] = useState({})
 
     const dataGeneration = async () => {
         // const dataSnapshot = doc(db, '2024', '0107')
@@ -21,8 +23,15 @@ function App() {
         const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
         setData(fetchedData)
     }
+
     useEffect(() => {
         dataGeneration()
+        const fetchAnalysis = async () => {
+            const data = await dataAnalysis()
+            setAnalyzedData(data)
+            console.log(data)
+        }
+        fetchAnalysis()
     }, []);
 
       return (
@@ -34,7 +43,7 @@ function App() {
                       {tapName.map((tap, index) => <div className='cursor-pointer' key={index} onClick={() => setTap(index)}>{tap}</div>)}
                   </div>
               </header>
-              {tap === 0 ? <LetsRecord/> : tap === 1 ? <RecordRoom data={data}/> : <WeeklyTeam/>}
+              {tap === 0 ? <LetsRecord/> : tap === 1 ? <RecordRoom propsData={data} analyzedData={analyzedData} /> : <WeeklyTeam/>}
               <footer></footer>
           </div>
       )

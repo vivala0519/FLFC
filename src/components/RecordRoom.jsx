@@ -1,50 +1,57 @@
 import {useEffect, useState} from 'react'
+import DataTable from './DataTable'
+import styled from 'styled-components'
 
 function RecordRoom(props) {
-    const {data} = props
-    const [tap, setTap] = useState(0)
+    const {propsData, analyzedData} = props
     const tapName = ['현황판', '출석', '골', '어시']
+    const [tap, setTap] = useState('현황판')
     const [month, setMonth] = useState([])
+    const [weeksPerMonth, setWeeksPerMonth] = useState([])
+    const [page, setPage] = useState(0)
+    const [tableData, setTableData] = useState({})
 
     useEffect(() => {
-        console.log(data)
         const monthSet = new Set()
-        data?.forEach(doc => {
-            monthSet.add(Number(doc.id.slice(0, 2)))
-        })
+
+        const weeksByMonth = propsData?.reduce((acc, cur) => {
+            const key = Number(cur.id.slice(0, 2))
+            monthSet.add(key)
+            acc[key] ? acc[key]++ : (acc[key] = 1)
+            return acc
+        }, {})
         setMonth([...monthSet])
+        setWeeksPerMonth(weeksByMonth)
     }, [])
 
     useEffect(() => {
-        console.log(month)
-    }, [month])
+        // console.log(propsData)
+    }, [propsData])
+
+    useEffect(() => {
+        const tableData = propsData?.filter(data => Number(data.id.slice(0, 2)) === month[page])
+        const obj = {month: month[page], weeks: weeksPerMonth[month[page]], data: tableData}
+        // console.log(obj)
+        setTableData(obj)
+    }, [page, month, weeksPerMonth]);
 
     return (
       <div className='w-full'>
             <div
               className='flex flex-row justify-around w-full mb-5 p-2' style={{ fontFamily: 'Giants-Inline'}}>
-              {tapName.map((tap, index) => <div className='border-solid border-0 border-b-2 border-indigo-600 cursor-pointer text-sm' key={index} onClick={() => setTap(index)}>{tap}</div>)}
+              {tapName.map((tap, index) => <div className='border-solid border-0 border-b-2 border-indigo-600 cursor-pointer text-sm' key={index} onClick={() => setTap(tapName[index])}>{tap}</div>)}
           </div>
-          <div className='w-full'>
-              {/*{tap === 0 ? <div>현황판</div> : tap === 1 ? <div>출석</div> : tap === 2 ? <div>골</div> : <div>어시</div>}*/}
-              <table className='overscroll-x-auto' style={{width: '340px'}}>
-                  <thead>
-                      <tr>
-                          {month?.map((m, index) => (
-                              <th key={index} style={{width: '330px'}}>{m}</th>
-                          ))}
-                          {/*{calendarData.map((date, index) => (*/}
-                          {/*    <th key={index}>{date.getDate()}</th>*/}
-                          {/*))}*/}
-                      </tr>
-                  </thead>
-                  <tbody>
-                  {/* 이 부분에 나머지 테이블 내용을 추가할 수 있습니다. */}
-                  </tbody>
-              </table>
+          <div>
+              <DataTable tap={tap} tableData={tableData} analyzedData={analyzedData}/>
           </div>
       </div>
     )
 }
 
 export default RecordRoom
+
+const Table = styled.div`
+    @media (max-width: 812px) {
+        width: 340px;
+    }
+`
