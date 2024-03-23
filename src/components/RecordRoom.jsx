@@ -12,14 +12,20 @@ function RecordRoom(props) {
     const [tableData, setTableData] = useState({})
 
     useEffect(() => {
-        const monthSet = new Set()
+        // 초기 페이지 현재 월로 설정
+        const currentTime = new Date()
+        const month = currentTime.getMonth()
+        setPage(month)
 
+        // 월별 주차 계산
+        const monthSet = new Set()
         const weeksByMonth = propsData?.reduce((acc, cur) => {
             const key = Number(cur.id.slice(0, 2))
             monthSet.add(key)
             acc[key] ? acc[key]++ : (acc[key] = 1)
             return acc
         }, {})
+        // 진행된 월 set
         setMonth([...monthSet])
         setWeeksPerMonth(weeksByMonth)
     }, [])
@@ -31,7 +37,7 @@ function RecordRoom(props) {
     useEffect(() => {
         const tableData = propsData?.filter(data => Number(data.id.slice(0, 2)) === month[page])
         const obj = {month: month[page], weeks: weeksPerMonth[month[page]], data: tableData}
-        // console.log(obj)
+
         setTableData(obj)
     }, [page, month, weeksPerMonth]);
 
@@ -42,16 +48,10 @@ function RecordRoom(props) {
               {tapName.map((tap, index) => <div className='border-solid border-0 border-b-2 border-indigo-600 cursor-pointer text-sm' key={index} onClick={() => setTap(tapName[index])}>{tap}</div>)}
           </div>
           <div>
-              <DataTable tap={tap} tableData={tableData} analyzedData={analyzedData}/>
+              <DataTable tap={tap} tableData={tableData} analyzedData={analyzedData} page={page} setPage={setPage} month={month} />
           </div>
       </div>
     )
 }
 
 export default RecordRoom
-
-const Table = styled.div`
-    @media (max-width: 812px) {
-        width: 340px;
-    }
-`
