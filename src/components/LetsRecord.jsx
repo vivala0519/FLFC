@@ -142,7 +142,7 @@ function LetsRecord() {
                 {/*  <option value="type2">Type 2</option>*/}
                 {/*</select>*/}
                 {/*Today Record*/}
-                {open ?
+                {!open ?
                     selectedType === 'type1' ? (
                             <>
                                 <div className='w-full h-96 overflow-auto flex flex-col gap-3 items-center'>
