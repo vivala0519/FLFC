@@ -18,6 +18,36 @@ function DataTable(props) {
         setSortedAbsenteeNames(analyzedData?.members['inactive'].sort((a, b) => a.localeCompare(b)))
     }, []);
 
+    useEffect(() => {
+        if (tap === '골') {
+            // eslint-disable-next-line no-unsafe-optional-chaining
+            const sortedByGoal = [...analyzedData?.members['active']].sort((a, b) => {
+                const aGoals = analyzedData.totalData.get(a)['골'];
+                const bGoals = analyzedData.totalData.get(b)['골'];
+                return bGoals - aGoals;
+            });
+            setSortedNames(sortedByGoal)
+        } else if (tap === '어시') {
+            // eslint-disable-next-line no-unsafe-optional-chaining
+            const sortedByAssist = [...analyzedData?.members['active']].sort((a, b) => {
+                const aAssists = analyzedData.totalData.get(a)['어시'];
+                const bAssists = analyzedData.totalData.get(b)['어시'];
+                return bAssists - aAssists;
+            })
+            setSortedNames(sortedByAssist)
+        } else if (tap === '출석') {
+            // eslint-disable-next-line no-unsafe-optional-chaining
+            const sortedByAttendance = [...analyzedData?.members['active']].sort((a, b) => {
+                const aAttendance = analyzedData.totalData.get(a)['출석'];
+                const bAttendance = analyzedData.totalData.get(b)['출석'];
+                return bAttendance - aAttendance;
+            })
+            setSortedNames(sortedByAttendance)
+        } else {
+            setSortedNames(analyzedData?.members['active'].sort((a, b) => a.localeCompare(b)))
+        }
+    }, [tap])
+
     const pageMoveHandler = (left) => {
         if (left && page > 0) {
             setPage(page - 1)

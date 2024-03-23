@@ -137,11 +137,6 @@ function LetsRecord() {
             <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'Giants-Inline'}}>{"Today's Record"}</span>
             <hr className='w-1/2 mb-5 border-indigo-600'/>
             <div className='flex flex-col items-center w-full'>
-                {/*<select value={selectedType} onChange={e => setSelectedType(e.target.value)}>*/}
-                {/*  <option value="type1">Type 1</option>*/}
-                {/*  <option value="type2">Type 2</option>*/}
-                {/*</select>*/}
-                {/*Today Record*/}
                 {open ?
                     selectedType === 'type1' ? (
                             <>
