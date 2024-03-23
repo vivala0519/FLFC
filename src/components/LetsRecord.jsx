@@ -78,7 +78,7 @@ function LetsRecord() {
 
   // 디바이스에 따른 기록창 높이 세팅
   function setHeight() {
-      const height = window.innerHeight - 400
+      const height = window.innerHeight - 450
       setDynamicHeight(height)
   }
   setHeight()
