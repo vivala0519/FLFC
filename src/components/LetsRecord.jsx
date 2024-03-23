@@ -19,7 +19,7 @@ function LetsRecord() {
 
   // 기록 가능 시간 7:55 ~ 10:30
   const startTime = new Date()
-  startTime.setHours(7, 55, 0, 0)
+  startTime.setHours(7, 30, 0, 0)
   const endTime = new Date()
   endTime.setHours(10, 30, 0, 0)
   const currentTime = new Date()
@@ -137,8 +137,7 @@ function LetsRecord() {
             <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'Giants-Inline'}}>{"Today's Record"}</span>
             <hr className='w-1/2 mb-5 border-indigo-600'/>
             <div className='flex flex-col items-center w-full'>
-                {open ?
-                    selectedType === 'type1' ? (
+                {selectedType === 'type1' ? (
                             <>
                                 <div className='w-full h-96 overflow-auto flex flex-col gap-3 items-center'>
                                     {
@@ -234,31 +233,32 @@ function LetsRecord() {
                                 }
                             </div>
                             {/*Write Container*/}
-                            <hr className='border-1 border-indigo-600 w-4/5 mt-7 mb-7'/>
-                            <div className='flex items-center gap-5'>
-                                <div>
-                                    <div className='flex mb-2 gap-0.5 items-center'>
+                            <hr className='border-1 border-indigo-600 w-4/5 mt-7 mb-4'/>
+                            {open ?
+                                <div className='flex items-center gap-5 mb-7'>
+                                    <div>
+                                        <div className='flex mb-2 gap-0.5 items-center'>
                                         <span className='flex justify-center text-rose-600'
                                               style={{width: '70px', fontFamily: 'Giants-Inline'}}>GOAL</span>
-                                        <input
-                                            className='w-24 border-solid border-0 border-b-2 border-indigo-600 text-center outline-none'
-                                            value={scorer} onChange={scorerHandler}/>
-                                    </div>
-                                    <div className='flex gap-0.5 items-center'>
+                                            <input
+                                                className='w-24 border-solid border-0 border-b-2 border-indigo-600 text-center outline-none'
+                                                value={scorer} onChange={scorerHandler}/>
+                                        </div>
+                                        <div className='flex gap-0.5 items-center'>
                                         <span className='flex justify-center text-lime-500'
                                               style={{width: '70px', fontFamily: 'Giants-Inline'}}>ASSIST</span>
-                                        <input
-                                            className='w-24 border-solid border-0 border-b-2 border-indigo-600 text-center outline-none'
-                                            value={assistant} onChange={assistantHandler}/>
+                                            <input
+                                                className='w-24 border-solid border-0 border-b-2 border-indigo-600 text-center outline-none'
+                                                value={assistant} onChange={assistantHandler}/>
+                                        </div>
                                     </div>
+                                    <button className='relative bottom-2 mt-5' onClick={registerHandler}>등록</button>
                                 </div>
-                                <button className='relative bottom-2 mt-5' onClick={registerHandler}>등록</button>
-                            </div>
+                                :
+                                <span className='mb-3'>기록 가능 시간이 아닙니다.</span>
+                            }
                         </>)
-                    :
-                    <span className='mb-3'>기록 가능 시간이 아닙니다.</span>
                 }
-
             </div>
         </>
     )
