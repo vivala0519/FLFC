@@ -5,6 +5,7 @@ import WeeklyTeam from './components/WeeklyTeam.jsx'
 import { dataAnalysis } from "./apis/analyzeData.js";
 import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
 import { db } from '../firebase.js'
+import styled from 'styled-components'
 import './App.css'
 
 function App() {
@@ -59,9 +60,34 @@ function App() {
               {[0].includes(tap) && <div className='w-full h-24'></div>}
               {[1].includes(tap) && <div className='w-full h-32'></div>}
               {tap === 0 ? <LetsRecord/> : tap === 1 ? <RecordRoom propsData={data} analyzedData={analyzedData} /> : <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam}/>}
-              <footer></footer>
+              {[0, 2].includes(tap) &&
+                  <footer className='absolute bottom-5'>
+                      <CopyRight>
+                          Developed by. Seungho Lee
+                      </CopyRight>
+                      <CopyRight>
+                          {/*Copyright*/}
+                          Copyright 2024 Seungho Lee. All rights reserved.
+                      </CopyRight>
+                  </footer>
+              }
           </div>
       )
 }
 
 export default App
+
+const CopyRight = styled.span`
+    font-size: 12px;
+    font-family: "Hahmlet", serif;
+    font-style: normal;
+    font-weight: 400;
+    color: #5a5a5a;
+    display: flex;
+    justify-content: center;
+    margin-top: 5px;
+    width: 100%;
+    @media (max-width: 821px) {
+        font-size: 8px;
+    };
+`
