@@ -27,10 +27,9 @@ function WeeklyTeam(props) {
 
         const lastDate = propsData[propsData.length - 1].id
         const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
-        const lastDateDay = parseInt(lastDate.slice(2, 4), 10)
+        const lastDateDay = parseInt(lastDate.slice(2, 4), 10) - 1
 
         const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
-        console.log(lastTeamDate, today)
 
         if (lastTeamDate > today) {
             setCanCreate(false)
