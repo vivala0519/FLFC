@@ -2,8 +2,9 @@ import {useEffect, useState} from 'react'
 import { getDatabase, ref, get, set, child, onValue } from 'firebase/database'
 import { uid } from "uid"
 
-function LetsRecord() {
-  const [open, setOpen] = useState(false)
+function LetsRecord(props) {
+  const {open, setOpen} = props
+  // const [open, setOpen] = useState(false)
   const [round, setRound] = useState(1)
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
@@ -19,7 +20,7 @@ function LetsRecord() {
 
   // 기록 가능 시간 7:55 ~ 10:30
   const startTime = new Date()
-  startTime.setHours(7, 30, 0, 0)
+  startTime.setHours(7, 40, 0, 0)
   const endTime = new Date()
   endTime.setHours(10, 30, 0, 0)
   const currentTime = new Date()
@@ -78,7 +79,7 @@ function LetsRecord() {
 
   // 디바이스에 따른 기록창 높이 세팅
   function setHeight() {
-      const height = window.innerHeight - 450
+      const height = window.innerHeight - 400
       setDynamicHeight(height)
   }
   setHeight()
