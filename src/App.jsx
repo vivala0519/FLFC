@@ -3,7 +3,7 @@ import LetsRecord from './components/LetsRecord.jsx'
 import RecordRoom from './components/RecordRoom.jsx'
 import WeeklyTeam from './components/WeeklyTeam.jsx'
 import { dataAnalysis } from "./apis/analyzeData.js";
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore'
+import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
 import { db } from '../firebase.js'
 import './App.css'
 
@@ -12,16 +12,18 @@ function App() {
     const tapName = ['기록하기', '기록실', '이번 주 팀']
     const [data, setData] = useState([])
     const [analyzedData, setAnalyzedData] = useState({})
+    const [weeklyTeamData, setWeeklyTeamData] = useState([])
+    const [registeredTeam, setRegisteredTeam] = useState(null)
 
     const dataGeneration = async () => {
-        // const dataSnapshot = doc(db, '2024', '0107')
-        // const response = await getDoc(dataSnapshot)
-        // console.log(response)
-        // console.log(response.data())
         const collectionRef = collection(db, '2024');
+        const weeklyTeamRef = collection(db, 'weeklyTeam');
         const snapshot = await getDocs(collectionRef);
+        const weeklyTeamSnapshot = await getDocs(weeklyTeamRef);
+        const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
         const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
         setData(fetchedData)
+        setWeeklyTeamData(fetchedWeeklyTeamData)
     }
 
     useEffect(() => {
@@ -32,6 +34,18 @@ function App() {
         }
         fetchAnalysis()
     }, []);
+
+    useEffect(() => {
+        console.log(registeredTeam)
+        const registerTeam = async () => {
+            const docRef = doc(db, 'weeklyTeam', registeredTeam.id)
+            await setDoc(docRef, registeredTeam.data)
+            console.log("Document written with ID: ", docRef.id);
+        }
+        if (registeredTeam) {
+            registerTeam()
+        }
+    }, [registeredTeam])
 
       return (
           <div className='flex flex-col items-center'>
@@ -44,7 +58,7 @@ function App() {
               </header>
               {[0].includes(tap) && <div className='w-full h-24'></div>}
               {[1].includes(tap) && <div className='w-full h-32'></div>}
-              {tap === 0 ? <LetsRecord/> : tap === 1 ? <RecordRoom propsData={data} analyzedData={analyzedData} /> : <WeeklyTeam/>}
+              {tap === 0 ? <LetsRecord/> : tap === 1 ? <RecordRoom propsData={data} analyzedData={analyzedData} /> : <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam}/>}
               <footer></footer>
           </div>
       )

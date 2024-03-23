@@ -19,14 +19,6 @@ function DataTable(props) {
     }, []);
 
     const pageMoveHandler = (left) => {
-        // if (left) {
-        //     if (month[page -1]) {
-        //         console.log('잇음')
-        //     } else {
-        //         console.log('없음')
-        //
-        //     }
-        // }
         if (left && page > 0) {
             setPage(page - 1)
             return

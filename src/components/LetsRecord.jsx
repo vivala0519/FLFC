@@ -142,7 +142,7 @@ function LetsRecord() {
                 {/*  <option value="type2">Type 2</option>*/}
                 {/*</select>*/}
                 {/*Today Record*/}
-                {!open ?
+                {open ?
                     selectedType === 'type1' ? (
                             <>
                                 <div className='w-full h-96 overflow-auto flex flex-col gap-3 items-center'>
@@ -209,7 +209,7 @@ function LetsRecord() {
                             <div className='w-full overflow-auto flex flex-col gap-10 items-center'
                                  style={{height: dynamicHeight}}>
                                 {
-                                    todayRecordType2?.map((record, index) =>
+                                    todayRecord?.map((record, index) =>
                                         // <div className='flex items-center w-9/12 gap-5 border-b-indigo-300 border-b-2 pt-1' key={index}>
                                         <div className='flex items-center w-9/12 gap-5 pt-1' key={index}>
                                             <span style={{
