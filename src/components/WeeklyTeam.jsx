@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react'
 import styled from "styled-components"
-import left from "@/assets/left.svg"
-import right from "@/assets/right.svg"
+import left from "@/assets/left.png"
+import right from "@/assets/right.png"
 
 function WeeklyTeam(props) {
     const {propsData, setRegisteredTeam} = props
