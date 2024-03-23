@@ -235,7 +235,7 @@ function LetsRecord() {
                             {/*Write Container*/}
                             <hr className='border-1 border-indigo-600 w-4/5 mt-7 mb-4'/>
                             {open ?
-                                <div className='flex items-center gap-5 mb-7'>
+                                <div className='flex items-center gap-5 mb-1'>
                                     <div>
                                         <div className='flex mb-2 gap-0.5 items-center'>
                                         <span className='flex justify-center text-rose-600'

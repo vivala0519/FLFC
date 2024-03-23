@@ -61,7 +61,7 @@ function App() {
               {[1].includes(tap) && <div className='w-full h-32'></div>}
               {tap === 0 ? <LetsRecord/> : tap === 1 ? <RecordRoom propsData={data} analyzedData={analyzedData} /> : <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam}/>}
               {[0, 2].includes(tap) &&
-                  <footer className='absolute bottom-5'>
+                  <footer className='absolute bottom-1'>
                       <CopyRight>
                           Developed by. Seungho Lee
                       </CopyRight>
