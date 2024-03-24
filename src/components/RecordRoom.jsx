@@ -9,6 +9,7 @@ function RecordRoom(props) {
     const [weeksPerMonth, setWeeksPerMonth] = useState([])
     const [page, setPage] = useState(0)
     const [tableData, setTableData] = useState({})
+    const [quarterData, setQuarterData] = useState([])
 
     useEffect(() => {
         // 초기 페이지 현재 월로 설정
@@ -36,18 +37,44 @@ function RecordRoom(props) {
     useEffect(() => {
         const tableData = propsData?.filter(data => Number(data.id.slice(0, 2)) === month[page])
         const obj = {month: month[page], weeks: weeksPerMonth[month[page]], data: tableData}
-
         setTableData(obj)
+
+        const selectedMonth = month[page]
+        let quarterData = []
+        if (selectedMonth <= 3) {
+            quarterData = analyzedData.totalQuarterData[0]
+        }
+        else if (selectedMonth > 3 && selectedMonth <= 6) {
+            quarterData = analyzedData.totalQuarterData[1]
+        }
+        else if (selectedMonth > 6 && selectedMonth <= 9) {
+            quarterData = analyzedData.totalQuarterData[2]
+        } else {
+            quarterData = analyzedData.totalQuarterData[3]
+        }
+        setQuarterData(quarterData)
+
     }, [page, month, weeksPerMonth]);
 
     return (
       <div className='w-full'>
-            <div
-              className='flex flex-row justify-around w-full mb-5 p-2' style={{ fontFamily: 'Giants-Inline'}}>
-              {tapName.map((tap, index) => <div className='border-solid border-0 border-b-2 border-indigo-600 cursor-pointer text-sm' key={index} onClick={() => setTap(tapName[index])}>{tap}</div>)}
+          <div className='flex flex-row justify-around w-full mb-5 p-2' style={{fontFamily: 'Giants-Inline'}}>
+              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '현황판' && 'text-rose-600'}`}
+                   onClick={() => setTap(tapName[0])}>현황판
+              </div>
+              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '출석' && 'text-rose-600'}`}
+                   onClick={() => setTap(tapName[1])}>출석
+              </div>
+              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '골' && 'text-rose-600'}`}
+                   onClick={() => setTap(tapName[2])}>골
+              </div>
+              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '어시' && 'text-rose-600'}`}
+                   onClick={() => setTap(tapName[3])}>어시
+              </div>
           </div>
           <div>
-              <DataTable tap={tap} tableData={tableData} analyzedData={analyzedData} page={page} setPage={setPage} month={month} />
+              <DataTable tap={tap} tableData={tableData} analyzedData={analyzedData} page={page} setPage={setPage}
+                         month={month} quarterData={quarterData}/>
           </div>
       </div>
     )

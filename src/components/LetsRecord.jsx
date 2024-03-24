@@ -12,8 +12,6 @@ function LetsRecord(props) {
   const [round, setRound] = useState(1)
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
-  const [todayRecordType1, setTodayRecordType1] = useState([])
-  const [todayRecordType2, setTodayRecordType2] = useState([])
   const [todayRecordObject, setTodayRecordObject] = useState({})
   const [todayRecord, setTodayRecord] = useState([])
   const [dynamicHeight, setDynamicHeight] = useState(0);
@@ -32,36 +30,6 @@ function LetsRecord(props) {
   const currentTime = new Date()
 
   useEffect(() => {
-    const dummy = [
-      {goal: ['승호', '승호', '영진'], assist: ['승호'], time: '8:12'},
-      {goal: ['영진', '승호', '지원'], assist: ['용병', '용병', '근한'], time: '8:45'},
-      {goal: ['근한', '원효'], assist: ['영진', '근한'], time: '9:12'},
-      {goal: ['승호', '승호', '승호'], assist: [], time: '9:24'},
-      {goal: ['승호', '승호', '승호'], assist: [], time: '9:24'},
-      {goal: ['승호', '승호', '승호'], assist: [], time: '9:24'},
-      {goal: ['승호', '승호', '승호'], assist: [], time: '9:24'},
-      {goal: ['승호', '승호', '승호'], assist: [], time: '9:24'},
-      {goal: ['승호', '승호', '승호'], assist: [], time: '9:24'},
-      {goal: ['승호', '승호', '승호'], assist: [], time: '9:24'},
-    ]
-  setTodayRecordType1(dummy)
-  const dummy2 = [
-    {time: '9:17', goal: '승호', assist: '희철'},
-    {time: '9:27', goal: '승호', assist: '영진'},
-    {time: '9:37', goal: '승호', assist: '근한'},
-    {time: '9:47', goal: '승호'},
-    {time: '9:57', goal: '승호', assist: '희철'},
-    {time: '10:17', goal: '승호'},
-    {time: '10:27', goal: '승호', assist: '지원'},
-    {time: '10:37', goal: '승호', assist: '희철'},
-    {time: '10:47', goal: '승호', assist: '지원'},
-    {time: '10:17', goal: '승호'},
-    {time: '10:17', goal: '승호'},
-    {time: '10:47', goal: '승호', assist: '지원'},
-    {time: '10:57', goal: '승호', assist: '희철'},
-  ]
- setTodayRecordType2(dummy2)
-
   // 일요일 8~10시 open
   const day = currentTime.getDay()
   if ([0, 7].includes(day) && currentTime >= startTime && currentTime <= endTime) {
@@ -96,7 +64,7 @@ function LetsRecord(props) {
   };
   }, []);
 
-    // 오늘의 기록된 데이터 가져오기
+  // 오늘의 기록된 데이터 가져오기
   useEffect(() => {
       const data = recordData?.find(obj => obj.id === today)
       if (data?.data) {
@@ -217,69 +185,69 @@ function LetsRecord(props) {
             <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'Giants-Inline'}}>{"Today's Record"}</span>
             <hr className='w-1/2 mb-5 border-indigo-600'/>
             <div className='flex flex-col items-center w-full'>
-                {selectedType === 'type1' ? (
-                            <>
-                                <div className='w-full h-96 overflow-auto flex flex-col gap-3 items-center'>
-                                    {
-                                        todayRecordType1.map((record, index) =>
-                                            <>
-                                                <span style={{
-                                                    fontSize: '12px',
-                                                    fontFamily: 'Hahmlet'
-                                                }}> {index + 1}R : {record.time}</span>
-                                                <div key={index} className='border-amber-300 border-2 w-11/12 pl-2'>
-                                                    <div className='flex mt-2 mb-3 gap-2 items-center'>
-                                                        <span className='flex justify-center' style={{
-                                                            width: '18%',
-                                                            fontFamily: 'Giants-Inline'
-                                                        }}>GOAL</span>
-                                                        {record.goal.map((el, index) => <span key={index}
-                                                                                              className='border-solid border-0 border-b-2 border-indigo-600'
-                                                                                              style={{
-                                                                                                  width: '24%',
-                                                                                                  fontFamily: 'KBO-Dia-Gothic_bold'
-                                                                                              }}>{el}</span>)}
-                                                    </div>
-                                                    <div className='flex gap-2 items-center mb-2'>
-                                                        <span className='flex justify-center' style={{
-                                                            width: '18%',
-                                                            fontFamily: 'Giants-Inline'
-                                                        }}>ASSIST</span>
-                                                        {record.assist.map((el, index) => <span key={index}
-                                                                                                className='border-solid border-0 border-b-2 border-indigo-600'
-                                                                                                style={{
-                                                                                                    width: '24%',
-                                                                                                    fontFamily: 'KBO-Dia-Gothic_bold'
-                                                                                                }}>{el}</span>)}
-                                                    </div>
-                                                </div>
-                                            </>
-                                        )
-                                    }
-                                </div>
-                                <hr className='w-full mt-5 mb-5 border-indigo-600'/>
-                                {/*Write Container*/}
-                                <div className=''>
-                                    <span className='flex justify-center mb-3'>{round + 'R'}</span>
-                                    <div className='flex mb-2 gap-2 items-center'>
-                                        <span className='flex justify-center'
-                                              style={{width: '18%', fontFamily: 'Giants-Inline'}}>GOAL</span>
-                                        {scorer.map((el, index) => <input
-                                            className='border-solid border-0 border-b-2 border-indigo-600' key={index}
-                                            style={{width: '24%'}}/>)}
-                                    </div>
-                                    <div className='flex gap-2 items-center'>
-                                        <span className='flex justify-center'
-                                              style={{width: '18%', fontFamily: 'Giants-Inline'}}>ASSIST</span>
-                                        {assistant.map((el, index) => <input
-                                            className='border-solid border-0 border-b-2 border-indigo-600' key={index}
-                                            style={{width: '24%'}}/>)}
-                                    </div>
-                                    <button className='mt-5'>등록</button>
-                                </div>
-                            </>)
-                        :
-                        (
+                {/*{selectedType === 'type1' ? (*/}
+                {/*            <>*/}
+                {/*                <div className='w-full h-96 overflow-auto flex flex-col gap-3 items-center'>*/}
+                {/*                    {*/}
+                {/*                        todayRecordType1.map((record, index) =>*/}
+                {/*                            <>*/}
+                {/*                                <span style={{*/}
+                {/*                                    fontSize: '12px',*/}
+                {/*                                    fontFamily: 'Hahmlet'*/}
+                {/*                                }}> {index + 1}R : {record.time}</span>*/}
+                {/*                                <div key={index} className='border-amber-300 border-2 w-11/12 pl-2'>*/}
+                {/*                                    <div className='flex mt-2 mb-3 gap-2 items-center'>*/}
+                {/*                                        <span className='flex justify-center' style={{*/}
+                {/*                                            width: '18%',*/}
+                {/*                                            fontFamily: 'Giants-Inline'*/}
+                {/*                                        }}>GOAL</span>*/}
+                {/*                                        {record.goal.map((el, index) => <span key={index}*/}
+                {/*                                                                              className='border-solid border-0 border-b-2 border-indigo-600'*/}
+                {/*                                                                              style={{*/}
+                {/*                                                                                  width: '24%',*/}
+                {/*                                                                                  fontFamily: 'KBO-Dia-Gothic_bold'*/}
+                {/*                                                                              }}>{el}</span>)}*/}
+                {/*                                    </div>*/}
+                {/*                                    <div className='flex gap-2 items-center mb-2'>*/}
+                {/*                                        <span className='flex justify-center' style={{*/}
+                {/*                                            width: '18%',*/}
+                {/*                                            fontFamily: 'Giants-Inline'*/}
+                {/*                                        }}>ASSIST</span>*/}
+                {/*                                        {record.assist.map((el, index) => <span key={index}*/}
+                {/*                                                                                className='border-solid border-0 border-b-2 border-indigo-600'*/}
+                {/*                                                                                style={{*/}
+                {/*                                                                                    width: '24%',*/}
+                {/*                                                                                    fontFamily: 'KBO-Dia-Gothic_bold'*/}
+                {/*                                                                                }}>{el}</span>)}*/}
+                {/*                                    </div>*/}
+                {/*                                </div>*/}
+                {/*                            </>*/}
+                {/*                        )*/}
+                {/*                    }*/}
+                {/*                </div>*/}
+                {/*                <hr className='w-full mt-5 mb-5 border-indigo-600'/>*/}
+                {/*                /!*Write Container*!/*/}
+                {/*                <div className=''>*/}
+                {/*                    <span className='flex justify-center mb-3'>{round + 'R'}</span>*/}
+                {/*                    <div className='flex mb-2 gap-2 items-center'>*/}
+                {/*                        <span className='flex justify-center'*/}
+                {/*                              style={{width: '18%', fontFamily: 'Giants-Inline'}}>GOAL</span>*/}
+                {/*                        {scorer.map((el, index) => <input*/}
+                {/*                            className='border-solid border-0 border-b-2 border-indigo-600' key={index}*/}
+                {/*                            style={{width: '24%'}}/>)}*/}
+                {/*                    </div>*/}
+                {/*                    <div className='flex gap-2 items-center'>*/}
+                {/*                        <span className='flex justify-center'*/}
+                {/*                              style={{width: '18%', fontFamily: 'Giants-Inline'}}>ASSIST</span>*/}
+                {/*                        {assistant.map((el, index) => <input*/}
+                {/*                            className='border-solid border-0 border-b-2 border-indigo-600' key={index}*/}
+                {/*                            style={{width: '24%'}}/>)}*/}
+                {/*                    </div>*/}
+                {/*                    <button className='mt-5'>등록</button>*/}
+                {/*                </div>*/}
+                {/*            </>)*/}
+                {/*        :*/}
+                {/*        (*/}
                             <>
                             {/*<ProcessBorder>*/}
                             {/*<Board>*/}
@@ -345,8 +313,8 @@ function LetsRecord(props) {
                             {/*</Board>*/}
                         {/*</ProcessBorder>*/}
             </>
-)
-                }
+{/*)*/}
+                {/*}*/}
             </div>
         </>
     )
