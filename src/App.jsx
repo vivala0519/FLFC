@@ -21,8 +21,8 @@ function App() {
         const weeklyTeamRef = collection(db, 'weeklyTeam');
         const snapshot = await getDocs(collectionRef);
         const weeklyTeamSnapshot = await getDocs(weeklyTeamRef);
-        const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
         const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+        const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
         setData(fetchedData)
         setWeeklyTeamData(fetchedWeeklyTeamData)
     }
@@ -37,7 +37,6 @@ function App() {
     }, []);
 
     useEffect(() => {
-        console.log(registeredTeam)
         const registerTeam = async () => {
             const docRef = doc(db, 'weeklyTeam', registeredTeam.id)
             await setDoc(docRef, registeredTeam.data)
@@ -61,7 +60,7 @@ function App() {
               </header>
               {[0].includes(tap) && <div className='w-full mb-3'></div>}
               {[1].includes(tap) && <div className='w-full h-32'></div>}
-              {tap === 0 ? <LetsRecord setOpen={setOpen} open={open}/> : tap === 1 ? <RecordRoom propsData={data} analyzedData={analyzedData} /> : <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam}/>}
+              {tap === 0 ? <LetsRecord setOpen={setOpen} open={open} recordData={data} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]}/> : tap === 1 ? <RecordRoom propsData={data} analyzedData={analyzedData} /> : <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam}/>}
               {[0, 2].includes(tap) && !open &&
                   <footer className='absolute bottom-3'>
                       <CopyRight>

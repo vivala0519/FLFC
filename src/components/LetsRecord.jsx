@@ -3,9 +3,11 @@ import { getDatabase, ref, get, set, child, onValue } from 'firebase/database'
 import { uid } from "uid"
 import styled from 'styled-components'
 import './LetsRecord.css'
+import {doc, setDoc} from "firebase/firestore";
+import {db} from "../../firebase.js";
 
 function LetsRecord(props) {
-  const {open, setOpen} = props
+  const {open, setOpen, recordData, weeklyTeamData} = props
   // const [open, setOpen] = useState(false)
   const [round, setRound] = useState(1)
   const [scorer, setScorer] = useState('')
@@ -17,6 +19,8 @@ function LetsRecord(props) {
   const [dynamicHeight, setDynamicHeight] = useState(0);
   const [today, setToday] = useState('')
   const [thisYear, setThisYear] = useState('2024')
+  const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '안용현', '윤준석', '이재진', '이종호', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은짐']
+  const [writtenData, setWrittenData] = useState([])
 
   const [selectedType, setSelectedType] = useState('type2');
 
@@ -92,9 +96,17 @@ function LetsRecord(props) {
   };
   }, []);
 
+    // 오늘의 기록된 데이터 가져오기
+  useEffect(() => {
+      const data = recordData?.find(obj => obj.id === today)
+      if (data?.data) {
+          setWrittenData(data.data)
+      }
+  }, [recordData])
+
   // 실시간 데이터 연동
   useEffect(() => {
-      const isData = Object.values(todayRecordObject)[0]
+      const isData = todayRecordObject[today]
       if (isData) {
           const recordArray = Object.values(isData)
           const sortedRecordArray = recordArray.sort((a, b) => {
@@ -110,6 +122,71 @@ function LetsRecord(props) {
           setTodayRecord(sortedRecordArray)
       }
   }, [todayRecordObject])
+
+    const formatRecordByName = (record) => {
+        const stats = {}
+        if (weeklyTeamData?.data) {
+            const data = weeklyTeamData.data
+            const thisWeekMembers = data[1].concat(data[2], data[3])
+            thisWeekMembers.forEach(member => {
+                players.forEach(player => {
+                    if (player.includes(member)) {
+                        stats[player] = {'출석': true, '골': 0, '어시': 0}
+                    }
+                })
+            })
+        }
+
+        record.forEach(item => {
+            const { assist, goal } = item
+
+            if (goal !== "") {
+                players.forEach(player => {
+                    if (player.includes(goal)) {
+                        stats[player]['골']++
+                    }
+                })
+            }
+
+            if (assist !== "") {
+                players.forEach(player => {
+                    if (player.includes(assist)) {
+                        stats[player]['어시']++
+                    }
+                })
+            }
+        });
+        return stats
+    }
+
+    function compareObjects(objA, objB) {
+        const keysA = Object.keys(objA)
+        const keysB = Object.keys(objB)
+
+        if (keysA.length !== keysB.length) {
+            return false
+        }
+        for (let key of keysA) {
+            if (objA[key]['출석'] !== objB[key]['출석'] ||
+                objA[key]['골'] !== objB[key]['골'] ||
+                objA[key]['어시'] !== objB[key]['어시']) {
+                return false
+            }
+        }
+        return true
+    }
+    // today Record 바로 등록
+    useEffect(() => {
+        const stats = formatRecordByName(todayRecord)
+        const registerRecord = async () => {
+            const docRef = doc(db, '2024', today)
+            await setDoc(docRef, stats)
+            console.log("Document written with ID: ", docRef.id);
+        }
+        if (!compareObjects(stats, writtenData)) {
+            registerRecord()
+        }
+    }, [todayRecord]);
 
   const scorerHandler = (e) => {
     setScorer(e.target.value)
@@ -206,7 +283,7 @@ function LetsRecord(props) {
                             <>
                             {/*<ProcessBorder>*/}
                             {/*<Board>*/}
-                            <div className={open ? 'custom-border' : 'default-border'}>
+                            <div className={!open ? 'custom-border' : 'default-border'}>
                             <div className='w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2'
                                  style={{height: dynamicHeight}}>
                                 {
@@ -242,7 +319,7 @@ function LetsRecord(props) {
                             </div>
                             {/*Write Container*/}
                             <hr className='border-1 border-indigo-600 w-4/5 mt-7 mb-4'/>
-                            {open ?
+                            {!open ?
                                 <div className='flex items-center gap-5 mb-1'>
                                     <div>
                                         <div className='flex mb-2 gap-0.5 items-center'>
