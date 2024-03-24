@@ -1,6 +1,8 @@
 import {useEffect, useState} from 'react'
 import { getDatabase, ref, get, set, child, onValue } from 'firebase/database'
 import { uid } from "uid"
+import styled from 'styled-components'
+import './LetsRecord.css'
 
 function LetsRecord(props) {
   const {open, setOpen} = props
@@ -200,8 +202,12 @@ function LetsRecord(props) {
                                 </div>
                             </>)
                         :
-                        (<>
-                            <div className='w-full overflow-auto flex flex-col gap-10 items-center'
+                        (
+                            <>
+                            {/*<ProcessBorder>*/}
+                            {/*<Board>*/}
+                            <div className='custom-border'>
+                            <div className='w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2'
                                  style={{height: dynamicHeight}}>
                                 {
                                     todayRecord?.map((record, index) =>
@@ -217,7 +223,7 @@ function LetsRecord(props) {
                                                 <span
                                                     className='flex justify-center relative bottom-2 mr-0.5  text-rose-600'
                                                     style={{fontFamily: 'Giants-Inline', fontSize: '13px'}}>GOAL</span>
-                                                <span className='mr-5 font-bold '>{record.goal}</span>
+                                                <span className='mr-5 font-bold text-black'>{record.goal}</span>
                                                 {record.assist &&
                                                     <>
                                                         <span
@@ -226,12 +232,13 @@ function LetsRecord(props) {
                                                                 fontFamily: 'Giants-Inline',
                                                                 fontSize: '13px'
                                                             }}>ASSIST</span>
-                                                        <span className='font-bold'>{record.assist}</span>
+                                                        <span className='font-bold text-black'>{record.assist}</span>
                                                     </>}
                                             </div>
                                         </div>
                                     )
                                 }
+                            </div>
                             </div>
                             {/*Write Container*/}
                             <hr className='border-1 border-indigo-600 w-4/5 mt-7 mb-4'/>
@@ -258,7 +265,10 @@ function LetsRecord(props) {
                                 :
                                 <span className='mb-3'>기록 가능 시간이 아닙니다.</span>
                             }
-                        </>)
+                            {/*</Board>*/}
+                        {/*</ProcessBorder>*/}
+            </>
+)
                 }
             </div>
         </>
@@ -266,3 +276,42 @@ function LetsRecord(props) {
 }
 
 export default LetsRecord
+
+const ProcessBorder = styled.div`
+    --borderWidth: 2px;
+    position: relative;
+    border-radius: var(--borderWidth);
+    z-index: revert;
+    margin-bottom: 15px;
+
+    @media (max-width: 821px) {
+        width: 100%;
+        //left: 2.3%;
+    }
+
+    &::after {
+        content: '';
+        position: absolute;
+        top: calc(-1 * var(--borderWidth));
+        left: calc(-1 * var(--borderWidth));
+        height: 105%;
+        width: 97%;
+        background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
+        border-radius: calc(2 * var(--borderWidth));
+        z-index: -1;
+        animation: animatedgradient 3s ease alternate infinite;
+        background-size: 300% 300%;
+        filter: blur(5px);
+        @media (max-width: 821px) {
+            width: 100%;
+        };
+    }
+`
+
+const Board = styled`
+    position: relative;
+    z-index: 3;
+    width: 96%;
+    height: 100%;
+    background: repeating-linear-gradient(to right, #666666, black 82%, #3f3f3f 18%);
+`
