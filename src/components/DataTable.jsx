@@ -4,49 +4,66 @@ import left from "@/assets/left.png"
 import right from "@/assets/right.png"
 
 function DataTable(props) {
-    const {tap, tableData, analyzedData, page, setPage, month} = props
+    const {tap, tableData, analyzedData, page, setPage, month, quarterData} = props
+
     const [sortedNames, setSortedNames] = useState([])
     const [sortedAbsenteeNames, setSortedAbsenteeNames] = useState([])
+    const [quarterName, setQuarterName] = useState('')
 
     useEffect(() => {
         // console.log('tableData.data', tableData.data)
         // console.log('analyzedData', analyzedData)
+        // console.log('quarterData', quarterData)
     }, [tableData]);
 
     useEffect(() => {
-        setSortedNames(analyzedData?.members['active'].sort((a, b) => a.localeCompare(b)))
-        setSortedAbsenteeNames(analyzedData?.members['inactive'].sort((a, b) => a.localeCompare(b)))
+        setSortedNames(analyzedData?.active?.members['active'].sort((a, b) => a.localeCompare(b)))
+        setSortedAbsenteeNames(analyzedData?.active?.members['inactive'].sort((a, b) => a.localeCompare(b)))
     }, []);
 
+    // 탭에 따른 정렬
     useEffect(() => {
         if (tap === '골') {
             // eslint-disable-next-line no-unsafe-optional-chaining
-            const sortedByGoal = [...analyzedData?.members['active']].sort((a, b) => {
-                const aGoals = analyzedData.totalData.get(a)['골'];
-                const bGoals = analyzedData.totalData.get(b)['골'];
+            const sortedByGoal = [...quarterData.members['active']].sort((a, b) => {
+                const aGoals = quarterData.totalData.get(a)['골'];
+                const bGoals = quarterData.totalData.get(b)['골'];
                 return bGoals - aGoals;
             });
             setSortedNames(sortedByGoal)
         } else if (tap === '어시') {
             // eslint-disable-next-line no-unsafe-optional-chaining
-            const sortedByAssist = [...analyzedData?.members['active']].sort((a, b) => {
-                const aAssists = analyzedData.totalData.get(a)['어시'];
-                const bAssists = analyzedData.totalData.get(b)['어시'];
+            const sortedByAssist = [...quarterData.members['active']].sort((a, b) => {
+                const aAssists = quarterData.totalData.get(a)['어시'];
+                const bAssists = quarterData.totalData.get(b)['어시'];
                 return bAssists - aAssists;
             })
             setSortedNames(sortedByAssist)
         } else if (tap === '출석') {
             // eslint-disable-next-line no-unsafe-optional-chaining
-            const sortedByAttendance = [...analyzedData?.members['active']].sort((a, b) => {
-                const aAttendance = analyzedData.totalData.get(a)['출석'];
-                const bAttendance = analyzedData.totalData.get(b)['출석'];
+            const sortedByAttendance = [...quarterData.members['active']].sort((a, b) => {
+                const aAttendance = quarterData.totalData.get(a)['출석'];
+                const bAttendance = quarterData.totalData.get(b)['출석'];
                 return bAttendance - aAttendance;
             })
             setSortedNames(sortedByAttendance)
         } else {
-            setSortedNames(analyzedData?.members['active'].sort((a, b) => a.localeCompare(b)))
+            setSortedNames(analyzedData?.active?.members['active'].sort((a, b) => a.localeCompare(b)))
         }
     }, [tap])
+    
+    // 페이지에 따른 분기 이름 설정
+    useEffect(() => {
+        if (page < 3) {
+            setQuarterName('1')
+        } else if (page < 6) {
+            setQuarterName('2')
+        } else if (page < 9) {
+            setQuarterName('3')
+        } else {
+            setQuarterName('4')
+        }
+    }, [page])
 
     const pageMoveHandler = (left) => {
         if (left && page > 0) {
@@ -93,7 +110,7 @@ function DataTable(props) {
                             {
                                 tableData.data?.map((data) => <span key={data.id}>{Number(data.id.slice(2, 4)) + '일'}</span>)
                             }
-                            {<span>{`분기\n총합`}</span>}
+                            {<span>{`${quarterName}분기\n총합`}</span>}
                         </TableHeaderOther>
                     }
                     <StyledHR $tap={tap} />
@@ -106,24 +123,24 @@ function DataTable(props) {
                                     {/*골	골순위	일평균 득점	어시	어시순위	일평균 어시	공격포인트	순위	출석	출석순위	포인트 총합(출석,어시,골)	포인트 총합순위*/}
                                     {tap === '현황판' &&
                                         <>
-                                            <span>{analyzedData.totalData.get(name)['골']}</span>
-                                            <span>{analyzedData.totalData.get(name)['골순위']}</span>
-                                            <span>{analyzedData.totalData.get(name)['일평균득점']}</span>
-                                            <span>{analyzedData.totalData.get(name)['어시']}</span>
-                                            <span>{analyzedData.totalData.get(name)['어시순위']}</span>
-                                            <span>{analyzedData.totalData.get(name)['일평균어시']}</span>
-                                            <CustomMinWidthSpan $propsWidth='17%'>{analyzedData.totalData.get(name)['공격포인트']}</CustomMinWidthSpan>
-                                            <span>{analyzedData.totalData.get(name)['공격포인트순위']}</span>
-                                            <span>{analyzedData.totalData.get(name)['출석']}</span>
-                                            <span>{analyzedData.totalData.get(name)['출석순위']}</span>
-                                            <CustomMinWidthSpan $propsWidth='26%' $propsMax='10%'>{analyzedData.totalData.get(name)['포인트총합']}</CustomMinWidthSpan>
-                                            <CustomMinWidthSpan $propsWidth='26%' $propsMax='10%'>{analyzedData.totalData.get(name)['포인트총합순위']}</CustomMinWidthSpan>
+                                            <span>{analyzedData.active.totalData.get(name)['골']}</span>
+                                            <span>{analyzedData.active.totalData.get(name)['골순위']}</span>
+                                            <span>{analyzedData.active.totalData.get(name)['일평균득점']}</span>
+                                            <span>{analyzedData.active.totalData.get(name)['어시']}</span>
+                                            <span>{analyzedData.active.totalData.get(name)['어시순위']}</span>
+                                            <span>{analyzedData.active.totalData.get(name)['일평균어시']}</span>
+                                            <CustomMinWidthSpan $propsWidth='17%'>{analyzedData.active.totalData.get(name)['공격포인트']}</CustomMinWidthSpan>
+                                            <span>{analyzedData.active.totalData.get(name)['공격포인트순위']}</span>
+                                            <span>{analyzedData.active.totalData.get(name)['출석']}</span>
+                                            <span>{analyzedData.active.totalData.get(name)['출석순위']}</span>
+                                            <CustomMinWidthSpan $propsWidth='26%' $propsMax='10%'>{analyzedData.active.totalData.get(name)['포인트총합']}</CustomMinWidthSpan>
+                                            <CustomMinWidthSpan $propsWidth='26%' $propsMax='10%'>{analyzedData.active.totalData.get(name)['포인트총합순위']}</CustomMinWidthSpan>
                                         </>
                                     }
                                     {tap === '출석' && tableData.data.map((data, index) => (<span key={name + index}>{data.data[name] ? 'O' : '-'}</span>))}
                                     {tap === '골' && tableData.data.map((data, index) => (<span key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
                                     {tap === '어시' && tableData.data.map((data, index) => (<span key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
-                                    {tap !== '현황판' && <span>{analyzedData.totalData.get(name)[tap]}</span>}
+                                    {tap !== '현황판' && <span>{quarterData.totalData.get(name)[tap]}</span>}
                                 </TableRowStat>
                             <StyledHR $tap={tap} /></>))
                         }
@@ -176,14 +193,15 @@ const LeftButton = styled.div`
     height: 25px;
     cursor: pointer;
     @media (max-width: 812px) {
-        width: 15px;
-        height: 15px;
+        width: 20px;
+        height: 20px;
     }
 `
 
 const Month = styled.div`
     position: relative;
     top: -1px;
+    left: -4px;
 `
 
 const RightButton = styled.div`
@@ -193,8 +211,8 @@ const RightButton = styled.div`
     height: 25px;
     cursor: pointer;
     @media (max-width: 812px) {
-        width: 15px;
-        height: 15px;
+        width: 20px;
+        height: 20px;
     }
 `
 
