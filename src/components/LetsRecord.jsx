@@ -206,7 +206,7 @@ function LetsRecord(props) {
                             <>
                             {/*<ProcessBorder>*/}
                             {/*<Board>*/}
-                            <div className='custom-border'>
+                            <div className={open ? 'custom-border' : 'default-border'}>
                             <div className='w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2'
                                  style={{height: dynamicHeight}}>
                                 {
