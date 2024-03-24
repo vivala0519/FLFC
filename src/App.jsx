@@ -59,7 +59,7 @@ function App() {
                       {tapName.map((tap, index) => <div className='cursor-pointer' key={index} onClick={() => setTap(index)}>{tap}</div>)}
                   </div>
               </header>
-              {[0].includes(tap) && <div className='w-full h-24'></div>}
+              {[0].includes(tap) && <div className='w-full mb-10'></div>}
               {[1].includes(tap) && <div className='w-full h-32'></div>}
               {tap === 0 ? <LetsRecord setOpen={setOpen} open={open}/> : tap === 1 ? <RecordRoom propsData={data} analyzedData={analyzedData} /> : <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam}/>}
               {[0, 2].includes(tap) && !open &&
