@@ -283,7 +283,7 @@ function LetsRecord(props) {
                             <>
                             {/*<ProcessBorder>*/}
                             {/*<Board>*/}
-                            <div className={!open ? 'custom-border' : 'default-border'}>
+                            <div className={open ? 'custom-border' : 'default-border'}>
                             <div className='w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2'
                                  style={{height: dynamicHeight}}>
                                 {
@@ -319,7 +319,7 @@ function LetsRecord(props) {
                             </div>
                             {/*Write Container*/}
                             <hr className='border-1 border-indigo-600 w-4/5 mt-7 mb-4'/>
-                            {!open ?
+                            {open ?
                                 <div className='flex items-center gap-5 mb-1'>
                                     <div>
                                         <div className='flex mb-2 gap-0.5 items-center'>
