@@ -32,6 +32,9 @@
 .default-border {
     width: 96%;
 }
+.in-desktop {
+    justify-content: center;
+}
 
 @keyframes animatedgradient {
     0% {

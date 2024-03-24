@@ -212,7 +212,7 @@ function LetsRecord(props) {
                                 {
                                     todayRecord?.map((record, index) =>
                                         // <div className='flex items-center w-9/12 gap-5 border-b-indigo-300 border-b-2 pt-1' key={index}>
-                                        <div className='flex items-center w-9/12 gap-5 pt-1' key={index}>
+                                        <div className='flex items-center w-9/12 gap-5 pt-1 in-desktop' key={index}>
                                             <span style={{
                                                 width: '30px',
                                                 fontSize: '12px',
