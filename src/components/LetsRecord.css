@@ -34,6 +34,9 @@
 }
 .in-desktop {
     justify-content: center;
+    @media (max-width: 821px) {
+        justify-content: normal;
+    }
 }
 
 @keyframes animatedgradient {
