@@ -57,12 +57,11 @@ function App() {
       return (
           <div className='flex flex-col items-center'>
               <header ref={headerRef} className='flex flex-col items-center w-full absolute top-5'>
-                  <span className='mb-5' style={{ letterSpacing: '3px', fontSize: '35px', fontFamily: 'Giants-Inline', fontStyle: 'normal', fontWeight: '400'}}>FLFC</span>
+                  <span style={{ letterSpacing: '3px', fontSize: '35px', fontFamily: 'Giants-Inline', fontStyle: 'normal', fontWeight: '400'}}>FLFC</span>
+                  <span className='mb-3' style={{ fontSize: '9px', fontFamily: 'Hahmlet', fontStyle: 'normal', fontWeight: '100'}}>Football Love Futsal Club</span>
                   <div
                       className='flex flex-row justify-around w-full border-solid border-0 border-b-2 border-t-2 border-indigo-600 mb-5 p-2'
                       style={{fontFamily: 'KBO-Dia-Gothic_bold'}}>
-                      {/*{tapName.map((tap, index) => <div className='cursor-pointer' key={index}*/}
-                      {/*                                  onClick={() => setTap(index)}>{tap}</div>)}*/}
                       <div
                           className={`cursor-pointer ${tap === 0 && 'text-pink-700'}`} onClick={() => setTap(0)}>{tapName[0]}
                       </div>

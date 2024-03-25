@@ -60,16 +60,16 @@ function RecordRoom(props) {
     return (
       <div className='w-full'>
           <div className='flex flex-row justify-around w-full mb-5 p-2' style={{fontFamily: 'Giants-Inline'}}>
-              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '현황판' && 'text-rose-600'}`}
+              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}
                    onClick={() => setTap(tapName[0])}>현황판
               </div>
-              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '출석' && 'text-rose-600'}`}
+              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '출석' && 'text-rose-600'}`} style={{width: '40px'}}
                    onClick={() => setTap(tapName[1])}>출석
               </div>
-              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '골' && 'text-rose-600'}`}
+              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '골' && 'text-rose-600'}`} style={{width: '40px'}}
                    onClick={() => setTap(tapName[2])}>골
               </div>
-              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '어시' && 'text-rose-600'}`}
+              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '어시' && 'text-rose-600'}`} style={{width: '40px'}}
                    onClick={() => setTap(tapName[3])}>어시
               </div>
           </div>
