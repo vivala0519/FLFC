@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react'
 import DataTable from './DataTable'
+import './LetsRecord.css'
 
 function RecordRoom(props) {
     const {propsData, analyzedData} = props

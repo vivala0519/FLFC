@@ -2,6 +2,9 @@ import {useEffect, useState} from 'react'
 import styled from "styled-components"
 import left from "@/assets/left.png"
 import right from "@/assets/right.png"
+import write from "@/assets/write.png"
+import check from "@/assets/check.png"
+import './WeeklyTeam.css'
 
 function WeeklyTeam(props) {
     const {propsData, setRegisteredTeam} = props
@@ -85,12 +88,22 @@ function WeeklyTeam(props) {
     const registerTeamHandler = () => {
         const newWeeklyTeamData = [...weeklyTeamData]
         const newData = {1: inputTeamData[0], 2: inputTeamData[1], 3: inputTeamData[2]}
+        let canRegister = true;
+        Object.values(newData).forEach(team => {
+            const players = team.filter(player => player.trim())
+            if (players.length < 5) {
+                canRegister = false;
+            }})
 
-        newWeeklyTeamData[weeklyTeamData.length - 1].data = newData
-        setRegisteredTeam(weeklyTeamData[weeklyTeamData.length - 1])
-        setWeeklyTeamData(newWeeklyTeamData)
-        setEditMode(false)
-        setCanCreate(false)
+        if (canRegister) {
+            newWeeklyTeamData[weeklyTeamData.length - 1].data = newData
+            setRegisteredTeam(weeklyTeamData[weeklyTeamData.length - 1])
+            setWeeklyTeamData(newWeeklyTeamData)
+            setEditMode(false)
+            setCanCreate(false)
+        } else {
+            alert('각 팀당 5명 이상 입력해주세요.')
+        }
     }
 
   return (
@@ -100,38 +113,47 @@ function WeeklyTeam(props) {
             <Week $thisWeek={page === weeklyTeamData.length - 1} className='mt-3 mb-1 underline underline-offset-1 relative bottom-1' style={{fontFamily: 'Giants-Inline'}}>{weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 '}{"Weekly Team"}</Week>
             {!editMode && <RightButton onClick={() => pageMoveHandler(false)} />}
           </div>
-            <hr className='w-full mb-5 border-indigo-600'/>
-          <div className='flex flex-col gap-5 items-center'>
-              {!editMode ?
-                  [1, 2, 3].map((team, index) => (
-                  <div key={index} className='flex gap-5'>
-                      <span>{team}팀</span>
-                      <div className='flex gap-1'>
-                          {weeklyTeamData[page]?.data[team].map((player, idx) => (
-                              <span key={idx}>{player}</span>
-                          ))}
-                      </div>
-                  </div>
-                 ))
-              :
-                  inputTeamData?.map((team, index) => (
-                  <div key={index} className='flex gap-5'>
-                      <span>{index + 1}팀</span>
-                      <div className='flex gap-1'>
-                          {team.map((player, idx) => <input key={idx} value={player} onChange={(event) => teamMakerInputHandler(event, index, idx)} type='text' className='w-12 border-indigo-400 border-2 outline-none text-center'/>)}
-                      </div>
-                  </div>
-              ))
-              }
+          <div className='flex flex-col'>
+          <div className='flex flex-col items-end mb-5'>
+              <hr className='w-full border-indigo-600'/>
+              {/*<RelationButton>관계도</RelationButton>*/}
           </div>
-          <div className='mt-14'>
+          <div className='w-full flex justify-center mb-5'>
+              <div className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && 'custom-border'}`}>
+                  <div className='flex flex-col gap-5 items-start bg-white p-3 rounded-md'>
+                      {!editMode ?
+                          [1, 2, 3].map((team, index) => (
+                          <div key={index} className='flex gap-5'>
+                              <span style={{width: '25px'}}>{team}팀</span>
+                              <div className='flex gap-1'>
+                                  {weeklyTeamData[page]?.data[team].map((player, idx) => (
+                                      <span key={idx}>{player}</span>
+                                  ))}
+                              </div>
+                          </div>
+                         ))
+                      :
+                          inputTeamData?.map((team, index) => (
+                          <div key={index} className='flex gap-5'>
+                              <span>{index + 1}팀</span>
+                              <div className='flex gap-1'>
+                                  {team.map((player, idx) => <input key={idx} value={player} onChange={(event) => teamMakerInputHandler(event, index, idx)} type='text' className='w-12 border-indigo-400 border-2 outline-none text-center'/>)}
+                              </div>
+                          </div>
+                      ))
+                      }
+                  </div>
+              </div>
+          </div>
+          <div className='w-full flex justify-center'>
               {canCreate &&
                   (!editMode ?
-                  <button onClick={createWeeklyTeamHandler}>이번 주 팀 생성하기</button>
+                      <button className='flex block-border' onClick={createWeeklyTeamHandler}><span>이번 주 팀 생성하기</span><Write/></button>
                   :
-                  <button onClick={registerTeamHandler}>등록하기</button>)
+                      <button className='flex block-border' onClick={registerTeamHandler}><span>등록하기</span><Register /></button>)
               }
           </div>
+        </div>
       </div>
   )
 }
@@ -165,4 +187,32 @@ const RightButton = styled.div`
         width: 15px;
         height: 15px;
     }
+`
+
+const Write = styled.div`
+    background: url(${write}) no-repeat center center;
+    background-size: 100% 100%;
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 3px;
+    left: 7px;
+`
+
+const Register = styled.div`
+    background: url(${check}) no-repeat center center;
+    background-size: 100% 100%;
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 3px;
+    left: 7px;
+`
+
+const RelationButton = styled.button`
+    position: relative;
+    top: 10px;
+    width: 60px;
+    height: 30px;
+    font-size: 10px;
 `
