@@ -63,13 +63,18 @@ function App() {
                       className='flex flex-row justify-around w-full border-solid border-0 border-b-2 border-t-2 border-indigo-600 mb-5 p-2'
                       style={{fontFamily: 'KBO-Dia-Gothic_bold'}}>
                       <div
-                          className={`cursor-pointer ${tap === 0 && 'text-pink-700'}`} onClick={() => setTap(0)}>{tapName[0]}
+                          className={`cursor-pointer w-full ${tap === 0 && 'text-pink-700'}`}
+                          onClick={() => setTap(0)}>{tapName[0]}
                       </div>
+                      <div className='border-indigo-400 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>
                       <div
-                          className={`cursor-pointer ${tap === 1 && 'text-pink-700'}`} onClick={() => setTap(1)}>{tapName[1]}
+                          className={`cursor-pointer w-full ${tap === 1 && 'text-pink-700'}`}
+                          onClick={() => setTap(1)}>{tapName[1]}
                       </div>
+                      <div className='border-indigo-400 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>
                       <div
-                          className={`cursor-pointer ${tap === 2 && 'text-pink-700'}`} onClick={() => setTap(2)}>{tapName[2]}
+                          className={`cursor-pointer w-full ${tap === 2 && 'text-pink-700'}`}
+                          onClick={() => setTap(2)}>{tapName[2]}
                       </div>
                   </div>
               </header>
