@@ -1,5 +1,6 @@
 import {useEffect, useState} from 'react'
 import styled from "styled-components"
+import Swal from "sweetalert2"
 import left from "@/assets/left.png"
 import right from "@/assets/right.png"
 import write from "@/assets/write.png"
@@ -81,7 +82,10 @@ function WeeklyTeam(props) {
             setPage(weeklyTeamData.length)
             setEditMode(true)
         } else {
-            alert('이미 생성된 주차입니다.')
+            Swal.fire({
+                icon: "error",
+                title: "이미 생성된 주차입니다.",
+            })
         }
     }
 
@@ -102,7 +106,10 @@ function WeeklyTeam(props) {
             setEditMode(false)
             setCanCreate(false)
         } else {
-            alert('각 팀당 5명 이상 입력해주세요.')
+            Swal.fire({
+                icon: "error",
+                title: "팀당 최소 5명!",
+            })
         }
     }
 
@@ -124,10 +131,10 @@ function WeeklyTeam(props) {
                       {!editMode ?
                           [1, 2, 3].map((team, index) => (
                           <div key={index} className='flex gap-5'>
-                              <span style={{width: '25px'}}>{team}팀</span>
+                              <span style={{width: '25px'}} className='text-black'>{team}팀</span>
                               <div className='flex gap-1'>
                                   {weeklyTeamData[page]?.data[team].map((player, idx) => (
-                                      <span key={idx}>{player}</span>
+                                      <span key={idx} className='text-black'>{player}</span>
                                   ))}
                               </div>
                           </div>
@@ -135,7 +142,7 @@ function WeeklyTeam(props) {
                       :
                           inputTeamData?.map((team, index) => (
                           <div key={index} className='flex gap-5'>
-                              <span>{index + 1}팀</span>
+                              <span style={{width: '25px'}} className='text-black'>{index + 1}팀</span>
                               <div className='flex gap-1'>
                                   {team.map((player, idx) => <input key={idx} value={player} onChange={(event) => teamMakerInputHandler(event, index, idx)} type='text' className='w-12 border-indigo-400 border-2 outline-none text-center'/>)}
                               </div>

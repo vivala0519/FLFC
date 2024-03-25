@@ -64,13 +64,13 @@ function App() {
                       {/*{tapName.map((tap, index) => <div className='cursor-pointer' key={index}*/}
                       {/*                                  onClick={() => setTap(index)}>{tap}</div>)}*/}
                       <div
-                          className={`cursor-pointer ${tap === 0 && 'text-rose-600'}`} onClick={() => setTap(0)}>{tapName[0]}
+                          className={`cursor-pointer ${tap === 0 && 'text-pink-700'}`} onClick={() => setTap(0)}>{tapName[0]}
                       </div>
                       <div
-                          className={`cursor-pointer ${tap === 1 && 'text-rose-600'}`} onClick={() => setTap(1)}>{tapName[1]}
+                          className={`cursor-pointer ${tap === 1 && 'text-pink-700'}`} onClick={() => setTap(1)}>{tapName[1]}
                       </div>
                       <div
-                          className={`cursor-pointer ${tap === 2 && 'text-rose-600'}`} onClick={() => setTap(2)}>{tapName[2]}
+                          className={`cursor-pointer ${tap === 2 && 'text-pink-700'}`} onClick={() => setTap(2)}>{tapName[2]}
                       </div>
                   </div>
               </header>
