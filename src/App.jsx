@@ -72,7 +72,7 @@ function App() {
     }, [registeredTeam])
 
       return (
-          <div className='flex flex-col items-center' style={{height: '95vh'}}>
+          <div className='flex flex-col items-center' style={{height: '100vh'}}>
               <header ref={headerRef} className='flex flex-col items-center w-full top-5'>
                   <span style={{ letterSpacing: '3px', fontSize: '35px', fontFamily: 'Giants-Inline', fontStyle: 'normal', fontWeight: '400'}}>FLFC</span>
                   <span className='mb-3' style={{ fontSize: '9px', fontFamily: 'Hahmlet', fontStyle: 'normal', fontWeight: '100'}}>Football Love Futsal Club</span>
