@@ -87,9 +87,9 @@ function RecordRoom(props) {
 
     const handleTouchEnd = () => {
         const diff = startX - moveX;
-        if (diff > 100) {
+        if (diff > 75) {
             propsSetTap(0)
-        } else if (diff < -100) {
+        } else if (diff < -75) {
             propsSetTap(2)
         }
         setStartX(null);

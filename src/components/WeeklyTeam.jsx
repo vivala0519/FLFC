@@ -138,9 +138,9 @@ function WeeklyTeam(props) {
 
     const handleTouchEnd = () => {
         const diff = startX - moveX;
-        if (diff > 100) {
+        if (diff > 75) {
             setTap(3)
-        } else if (diff < -100) {
+        } else if (diff < -75) {
             setTap(1)
         }
         setStartX(null);
