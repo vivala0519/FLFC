@@ -3,6 +3,8 @@
   height: 100%;
   margin: 0 auto;
   /*padding: 1rem;*/
+  padding-right: 1rem;
+  padding-left: 1rem;
   text-align: center;
   max-height: 100%;
 }
