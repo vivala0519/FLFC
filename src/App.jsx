@@ -105,7 +105,7 @@ function App() {
               {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} lastSeasonKings={lastSeasonKings}/>}
               {tap === 2 && <RecordRoom propsData={data} analyzedData={analyzedData} propsSetTap={setTap} />}
               {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} />}
-              {[0, 2].includes(tap) && !open &&
+              {[0, 3].includes(tap) && !open &&
                   <footer className='absolute bottom-3'>
                       <CopyRight>
                           Developed by. Seungho Lee
