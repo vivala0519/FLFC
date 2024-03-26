@@ -82,7 +82,6 @@ function DataTable(props) {
 
     const findTrophy = (name) => {
         if (lastSeasonKings?.goal_king === name) {
-            console.log(name)
             return 'goal'
         }
         if (lastSeasonKings?.assist_king === name) {

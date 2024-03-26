@@ -101,10 +101,10 @@ function App() {
                   </div>
               </header>
               {/*{[1].includes(tap) && <div className='w-full h-32'></div>}*/}
-              {tap === 0 && <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]}/>}
+              {tap === 0 && <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]} setTap={setTap} />}
               {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} lastSeasonKings={lastSeasonKings}/>}
-              {tap === 2 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam}/>}
-              {tap === 3 && <RecordRoom propsData={data} analyzedData={analyzedData}/>}
+              {tap === 2 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} />}
+              {tap === 3 && <RecordRoom propsData={data} analyzedData={analyzedData} propsSetTap={setTap} />}
               {[0, 2].includes(tap) && !open &&
                   <footer className='absolute bottom-3'>
                       <CopyRight>

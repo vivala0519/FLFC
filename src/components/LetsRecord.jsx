@@ -9,7 +9,7 @@ import './LetsRecord.css'
 
 function LetsRecord(props) {
   const registerRef = useRef(null);
-  const {open, setOpen, recordData, weeklyTeamData, headerHeight} = props
+  const {open, setOpen, recordData, weeklyTeamData, headerHeight, setTap} = props
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
   const [todayRecordObject, setTodayRecordObject] = useState({})
@@ -157,7 +157,7 @@ function LetsRecord(props) {
             await setDoc(docRef, stats)
             console.log("Document written with ID: ", docRef.id);
         }
-        if (!compareObjects(stats, writtenData)) {
+        if (!compareObjects(stats, writtenData) && open) {
             registerRecord()
         }
     }, [todayRecord])
@@ -186,8 +186,38 @@ function LetsRecord(props) {
       }
   }
 
+  // 슬라이드 시 탭 이동
+    const [startX, setStartX] = useState(null);
+    const [moveX, setMoveX] = useState(null);
+
+    const handleTouchStart = (e) => {
+        setStartX(e.touches[0].clientX);
+        setMoveX(e.touches[0].clientX);
+    };
+
+    const handleTouchMove = (e) => {
+        setMoveX(e.touches[0].clientX);
+    };
+
+    const handleTouchEnd = () => {
+        const diff = startX - moveX;
+        console.log(diff)
+        if (diff > 50) {
+            setTap(1)
+        } else if (diff < -50) {
+            setTap(3)
+        }
+        setStartX(null);
+        setMoveX(null);
+    };
+
     return (
-        <div className={`flex flex-col items-center w-full relative ${!open && 'justify-center'}`} style={{top: open ? '-12px' : '-30px', height: !open && '95vh'}}>
+        <div
+            className={`flex flex-col items-center w-full relative ${!open && 'justify-center'}`}
+            style={{top: open ? '-12px' : '-30px', height: !open && '95vh'}}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}>
             <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'Giants-Inline'}}>{"Today's Record"}</span>
             <hr className='w-1/2 mb-5 border-green-600'/>
             <div className='flex flex-col items-center w-full'>

@@ -5,7 +5,7 @@ import './LetsRecord.css'
 import help from '@/assets/help.png'
 
 function RecordRoom(props) {
-    const {propsData, analyzedData} = props
+    const {propsData, analyzedData, propsSetTap} = props
     const tapName = ['출석', '골', '어시', '히스토리']
     const [tap, setTap] = useState('출석')
     const [month, setMonth] = useState([])
@@ -71,8 +71,37 @@ function RecordRoom(props) {
 
     }, [page, month, weeksPerMonth]);
 
+
+    // 슬라이드 시 탭 이동
+    const [startX, setStartX] = useState(null);
+    const [moveX, setMoveX] = useState(null);
+
+    const handleTouchStart = (e) => {
+        setStartX(e.touches[0].clientX);
+        setMoveX(e.touches[0].clientX);
+    };
+
+    const handleTouchMove = (e) => {
+        setMoveX(e.touches[0].clientX);
+    };
+
+    const handleTouchEnd = () => {
+        const diff = startX - moveX;
+        if (diff > 50) {
+            propsSetTap(0)
+        } else if (diff < -50) {
+            propsSetTap(2)
+        }
+        setStartX(null);
+        setMoveX(null);
+    };
+
+
     return (
-      <div className='w-full relative' style={{top: '-10px'}}>
+      <div className='w-full relative' style={{top: '-10px'}}
+           onTouchStart={handleTouchStart}
+           onTouchMove={handleTouchMove}
+           onTouchEnd={handleTouchEnd}>
           <div className='flex flex-row w-full mb-3 p-2' style={{fontFamily: 'Giants-Inline'}}>
               {/*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*/}
               {/*     onClick={() => setTap(tapName[0])}>현황판*/}

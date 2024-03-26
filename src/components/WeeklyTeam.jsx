@@ -8,7 +8,7 @@ import check from "@/assets/check.png"
 import './WeeklyTeam.css'
 
 function WeeklyTeam(props) {
-    const {propsData, setRegisteredTeam} = props
+    const {propsData, setRegisteredTeam, setTap} = props
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
     const [dynamicHeight, setDynamicHeight] = useState(0)
     const [page, setPage] = useState(0)
@@ -119,11 +119,40 @@ function WeeklyTeam(props) {
     }
 
     useEffect(() => {
-        console.log(page, weeklyTeamData)
+        // console.log(page, weeklyTeamData)
     }, [page, weeklyTeamData]);
 
-  return (
-      <div className='w-full relative' style={{height: dynamicHeight}}>
+
+    // 슬라이드 시 탭 이동
+    const [startX, setStartX] = useState(null);
+    const [moveX, setMoveX] = useState(null);
+
+    const handleTouchStart = (e) => {
+        setStartX(e.touches[0].clientX);
+        setMoveX(e.touches[0].clientX);
+    };
+
+    const handleTouchMove = (e) => {
+        setMoveX(e.touches[0].clientX);
+    };
+
+    const handleTouchEnd = () => {
+        const diff = startX - moveX;
+        if (diff > 50) {
+            setTap(3)
+        } else if (diff < -50) {
+            setTap(1)
+        }
+        setStartX(null);
+        setMoveX(null);
+    };
+
+
+    return (
+      <div className='w-full relative' style={{height: dynamicHeight}}
+           onTouchStart={handleTouchStart}
+           onTouchMove={handleTouchMove}
+           onTouchEnd={handleTouchEnd}>
           <div className='flex gap-5 justify-center items-center'>
             {!editMode && <LeftButton onClick={() => pageMoveHandler(true)}  $show={page !== 0} />}
             <Week $thisWeek={page === weeklyTeamData.length - 1 && activeBorder} className='mt-3 mb-1 underline underline-offset-1 relative bottom-1' style={{fontFamily: 'Giants-Inline'}}>{weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 '}{"Weekly Team"}</Week>
