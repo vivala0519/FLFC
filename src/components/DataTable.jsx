@@ -377,7 +377,7 @@ const CustomMinWidthDiv = styled.div`
 
 const StyledHR = styled.hr`
     @media (max-width: 812px) {
-        width: ${props => props.$tap === '현황판' && '215%'} !important;
+        width: ${props => props.$tap === '현황판' && '224%'} !important;
     }
 `
 

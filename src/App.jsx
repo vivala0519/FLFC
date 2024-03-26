@@ -11,7 +11,7 @@ import './App.css'
 
 function App() {
     const [tap, setTap] = useState(0)
-    const tapName = ['기록하기', '현황판', '이번 주 팀' ,'기록실']
+    const tapName = ['기록하기', '현황판', '기록실' ,'이번 주 팀']
     const [data, setData] = useState([])
     const [analyzedData, setAnalyzedData] = useState({})
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
@@ -103,8 +103,8 @@ function App() {
               {/*{[1].includes(tap) && <div className='w-full h-32'></div>}*/}
               {tap === 0 && <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]} setTap={setTap} />}
               {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} lastSeasonKings={lastSeasonKings}/>}
-              {tap === 2 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} />}
-              {tap === 3 && <RecordRoom propsData={data} analyzedData={analyzedData} propsSetTap={setTap} />}
+              {tap === 2 && <RecordRoom propsData={data} analyzedData={analyzedData} propsSetTap={setTap} />}
+              {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} />}
               {[0, 2].includes(tap) && !open &&
                   <footer className='absolute bottom-3'>
                       <CopyRight>

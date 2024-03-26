@@ -102,18 +102,18 @@ function RecordRoom(props) {
            onTouchStart={handleTouchStart}
            onTouchMove={handleTouchMove}
            onTouchEnd={handleTouchEnd}>
-          <div className='flex flex-row w-full mb-3 p-2' style={{fontFamily: 'Giants-Inline'}}>
+          <div className='flex flex-row w-full mb-3 p-2' style={{fontFamily: 'KBO-Dia-Gothic_bold'}}>
               {/*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*/}
               {/*     onClick={() => setTap(tapName[0])}>현황판*/}
               {/*</div>*/}
               <div className='flex flex-row w-full justify-center' style={{gap : '10%'}}>
-                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer text-sm ${tap === '출석' && 'text-yellow-600'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer text-sm ${tap === '출석' && 'text-yellow-500'}`}
                        onClick={() => setTap(tapName[0])}>출석
                   </Tap>
-                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer text-sm ${tap === '골' && 'text-yellow-600'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer text-sm ${tap === '골' && 'text-yellow-500'}`}
                        onClick={() => setTap(tapName[1])}>골
                   </Tap>
-                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer text-sm ${tap === '어시' && 'text-yellow-600'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer text-sm ${tap === '어시' && 'text-yellow-500'}`}
                        onClick={() => setTap(tapName[2])}>어시
                   </Tap>
                   {/*<Tap className={`underline decoration-2 decoration-solid decoration-green-300 cursor-pointer text-sm ${tap === '히스토리' && 'text-yellow-600'}`}*/}

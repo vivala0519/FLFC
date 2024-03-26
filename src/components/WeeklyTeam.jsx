@@ -155,12 +155,12 @@ function WeeklyTeam(props) {
            onTouchEnd={handleTouchEnd}>
           <div className='flex gap-5 justify-center items-center'>
             {!editMode && <LeftButton onClick={() => pageMoveHandler(true)}  $show={page !== 0} />}
-            <Week $thisWeek={page === weeklyTeamData.length - 1 && activeBorder} className='mt-3 mb-1 underline underline-offset-1 relative bottom-1' style={{fontFamily: 'Giants-Inline'}}>{weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 '}{"Weekly Team"}</Week>
+            <Week $thisWeek={page === weeklyTeamData.length - 1 && activeBorder} className='mt-3 mb-1 underline underline-offset-1 relative bottom-1' style={{fontFamily: 'KBO-Dia-Gothic_bold'}}>{weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 '}{"Weekly Team"}</Week>
             {!editMode && <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1} />}
           </div>
           <div className='flex flex-col'>
           <div className='flex flex-col items-end mb-5'>
-              <hr className='w-full border-green-600'/>
+              <hr className='w-full border-green-800'/>
               {/*<RelationButton>관계도</RelationButton>*/}
           </div>
           <div className='w-full flex justify-center mb-5'>
@@ -226,7 +226,7 @@ const LeftButton = styled.div`
 `
 
 const Week = styled.span`
-    ${props => props.$thisWeek && 'color: #BB2649;'}
+    ${props => props.$thisWeek && 'color: #EAB308;'}
 `
 
 const RightButton = styled.div`
