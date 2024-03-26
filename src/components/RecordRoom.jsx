@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react'
 import DataTable from './DataTable'
 import styled from 'styled-components'
 import './LetsRecord.css'
-import help from '@/assets/help2.png'
+import help from '@/assets/help.png'
 
 function RecordRoom(props) {
     const {propsData, analyzedData} = props
@@ -74,20 +74,20 @@ function RecordRoom(props) {
     return (
       <div className='w-full relative' style={{top: '-10px'}}>
           <div className='flex flex-row w-full mb-3 p-2' style={{fontFamily: 'Giants-Inline'}}>
-              {/*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*/}
+              {/*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*/}
               {/*     onClick={() => setTap(tapName[0])}>현황판*/}
               {/*</div>*/}
               <div className='flex flex-row w-full justify-center' style={{gap : '10%'}}>
-                  <Tap className={`underline decoration-2 decoration-solid decoration-indigo-300 cursor-pointer text-sm ${tap === '출석' && 'text-rose-600'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer text-sm ${tap === '출석' && 'text-yellow-600'}`}
                        onClick={() => setTap(tapName[0])}>출석
                   </Tap>
-                  <Tap className={`underline decoration-2 decoration-solid decoration-indigo-300 cursor-pointer text-sm ${tap === '골' && 'text-rose-600'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer text-sm ${tap === '골' && 'text-yellow-600'}`}
                        onClick={() => setTap(tapName[1])}>골
                   </Tap>
-                  <Tap className={`underline decoration-2 decoration-solid decoration-indigo-300 cursor-pointer text-sm ${tap === '어시' && 'text-rose-600'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer text-sm ${tap === '어시' && 'text-yellow-600'}`}
                        onClick={() => setTap(tapName[2])}>어시
                   </Tap>
-                  {/*<Tap className={`underline decoration-2 decoration-solid decoration-indigo-300 cursor-pointer text-sm ${tap === '히스토리' && 'text-rose-600'}`}*/}
+                  {/*<Tap className={`underline decoration-2 decoration-solid decoration-green-300 cursor-pointer text-sm ${tap === '히스토리' && 'text-yellow-600'}`}*/}
                   {/*     onClick={() => setTap(tapName[3])}>히스토리*/}
                   {/*</Tap>*/}
               </div>

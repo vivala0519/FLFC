@@ -189,7 +189,7 @@ function LetsRecord(props) {
     return (
         <div className={`flex flex-col items-center w-full relative ${!open && 'justify-center'}`} style={{top: open ? '-12px' : '-30px', height: !open && '95vh'}}>
             <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'Giants-Inline'}}>{"Today's Record"}</span>
-            <hr className='w-1/2 mb-5 border-indigo-600'/>
+            <hr className='w-1/2 mb-5 border-green-600'/>
             <div className='flex flex-col items-center w-full'>
                 <>
                 <div className={open ? 'custom-border' : 'default-border'}>
@@ -197,7 +197,7 @@ function LetsRecord(props) {
                      style={{height: open && dynamicHeight, display: open ? 'flex' : 'none'}}>
                     {
                         todayRecord?.map((record, index) =>
-                            // <div className='flex items-center w-9/12 gap-5 border-b-indigo-300 border-b-2 pt-1' key={index}>
+                            // <div className='flex items-center w-9/12 gap-5 border-b-green-300 border-b-2 pt-1' key={index}>
                             <div className='flex items-center w-9/12 gap-5 pt-1 in-desktop' key={index}>
                                 <span style={{
                                     width: '30px',
@@ -205,7 +205,7 @@ function LetsRecord(props) {
                                     fontFamily: 'Hahmlet',
                                     color: 'grey'
                                 }}>{record.time}</span>
-                                <div className='flex items-center pl-2 pr-2 border-b-indigo-300 border-b-2'>
+                                <div className='flex items-center pl-2 pr-2 border-b-green-300 border-b-2'>
                                     <span
                                         className='flex justify-center relative bottom-2 mr-0.5  text-rose-600'
                                         style={{fontFamily: 'Giants-Inline', fontSize: '13px'}}>GOAL</span>
@@ -228,7 +228,7 @@ function LetsRecord(props) {
                 </div>
                 {/*Write Container*/}
                 <div>
-                  <hr className={open ? 'border-1 border-indigo-600 w-full mb-4' : 'hidden'}/>
+                  <hr className={open ? 'border-1 border-green-600 w-full mb-4' : 'hidden'}/>
                   {open ?
                       <div ref={registerRef} className='flex items-center gap-5 mb-1'>
                         <div>
@@ -236,14 +236,14 @@ function LetsRecord(props) {
                               <span className='flex justify-center text-rose-600'
                                     style={{width: '70px', fontFamily: 'Giants-Inline'}}>GOAL</span>
                             <input
-                                className='w-24 border-solid border-0 border-b-2 border-indigo-600 text-center outline-none'
+                                className='w-24 border-solid border-0 border-b-2 border-green-600 text-center outline-none'
                                 value={scorer} onChange={scorerHandler}/>
                           </div>
                           <div className='flex gap-0.5 items-center'>
                               <span className='flex justify-center text-lime-500'
                                     style={{width: '70px', fontFamily: 'Giants-Inline'}}>ASSIST</span>
                             <input
-                                className='w-24 border-solid border-0 border-b-2 border-indigo-600 text-center outline-none'
+                                className='w-24 border-solid border-0 border-b-2 border-green-600 text-center outline-none'
                                 value={assistant} onChange={assistantHandler}/>
                           </div>
                         </div>

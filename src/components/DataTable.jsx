@@ -131,11 +131,11 @@ function DataTable(props) {
         <div>
             {tap !== '현황판' &&
                 <MonthContainer className=''>
-                    <LeftButton  onClick={() => pageMoveHandler(true)} />
+                    <PageButton onClick={() => pageMoveHandler(true)} $direction='left' $show={page !== 0} />
                     <Month className=''>
                         {tableData.month}월
                     </Month>
-                    <RightButton   onClick={() => pageMoveHandler(false)} />
+                    <PageButton onClick={() => pageMoveHandler(false)} $direction='right' $show={page !== month.length - 1} />
                 </MonthContainer>
             }
             <TableContainer>
@@ -162,7 +162,7 @@ function DataTable(props) {
                             {
                                 tableData?.data?.map((data) => <span key={data.id}>{Number(data.id.slice(2, 4)) + '일'}</span>)
                             }
-                            {<span>{`${quarterName}분기\n총합`}</span>}
+                            {<span style={{fontSize: '10px'}}>{`${quarterName}분기\n총합`}</span>}
                         </TableHeaderOther>
                     }
                     <StyledHR $tap={tap} />
@@ -244,8 +244,9 @@ const MonthContainer = styled.div`
     }
 `
 
-const LeftButton = styled.div`
-    background: url(${left}) no-repeat center center;
+const PageButton = styled.div`
+    visibility: ${props => props.$show ? 'visible' : 'hidden'};
+    background: ${props => props.$direction === 'right' ? `url(${right}) no-repeat center center` : `url(${left}) no-repeat center center`};
     background-size: 100% 100%;
     width: 25px;
     height: 25px;
@@ -260,18 +261,6 @@ const Month = styled.div`
     position: relative;
     top: -1px;
     left: -4px;
-`
-
-const RightButton = styled.div`
-    background: url(${right}) no-repeat center center;
-    background-size: 100% 100%;
-    width: 25px;
-    height: 25px;
-    cursor: pointer;
-    @media (max-width: 812px) {
-        width: 20px;
-        height: 20px;
-    }
 `
 
 const TableContainer = styled.div`

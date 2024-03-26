@@ -62,16 +62,16 @@ function StatusBoard(props) {
   return (
       <div className='w-full relative' style={{top: '-10px'}}>
         {/*<div className='flex flex-row justify-center gap-14 w-full mb-3 p-2' style={{fontFamily: 'Giants-Inline'}}>*/}
-        {/*  /!*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*!/*/}
+        {/*  /!*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*!/*/}
         {/*  /!*     onClick={() => setTap(tapName[0])}>현황판*!/*/}
         {/*  /!*</div>*!/*/}
-        {/*  <Tap className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '출석' && 'text-rose-600'}`} style={{width: '40px'}}*/}
+        {/*  <Tap className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '출석' && 'text-rose-600'}`} style={{width: '40px'}}*/}
         {/*       onClick={() => setTap(tapName[0])}>출석*/}
         {/*  </Tap>*/}
-        {/*  <Tap className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '골' && 'text-rose-600'}`} style={{width: '40px'}}*/}
+        {/*  <Tap className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '골' && 'text-rose-600'}`} style={{width: '40px'}}*/}
         {/*       onClick={() => setTap(tapName[1])}>골*/}
         {/*  </Tap>*/}
-        {/*  <Tap className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '어시' && 'text-rose-600'}`} style={{width: '40px'}}*/}
+        {/*  <Tap className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '어시' && 'text-rose-600'}`} style={{width: '40px'}}*/}
         {/*       onClick={() => setTap(tapName[2])}>어시*/}
         {/*  </Tap>*/}
         {/*  <Help />*/}

@@ -118,16 +118,20 @@ function WeeklyTeam(props) {
         }
     }
 
+    useEffect(() => {
+        console.log(page, weeklyTeamData)
+    }, [page, weeklyTeamData]);
+
   return (
       <div className='w-full relative' style={{height: dynamicHeight}}>
           <div className='flex gap-5 justify-center items-center'>
-            {!editMode && <LeftButton onClick={() => pageMoveHandler(true)}/>}
+            {!editMode && <LeftButton onClick={() => pageMoveHandler(true)}  $show={page !== 0} />}
             <Week $thisWeek={page === weeklyTeamData.length - 1 && activeBorder} className='mt-3 mb-1 underline underline-offset-1 relative bottom-1' style={{fontFamily: 'Giants-Inline'}}>{weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 '}{"Weekly Team"}</Week>
-            {!editMode && <RightButton onClick={() => pageMoveHandler(false)} />}
+            {!editMode && <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1} />}
           </div>
           <div className='flex flex-col'>
           <div className='flex flex-col items-end mb-5'>
-              <hr className='w-full border-indigo-600'/>
+              <hr className='w-full border-green-600'/>
               {/*<RelationButton>관계도</RelationButton>*/}
           </div>
           <div className='w-full flex justify-center mb-5'>
@@ -149,7 +153,7 @@ function WeeklyTeam(props) {
                           <div key={index} className='flex gap-5'>
                               <span style={{width: '25px'}} className='text-black'>{index + 1}팀</span>
                               <div className='flex gap-1'>
-                                  {team.map((player, idx) => <input key={idx} value={player} onChange={(event) => teamMakerInputHandler(event, index, idx)} type='text' className='w-12 border-indigo-400 border-2 outline-none text-center'/>)}
+                                  {team.map((player, idx) => <input key={idx} value={player} onChange={(event) => teamMakerInputHandler(event, index, idx)} type='text' className='w-12 border-green-400 border-2 outline-none text-center'/>)}
                               </div>
                           </div>
                       ))
@@ -167,7 +171,7 @@ function WeeklyTeam(props) {
                   :
                   <div className='flex flex-col'>
                       <p className='mb-1 text-gray-400' style={{filter: 'drop-shadow(2px 4px 7px grey)'}}>팀 생성하기</p>
-                      <p className='text-xs'>Open: 참여투표 종료 후 목요일</p>
+                      <p className='text-xs'>Open: 참여투표 종료 후</p>
                   </div>
               }
           </div>
@@ -180,6 +184,7 @@ export default WeeklyTeam
 
 
 const LeftButton = styled.div`
+    visibility: ${props => props.$show ? 'visible' : 'hidden'};
     background: url(${left}) no-repeat center center;
     background-size: 100% 100%;
     width: 25px;
@@ -196,6 +201,7 @@ const Week = styled.span`
 `
 
 const RightButton = styled.div`
+    visibility: ${props => props.$show ? 'visible' : 'hidden'};
     background: url(${right}) no-repeat center center;
     background-size: 100% 100%;
     width: 25px;
