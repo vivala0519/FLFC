@@ -202,9 +202,9 @@ function LetsRecord(props) {
     const handleTouchEnd = () => {
         const diff = startX - moveX;
         console.log(diff)
-        if (diff > 50) {
+        if (diff > 100) {
             setTap(1)
-        } else if (diff < -50) {
+        } else if (diff < -100) {
             setTap(3)
         }
         setStartX(null);

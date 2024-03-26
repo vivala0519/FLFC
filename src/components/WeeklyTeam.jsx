@@ -138,9 +138,9 @@ function WeeklyTeam(props) {
 
     const handleTouchEnd = () => {
         const diff = startX - moveX;
-        if (diff > 50) {
+        if (diff > 100) {
             setTap(3)
-        } else if (diff < -50) {
+        } else if (diff < -100) {
             setTap(1)
         }
         setStartX(null);
@@ -149,7 +149,7 @@ function WeeklyTeam(props) {
 
 
     return (
-      <div className='w-full relative' style={{height: dynamicHeight}}
+      <div className='w-full relative' style={{height: '80vh'}}
            onTouchStart={handleTouchStart}
            onTouchMove={handleTouchMove}
            onTouchEnd={handleTouchEnd}>
