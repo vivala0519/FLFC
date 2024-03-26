@@ -201,7 +201,6 @@ function LetsRecord(props) {
 
     const handleTouchEnd = () => {
         const diff = startX - moveX;
-        console.log(diff)
         if (diff > 75) {
             setTap(1)
         } else if (diff < -75) {
@@ -214,12 +213,12 @@ function LetsRecord(props) {
     return (
         <div
             className={`flex flex-col items-center w-full relative ${!open && 'justify-center'}`}
-            style={{top: open ? '-12px' : '-30px', height: !open && '95vh'}}
+            style={{top: open ? '-12px' : '-21px', height: !open && '80vh'}}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}>
             <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'Giants-Inline'}}>{"Today's Record"}</span>
-            <hr className='w-1/2 mb-5 border-green-600'/>
+            <hr className='w-1/2 mb-5 border-green-700'/>
             <div className='flex flex-col items-center w-full'>
                 <>
                 <div className={open ? 'custom-border' : 'default-border'}>

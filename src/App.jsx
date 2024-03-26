@@ -74,26 +74,26 @@ function App() {
       return (
           <div className='flex flex-col items-center' style={{height: '100vh'}}>
               <header ref={headerRef} className='flex flex-col items-center w-full top-5'>
-                  <span className='text-green-500' style={{ letterSpacing: '3px', fontSize: '35px', fontFamily: 'Giants-Inline', fontStyle: 'normal', fontWeight: '400'}}>FLFC</span>
-                  <span className='mb-3 text-yellow-600' style={{ fontSize: '9px', fontFamily: 'Hahmlet', fontStyle: 'normal', fontWeight: '100'}}>Football Love Futsal Club</span>
+                  <span className='text-green-800' style={{ letterSpacing: '3px', fontSize: '35px', fontFamily: 'Giants-Inline', fontStyle: 'normal', fontWeight: '400'}}>FLFC</span>
+                  <span className='mb-3 text-yellow-500' style={{ fontSize: '9px', fontFamily: 'Hahmlet', fontStyle: 'normal', fontWeight: '300'}}>Football Love Futsal Club</span>
                   <div
-                      className='flex flex-row justify-around w-full border-solid border-0 border-b-2 border-t-2 border-green-600 mb-5 p-2'
+                      className='flex flex-row justify-around w-full border-solid border-0 border-b-2 border-t-2 border-green-800 mb-5 p-2'
                       style={{fontFamily: 'KBO-Dia-Gothic_bold'}}>
                       <div
                           className={`cursor-pointer w-full ${tap === 0 && 'text-yellow-500'}`}
                           onClick={() => setTap(0)}>{tapName[0]}
                       </div>
-                      <div className='border-green-600 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>
+                      <div className='border-green-800 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>
                       <div
                           className={`cursor-pointer w-full ${tap === 1 && 'text-yellow-500'}`}
                           onClick={() => setTap(1)}>{tapName[1]}
                       </div>
-                      <div className='border-green-600 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>
+                      <div className='border-green-800 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>
                       <div
                           className={`cursor-pointer w-full ${tap === 2 && 'text-yellow-500'}`}
                           onClick={() => setTap(2)}>{tapName[2]}
                       </div>
-                      <div className='border-green-600 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>
+                      <div className='border-green-800 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>
                       <div
                           className={`cursor-pointer w-full ${tap === 3 && 'text-yellow-500'}`}
                           onClick={() => setTap(3)}>{tapName[3]}
