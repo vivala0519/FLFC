@@ -167,7 +167,7 @@ function WeeklyTeam(props) {
                   :
                   <div className='flex flex-col'>
                       <p className='mb-1 text-gray-400' style={{filter: 'drop-shadow(2px 4px 7px grey)'}}>팀 생성하기</p>
-                      <p className='text-xs'>Open: 투표 종료 후 목요일</p>
+                      <p className='text-xs'>Open: 참여투표 종료 후 목요일</p>
                   </div>
               }
           </div>
