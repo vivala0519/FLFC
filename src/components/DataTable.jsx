@@ -1,56 +1,108 @@
 import {useEffect, useState} from 'react'
-import styled from "styled-components"
-import left from "@/assets/left.png"
-import right from "@/assets/right.png"
+import styled from 'styled-components'
+import left from '@/assets/left.png'
+import right from '@/assets/right.png'
+import medal from '@/assets/medal.png'
+import goal from '@/assets/goal2.png'
+import assist from '@/assets/assist2.png'
+import attendance from '@/assets/attendance2.png'
 
 function DataTable(props) {
-    const {tap, tableData, analyzedData, page, setPage, month, quarterData} = props
+    const {tap, tableData, analyzedData, page, setPage, month, quarterData, lastSeasonKings} = props
 
     const [sortedNames, setSortedNames] = useState([])
     const [sortedAbsenteeNames, setSortedAbsenteeNames] = useState([])
     const [quarterName, setQuarterName] = useState('')
+    const [winnerList, setWinnerList] = useState([])
+    const [kingList, setKingList] = useState([])
 
     useEffect(() => {
         // console.log('tableData.data', tableData.data)
         // console.log('analyzedData', analyzedData)
         // console.log('quarterData', quarterData)
-    }, [tableData]);
+    }, [tableData])
 
     useEffect(() => {
-        setSortedNames(analyzedData?.active?.members['active'].sort((a, b) => a.localeCompare(b)))
+        if (analyzedData?.active?.members && tap === '현황판') {
+            setSortedNames(analyzedData?.active?.members['active'].sort((a, b) => a.localeCompare(b)))
+        }
         setSortedAbsenteeNames(analyzedData?.active?.members['inactive'].sort((a, b) => a.localeCompare(b)))
-    }, []);
+    }, [analyzedData])
+
+    const extractWinners = (sortedByValue) => {
+        const maxValue = Math.max(...sortedByValue.map(name => quarterData.totalData.get(name)[tap]))
+        let maxValuePeople = sortedByValue.filter(name => quarterData.totalData.get(name)[tap] === maxValue)
+        if (['골', '어시'].includes(tap)) {
+            const totalScore = maxValuePeople.map(name => quarterData.totalData.get(name)['골'] + quarterData.totalData.get(name)['어시'] + quarterData.totalData.get(name)['출석'])
+            const maxValueOfTotalScore = Math.max(...totalScore)
+            const winner = maxValuePeople.filter((name) => totalScore[maxValuePeople.indexOf(name)] === maxValueOfTotalScore)
+            setWinnerList(winner)
+        } else if (tap === '출석') {
+            setWinnerList(maxValuePeople)
+        } else {
+            setWinnerList([])
+        }
+    }
 
     // 탭에 따른 정렬
     useEffect(() => {
-        if (tap === '골') {
-            // eslint-disable-next-line no-unsafe-optional-chaining
-            const sortedByGoal = [...quarterData.members['active']].sort((a, b) => {
-                const aGoals = quarterData.totalData.get(a)['골'];
-                const bGoals = quarterData.totalData.get(b)['골'];
-                return bGoals - aGoals;
-            });
-            setSortedNames(sortedByGoal)
-        } else if (tap === '어시') {
-            // eslint-disable-next-line no-unsafe-optional-chaining
-            const sortedByAssist = [...quarterData.members['active']].sort((a, b) => {
-                const aAssists = quarterData.totalData.get(a)['어시'];
-                const bAssists = quarterData.totalData.get(b)['어시'];
-                return bAssists - aAssists;
-            })
-            setSortedNames(sortedByAssist)
-        } else if (tap === '출석') {
-            // eslint-disable-next-line no-unsafe-optional-chaining
-            const sortedByAttendance = [...quarterData.members['active']].sort((a, b) => {
-                const aAttendance = quarterData.totalData.get(a)['출석'];
-                const bAttendance = quarterData.totalData.get(b)['출석'];
-                return bAttendance - aAttendance;
-            })
-            setSortedNames(sortedByAttendance)
-        } else {
-            setSortedNames(analyzedData?.active?.members['active'].sort((a, b) => a.localeCompare(b)))
+        if (quarterData?.members) {
+            if (tap === '골') {
+                // eslint-disable-next-line no-unsafe-optional-chaining
+                const sortedByGoal = [...quarterData.members['active']].sort((a, b) => {
+                    const aGoals = quarterData.totalData.get(a)['골'];
+                    const bGoals = quarterData.totalData.get(b)['골'];
+                    return bGoals - aGoals;
+                })
+                setSortedNames(sortedByGoal)
+                extractWinners(sortedByGoal)
+            } else if (tap === '어시') {
+                // eslint-disable-next-line no-unsafe-optional-chaining
+                const sortedByAssist = [...quarterData.members['active']].sort((a, b) => {
+                    const aAssists = quarterData.totalData.get(a)['어시'];
+                    const bAssists = quarterData.totalData.get(b)['어시'];
+                    return bAssists - aAssists;
+                })
+                setSortedNames(sortedByAssist)
+                extractWinners(sortedByAssist)
+            } else if (tap === '출석') {
+                // eslint-disable-next-line no-unsafe-optional-chaining
+                const sortedByAttendance = [...quarterData.members['active']].sort((a, b) => {
+                    const aAttendance = quarterData.totalData.get(a)['출석'];
+                    const bAttendance = quarterData.totalData.get(b)['출석'];
+                    return bAttendance - aAttendance;
+                })
+                setSortedNames(sortedByAttendance)
+                extractWinners(sortedByAttendance)
+            } else {
+                setSortedNames(analyzedData?.active?.members['active'].sort((a, b) => a.localeCompare(b)))
+            }
         }
-    }, [tap])
+    }, [tap, quarterData])
+
+    const findTrophy = (name) => {
+        if (lastSeasonKings?.goal_king === name) {
+            console.log(name)
+            return 'goal'
+        }
+        if (lastSeasonKings?.assist_king === name) {
+            return 'assist'
+        }
+        if (lastSeasonKings?.attendance_king.includes(name)) {
+            return 'attendance'
+        }
+    }
+
+    useEffect(() => {
+        let kings = []
+        if (lastSeasonKings) {
+            kings = [...lastSeasonKings.attendance_king]
+            kings.push(lastSeasonKings.goal_king)
+            kings.push(lastSeasonKings.assist_king)
+        }
+
+        setKingList(kings)
+    }, [lastSeasonKings])
     
     // 페이지에 따른 분기 이름 설정
     useEffect(() => {
@@ -108,7 +160,7 @@ function DataTable(props) {
                         <TableHeaderOther>
                             <div style={{width: '75px'}}>이름</div>
                             {
-                                tableData.data?.map((data) => <span key={data.id}>{Number(data.id.slice(2, 4)) + '일'}</span>)
+                                tableData?.data?.map((data) => <span key={data.id}>{Number(data.id.slice(2, 4)) + '일'}</span>)
                             }
                             {<span>{`${quarterName}분기\n총합`}</span>}
                         </TableHeaderOther>
@@ -119,7 +171,13 @@ function DataTable(props) {
                         {
                             sortedNames?.map((name, index) =>
                                 (<><TableRowStat key={index}>
-                                    {tap === '현황판' ? <FirstColumn><div style={{width: '75px', borderRight: '1px solid #ccc'}}>{name}</div></FirstColumn> : <div style={{minWidth: '20%', flex: '1', borderRight: '1px solid #ccc'}}>{name}</div>}
+                                    {tap === '현황판' ?
+                                        <FirstColumn>{kingList.includes(name) && <Trophy $king={findTrophy(name)}/>}<StatusBoardName style={{width: '75px', borderRight: '1px solid #ccc'}}>{name}</StatusBoardName></FirstColumn>
+                                        :
+                                        <div className='flex items-center justify-center' style={{minWidth: '20%', flex: '1', borderRight: '1px solid #ccc'}}>
+                                            {winnerList.includes(name) && <Medal />}
+                                            <span>{name}</span>
+                                        </div>}
                                     {/*골	골순위	일평균 득점	어시	어시순위	일평균 어시	공격포인트	순위	출석	출석순위	포인트 총합(출석,어시,골)	포인트 총합순위*/}
                                     {tap === '현황판' &&
                                         <>
@@ -137,10 +195,10 @@ function DataTable(props) {
                                             <CustomMinWidthSpan $propsWidth='26%' $propsMax='10%'>{analyzedData.active.totalData.get(name)['포인트총합순위']}</CustomMinWidthSpan>
                                         </>
                                     }
-                                    {tap === '출석' && tableData.data.map((data, index) => (<span key={name + index}>{data.data[name] ? 'O' : '-'}</span>))}
-                                    {tap === '골' && tableData.data.map((data, index) => (<span key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
-                                    {tap === '어시' && tableData.data.map((data, index) => (<span key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
-                                    {tap !== '현황판' && <span>{quarterData.totalData.get(name)[tap]}</span>}
+                                    {tap === '출석' && tableData?.data?.map((data, index) => (<span key={name + index}>{data.data[name] ? 'O' : '-'}</span>))}
+                                    {tap === '골' && tableData?.data?.map((data, index) => (<span key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
+                                    {tap === '어시' && tableData?.data?.map((data, index) => (<span key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
+                                    {tap !== '현황판' && tableData?.data && <span>{quarterData.totalData.get(name)[tap]}</span>}
                                 </TableRowStat>
                             <StyledHR $tap={tap} /></>))
                         }
@@ -149,11 +207,11 @@ function DataTable(props) {
                             (<><TableRowOther key={index}>
                                 {tap === '현황판' ? <FirstColumn><div style={{width: '75px'}}>{name}</div></FirstColumn> : <div style={{minWidth: '20%', flex: '1'}}>{name}</div>}
                                 {
-                                    tap === '출석' ? tableData.data.map((data, index) => (
+                                    tap === '출석' ? tableData?.data?.map((data, index) => (
                                             <span key={name + index}>{data.data[name] ? 'O' : ''}</span>))
-                                        : tap === '골' ? tableData.data.map((data, index) => (<span
+                                        : tap === '골' ? tableData?.data?.map((data, index) => (<span
                                                 key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '' : data.data[name][tap] : ''}</span>))
-                                            : tableData.data.map((data, index) => (<span
+                                            : tableData?.data?.map((data, index) => (<span
                                                 key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '' : data.data[name][tap] : ''}</span>))
                                 }
                                 <span className='flex items-center pre text-xs'></span>
@@ -244,7 +302,7 @@ const TableHeaderStat = styled.div`
         align-items: center;
         @media (max-width: 812px) {
             font-size: 12px;
-            min-width: 14%;
+            min-width: 15%;
         }
     }
 `
@@ -286,7 +344,7 @@ const TableRowStat = styled.div`
         border-right: 1px solid #ccc;
         //border-top: 1px solid #ccc;
         @media (max-width: 812px) {
-            min-width: 14%;
+            min-width: 15%;
         }
     }
 `
@@ -326,11 +384,52 @@ const CustomMinWidthDiv = styled.div`
     @media (max-width: 812px) {
         font-size: 12px;
         min-width: ${props => props.$propsWidth} !important;
-    }   
+    }
 `
 
 const StyledHR = styled.hr`
     @media (max-width: 812px) {
         width: ${props => props.$tap === '현황판' && '215%'} !important;
+    }
+`
+
+const Medal = styled.div`
+    position: absolute;
+    width: 25px;
+    height: 25px;
+    &::after {
+        position: absolute;
+        content: '';
+        background-image: url(${medal});
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        width: 100%;
+        height: 100%;
+        left: -150%;
+        top: 8%;
+    }
+`
+
+const StatusBoardName = styled.div`
+    width: 75px;
+    border-right: '1px solid #ccc';
+`
+
+const Trophy = styled.div`
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    &::after {
+        position: absolute;
+        content: '';
+        background-image: ${props => props.$king === 'goal' ? `url(${goal})` : props.$king === 'assist' ? `url(${assist})` : `url(${attendance})`};
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: -40%;
     }
 `

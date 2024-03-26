@@ -1,7 +1,8 @@
 import {useEffect, useState, useRef} from 'react'
 import LetsRecord from './components/LetsRecord.jsx'
-import RecordRoom from './components/RecordRoom.jsx'
+import StatusBoard from './components/StatusBoard.jsx'
 import WeeklyTeam from './components/WeeklyTeam.jsx'
+import RecordRoom from './components/RecordRoom.jsx'
 import { dataAnalysis } from "./apis/analyzeData.js";
 import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
 import { db } from '../firebase.js'
@@ -10,25 +11,41 @@ import './App.css'
 
 function App() {
     const [tap, setTap] = useState(0)
-    const tapName = ['기록하기', '기록실', '이번 주 팀']
+    const tapName = ['기록하기', '현황판', '이번 주 팀' ,'기록실']
     const [data, setData] = useState([])
     const [analyzedData, setAnalyzedData] = useState({})
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
+    const [historyData, setHistoryData] = useState([])
+    const [lastSeasonKings, setLastSeasonKings] = useState(null)
     const [registeredTeam, setRegisteredTeam] = useState(null)
-    const headerRef = useRef(null);
-    const [headerHeight, setHeaderHeight] = useState(0);
+    const headerRef = useRef(null)
+    const [headerHeight, setHeaderHeight] = useState(0)
     const [open, setOpen] = useState(false)
 
     const dataGeneration = async () => {
-        const collectionRef = collection(db, '2024');
-        const weeklyTeamRef = collection(db, 'weeklyTeam');
-        const snapshot = await getDocs(collectionRef);
-        const weeklyTeamSnapshot = await getDocs(weeklyTeamRef);
-        const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+        const collectionRef = collection(db, '2024')
+        const weeklyTeamRef = collection(db, 'weeklyTeam')
+        const historyRef = collection(db, 'history')
+        const snapshot = await getDocs(collectionRef)
+        const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
+        const historySnapshot = await getDocs(historyRef)
+        const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
         const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+        const fetchedHistoryData = historySnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
         setData(fetchedData)
         setWeeklyTeamData(fetchedWeeklyTeamData)
+        setHistoryData(fetchedHistoryData)
     }
+
+    // 지난 시즌 수상자 세팅
+    useEffect(() => {
+        if (historyData) {
+            const item = historyData.find(data => data.id === 'last_season')
+            if (item) {
+                setLastSeasonKings(item.data)
+            }
+        }
+    }, [historyData]);
 
     useEffect(() => {
         if (headerRef.current) {
@@ -40,7 +57,7 @@ function App() {
             setAnalyzedData(data)
         }
         fetchAnalysis()
-    }, []);
+    }, [])
 
     // 위클리 팀 등록
     useEffect(() => {
@@ -55,8 +72,8 @@ function App() {
     }, [registeredTeam])
 
       return (
-          <div className='flex flex-col items-center'>
-              <header ref={headerRef} className='flex flex-col items-center w-full absolute top-5'>
+          <div className='flex flex-col items-center' style={{height: '95vh'}}>
+              <header ref={headerRef} className='flex flex-col items-center w-full top-5'>
                   <span style={{ letterSpacing: '3px', fontSize: '35px', fontFamily: 'Giants-Inline', fontStyle: 'normal', fontWeight: '400'}}>FLFC</span>
                   <span className='mb-3' style={{ fontSize: '9px', fontFamily: 'Hahmlet', fontStyle: 'normal', fontWeight: '100'}}>Football Love Futsal Club</span>
                   <div
@@ -76,13 +93,18 @@ function App() {
                           className={`cursor-pointer w-full ${tap === 2 && 'text-pink-700'}`}
                           onClick={() => setTap(2)}>{tapName[2]}
                       </div>
+                      <div className='border-indigo-400 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>
+                      <div
+                          className={`cursor-pointer w-full ${tap === 3 && 'text-pink-700'}`}
+                          onClick={() => setTap(3)}>{tapName[3]}
+                      </div>
                   </div>
               </header>
-              {[1].includes(tap) && <div className='w-full h-32'></div>}
-              {tap === 0 ? <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data}
-                                       weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]}/> : tap === 1 ?
-                  <RecordRoom propsData={data} analyzedData={analyzedData}/> :
-                  <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam}/>}
+              {/*{[1].includes(tap) && <div className='w-full h-32'></div>}*/}
+              {tap === 0 && <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]}/>}
+              {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} lastSeasonKings={lastSeasonKings}/>}
+              {tap === 2 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam}/>}
+              {tap === 3 && <RecordRoom propsData={data} analyzedData={analyzedData}/>}
               {[0, 2].includes(tap) && !open &&
                   <footer className='absolute bottom-3'>
                       <CopyRight>

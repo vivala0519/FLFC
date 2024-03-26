@@ -1,16 +1,30 @@
 import {useEffect, useState} from 'react'
 import DataTable from './DataTable'
+import styled from 'styled-components'
 import './LetsRecord.css'
+import help from '@/assets/help2.png'
 
 function RecordRoom(props) {
     const {propsData, analyzedData} = props
-    const tapName = ['현황판', '출석', '골', '어시']
-    const [tap, setTap] = useState('현황판')
+    const tapName = ['출석', '골', '어시', '히스토리']
+    const [tap, setTap] = useState('출석')
     const [month, setMonth] = useState([])
     const [weeksPerMonth, setWeeksPerMonth] = useState([])
     const [page, setPage] = useState(0)
     const [tableData, setTableData] = useState({})
     const [quarterData, setQuarterData] = useState([])
+    const [showHelp, setShowHelp] = useState(false)
+    const infoText = '각 분기마다 스탯은 초기화 됩니다.\n\n' +
+        '다음 분기까지 현황판의 회원명 앞에\n득점왕/어시왕/출석왕 트로피 부착\n\n' +
+        '출석\n' +
+        '- 공동 1위의 경우 해당 인원 모두 인정.\n\n' +
+        '득점 & 어시\n' +
+        '- 공동 1위의 경우 다음 순서대로 1등을 가린다.\n' +
+        '1. 출석 + 골 + 어시 총합 순\n' +
+        '2. 1:1 PK(선공 가위바위보)\n\n' +
+        '- 수상인원은 다음 분기 동일 부분 수상에서 제외.\n\n' +
+        "- 각 분야의 1등이 같을 경우: 득점/어시 타이틀 수상이 우선\n- 득점, 어시가 겹칠경우: 두 분야중 더 높은 포인트를 기록한 분야로 수상.\n" +
+        "- 해당 분야를 제외한 분야는 '출석+골+어시 총합'이 다음으로 높은 인원이 대체 수상"
 
     useEffect(() => {
         // 초기 페이지 현재 월로 설정
@@ -58,27 +72,71 @@ function RecordRoom(props) {
     }, [page, month, weeksPerMonth]);
 
     return (
-      <div className='w-full'>
-          <div className='flex flex-row justify-around w-full mb-5 p-2' style={{fontFamily: 'Giants-Inline'}}>
-              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}
-                   onClick={() => setTap(tapName[0])}>현황판
+      <div className='w-full relative' style={{top: '-10px'}}>
+          <div className='flex flex-row w-full mb-3 p-2' style={{fontFamily: 'Giants-Inline'}}>
+              {/*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*/}
+              {/*     onClick={() => setTap(tapName[0])}>현황판*/}
+              {/*</div>*/}
+              <div className='flex flex-row w-full justify-center' style={{gap : '10%'}}>
+                  <Tap className={`underline decoration-2 decoration-solid decoration-indigo-300 cursor-pointer text-sm ${tap === '출석' && 'text-rose-600'}`}
+                       onClick={() => setTap(tapName[0])}>출석
+                  </Tap>
+                  <Tap className={`underline decoration-2 decoration-solid decoration-indigo-300 cursor-pointer text-sm ${tap === '골' && 'text-rose-600'}`}
+                       onClick={() => setTap(tapName[1])}>골
+                  </Tap>
+                  <Tap className={`underline decoration-2 decoration-solid decoration-indigo-300 cursor-pointer text-sm ${tap === '어시' && 'text-rose-600'}`}
+                       onClick={() => setTap(tapName[2])}>어시
+                  </Tap>
+                  {/*<Tap className={`underline decoration-2 decoration-solid decoration-indigo-300 cursor-pointer text-sm ${tap === '히스토리' && 'text-rose-600'}`}*/}
+                  {/*     onClick={() => setTap(tapName[3])}>히스토리*/}
+                  {/*</Tap>*/}
               </div>
-              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '출석' && 'text-rose-600'}`} style={{width: '40px'}}
-                   onClick={() => setTap(tapName[1])}>출석
-              </div>
-              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '골' && 'text-rose-600'}`} style={{width: '40px'}}
-                   onClick={() => setTap(tapName[2])}>골
-              </div>
-              <div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-indigo-600 ${tap === '어시' && 'text-rose-600'}`} style={{width: '40px'}}
-                   onClick={() => setTap(tapName[3])}>어시
-              </div>
+              <Help onClick={() => setShowHelp(true)}/>
           </div>
           <div>
-              <DataTable tap={tap} tableData={tableData} analyzedData={analyzedData} page={page} setPage={setPage}
-                         month={month} quarterData={quarterData}/>
+              {
+                  ['현황판', '출석', '골', '어시'].includes(tap)
+                      ? (<DataTable tap={tap} tableData={tableData} analyzedData={analyzedData} page={page} setPage={setPage}
+                             month={month} quarterData={quarterData}/>)
+                      : <div></div>
+              }
+
           </div>
+          {showHelp &&
+              <div className='absolute top-0 bg-amber-50 overflow-hidden whitespace-break-spaces p-4 text-xs w-fit h-fit right-0' style={{filter: 'drop-shadow(2px 4px 13px black)'}}>
+                  {infoText}
+                  <div className='absolute top-1 -right-2 bg-transparent text-center cursor-pointer' style={{width: '40px', height: '30px'}} onClick={()=> setShowHelp(false)}>
+                      <span className='relative cursor-pointer'>X</span>
+                  </div>
+              </div>
+          }
       </div>
     )
 }
 
 export default RecordRoom
+
+const Help = styled.div`
+    position: absolute;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    &::after {
+        position: absolute;
+        content: '';
+        background-image: url(${help});
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        width: 100%;
+        height: 100%;
+        right: 0;
+    }
+`
+
+const Tap = styled.div`
+    @media (min-width: 812px) {
+        font-size: 21px;
+    }
+`

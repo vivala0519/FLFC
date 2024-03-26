@@ -14,6 +14,7 @@ function WeeklyTeam(props) {
     const [page, setPage] = useState(0)
     const [editMode, setEditMode] = useState(false)
     const [canCreate, setCanCreate] = useState(true)
+    const [activeBorder, setActiveBorder] = useState(false)
     const [inputTeamData, setInputTeamData] = useState([['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', '']])
 
     const today = new Date()
@@ -36,6 +37,10 @@ function WeeklyTeam(props) {
         const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
 
         if (lastTeamDate > today) {
+            setActiveBorder(true)
+        }
+
+        if (currentDayOfWeek < 4) {
             setCanCreate(false)
         }
 
@@ -114,10 +119,10 @@ function WeeklyTeam(props) {
     }
 
   return (
-      <div className='w-full' style={{height: dynamicHeight}}>
+      <div className='w-full relative' style={{height: dynamicHeight}}>
           <div className='flex gap-5 justify-center items-center'>
             {!editMode && <LeftButton onClick={() => pageMoveHandler(true)}/>}
-            <Week $thisWeek={page === weeklyTeamData.length - 1} className='mt-3 mb-1 underline underline-offset-1 relative bottom-1' style={{fontFamily: 'Giants-Inline'}}>{weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 '}{"Weekly Team"}</Week>
+            <Week $thisWeek={page === weeklyTeamData.length - 1 && activeBorder} className='mt-3 mb-1 underline underline-offset-1 relative bottom-1' style={{fontFamily: 'Giants-Inline'}}>{weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 '}{"Weekly Team"}</Week>
             {!editMode && <RightButton onClick={() => pageMoveHandler(false)} />}
           </div>
           <div className='flex flex-col'>
@@ -126,7 +131,7 @@ function WeeklyTeam(props) {
               {/*<RelationButton>관계도</RelationButton>*/}
           </div>
           <div className='w-full flex justify-center mb-5'>
-              <div className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && 'custom-border'}`}>
+              <div className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'custom-border'}`}>
                   <div className='flex flex-col gap-5 items-start bg-white p-3 rounded-md'>
                       {!editMode ?
                           [1, 2, 3].map((team, index) => (
@@ -153,14 +158,20 @@ function WeeklyTeam(props) {
               </div>
           </div>
           <div className='w-full flex justify-center'>
-              {canCreate &&
+              {canCreate ?
                   (!editMode ?
                       <button className='flex block-border' onClick={createWeeklyTeamHandler}><span>이번 주 팀 생성하기</span><Write/></button>
                   :
-                      <button className='flex block-border' onClick={registerTeamHandler}><span>등록하기</span><Register /></button>)
+                      <button className='flex block-border' onClick={registerTeamHandler}><span>등록하기</span><Register /></button>
+                  )
+                  :
+                  <div className='flex flex-col'>
+                      <p className='mb-1 text-gray-400' style={{filter: 'drop-shadow(2px 4px 7px grey)'}}>팀 생성하기</p>
+                      <p className='text-xs'>Open: 투표 종료 후 목요일</p>
+                  </div>
               }
           </div>
-        </div>
+          </div>
       </div>
   )
 }

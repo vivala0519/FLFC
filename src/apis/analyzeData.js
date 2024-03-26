@@ -77,7 +77,7 @@ export const dataAnalysis = async () => {
         value['공격포인트순위'] = 0
         value['포인트총합순위'] = 0
     })
-    const totalStatsArray = Array.from(activeQuarterStats.entries());
+    const totalStatsArray = Array.from(activeQuarterStats.entries())
     // 골 순위
     const goalRank = totalStatsArray.sort((a, b) => b[1]['골'] - a[1]['골'])
     let prevGoal = null, prevGoalRank = 1;
@@ -146,7 +146,7 @@ export const dataAnalysis = async () => {
 }
 
 const extractActiveMembers = (totalStats) => {
-    const names = ['홍원진', '우장식', '임희재', '윤희철', '김동휘', '이승호', '임건휘', '방승진', '김민관', '김규진', '임준휘', '전희종', '한상태', '임종우', '노태훈', '윤영진', '이원효', '황정민', '양대열', '정우진', '김남구', '박근한', '손지원', '황철민', '최봉호', '선민조', '최수혁', '김병일', '김대건', '전의준', '황은집', '진장용', '이진헌', '윤준석', '김동주', '선우용', '이재진', '김성록', '박남호', '안용현', '이종호', '장성민', '하민수']
+    const names = ['홍원진', '우장식', '임희재', '윤희철', '김동휘', '이승호', '임건휘', '방승진', '김민관', '김규진', '임준휘', '전희종', '한상태', '임종우', '노태훈', '윤영진', '이원효', '황정민', '양대열', '정우진', '김남구', '박근한', '손지원', '황철민', '최봉호', '선민조', '최수혁', '김병일', '김대건', '전의준', '황은집', '진장용', '이진헌', '윤준석', '김동주', '선우용', '이재진', '김성록', '박남호', '안용현', '장성민', '하민수']
     const includedNames = names.filter(name => totalStats.has(name))
     const excludedNames = names.filter(name => !totalStats.has(name))
 

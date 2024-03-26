@@ -17,7 +17,7 @@ function LetsRecord(props) {
   const [dynamicHeight, setDynamicHeight] = useState(0);
   const [today, setToday] = useState('')
   const [thisYear, setThisYear] = useState('2024')
-  const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '안용현', '윤준석', '이재진', '이종호', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은짐']
+  const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '안용현', '윤준석', '이재진', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은짐']
   const [writtenData, setWrittenData] = useState([])
   const [registerHeight, setRegisterHeight] = useState(0);
 
@@ -84,13 +84,13 @@ function LetsRecord(props) {
       if (isData) {
           const recordArray = Object.values(isData)
           const sortedRecordArray = recordArray.sort((a, b) => {
-              const timeA = a.time.split(":").map(Number);
-              const timeB = b.time.split(":").map(Number);
+              const timeA = a.time.split(":").map(Number)
+              const timeB = b.time.split(":").map(Number)
 
               if (timeA[0] !== timeB[0]) {
-                  return timeA[0] - timeB[0];
+                  return timeA[0] - timeB[0]
               } else {
-                  return timeA[1] - timeB[1];
+                  return timeA[1] - timeB[1]
               }
           });
           setTodayRecord(sortedRecordArray)
@@ -160,7 +160,7 @@ function LetsRecord(props) {
         if (!compareObjects(stats, writtenData)) {
             registerRecord()
         }
-    }, [todayRecord]);
+    }, [todayRecord])
 
   const scorerHandler = (e) => {
     setScorer(e.target.value)
@@ -187,7 +187,7 @@ function LetsRecord(props) {
   }
 
     return (
-        <div className='flex flex-col items-center mt-3 w-full'>
+        <div className={`flex flex-col items-center w-full relative ${!open && 'justify-center'}`} style={{top: open ? '-12px' : '-30px', height: !open && '95vh'}}>
             <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'Giants-Inline'}}>{"Today's Record"}</span>
             <hr className='w-1/2 mb-5 border-indigo-600'/>
             <div className='flex flex-col items-center w-full'>
@@ -227,7 +227,7 @@ function LetsRecord(props) {
                 </div>
                 </div>
                 {/*Write Container*/}
-                <div className={open ? 'absolute bottom-10' : ''}>
+                <div>
                   <hr className={open ? 'border-1 border-indigo-600 w-full mb-4' : 'hidden'}/>
                   {open ?
                       <div ref={registerRef} className='flex items-center gap-5 mb-1'>
@@ -253,7 +253,7 @@ function LetsRecord(props) {
                     :
                     <div className='relative bottom-4'>
                       <p className='mb-1'>기록 가능 시간이 아닙니다.</p>
-                      <p className='text-xs'>Open: 07:45 ~ 10:15 Sun.</p>
+                      <p className='text-xs text-gray-500'>Open: 07:45 ~ 10:15 Sun.</p>
                     </div>
                 }
                 </div>
