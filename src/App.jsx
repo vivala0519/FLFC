@@ -75,7 +75,7 @@ function App() {
           <div className='flex flex-col items-center' style={{height: '100vh'}}>
               <header ref={headerRef} className='flex flex-col items-center w-full top-5'>
                   <span className='text-green-800' style={{ letterSpacing: '3px', fontSize: '35px', fontFamily: 'Giants-Inline', fontStyle: 'normal', fontWeight: '400'}}>FLFC</span>
-                  <span className='mb-3 text-yellow-500' style={{ fontSize: '9px', fontFamily: 'Hahmlet', fontStyle: 'normal', fontWeight: '300'}}>Football Love Futsal Club</span>
+                  <span className='mb-3 text-yellow-500' style={{ fontSize: '9px', fontFamily: 'Hahmlet', fontStyle: 'normal', fontWeight: '200'}}>Football Love Futsal Club</span>
                   <div
                       className='flex flex-row justify-around w-full border-solid border-0 border-b-2 border-t-2 border-green-800 mb-5 p-2'
                       style={{fontFamily: 'KBO-Dia-Gothic_bold'}}>

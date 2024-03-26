@@ -213,7 +213,7 @@ function LetsRecord(props) {
     return (
         <div
             className={`flex flex-col items-center w-full relative ${!open && 'justify-center'}`}
-            style={{top: open ? '-12px' : '-21px', height: !open && '80vh'}}
+            style={{top: open ? '-12px' : '-21px', height: !open && '75vh'}}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}>
