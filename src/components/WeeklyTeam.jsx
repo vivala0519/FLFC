@@ -10,7 +10,7 @@ import {collection, getDocs} from "firebase/firestore";
 import {db} from "../../firebase.js";
 
 function WeeklyTeam(props) {
-    const {setRegisteredTeam, setTap, setWeeklyTeamLive} = props
+    const {setRegisteredTeam, setTap, setWeeklyTeamLive, setShowFooter} = props
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
     const [lastDate, setLastDate] = useState('')
     const [dynamicHeight, setDynamicHeight] = useState(0)
@@ -73,6 +73,8 @@ function WeeklyTeam(props) {
     useEffect(() => {
         if (!editMode) {
             fetchWeeklyTeamData()
+        } else {
+            setShowFooter(false)
         }
     }, [editMode]);
 
@@ -201,19 +203,19 @@ function WeeklyTeam(props) {
                       : // 팀 생성 모드
                           <div className='flex flex-col gap-4'>
                               <div className='flex flex-col mb-6'>
-                                  <span className='mb-4'>금주 참여 투표 인원 (투표 시간 순)</span>
+                                  <span className='mb-4 text-black'>금주 참여 투표 인원 (투표 시간 순)</span>
                                   <div className='mr-2 mb-4'>
                                       <span className='text-sm text-yellow-600'>월회비 : </span>
                                       <div className='flex flex-wrap justify-center gap-1'>
                                           {votedPlayerMonthPlan.map((player, index) => (
-                                                <span key={index}>{player + ' '}</span>))}
+                                                <span className=' text-black' key={index}>{player + ' '}</span>))}
                                       </div>
                                   </div>
                                   <div className='mr-2'>
                                       <span className='text-sm text-yellow-600'>주회비 : </span>
                                       <div className='flex flex-wrap justify-center gap-1'>
                                           {votedPlayerWeekPlan.map((player, index) => (
-                                              <span key={index}>{player}</span>))}
+                                              <span className=' text-black' key={index}>{player}</span>))}
                                       </div>
                                   </div>
                               </div>

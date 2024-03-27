@@ -24,6 +24,7 @@ function App() {
     const [headerHeight, setHeaderHeight] = useState(0)
     const [open, setOpen] = useState(false)
     const [weeklyTeamLive, setWeeklyTeamLive] = useState(false)
+    const [showFooter, setSHowFooter] = useState(true)
 
     const dataGeneration = async () => {
         const collectionRef = collection(db, '2024')
@@ -124,8 +125,8 @@ function App() {
               {tap === 0 && <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]} setTap={setTap} />}
               {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} lastSeasonKings={lastSeasonKings} setTap={setTap} />}
               {tap === 2 && <RecordRoom propsData={data} analyzedData={analyzedData} propsSetTap={setTap} />}
-              {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} setWeeklyTeamLive={setWeeklyTeamLive}/>}
-              {[0, 3].includes(tap) && !open &&
+              {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} setWeeklyTeamLive={setWeeklyTeamLive} setShowFooter={setSHowFooter}/>}
+              {[0, 3].includes(tap) && !open && showFooter &&
                   <footer className='absolute bottom-3'>
                       <CopyRight>
                           Developed by. Seungho Lee
