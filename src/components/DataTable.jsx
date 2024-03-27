@@ -152,8 +152,8 @@ function DataTable(props) {
                             <div>순위</div>
                             <div>출석</div>
                             <div>출석순위</div>
-                            <CustomMinWidthDiv $propsWidth='15%' $propsMax='9.5%'>{`포인트 총합\n(출석, 어시, 골)`}</CustomMinWidthDiv>
-                            <CustomMinWidthDiv $propsWidth='15%' $propsMax='9.5%'>포인트 총합 순위</CustomMinWidthDiv>
+                            <CustomMinWidthDiv $propsWidth='15%' $propsMax='9.5%' $propsSize='8px'>{`포인트 총합\n(출석, 어시, 골)`}</CustomMinWidthDiv>
+                            <CustomMinWidthDiv $propsWidth='15%' $propsMax='9.5%' $propsSize='9px'>{'포인트 총합\n순위'}</CustomMinWidthDiv>
                         </TableHeaderStat>
                         :
                         <TableHeaderOther>
@@ -370,7 +370,8 @@ const CustomMinWidthDiv = styled.div`
     max-width: ${props => props.$propsMax} !important;;
     white-space: pre-line;
     @media (max-width: 812px) {
-        font-size: 7px !important;
+        //font-size: 7px !important;
+        font-size: ${props => props.$propsSize} !important;
     }
 `
 
