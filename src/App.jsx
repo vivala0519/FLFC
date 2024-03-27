@@ -6,6 +6,7 @@ import RecordRoom from './components/RecordRoom.jsx'
 import { dataAnalysis } from "./apis/analyzeData.js";
 import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
 import { db } from '../firebase.js'
+import { Analytics } from "@vercel/analytics/react"
 import styled from 'styled-components'
 import './App.css'
 import sun from '@/assets/sun2.png'
@@ -88,6 +89,7 @@ function App() {
 
       return (
           <div className='flex flex-col items-center' style={{height: '100vh'}}>
+              <Analytics />
               <header ref={headerRef} className='flex flex-col items-center w-full top-5'>
                   <span className='text-green-800' style={{ letterSpacing: '3px', fontSize: '35px', fontFamily: 'Giants-Inline', fontStyle: 'normal', fontWeight: '400'}}>FLFC</span>
                   <span className='mb-3 text-yellow-500' style={{ fontSize: '8px', fontFamily: 'SUITE-Regular', fontStyle: 'normal', fontWeight: '200'}}>Football Love Futsal Club</span>
