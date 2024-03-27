@@ -2,10 +2,13 @@ import {useEffect, useState} from 'react'
 import styled from 'styled-components'
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
+import up from '@/assets/up.png'
+import down from '@/assets/down.png'
 import medal from '@/assets/medal.png'
 import goal from '@/assets/goal2.png'
 import assist from '@/assets/assist2.png'
 import attendance from '@/assets/attendance2.png'
+import './DataTable.css'
 
 function DataTable(props) {
     const {tap, tableData, analyzedData, page, setPage, month, quarterData, lastSeasonKings} = props
@@ -15,6 +18,8 @@ function DataTable(props) {
     const [quarterName, setQuarterName] = useState('')
     const [winnerList, setWinnerList] = useState([])
     const [kingList, setKingList] = useState([])
+    const [arrowState, setArrowState] = useState('이름')
+    const [arrowDirection, setArrowDirection] = useState(true)
 
     useEffect(() => {
         // console.log('tableData.data', tableData.data)
@@ -126,6 +131,27 @@ function DataTable(props) {
         }
     }
 
+    // th에 따른 정렬
+    const sortBy = (by) => {
+        if (by === '이름') {
+            if (!arrowDirection) {
+                setSortedNames(analyzedData?.active?.members['active'].sort((a, b) => a.localeCompare(b)))
+            } else {
+                setSortedNames(analyzedData?.active?.members['active'].sort((a, b) => a.localeCompare(b)).reverse())
+            }
+            setArrowDirection(!arrowDirection)
+        } else {
+            setSortedNames([...sortedNames].sort((a, b) => {
+
+                const aEl = analyzedData.active.totalData.get(a)[by];
+                const bEl = analyzedData.active.totalData.get(b)[by];
+                return bEl - aEl;
+            }))
+            setArrowDirection(false)
+        }
+        setArrowState(by)
+    }
+
     return (
         <div>
             {tap !== '현황판' &&
@@ -141,19 +167,58 @@ function DataTable(props) {
                 <Table>
                     {tap === '현황판' ?
                         <TableHeaderStat>
-                            <div style={{minWidth: '75px', maxWidth: '75px'}}>이름</div>
-                            <div>골</div>
-                            <div>골순위</div>
-                            <div>{`일평균\n득점`}</div>
-                            <div>어시</div>
-                            <div>어시순위</div>
-                            <div>{`일평균\n어시`}</div>
-                            <div>{'공격\n포인트'}</div>
-                            <div>순위</div>
-                            <div>출석</div>
-                            <div>출석순위</div>
-                            <CustomMinWidthDiv $propsWidth='15%' $propsMax='9.5%' $propsSize='8px'>{`포인트 총합\n(출석, 어시, 골)`}</CustomMinWidthDiv>
-                            <CustomMinWidthDiv $propsWidth='15%' $propsMax='9.5%' $propsSize='9px'>{'포인트 총합\n순위'}</CustomMinWidthDiv>
+                            <StatTd style={{minWidth: '72px', maxWidth: '75px'}} onClick={() => sortBy('이름')}>
+                                <span>이름</span>
+                                {arrowState === '이름' && (arrowDirection ? <DownArrow className='arrow' /> : <UpArrow className='arrow' /> )}
+                            </StatTd>
+                            <StatTd onClick={() => sortBy('골')}>
+                                <span>골</span>
+                                {arrowState === '골' && <DownArrow className='arrow' />}
+                            </StatTd>
+                            <StatTd onClick={() => sortBy('골')}>
+                                <span>골순위</span>
+                                {arrowState === '골' && <DownArrow className='arrow' />}
+                            </StatTd>
+                            <StatTd onClick={() => sortBy('일평균득점')}>
+                                <span>{`일평균\n득점`}</span>
+                                {arrowState === '일평균득점' && <DownArrow className='arrow' />}
+                            </StatTd>
+                            <StatTd onClick={() => sortBy('어시')}>
+                                <span>어시</span>
+                                {arrowState === '어시' && <DownArrow className='arrow' />}
+                            </StatTd>
+                            <StatTd onClick={() => sortBy('어시')}>
+                                <span>어시순위</span>
+                                {arrowState === '어시' && <DownArrow className='arrow' />}
+                            </StatTd>
+                            <StatTd onClick={() => sortBy('일평균어시')}>
+                                <span>{`일평균\n어시`}</span>
+                                {arrowState === '일평균어시' && <DownArrow className='arrow' />}
+                            </StatTd>
+                            <StatTd onClick={() => sortBy('공격포인트')}>
+                                <span>{'공격\n포인트'}</span>
+                                {arrowState === '공격포인트' && <DownArrow className='arrow' />}
+                            </StatTd>
+                            <StatTd onClick={() => sortBy('공격포인트')}>
+                                <span>공포순위</span>
+                                {arrowState === '공격포인트' && <DownArrow className='arrow' />}
+                            </StatTd>
+                            <StatTd onClick={() => sortBy('출석')}>
+                                <span>출석</span>
+                                {arrowState === '출석' && <DownArrow className='arrow' />}
+                            </StatTd>
+                            <StatTd onClick={() => sortBy('출석')}>
+                                <span>출석순위</span>
+                                {arrowState === '출석' && <DownArrow className='arrow' />}
+                            </StatTd>
+                            <CustomMinWidthDiv onClick={() => sortBy('포인트총합')} $propsWidth='15%' $propsMax='9.5%' $propsSize='7px'>
+                                <span>{`포인트 총합\n(출석, 어시, 골)`}</span>
+                                {arrowState === '포인트총합' && <DownArrow className='arrow' />}
+                            </CustomMinWidthDiv>
+                            <CustomMinWidthDiv onClick={() => sortBy('포인트총합')} $propsWidth='15%' $propsMax='9.5%' $propsSize='9px'>
+                                <span>{'포인트 총합\n순위'}</span>
+                                {arrowState === '포인트총합' && <DownArrow className='arrow' />}
+                            </CustomMinWidthDiv>
                         </TableHeaderStat>
                         :
                         <TableHeaderOther>
@@ -171,7 +236,7 @@ function DataTable(props) {
                             sortedNames?.map((name, index) =>
                                 (<><TableRowStat key={index}>
                                     {tap === '현황판' ?
-                                        <FirstColumn>{kingList.includes(name) && <Trophy $king={findTrophy(name)}/>}<StatusBoardName style={{width: '75px', borderRight: '1px solid #ccc'}}>{name}</StatusBoardName></FirstColumn>
+                                        <FirstColumn>{kingList.includes(name) && <Trophy className='trophy' $king={findTrophy(name)}/>}<StatusBoardName style={{width: '72px', borderRight: '1px solid #ccc'}}>{name}</StatusBoardName></FirstColumn>
                                         :
                                         <div className='flex items-center justify-center' style={{minWidth: '20%', flex: '1', borderRight: '1px solid #ccc'}}>
                                             {winnerList.includes(name) && <Medal />}
@@ -295,6 +360,34 @@ const TableHeaderStat = styled.div`
     }
 `
 
+const StatTd = styled.div`
+    display: flex;
+    flex-direction: column;
+    position: relative;
+`
+
+const UpArrow = styled.div`
+    position: absolute;
+    top: 24px;
+    width: 20px;
+    height: 20px;
+    background-image: url(${up});
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+`
+
+const DownArrow = styled.div`
+    position: absolute;
+    top: 24px;
+    width: 20px;
+    height: 20px;
+    background-image: url(${down});
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+`
+
 const TableHeaderOther = styled.div`
     display: flex;
     align-items: center;
@@ -366,6 +459,7 @@ const CustomMinWidthSpan = styled.span`
 
 const CustomMinWidthDiv = styled.div`
     flex: 1;
+    position: relative;
     min-width: 7%;
     max-width: ${props => props.$propsMax} !important;;
     white-space: pre-line;

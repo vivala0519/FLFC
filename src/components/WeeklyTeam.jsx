@@ -155,7 +155,7 @@ function WeeklyTeam(props) {
            onTouchEnd={handleTouchEnd}>
           <div className='flex gap-5 justify-center items-center'>
             {!editMode && <LeftButton onClick={() => pageMoveHandler(true)}  $show={page !== 0} />}
-            <Week $thisWeek={page === weeklyTeamData.length - 1 && activeBorder} className='mt-3 mb-1 underline underline-offset-1 relative bottom-1' style={{fontFamily: 'KBO-Dia-Gothic_bold'}}>{weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 '}{"Weekly Team"}</Week>
+            <Week $thisWeek={page === weeklyTeamData.length - 1 && activeBorder} className='mt-3 mb-1 underline underline-offset-1 relative bottom-1' style={{fontFamily: 'DNFForgedBlade'}}>{weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 '}{"Weekly Team"}</Week>
             {!editMode && <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1} />}
           </div>
           <div className='flex flex-col'>
@@ -193,14 +193,14 @@ function WeeklyTeam(props) {
           <div className='w-full flex justify-center'>
               {canCreate ?
                   (!editMode ?
-                      <button className='flex block-border' onClick={createWeeklyTeamHandler}><span>이번 주 팀 생성하기</span><Write/></button>
+                      <button className='flex block-border' onClick={createWeeklyTeamHandler} style={{fontFamily: 'DNFForgedBlade'}}><span>이번 주 팀 생성하기</span><Write/></button>
                   :
-                      <button className='flex block-border' onClick={registerTeamHandler}><span>등록하기</span><Register /></button>
+                      <button className='flex block-border' onClick={registerTeamHandler} style={{fontFamily: 'DNFForgedBlade'}}><span>등록하기</span><Register /></button>
                   )
                   :
-                  <div className='flex flex-col'>
-                      <p className='mb-1 text-gray-400' style={{filter: 'drop-shadow(2px 4px 7px grey)'}}>팀 생성하기</p>
-                      <p className='text-xs'>Open: 참여투표 종료 후</p>
+                  <div className='flex flex-col mt-3'>
+                      <p className='mb-1 text-gray-400' style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀 생성하기</p>
+                      <p className='text-xs' style={{fontFamily: 'DNFForgedBlade'}}>Open: 참여투표 종료 후</p>
                   </div>
               }
           </div>

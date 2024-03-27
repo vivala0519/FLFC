@@ -217,7 +217,7 @@ function LetsRecord(props) {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}>
-            <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'Giants-Inline'}}>{"Today's Record"}</span>
+            <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'DNFForgedBlade'}}>{"Today's Record"}</span>
             <hr className='w-1/2 mb-5 border-green-700'/>
             <div className='flex flex-col items-center w-full'>
                 <>
@@ -281,8 +281,8 @@ function LetsRecord(props) {
                       </div>
                     :
                     <div className='relative bottom-4'>
-                      <p className='mb-1'>기록 가능 시간이 아닙니다.</p>
-                      <p className='text-xs text-gray-500'>Open: 07:45 ~ 10:15 Sun.</p>
+                      <p className='mb-1' style={{fontFamily: 'DNFForgedBlade'}}>기록 가능 시간이 아닙니다.</p>
+                      <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>Open: 07:45 ~ 10:15 Sun.</p>
                     </div>
                 }
                 </div>

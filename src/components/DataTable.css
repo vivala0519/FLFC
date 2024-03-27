@@ -1,0 +1,25 @@
+.arrow {
+    animation: moveUpDown 0.5s infinite alternate;
+}
+
+@keyframes moveUpDown {
+    0% {
+        top: 22px;
+    }
+    100% {
+        top: 26px;
+    }
+}
+
+.trophy {
+    animation: rotateLeftRight 0.5s infinite alternate;
+}
+
+@keyframes rotateLeftRight {
+    0% {
+        transform: rotate(5deg);
+    }
+    100% {
+        transform: rotate(-5deg);
+    }
+}

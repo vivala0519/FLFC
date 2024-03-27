@@ -20,6 +20,10 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+.spin {
+    animation: logo-spin 0.5s infinite linear;
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -52,22 +56,39 @@
 }
 
 @font-face {
-  font-family: 'HeirofLightBold';
-  src: url('./assets/HeirofLightBold.ttf');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'HeirofLightRegular';
-  src: url('./assets/HeirofLightRegular.ttf');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
   font-family: 'KBO-Dia-Gothic_bold';
   src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/KBO-Dia-Gothic_bold.woff') format('woff');
   font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'BMEuljiro10yearslater';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/BMEuljiro10yearslater.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face{
+  font-family:'DNFBitBitv2';
+  font-style:normal;font-weight:400;src:url('//cdn.df.nexon.com/img/common/font/DNFBitBitv2.otf')format('opentype')
+}
+
+@font-face{
+  font-family:'DNFForgedBlade';font-style:normal;font-weight:700;
+  src:url('//cdn.df.nexon.com/img/common/font/DNFForgedBlade-Bold.otf')format('opentype')
+}
+
+@font-face {
+  font-family: 'SUITE_Regular';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2304-2@1.0/SUITE-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'MapoPeacefull';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/MapoPeacefullA.woff') format('woff');
+  font-weight: normal;
   font-style: normal;
 }
