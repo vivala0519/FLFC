@@ -22,6 +22,7 @@ function App() {
     const headerRef = useRef(null)
     const [headerHeight, setHeaderHeight] = useState(0)
     const [open, setOpen] = useState(false)
+    const [weeklyTeamLive, setWeeklyTeamLive] = useState(false)
 
     const dataGeneration = async () => {
         const collectionRef = collection(db, '2024')
@@ -80,43 +81,35 @@ function App() {
                   <div
                       className='flex flex-row justify-around w-full border-double border-0 border-b-2 border-t-2 border-green-500 mb-5 p-2'
                       style={{fontFamily: 'DNFForgedBlade'}}>
-                      {/*<span className={`relative top-1 ${[0].includes(tap) && 'text-yellow-500'}`}>*</span>*/}
                       <div
-                          className={`cursor-pointer w-full ${tap === 0 && 'text-yellow-500'}`}
-                          onClick={() => setTap(0)}>{tapName[0]}
+                          className={`relative cursor-pointer w-full ${tap === 0 && 'text-yellow-500'}`}
+                          onClick={() => setTap(0)}>{open && <Live>Live</Live>}<span>{tapName[0]}</span>
                       </div>
-                      {/*<div className='border-green-800 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>*/}
-                      {/*<span className={`relative top-1 ${[0, 1].includes(tap) && 'text-yellow-500'}`}>*</span>*/}
                       {/*<span className={`relative top-1`}>*</span>*/}
                       <Sun className='spin'/>
                       <div
-                          className={`cursor-pointer w-full ${tap === 1 && 'text-yellow-500'}`}
-                          onClick={() => setTap(1)}>{tapName[1]}
+                          className={`relative cursor-pointer w-full ${tap === 1 && 'text-yellow-500'}`}
+                          onClick={() => setTap(1)}><Live>Live</Live><span>{tapName[1]}</span>
                       </div>
-                      {/*<div className='border-green-800 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>*/}
-                      {/*<span className={`relative top-1 ${[1, 2].includes(tap) && 'text-yellow-500'}`}>*</span>*/}
                       {/*<span className={`relative top-1`}>*</span>*/}
                       <Sun className='spin'/>
                       <div
-                          className={`cursor-pointer w-full ${tap === 2 && 'text-yellow-500'}`}
+                          className={`relative cursor-pointer w-full ${tap === 2 && 'text-yellow-500'}`}
                           onClick={() => setTap(2)}>{tapName[2]}
                       </div>
-                      {/*<div className='border-green-800 border-r-2 w-1 h-full' style={{width: '1px', height: '24px'}}/>*/}
-                      {/*<span className={`relative top-1 ${[2, 3].includes(tap) && 'text-yellow-500'}`}>*</span>*/}
                       {/*<span className={`relative top-1`}>*</span>*/}
                       <Sun className='spin'/>
                       <div
-                          className={`cursor-pointer w-full ${tap === 3 && 'text-yellow-500'}`}
-                          onClick={() => setTap(3)}>{tapName[3]}
+                          className={`relative cursor-pointer w-full ${tap === 3 && 'text-yellow-500'}`}
+                          onClick={() => setTap(3)}>{weeklyTeamLive && <Live>Live</Live>}<span>{tapName[3]}</span>
                       </div>
-                      {/*<span className={`relative top-1 ${[3].includes(tap) && 'text-yellow-500'}`}>*</span>*/}
                   </div>
               </header>
               {/*{[1].includes(tap) && <div className='w-full h-32'></div>}*/}
               {tap === 0 && <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]} setTap={setTap} />}
               {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} lastSeasonKings={lastSeasonKings}/>}
               {tap === 2 && <RecordRoom propsData={data} analyzedData={analyzedData} propsSetTap={setTap} />}
-              {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} />}
+              {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} setWeeklyTeamLive={setWeeklyTeamLive}/>}
               {[0, 3].includes(tap) && !open &&
                   <footer className='absolute bottom-3'>
                       <CopyRight>
@@ -155,5 +148,15 @@ const CopyRight = styled.span`
      background-image: url(${sun});
      background-position: center;
      background-repeat: no-repeat;
-     background-size: 95% 80%;
+     background-size: 42% 37%;
  `
+
+const Live = styled.span`
+    position: absolute;
+    left: 2px;
+    bottom: 17px;
+    font-family: 'DNFBitBitv2', serif;
+    font-size: 9px;
+    color: #bb2649;
+    transform: rotate(-17deg);
+`

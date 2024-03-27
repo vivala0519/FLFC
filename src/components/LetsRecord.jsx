@@ -276,8 +276,8 @@ function LetsRecord(props) {
                                 value={assistant} onChange={assistantHandler}/>
                           </div>
                         </div>
-                        <button className='flex relative bottom-2 mt-5 underline-border' onClick={registerHandler}>
-                          <span>등록</span><Write/></button>
+                        <button className='flex relative bottom-2 mt-5 underline-border bg-gray-50' onClick={registerHandler}>
+                          <span className='text-black'>등록</span><Write/></button>
                       </div>
                     :
                     <div className='relative bottom-4'>

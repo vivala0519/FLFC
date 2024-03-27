@@ -21,7 +21,7 @@
 }
 
 .spin {
-    animation: logo-spin 0.5s infinite linear;
+    animation: logo-spin 0.2s infinite linear;
 }
 
 @keyframes logo-spin {
@@ -89,6 +89,20 @@
 @font-face {
   font-family: 'MapoPeacefull';
   src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/MapoPeacefullA.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'YEONGJUSeonbiTTF';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2403@1.0/YEONGJUSeonbiTTF.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Ggeuteumuri';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/naverfont_04@1.0/Ggeuteumuri.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }

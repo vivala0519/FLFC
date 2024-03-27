@@ -8,7 +8,7 @@ import check from "@/assets/check.png"
 import './WeeklyTeam.css'
 
 function WeeklyTeam(props) {
-    const {propsData, setRegisteredTeam, setTap} = props
+    const {propsData, setRegisteredTeam, setTap, setWeeklyTeamLive} = props
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
     const [dynamicHeight, setDynamicHeight] = useState(0)
     const [page, setPage] = useState(0)
@@ -38,6 +38,7 @@ function WeeklyTeam(props) {
 
         if (lastTeamDate > today) {
             setActiveBorder(true)
+            setWeeklyTeamLive(true)
         }
 
         if (currentDayOfWeek < 4) {
