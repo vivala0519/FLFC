@@ -318,7 +318,10 @@ const PageButton = styled.div`
     @media (max-width: 812px) {
         width: 20px;
         height: 20px;
-    }
+    };
+    @media (prefers-color-scheme: dark) {
+        filter: invert(1);
+    };
 `
 
 const Month = styled.div`
@@ -364,6 +367,7 @@ const StatTd = styled.div`
     display: flex;
     flex-direction: column;
     position: relative;
+    cursor: pointer;
 `
 
 const UpArrow = styled.div`

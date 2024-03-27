@@ -282,7 +282,10 @@ const RightButton = styled.div`
     @media (max-width: 812px) {
         width: 15px;
         height: 15px;
-    }
+    };
+    @media (prefers-color-scheme: dark) {
+        filter: invert(1);
+    };
 `
 
 const Write = styled.div`
