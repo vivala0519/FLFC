@@ -96,13 +96,13 @@ function App() {
                       style={{fontFamily: 'DNFForgedBlade'}}>
                       <div
                           className={`relative cursor-pointer w-full ${tap === 0 && 'text-yellow-500'}`}
-                          onClick={() => setTap(0)}>{open && <Live>Live</Live>}<span>{tapName[0]}</span>
+                          onClick={() => setTap(0)}><span>{open && <Live $left='-3px'>Live</Live>}{tapName[0]}</span>
                       </div>
                       {/*<span className={`relative top-1`}>*</span>*/}
                       <Sun className='spin'/>
                       <div
-                          className={`relative cursor-pointer w-full ${tap === 1 && 'text-yellow-500'}`}
-                          onClick={() => setTap(1)}><Live>Live</Live><span>{tapName[1]}</span>
+                          className={`cursor-pointer w-full ${tap === 1 && 'text-yellow-500'}`}
+                          onClick={() => setTap(1)}><span className='relative'><Live $left='-13px'>Live</Live>{tapName[1]}</span>
                       </div>
                       {/*<span className={`relative top-1`}>*</span>*/}
                       <Sun className='spin'/>
@@ -114,7 +114,7 @@ function App() {
                       <Sun className='spin'/>
                       <div
                           className={`relative cursor-pointer w-full ${tap === 3 && 'text-yellow-500'}`}
-                          onClick={() => setTap(3)}>{weeklyTeamLive && <Live>Live</Live>}<span>{tapName[3]}</span>
+                          onClick={() => setTap(3)}><span>{weeklyTeamLive && <Live $left='-3px'>Live</Live>}{tapName[3]}</span>
                       </div>
                   </div>
               </header>
@@ -166,8 +166,8 @@ const CopyRight = styled.span`
 
 const Live = styled.span`
     position: absolute;
-    left: 2px;
-    bottom: 17px;
+    left: ${props => props.$left};
+    bottom: 16px;
     font-family: 'DNFBitBitv2', serif;
     font-size: 9px;
     color: #bb2649;

@@ -6,10 +6,13 @@ import right from "@/assets/right.png"
 import write from "@/assets/write.png"
 import check from "@/assets/check.png"
 import './WeeklyTeam.css'
+import {collection, getDocs} from "firebase/firestore";
+import {db} from "../../firebase.js";
 
 function WeeklyTeam(props) {
-    const {propsData, setRegisteredTeam, setTap, setWeeklyTeamLive} = props
+    const {setRegisteredTeam, setTap, setWeeklyTeamLive} = props
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
+    const [lastDate, setLastDate] = useState('')
     const [dynamicHeight, setDynamicHeight] = useState(0)
     const [page, setPage] = useState(0)
     const [editMode, setEditMode] = useState(false)
@@ -26,23 +29,32 @@ function WeeklyTeam(props) {
     const sundayDate = nextSunday.getDate()
     const sundayMonth = nextSunday.getMonth() + 1
 
+    const fetchWeeklyTeamData = async () => {
+        const weeklyTeamRef = collection(db, 'weeklyTeam')
+        const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
+        const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+        setWeeklyTeamData(fetchedWeeklyTeamData)
+        setPage(fetchedWeeklyTeamData.length -1)
+        setLastDate(fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id)
+    }
+
     useEffect(() => {
-        setWeeklyTeamData(propsData)
-        setPage(propsData.length -  1)
-
-        const lastDate = propsData[propsData.length - 1].id
-        const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
-        const lastDateDay = parseInt(lastDate.slice(2, 4), 10) + 1
-
-        const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
-
-        if (lastTeamDate > today) {
-            setActiveBorder(true)
-            setWeeklyTeamLive(true)
-        }
+        fetchWeeklyTeamData()
 
         if (currentDayOfWeek < 4) {
             setCanCreate(false)
+        }
+        if (lastDate) {
+            const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
+            const lastDateDay = parseInt(lastDate.slice(2, 4), 10) + 1
+
+            const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
+
+            if (lastTeamDate > today) {
+                setActiveBorder(true)
+                setWeeklyTeamLive(true)
+                setCanCreate(false)
+            }
         }
 
         // 창 높이에 따라 높이 조절
@@ -56,7 +68,13 @@ function WeeklyTeam(props) {
         return () => {
             window.removeEventListener('resize', setHeight);
         };
-    }, []);
+    }, [lastDate]);
+
+    useEffect(() => {
+        if (!editMode) {
+            fetchWeeklyTeamData()
+        }
+    }, [editMode]);
 
     const pageMoveHandler = (left) => {
         if (left && page > 0) {
@@ -148,6 +166,8 @@ function WeeklyTeam(props) {
         setMoveX(null);
     };
 
+    const votedPlayerMonthPlan = ['승진', '희종', '승호', '규진', '원효', '장식', '우진', '대열', '종우', '민관', '영진', '원진', '희철', '태훈']
+    const votedPlayerWeekPlan = ['민조', '정민']
 
     return (
       <div className='w-full relative' style={{height: '80vh'}}
@@ -170,7 +190,7 @@ function WeeklyTeam(props) {
                       {!editMode ?
                           [1, 2, 3].map((team, index) => (
                           <div key={index} className='flex gap-5'>
-                              <span style={{width: '25px'}} className='text-black'>{team}팀</span>
+                              <span style={{width: '25px'}} className='text-black relative left-1'>{team}팀</span>
                               <div className='flex gap-1'>
                                   {weeklyTeamData[page]?.data[team].map((player, idx) => (
                                       <span key={idx} className='text-black'>{player}</span>
@@ -178,15 +198,36 @@ function WeeklyTeam(props) {
                               </div>
                           </div>
                          ))
-                      :
-                          inputTeamData?.map((team, index) => (
-                          <div key={index} className='flex gap-5'>
-                              <span style={{width: '25px'}} className='text-black'>{index + 1}팀</span>
-                              <div className='flex gap-1'>
-                                  {team.map((player, idx) => <input key={idx} value={player} onChange={(event) => teamMakerInputHandler(event, index, idx)} type='text' className='w-12 border-green-400 border-2 outline-none text-center'/>)}
+                      : // 팀 생성 모드
+                          <div className='flex flex-col gap-4'>
+                              <div className='flex flex-col mb-6'>
+                                  <span className='mb-4'>금주 참여 투표 인원 (투표 시간 순)</span>
+                                  <div className='mr-2 mb-4'>
+                                      <span className='text-sm text-yellow-600'>월회비 : </span>
+                                      <div className='flex flex-wrap justify-center gap-1'>
+                                          {votedPlayerMonthPlan.map((player, index) => (
+                                                <span key={index}>{player + ' '}</span>))}
+                                      </div>
+                                  </div>
+                                  <div className='mr-2'>
+                                      <span className='text-sm text-yellow-600'>주회비 : </span>
+                                      <div className='flex flex-wrap justify-center gap-1'>
+                                          {votedPlayerWeekPlan.map((player, index) => (
+                                              <span key={index}>{player}</span>))}
+                                      </div>
+                                  </div>
+                              </div>
+                              <div className='flex flex-col gap-2 items-center'>
+                                  {inputTeamData?.map((team, index) => (
+                                  <div key={index} className='flex gap-5'>
+                                      <span style={{width: '25px'}} className='text-black relative left-1'>{index + 1}팀</span>
+                                      <div className='flex gap-1'>
+                                          {team.map((player, idx) => <input key={idx} value={player} onChange={(event) => teamMakerInputHandler(event, index, idx)} type='text' className='w-12 border-green-600 border-2 outline-none text-center'/>)}
+                                      </div>
+                                  </div>
+                                ))}
                               </div>
                           </div>
-                      ))
                       }
                   </div>
               </div>
@@ -194,15 +235,16 @@ function WeeklyTeam(props) {
           <div className='w-full flex justify-center'>
               {canCreate ?
                   (!editMode ?
-                      <button className='flex block-border' onClick={createWeeklyTeamHandler} style={{fontFamily: 'DNFForgedBlade'}}><span>이번 주 팀 생성하기</span><Write/></button>
+                      <button className='flex block-border bg-gray-50' onClick={createWeeklyTeamHandler} style={{fontFamily: 'DNFForgedBlade'}}><span className='text-black'>이번 주 팀 생성하기</span><Write/></button>
                   :
-                      <button className='flex block-border' onClick={registerTeamHandler} style={{fontFamily: 'DNFForgedBlade'}}><span>등록하기</span><Register /></button>
+                      <button className='flex block-border bg-gray-50' onClick={registerTeamHandler} style={{fontFamily: 'DNFForgedBlade'}}><span className='text-black'>등록하기</span><Register /></button>
                   )
                   :
-                  <div className='flex flex-col mt-3'>
-                      <p className='mb-1 text-gray-400' style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀 생성하기</p>
-                      <p className='text-xs' style={{fontFamily: 'DNFForgedBlade'}}>Open: 참여투표 종료 후</p>
-                  </div>
+                  (!activeBorder &&
+                      <div className='flex flex-col mt-3'>
+                          <p className='mb-1 text-gray-400' style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀 생성하기</p>
+                          <p className='text-xs' style={{fontFamily: 'DNFForgedBlade'}}>Open : 참여투표 종료 후</p>
+                      </div>)
               }
           </div>
           </div>

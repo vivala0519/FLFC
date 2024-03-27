@@ -285,7 +285,7 @@ function LetsRecord(props) {
                     :
                     <div className='relative bottom-4'>
                       <p className='mb-1' style={{fontFamily: 'DNFForgedBlade'}}>기록 가능 시간이 아닙니다.</p>
-                      <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>Open: 07:45 ~ 10:15 Sun.</p>
+                      <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>Open : 07:45 ~ 10:15 Sun.</p>
                     </div>
                 }
                 </div>
