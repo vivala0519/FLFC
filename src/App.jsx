@@ -37,6 +37,19 @@ function App() {
         setData(fetchedData)
         setWeeklyTeamData(fetchedWeeklyTeamData)
         setHistoryData(fetchedHistoryData)
+
+        const lastDate = fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id
+        const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
+        const lastDateDay = parseInt(lastDate.slice(2, 4), 10) + 1
+
+        const today = new Date()
+        const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
+
+        if (lastTeamDate > today) {
+            if (fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id) {
+                setWeeklyTeamLive(true)
+            }
+        }
     }
 
     // 지난 시즌 수상자 세팅

@@ -99,7 +99,7 @@ function LetsRecord(props) {
 
     const formatRecordByName = (record) => {
         const stats = {}
-        if (weeklyTeamData?.data) {
+        if (weeklyTeamData?.data && weeklyTeamData?.id === today) {
             const data = weeklyTeamData.data
             const thisWeekMembers = data[1].concat(data[2], data[3])
             thisWeekMembers.forEach(member => {
@@ -109,28 +109,28 @@ function LetsRecord(props) {
                     }
                 })
             })
+
+            record.forEach(item => {
+                const { assist, goal } = item
+
+                if (goal !== "") {
+                    players.forEach(player => {
+                        if (player.includes(goal)) {
+                            stats[player]['골']++
+                        }
+                    })
+                }
+
+                if (assist !== "") {
+                    players.forEach(player => {
+                        if (player.includes(assist)) {
+                            stats[player]['어시']++
+                        }
+                    })
+                }
+            });
+            return stats
         }
-
-        record.forEach(item => {
-            const { assist, goal } = item
-
-            if (goal !== "") {
-                players.forEach(player => {
-                    if (player.includes(goal)) {
-                        stats[player]['골']++
-                    }
-                })
-            }
-
-            if (assist !== "") {
-                players.forEach(player => {
-                    if (player.includes(assist)) {
-                        stats[player]['어시']++
-                    }
-                })
-            }
-        });
-        return stats
     }
 
     function compareObjects(objA, objB) {
@@ -152,13 +152,15 @@ function LetsRecord(props) {
     // today Record 바로 등록
     useEffect(() => {
         const stats = formatRecordByName(todayRecord)
-        const registerRecord = async () => {
-            const docRef = doc(db, '2024', today)
-            await setDoc(docRef, stats)
-            console.log("Document written with ID: ", docRef.id);
-        }
-        if (!compareObjects(stats, writtenData) && open) {
-            registerRecord()
+        if (stats) {
+            const registerRecord = async () => {
+                const docRef = doc(db, '2024', today)
+                await setDoc(docRef, stats)
+                console.log("Document written with ID: ", docRef.id);
+            }
+            if (!compareObjects(stats, writtenData) && open) {
+                registerRecord()
+            }
         }
     }, [todayRecord])
 
@@ -234,18 +236,19 @@ function LetsRecord(props) {
                                     fontFamily: 'Hahmlet',
                                     color: 'grey'
                                 }}>{record.time}</span>
-                                <div className='flex items-center pl-2 pr-2 border-b-green-300 border-b-2'>
+                                <div className='flex items-center pl-2 pr-2 border-b-green-600 border-b-2'>
                                     <span
-                                        className='flex justify-center relative bottom-2 mr-0.5  text-rose-600'
-                                        style={{fontFamily: 'Giants-Inline', fontSize: '13px'}}>GOAL</span>
+                                        className='flex justify-center relative bottom-2 mr-0.5'
+                                        style={{fontFamily: 'Giants-Inline', fontSize: '13px', color: '#bb2649'}}>GOAL</span>
                                     <span className='mr-5 font-bold text-black'>{record.goal}</span>
                                     {record.assist &&
                                         <>
                                             <span
-                                                className='flex justify-center relative bottom-2 mr-0.5 text-lime-500'
+                                                className='flex justify-center relative bottom-2 mr-0.5'
                                                 style={{
                                                     fontFamily: 'Giants-Inline',
-                                                    fontSize: '13px'
+                                                    fontSize: '13px',
+                                                    color: '#eab308'
                                                 }}>ASSIST</span>
                                             <span className='font-bold text-black'>{record.assist}</span>
                                         </>}
@@ -262,15 +265,15 @@ function LetsRecord(props) {
                       <div ref={registerRef} className='flex items-center gap-5 mb-1'>
                         <div>
                           <div className='flex mb-2 gap-0.5 items-center'>
-                              <span className='flex justify-center text-rose-600'
-                                    style={{width: '70px', fontFamily: 'Giants-Inline'}}>GOAL</span>
+                              <span className='flex justify-center'
+                                    style={{width: '70px', fontFamily: 'Giants-Inline', color: '#bb2649'}}>GOAL</span>
                             <input
                                 className='w-24 border-solid border-0 border-b-2 border-green-600 text-center outline-none'
                                 value={scorer} onChange={scorerHandler}/>
                           </div>
                           <div className='flex gap-0.5 items-center'>
-                              <span className='flex justify-center text-lime-500'
-                                    style={{width: '70px', fontFamily: 'Giants-Inline'}}>ASSIST</span>
+                              <span className='flex justify-center'
+                                    style={{width: '70px', fontFamily: 'Giants-Inline',  color: '#eab308'}}>ASSIST</span>
                             <input
                                 className='w-24 border-solid border-0 border-b-2 border-green-600 text-center outline-none'
                                 value={assistant} onChange={assistantHandler}/>

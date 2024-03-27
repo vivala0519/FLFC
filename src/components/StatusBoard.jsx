@@ -3,17 +3,20 @@ import DataTable from './DataTable'
 import styled from 'styled-components'
 import './LetsRecord.css'
 import help from '@/assets/help2.png'
+import {dataAnalysis} from "../apis/analyzeData.js";
 
 function StatusBoard(props) {
-  const {propsData, analyzedData, lastSeasonKings} = props
-  // const tapName = ['출석', '골', '어시']
-  // const [tap, setTap] = useState('출석')
-  // const [month, setMonth] = useState([])
-  // const [weeksPerMonth, setWeeksPerMonth] = useState([])
-  // const [page, setPage] = useState(0)
-  // const [tableData, setTableData] = useState({})
-  // const [quarterData, setQuarterData] = useState([])
-  //
+    const {propsData, lastSeasonKings} = props
+
+    const [analyzedData, setAnalyzedData] = useState({})
+    const fetchAnalysis = async () => {
+        const data = await dataAnalysis()
+        setAnalyzedData(data)
+    }
+
+    useEffect(() => {
+        fetchAnalysis()
+    }, [])
   // useEffect(() => {
   //   // 초기 페이지 현재 월로 설정
   //   const currentTime = new Date()

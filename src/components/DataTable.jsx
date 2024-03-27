@@ -211,8 +211,8 @@ function DataTable(props) {
                                 <span>출석순위</span>
                                 {arrowState === '출석' && <DownArrow className='arrow' />}
                             </StatTd>
-                            <CustomMinWidthDiv onClick={() => sortBy('포인트총합')} $propsWidth='15%' $propsMax='9.5%' $propsSize='7px'>
-                                <span>{`포인트 총합\n(출석, 어시, 골)`}</span>
+                            <CustomMinWidthDiv onClick={() => sortBy('포인트총합')} $propsWidth='15%' $propsMax='9.5%' $propsSize='8px'>
+                                <span>{`출석/어시/골\n포인트 총합`}</span>
                                 {arrowState === '포인트총합' && <DownArrow className='arrow' />}
                             </CustomMinWidthDiv>
                             <CustomMinWidthDiv onClick={() => sortBy('포인트총합')} $propsWidth='15%' $propsMax='9.5%' $propsSize='9px'>
@@ -226,7 +226,7 @@ function DataTable(props) {
                             {
                                 tableData?.data?.map((data) => <span key={data.id}>{Number(data.id.slice(2, 4)) + '일'}</span>)
                             }
-                            {<span style={{fontSize: '10px'}}>{`${quarterName}분기\n총합`}</span>}
+                            {<span style={{fontSize: '9px'}}>{`${quarterName}분기\n총합`}</span>}
                         </TableHeaderOther>
                     }
                     <StyledHR $tap={tap} />
@@ -234,7 +234,7 @@ function DataTable(props) {
                         {/*실 출석 인원 먼저*/}
                         {
                             sortedNames?.map((name, index) =>
-                                (<><TableRowStat key={index}>
+                                (<><TableRowStat key={index} $tap={tap}>
                                     {tap === '현황판' ?
                                         <FirstColumn>{kingList.includes(name) && <Trophy className='trophy' $king={findTrophy(name)}/>}<StatusBoardName style={{width: '72px', borderRight: '1px solid #ccc'}}>{name}</StatusBoardName></FirstColumn>
                                         :
@@ -259,9 +259,9 @@ function DataTable(props) {
                                             <CustomMinWidthSpan $propsWidth='14%' $propsMax='10%'>{analyzedData.active.totalData.get(name)['포인트총합순위']}</CustomMinWidthSpan>
                                         </>
                                     }
-                                    {tap === '출석' && tableData?.data?.map((data, index) => (<span key={name + index}>{data.data[name] ? 'O' : '-'}</span>))}
-                                    {tap === '골' && tableData?.data?.map((data, index) => (<span key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
-                                    {tap === '어시' && tableData?.data?.map((data, index) => (<span key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
+                                    {tap === '출석' && tableData?.data?.map((data, index) => (<span style={{minWidth: '13% !important'}} key={name + index}>{data.data[name] ? 'O' : '-'}</span>))}
+                                    {tap === '골' && tableData?.data?.map((data, index) => (<span style={{minWidth: '13% !important'}} key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
+                                    {tap === '어시' && tableData?.data?.map((data, index) => (<span style={{minWidth: '13% !important'}} key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
                                     {tap !== '현황판' && tableData?.data && <span>{quarterData.totalData.get(name)[tap]}</span>}
                                 </TableRowStat>
                             <StyledHR $tap={tap} /></>))
@@ -425,7 +425,7 @@ const TableRowStat = styled.div`
         border-right: 1px solid #ccc;
         //border-top: 1px solid #ccc;
         @media (max-width: 812px) {
-            min-width: 14%;
+            min-width: ${props => props.$tap === '현황판' ? '14%' : '13%'};
         }
     }
 `

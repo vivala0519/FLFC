@@ -3,9 +3,14 @@ import DataTable from './DataTable'
 import styled from 'styled-components'
 import './LetsRecord.css'
 import help from '@/assets/help.png'
+import {collection, getDocs} from "firebase/firestore";
+import {db} from "../../firebase.js";
+import {dataAnalysis} from "../apis/analyzeData.js";
 
 function RecordRoom(props) {
-    const {propsData, analyzedData, propsSetTap} = props
+    const {propsSetTap} = props
+    const [fetchData, setFetchData] = useState([])
+    const [analyzedData, setAnalyzedData] = useState({})
     const tapName = ['출석', '골', '어시', '히스토리']
     const [tap, setTap] = useState('출석')
     const [month, setMonth] = useState([])
@@ -26,15 +31,27 @@ function RecordRoom(props) {
         "- 각 분야의 1등이 같을 경우: 득점/어시 타이틀 수상이 우선\n- 득점, 어시가 겹칠경우: 두 분야중 더 높은 포인트를 기록한 분야로 수상.\n" +
         "-> '출석+골+어시 총합'이 다음으로 높은 인원이 대체 수상"
 
-    useEffect(() => {
-        // 초기 페이지 현재 월로 설정
-        const currentTime = new Date()
-        const month = currentTime.getMonth()
-        setPage(month)
 
+    const dataGeneration = async () => {
+        const collectionRef = collection(db, '2024')
+        const snapshot = await getDocs(collectionRef)
+        const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+        setFetchData(fetchedData)
+    }
+    const fetchAnalysis = async () => {
+        const data = await dataAnalysis()
+        setAnalyzedData(data)
+    }
+
+    useEffect(() => {
+        dataGeneration()
+        fetchAnalysis()
+    }, [])
+
+    useEffect(() => {
         // 월별 주차 계산
         const monthSet = new Set()
-        const weeksByMonth = propsData?.reduce((acc, cur) => {
+        const weeksByMonth = fetchData?.reduce((acc, cur) => {
             const key = Number(cur.id.slice(0, 2))
             monthSet.add(key)
             acc[key] ? acc[key]++ : (acc[key] = 1)
@@ -42,35 +59,37 @@ function RecordRoom(props) {
         }, {})
         // 진행된 월 set
         setMonth([...monthSet])
+        // 초기 월 설정
+        setPage([...monthSet][monthSet.size - 1] - 1)
         setWeeksPerMonth(weeksByMonth)
-    }, [])
+    }, [fetchData])
 
     useEffect(() => {
-        // console.log(propsData)
-    }, [propsData])
-
-    useEffect(() => {
-        const tableData = propsData?.filter(data => Number(data.id.slice(0, 2)) === month[page])
+        const tableData = fetchData?.filter(data => Number(data.id.slice(0, 2)) === month[page])
         const obj = {month: month[page], weeks: weeksPerMonth[month[page]], data: tableData}
         setTableData(obj)
 
+    }, [page, month, weeksPerMonth, fetchData]);
+
+    useEffect(() => {
         const selectedMonth = month[page]
         let quarterData = []
-        if (selectedMonth <= 3) {
-            quarterData = analyzedData.totalQuarterData[0]
-        }
-        else if (selectedMonth > 3 && selectedMonth <= 6) {
-            quarterData = analyzedData.totalQuarterData[1]
-        }
-        else if (selectedMonth > 6 && selectedMonth <= 9) {
-            quarterData = analyzedData.totalQuarterData[2]
-        } else {
-            quarterData = analyzedData.totalQuarterData[3]
+        if (analyzedData?.totalQuarterData) {
+            if (selectedMonth <= 3) {
+                quarterData = analyzedData.totalQuarterData[0]
+            }
+            else if (selectedMonth > 3 && selectedMonth <= 6) {
+                quarterData = analyzedData.totalQuarterData[1]
+            }
+            else if (selectedMonth > 6 && selectedMonth <= 9) {
+                quarterData = analyzedData.totalQuarterData[2]
+            } else {
+                quarterData = analyzedData.totalQuarterData[3]
+            }
         }
         setQuarterData(quarterData)
 
-    }, [page, month, weeksPerMonth]);
-
+    }, [tableData, analyzedData])
 
     // 슬라이드 시 탭 이동
     const [startX, setStartX] = useState(null);
