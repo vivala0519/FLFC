@@ -167,7 +167,7 @@ function DataTable(props) {
                 <Table>
                     {tap === '현황판' ?
                         <TableHeaderStat>
-                            <StatTd style={{minWidth: '72px', maxWidth: '75px'}} onClick={() => sortBy('이름')}>
+                            <StatTd id='first_element'  style={{minWidth: '72px', maxWidth: '75px'}} onClick={() => sortBy('이름')}>
                                 <span>이름</span>
                                 {arrowState === '이름' && (arrowDirection ? <DownArrow className='arrow' /> : <UpArrow className='arrow' /> )}
                             </StatTd>
@@ -215,7 +215,7 @@ function DataTable(props) {
                                 <span>{`출석/어시/골\n포인트 총합`}</span>
                                 {arrowState === '포인트총합' && <DownArrow className='arrow' />}
                             </CustomMinWidthDiv>
-                            <CustomMinWidthDiv onClick={() => sortBy('포인트총합')} $propsWidth='15%' $propsMax='9.5%' $propsSize='9px'>
+                            <CustomMinWidthDiv id='last_element' onClick={() => sortBy('포인트총합')} $propsWidth='15%' $propsMax='9.5%' $propsSize='9px'>
                                 <span>{'포인트 총합\n순위'}</span>
                                 {arrowState === '포인트총합' && <DownArrow className='arrow' />}
                             </CustomMinWidthDiv>
