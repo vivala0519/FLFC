@@ -148,12 +148,12 @@ function DataTable(props) {
                             <div>어시</div>
                             <div>어시순위</div>
                             <div>{`일평균\n어시`}</div>
-                            <CustomMinWidthDiv $propsWidth='17%'>공격포인트</CustomMinWidthDiv>
+                            <div>{'공격\n포인트'}</div>
                             <div>순위</div>
                             <div>출석</div>
                             <div>출석순위</div>
-                            <CustomMinWidthDiv $propsWidth='26%' $propsMax='9.5%'>{`포인트 총합\n(출석, 어시, 골)`}</CustomMinWidthDiv>
-                            <CustomMinWidthDiv $propsWidth='26%' $propsMax='9.5%'>포인트 총합 순위</CustomMinWidthDiv>
+                            <CustomMinWidthDiv $propsWidth='15%' $propsMax='9.5%'>{`포인트 총합\n(출석, 어시, 골)`}</CustomMinWidthDiv>
+                            <CustomMinWidthDiv $propsWidth='15%' $propsMax='9.5%'>포인트 총합 순위</CustomMinWidthDiv>
                         </TableHeaderStat>
                         :
                         <TableHeaderOther>
@@ -186,12 +186,12 @@ function DataTable(props) {
                                             <span>{analyzedData.active.totalData.get(name)['어시']}</span>
                                             <span>{analyzedData.active.totalData.get(name)['어시순위']}</span>
                                             <span>{analyzedData.active.totalData.get(name)['일평균어시']}</span>
-                                            <CustomMinWidthSpan $propsWidth='17%'>{analyzedData.active.totalData.get(name)['공격포인트']}</CustomMinWidthSpan>
+                                            <CustomMinWidthSpan $propsWidth='14%'>{analyzedData.active.totalData.get(name)['공격포인트']}</CustomMinWidthSpan>
                                             <span>{analyzedData.active.totalData.get(name)['공격포인트순위']}</span>
                                             <span>{analyzedData.active.totalData.get(name)['출석']}</span>
                                             <span>{analyzedData.active.totalData.get(name)['출석순위']}</span>
-                                            <CustomMinWidthSpan $propsWidth='26%' $propsMax='10%'>{analyzedData.active.totalData.get(name)['포인트총합']}</CustomMinWidthSpan>
-                                            <CustomMinWidthSpan $propsWidth='26%' $propsMax='10%'>{analyzedData.active.totalData.get(name)['포인트총합순위']}</CustomMinWidthSpan>
+                                            <CustomMinWidthSpan $propsWidth='14%' $propsMax='10%'>{analyzedData.active.totalData.get(name)['포인트총합']}</CustomMinWidthSpan>
+                                            <CustomMinWidthSpan $propsWidth='14%' $propsMax='10%'>{analyzedData.active.totalData.get(name)['포인트총합순위']}</CustomMinWidthSpan>
                                         </>
                                     }
                                     {tap === '출석' && tableData?.data?.map((data, index) => (<span key={name + index}>{data.data[name] ? 'O' : '-'}</span>))}
@@ -290,7 +290,7 @@ const TableHeaderStat = styled.div`
         align-items: center;
         @media (max-width: 812px) {
             font-size: 12px;
-            min-width: 15%;
+            min-width: 14%;
         }
     }
 `
@@ -332,7 +332,7 @@ const TableRowStat = styled.div`
         border-right: 1px solid #ccc;
         //border-top: 1px solid #ccc;
         @media (max-width: 812px) {
-            min-width: 15%;
+            min-width: 14%;
         }
     }
 `
@@ -370,14 +370,13 @@ const CustomMinWidthDiv = styled.div`
     max-width: ${props => props.$propsMax} !important;;
     white-space: pre-line;
     @media (max-width: 812px) {
-        font-size: 12px;
-        min-width: ${props => props.$propsWidth} !important;
+        font-size: 7px !important;
     }
 `
 
 const StyledHR = styled.hr`
     @media (max-width: 812px) {
-        width: ${props => props.$tap === '현황판' && '224%'} !important;
+        width: ${props => props.$tap === '현황판' && '189%'} !important;
     }
 `
 
