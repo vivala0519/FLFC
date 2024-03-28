@@ -127,13 +127,13 @@ function RecordRoom(props) {
               {/*</div>*/}
               <div className='flex flex-row w-full justify-center' style={{gap : '10%'}}>
                   <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer ${tap === '출석' && 'text-yellow-500'}`}
-                       onClick={() => setTap(tapName[0])}>출석
+                       style={{width: '20%'}} onClick={() => setTap(tapName[0])}>출석
                   </Tap>
                   <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer ${tap === '골' && 'text-yellow-500'}`}
-                       onClick={() => setTap(tapName[1])}>골
+                       style={{width: '20%'}} onClick={() => setTap(tapName[1])}>골
                   </Tap>
                   <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer ${tap === '어시' && 'text-yellow-500'}`}
-                       onClick={() => setTap(tapName[2])}>어시
+                       style={{width: '20%'}} onClick={() => setTap(tapName[2])}>어시
                   </Tap>
                   {/*<Tap className={`underline decoration-2 decoration-solid decoration-green-300 cursor-pointer text-sm ${tap === '히스토리' && 'text-yellow-600'}`}*/}
                   {/*     onClick={() => setTap(tapName[3])}>히스토리*/}

@@ -370,6 +370,26 @@ const StatTd = styled.div`
     cursor: pointer;
 `
 
+const CustomMinWidthDiv = styled.div`
+    flex: 1;
+    position: relative;
+    min-width: 7%;
+    max-width: ${props => props.$propsMax} !important;;
+    white-space: pre-line;
+    cursor: pointer;
+    @media (max-width: 812px) {
+        //font-size: 7px !important;
+        font-size: ${props => props.$propsSize} !important;
+    }
+`
+
+const CustomMinWidthSpan = styled.span`
+    min-width: ${props => props.$propsMax} !important;
+    @media (max-width: 812px) {
+        min-width: ${props => props.$propsWidth} !important;
+    }
+`
+
 const UpArrow = styled.div`
     position: absolute;
     top: 24px;
@@ -451,25 +471,6 @@ const FirstColumn = styled.div`
     z-index: 1;
     @media (prefers-color-scheme: dark) {
         background: black;
-    }
-`
-
-const CustomMinWidthSpan = styled.span`
-    min-width: ${props => props.$propsMax} !important;
-    @media (max-width: 812px) {
-        min-width: ${props => props.$propsWidth} !important;
-    }
-`
-
-const CustomMinWidthDiv = styled.div`
-    flex: 1;
-    position: relative;
-    min-width: 7%;
-    max-width: ${props => props.$propsMax} !important;;
-    white-space: pre-line;
-    @media (max-width: 812px) {
-        //font-size: 7px !important;
-        font-size: ${props => props.$propsSize} !important;
     }
 `
 
