@@ -94,24 +94,30 @@ function WeeklyTeam(props) {
         setInputTeamData(newTeamData)
     }
 
-    const createWeeklyTeamHandler = () => {
-        const newWeeklyTeam = {
-            id: `${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`,
-            data: {
-                1: [],
-                2: [],
-                3: []
+    const createWeeklyTeamHandler = (isNew) => {
+        // 첫 생성
+        if (isNew) {
+            const newWeeklyTeam = {
+                id: `${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`,
+                data: {
+                    1: [],
+                    2: [],
+                    3: []
+                }
             }
-        }
-        if (newWeeklyTeam.id !== weeklyTeamData[weeklyTeamData.length - 1].id) {
-            setWeeklyTeamData([...weeklyTeamData, newWeeklyTeam])
-            setPage(weeklyTeamData.length)
+            if (newWeeklyTeam.id !== weeklyTeamData[weeklyTeamData.length - 1].id) {
+                setWeeklyTeamData([...weeklyTeamData, newWeeklyTeam])
+                setPage(weeklyTeamData.length)
+                setEditMode(true)
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "이미 생성된 주차입니다.",
+                })
+            }
+        } else {// 수정
+            setInputTeamData([weeklyTeamData[weeklyTeamData.length - 1].data[1], weeklyTeamData[weeklyTeamData.length - 1].data[2], weeklyTeamData[weeklyTeamData.length - 1].data[3]])
             setEditMode(true)
-        } else {
-            Swal.fire({
-                icon: "error",
-                title: "이미 생성된 주차입니다.",
-            })
         }
     }
 
@@ -237,16 +243,22 @@ function WeeklyTeam(props) {
           <div className='w-full flex justify-center'>
               {canCreate ?
                   (!editMode ?
-                      <button className='flex block-border bg-gray-50' onClick={createWeeklyTeamHandler} style={{fontFamily: 'DNFForgedBlade'}}><span className='text-black'>이번 주 팀 생성하기</span><Write/></button>
+                      <button className='flex block-border bg-gray-50' onClick={() => createWeeklyTeamHandler(true)} style={{fontFamily: 'DNFForgedBlade'}}><span className='text-black'>이번 주 팀 생성하기</span><Write/></button>
                   :
                       <button className='flex block-border bg-gray-50' onClick={registerTeamHandler} style={{fontFamily: 'DNFForgedBlade'}}><span className='text-black'>등록하기</span><Register /></button>
                   )
                   :
-                  (!activeBorder &&
+                  (!activeBorder ?
                       <div className='flex flex-col mt-3'>
                           <p className='mb-1 text-gray-400' style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀 생성하기</p>
                           <p className='text-xs' style={{fontFamily: 'DNFForgedBlade'}}>Open : 참여투표 종료 후</p>
-                      </div>)
+                      </div>
+                      :
+                          editMode ?
+                                <button className='flex block-border bg-gray-50' style={{fontFamily: 'DNFForgedBlade'}} onClick={registerTeamHandler}><span className='text-black'>등록하기</span><Register /></button>
+                          :
+                              <button className='flex block-border bg-gray-50' style={{fontFamily: 'DNFForgedBlade'}} onClick={() => createWeeklyTeamHandler(false)}><span>수정</span></button>
+                  )
               }
           </div>
           </div>
