@@ -1,8 +1,9 @@
 import {useEffect, useState, useRef} from 'react'
-import { getDatabase, ref, get, set, child, onValue } from 'firebase/database'
+import { getDatabase, ref, get, set, child, onValue, remove } from 'firebase/database'
 import { uid } from "uid"
 import {doc, setDoc} from "firebase/firestore";
 import {db} from "../../firebase.js";
+import Swal from "sweetalert2"
 import styled from 'styled-components'
 import write from "@/assets/write.png"
 import './LetsRecord.css'
@@ -186,6 +187,7 @@ function LetsRecord(props) {
 
       if (scorer.trim()) {
           set(ref(db, '2024/' + today + '/' + id), {
+              id: id,
               time: time,
               goal: scorer.trim(),
               assist: assistant.trim(),
@@ -208,6 +210,30 @@ function LetsRecord(props) {
       setTimeout(() => {
           scrollToElement()
       }, 300)
+  }
+
+  const deleteRecord = (index) => {
+      Swal.fire({
+            title: '삭제, Really?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: '삭제',
+            cancelButtonText: '취소'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const db = getDatabase()
+                const recordRef = ref(db, '2024/' + today + '/' + todayRecord[index].id)
+                remove(ref(db, '2024/' + today + '/' + todayRecord[index].id))
+                remove(recordRef).then(() => {
+                    console.log('Document successfully deleted!')
+                })
+                .catch((error) => {
+                    console.log(error)
+                });
+            }
+      })
   }
 
     // const showLastRecord = () => {
@@ -250,12 +276,12 @@ function LetsRecord(props) {
             <hr className='w-1/2 mb-5 border-green-700'/>
             <div className='flex flex-col items-center w-full'>
                 <>
-                <div className={canRegister ? 'custom-border' : open ? 'default-border' : 'none-border'}>
+                <div className={canRegister ? 'custom-record-border' : open ? 'default-border' : 'none-border'}>
                 <div ref={scrollContainerRef} className='w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2'
                      style={{height: open && dynamicHeight, display: open ? 'flex' : 'none'}}>
                     {
                         todayRecord?.map((record, index) =>
-                            <div className='flex items-center gap-5 pt-1 in-desktop' key={index} style={{width: '80%'}}>
+                            <div className='relative flex items-center gap-5 pt-1 in-desktop' key={index} style={{width: '80%'}}>
                                 <span style={{
                                     width: '30px',
                                     fontSize: '12px',
@@ -279,6 +305,7 @@ function LetsRecord(props) {
                                             <span className='font-bold text-black'>{record.assist}</span>
                                         </>}
                                 </div>
+                                <div className='absolute -right-1 top-1 cursor-pointer text-red-600' onClick={() => deleteRecord(index)}>X</div>
                             </div>
                         )
                     }

@@ -25,6 +25,13 @@ function App() {
     const [open, setOpen] = useState(false)
     const [weeklyTeamLive, setWeeklyTeamLive] = useState(false)
     const [showFooter, setSHowFooter] = useState(true)
+    const [live, setLive] = useState(false)
+
+    const startTime = new Date()
+    startTime.setHours(7, 50, 0, 0)
+    const endTime = new Date()
+    endTime.setHours(10, 15, 0, 0)
+    const currentTime = new Date()
 
     const dataGeneration = async () => {
         const collectionRef = collection(db, '2024')
@@ -65,6 +72,10 @@ function App() {
     }, [historyData]);
 
     useEffect(() => {
+        const day = currentTime.getDay()
+        if ([0, 7].includes(day) && currentTime >= startTime && currentTime <= endTime) {
+            setLive(true)
+        }
         if (headerRef.current) {
             setHeaderHeight(headerRef.current.clientHeight)
         }
@@ -99,7 +110,7 @@ function App() {
                       style={{fontFamily: 'DNFForgedBlade'}}>
                       <div
                           className={`relative cursor-pointer w-full ${tap === 0 && 'text-yellow-500'}`}
-                          onClick={() => setTap(0)}><span>{open && <Live $left='-3px'>Live</Live>}{tapName[0]}</span>
+                          onClick={() => setTap(0)}><span className='relative'>{live && <Live $left='-13px'>Live</Live>}{tapName[0]}</span>
                       </div>
                       {/*<span className={`relative top-1`}>*</span>*/}
                       <Sun className='spin'/>
@@ -117,7 +128,7 @@ function App() {
                       <Sun className='spin'/>
                       <div
                           className={`relative cursor-pointer w-full ${tap === 3 && 'text-yellow-500'}`}
-                          onClick={() => setTap(3)}><span>{weeklyTeamLive && <Live $left='-3px'>Live</Live>}{tapName[3]}</span>
+                          onClick={() => setTap(3)}><span className='relative'>{weeklyTeamLive && <Live $left='-13px'>Live</Live>}{tapName[3]}</span>
                       </div>
                   </div>
               </header>
