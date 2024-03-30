@@ -8,7 +8,8 @@ import write from "@/assets/write.png"
 import './LetsRecord.css'
 
 function LetsRecord(props) {
-  const registerRef = useRef(null);
+  const registerRef = useRef(null)
+  const scrollContainerRef = useRef(null)
   const {open, setOpen, recordData, weeklyTeamData, headerHeight, setTap} = props
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
@@ -20,15 +21,18 @@ function LetsRecord(props) {
   const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '안용현', '윤준석', '이재진', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은짐']
   const [writtenData, setWrittenData] = useState([])
   const [registerHeight, setRegisterHeight] = useState(0);
+  const [canRegister, setCanRegister] = useState(false)
 
-  const [selectedType, setSelectedType] = useState('type2');
 
   // 기록 가능 시간 7:45 ~ 10:15
   const startTime = new Date()
-  startTime.setHours(7, 45, 0, 0)
+  startTime.setHours(7, 40, 0, 0)
   const endTime = new Date()
-  endTime.setHours(10, 15, 0, 0)
+  endTime.setHours(23, 59, 0, 0)
   const currentTime = new Date()
+
+  const registerEndTime = new Date()
+  registerEndTime.setHours(10, 15, 0, 0)
 
   useEffect(() => {
     if (registerRef.current) {
@@ -38,6 +42,9 @@ function LetsRecord(props) {
     const day = currentTime.getDay()
     if ([0, 7].includes(day) && currentTime >= startTime && currentTime <= endTime) {
       setOpen(true)
+    }
+    if ([0, 7].includes(day) && currentTime >= startTime && currentTime <= registerEndTime) {
+      setCanRegister(true)
     }
 
     // 오늘 날짜 형식 포맷 (MMDD)
@@ -59,7 +66,7 @@ function LetsRecord(props) {
 
   useEffect(() => {
     function setHeight() {
-      const height = window.innerHeight - (headerHeight + registerHeight + 150)
+      const height = window.innerHeight - (headerHeight + registerHeight + 200)
       setDynamicHeight(height)
     }
     setHeight()
@@ -158,7 +165,7 @@ function LetsRecord(props) {
                 await setDoc(docRef, stats)
                 console.log("Document written with ID: ", docRef.id);
             }
-            if (!compareObjects(stats, writtenData) && open) {
+            if (!compareObjects(stats, writtenData) && canRegister) {
                 registerRecord()
             }
         }
@@ -186,7 +193,26 @@ function LetsRecord(props) {
           setScorer('')
           setAssistant('')
       }
+
+      // 스크롤 내려주기
+      const scrollToElement = () => {
+          const scrollContainer = scrollContainerRef.current;
+
+          if (scrollContainer) {
+              scrollContainer.scrollTo({
+                  top: scrollContainer.scrollTop + scrollContainer.clientHeight,
+                  behavior: 'smooth',
+              });
+          }
+      }
+      setTimeout(() => {
+          scrollToElement()
+      }, 300)
   }
+
+    // const showLastRecord = () => {
+    //     console.log('click')
+    // }
 
   // 슬라이드 시 탭 이동
     const [startX, setStartX] = useState(null);
@@ -219,17 +245,17 @@ function LetsRecord(props) {
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}>
+            {/*<span className='text-xs absolute left-0 top-0 mt-5 cursor-pointer' onClick={showLastRecord}>{'< 지난 기록 보기'}</span>*/}
             <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'DNFForgedBlade'}}>{"Today's Record"}</span>
             <hr className='w-1/2 mb-5 border-green-700'/>
             <div className='flex flex-col items-center w-full'>
                 <>
-                <div className={open ? 'custom-border' : 'default-border'}>
-                <div className='w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2'
+                <div className={canRegister ? 'custom-border' : open ? 'default-border' : 'none-border'}>
+                <div ref={scrollContainerRef} className='w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2'
                      style={{height: open && dynamicHeight, display: open ? 'flex' : 'none'}}>
                     {
                         todayRecord?.map((record, index) =>
-                            // <div className='flex items-center w-9/12 gap-5 border-b-green-300 border-b-2 pt-1' key={index}>
-                            <div className='flex items-center w-9/12 gap-5 pt-1 in-desktop' key={index}>
+                            <div className='flex items-center gap-5 pt-1 in-desktop' key={index} style={{width: '80%'}}>
                                 <span style={{
                                     width: '30px',
                                     fontSize: '12px',
@@ -260,8 +286,8 @@ function LetsRecord(props) {
                 </div>
                 {/*Write Container*/}
                 <div>
-                  <hr className={open ? 'border-1 border-green-600 w-full mb-4' : 'hidden'}/>
-                  {open ?
+                  <hr className={canRegister ? 'border-1 border-green-600 w-full mb-4' : 'hidden'}/>
+                  {canRegister ?
                       <div ref={registerRef} className='flex items-center gap-5 mb-1'>
                         <div>
                           <div className='flex mb-2 gap-0.5 items-center'>
@@ -283,7 +309,7 @@ function LetsRecord(props) {
                           <span className='text-black'>등록</span><Write/></button>
                       </div>
                     :
-                    <div className='relative bottom-4'>
+                    <div className={open ? 'relative bottom-4 top-10' : 'relative bottom-4'}>
                       <p className='mb-1' style={{fontFamily: 'DNFForgedBlade'}}>기록 가능 시간이 아닙니다.</p>
                       <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>Open : 07:45 ~ 10:15 Sun.</p>
                     </div>

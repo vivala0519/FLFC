@@ -31,6 +31,11 @@
 }
 .default-border {
     width: 96%;
+    border: 1px solid transparent;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+}
+.none-border {
+    width: 96%;
 }
 .in-desktop {
     justify-content: center;
