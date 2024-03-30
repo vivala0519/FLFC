@@ -174,7 +174,7 @@ function WeeklyTeam(props) {
         setMoveX(null);
     };
 
-    const votedPlayerMonthPlan = ['승진', '희종', '승호', '규진', '원효', '장식', '대열', '종우', '영진', '원진', '희철', '태훈']
+    const votedPlayerMonthPlan = ['승진', '희종', '승호', '규진', '원효', '장식', 종우', '영진', '원진', '희철', '태훈']
     const votedPlayerWeekPlan = ['민조', '정민']
 
     return (
