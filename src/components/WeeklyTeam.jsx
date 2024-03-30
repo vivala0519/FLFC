@@ -257,7 +257,7 @@ function WeeklyTeam(props) {
                           editMode ?
                                 <button className='flex block-border bg-gray-50' style={{fontFamily: 'DNFForgedBlade'}} onClick={registerTeamHandler}><span className='text-black'>등록하기</span><Register /></button>
                           :
-                              <button className='flex block-border bg-gray-50' style={{fontFamily: 'DNFForgedBlade'}} onClick={() => createWeeklyTeamHandler(false)}><span>수정</span></button>
+                              <button className='flex block-border bg-gray-50' style={{fontFamily: 'DNFForgedBlade'}} onClick={() => createWeeklyTeamHandler(false)}><span className='text-black'>수정</span></button>
                   )
               }
           </div>
