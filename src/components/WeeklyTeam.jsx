@@ -10,7 +10,7 @@ import {collection, getDocs} from "firebase/firestore";
 import {db} from "../../firebase.js";
 
 function WeeklyTeam(props) {
-    const {setRegisteredTeam, setTap, setWeeklyTeamLive, setShowFooter} = props
+    const {setRegisteredTeam, setTap, setShowFooter} = props
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
     const [lastDate, setLastDate] = useState('')
     const [dynamicHeight, setDynamicHeight] = useState(0)
@@ -52,7 +52,6 @@ function WeeklyTeam(props) {
 
             if (lastTeamDate > today) {
                 setActiveBorder(true)
-                setWeeklyTeamLive(true)
                 setCanCreate(false)
             }
         }
