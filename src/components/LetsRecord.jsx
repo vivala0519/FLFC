@@ -163,7 +163,9 @@ function LetsRecord(props) {
         if (stats) {
             const registerRecord = async () => {
                 const docRef = doc(db, '2024', today)
+                const backupRef = doc(db, '2024', today + '_backup')
                 await setDoc(docRef, stats)
+                await setDoc(backupRef, stats)
                 console.log("Document written with ID: ", docRef.id);
             }
             if (!compareObjects(stats, writtenData) && canRegister) {
