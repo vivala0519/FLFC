@@ -19,11 +19,12 @@ function LetsRecord(props) {
   const [dynamicHeight, setDynamicHeight] = useState(0);
   const [today, setToday] = useState('')
   const [thisYear, setThisYear] = useState('2024')
-  const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '안용현', '윤준석', '이재진', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은짐']
+  const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '안용현', '윤준석', '이재진', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은집']
   const [writtenData, setWrittenData] = useState([])
   const [registerHeight, setRegisterHeight] = useState(0);
   const [canRegister, setCanRegister] = useState(false)
 
+    console.log(weeklyTeamData)
 
   // 기록 가능 시간 7:45 ~ 10:15
   const startTime = new Date()
@@ -112,7 +113,7 @@ function LetsRecord(props) {
             const thisWeekMembers = data[1].concat(data[2], data[3])
             thisWeekMembers.forEach(member => {
                 players.forEach(player => {
-                    if (player.includes(member)) {
+                    if (member && player.includes(member)) {
                         stats[player] = {'출석': true, '골': 0, '어시': 0}
                     }
                 })
@@ -157,15 +158,13 @@ function LetsRecord(props) {
         }
         return true
     }
-    // today Record 바로 등록
+    // Firestore 데이터 등록
     useEffect(() => {
         const stats = formatRecordByName(todayRecord)
         if (stats) {
             const registerRecord = async () => {
                 const docRef = doc(db, '2024', today)
-                const backupRef = doc(db, '2024', today + '_backup')
                 await setDoc(docRef, stats)
-                await setDoc(backupRef, stats)
                 console.log("Document written with ID: ", docRef.id);
             }
             if (!compareObjects(stats, writtenData) && canRegister) {
@@ -182,18 +181,21 @@ function LetsRecord(props) {
     setAssistant(e.target.value)
   }
 
+  // RealTime Database 등록
   const registerHandler = () => {
       const db = getDatabase()
       const time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0')
       const id = uid()
 
       if (scorer.trim()) {
-          set(ref(db, '2024/' + today + '/' + id), {
+          const record = {
               id: id,
               time: time,
               goal: scorer.trim(),
-              assist: assistant.trim(),
-          });
+              assist: assistant.trim()
+          }
+          set(ref(db, '2024/' + today + '/' + id), record);
+          set(ref(db, '2024/' + today + '_backup' + '/' + id), record);
           setScorer('')
           setAssistant('')
       }

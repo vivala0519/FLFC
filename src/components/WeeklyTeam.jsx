@@ -22,7 +22,6 @@ function WeeklyTeam(props) {
 
     const today = new Date()
     const currentDayOfWeek = today.getDay()
-    console.log(currentDayOfWeek)
     const daysUntilSunday = 7 - currentDayOfWeek
     const nextSunday = new Date(today)
     nextSunday.setDate(today.getDate() + daysUntilSunday)
