@@ -350,7 +350,7 @@ function LetsRecord(props) {
                       <div className={open ? 'relative bottom-4 top-10' : 'relative bottom-4'}>
                           <p className='mb-1' style={{fontFamily: 'DNFForgedBlade'}}>기록 가능 시간이 아닙니다.</p>
                           <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>Open : 07:50 ~ 10:05 Sun.</p>
-                          <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>오늘의 기록은 오늘 하루 동안 유지됩니다.</p>
+                          {open && <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>오늘의 기록은 오늘 하루 동안 유지됩니다.</p>}
                       </div>
                   }
                 </div>

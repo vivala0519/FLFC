@@ -58,11 +58,20 @@ export const dataAnalysis = async () => {
     }
     else if (currentMonth > 3 && currentMonth <= 6) {
         activeQuarterStats = secondQuarterStats
+        if (secondQuarterStats.size === 0) {
+            activeQuarterStats = firstQuarterStats
+        }
     }
     else if (currentMonth > 6 && currentMonth <= 9) {
         activeQuarterStats = thirdQuarterStats
+        if (thirdQuarterStats.size === 0) {
+            activeQuarterStats = firstQuarterStats
+        }
     } else {
         activeQuarterStats = fourthQuarterStats
+        if (fourthQuarterStats.size === 0) {
+            activeQuarterStats = firstQuarterStats
+        }
     }
 
     activeQuarterStats.forEach((value, key) => {
