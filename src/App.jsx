@@ -57,6 +57,11 @@ function App() {
         if (lastTeamDate > today) {
             if (fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id) {
                 setWeeklyTeamLive(true)
+                const endTime = new Date()
+                endTime.setHours(10, 5, 0, 0)
+                if ([0, 7].includes(today.getDay()) &&  currentTime > endTime) {
+                    setWeeklyTeamLive(false)
+                }
             }
         }
     }

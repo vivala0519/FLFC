@@ -24,8 +24,6 @@ function LetsRecord(props) {
   const [registerHeight, setRegisterHeight] = useState(0);
   const [canRegister, setCanRegister] = useState(false)
 
-    console.log(weeklyTeamData)
-
   // 기록 가능 시간 7:45 ~ 10:15
   const startTime = new Date()
   startTime.setHours(7, 50, 0, 0)
