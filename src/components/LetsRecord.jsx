@@ -28,13 +28,13 @@ function LetsRecord(props) {
 
   // 기록 가능 시간 7:45 ~ 10:15
   const startTime = new Date()
-  startTime.setHours(7, 40, 0, 0)
+  startTime.setHours(7, 50, 0, 0)
   const endTime = new Date()
   endTime.setHours(23, 59, 0, 0)
   const currentTime = new Date()
 
   const registerEndTime = new Date()
-  registerEndTime.setHours(10, 15, 0, 0)
+  registerEndTime.setHours(10, 5, 0, 0)
 
   useEffect(() => {
     if (registerRef.current) {
@@ -170,6 +170,15 @@ function LetsRecord(props) {
             if (!compareObjects(stats, writtenData) && canRegister) {
                 registerRecord()
             }
+        }
+        // 스크롤 맨 밑으로
+        const scrollContainer = scrollContainerRef.current;
+        if (scrollContainer) {
+            const scrollHeight = scrollContainer.scrollHeight;
+            scrollContainer.scrollTo({
+                top: scrollHeight,
+                behavior: 'smooth',
+            });
         }
     }, [todayRecord])
 
@@ -340,13 +349,14 @@ function LetsRecord(props) {
                           <span className='text-black'>등록</span><Write/></button>
                       </div>
                     :
-                    <div className={open ? 'relative bottom-4 top-10' : 'relative bottom-4'}>
-                      <p className='mb-1' style={{fontFamily: 'DNFForgedBlade'}}>기록 가능 시간이 아닙니다.</p>
-                      <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>Open : 07:45 ~ 10:15 Sun.</p>
-                    </div>
-                }
+                      <div className={open ? 'relative bottom-4 top-10' : 'relative bottom-4'}>
+                          <p className='mb-1' style={{fontFamily: 'DNFForgedBlade'}}>기록 가능 시간이 아닙니다.</p>
+                          <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>Open : 07:50 ~ 10:05 Sun.</p>
+                          <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>오늘의 기록은 오늘 하루 동안 유지됩니다.</p>
+                      </div>
+                  }
                 </div>
-              </>
+                </>
             </div>
         </div>
     )
