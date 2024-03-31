@@ -316,7 +316,7 @@ function LetsRecord(props) {
                                             <span className='font-bold text-black'>{record.assist}</span>
                                         </>}
                                 </div>
-                                <div className='absolute -right-1 top-1 cursor-pointer text-red-600' onClick={() => deleteRecord(index)}>X</div>
+                                {canRegister && <div className='absolute -right-1 top-1 cursor-pointer text-red-600' onClick={() => deleteRecord(index)}>X</div>}
                             </div>
                         )
                     }
