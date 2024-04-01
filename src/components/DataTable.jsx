@@ -68,7 +68,6 @@ function DataTable(props) {
                     const bAssists = quarterData.totalData.get(b)['어시'];
                     return bAssists - aAssists;
                 })
-                sortedByAssist.unshift('만우절')
                 setSortedNames(sortedByAssist)
                 extractWinners(sortedByAssist)
             } else if (tap === '출석') {
