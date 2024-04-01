@@ -31,6 +31,9 @@ export const dataAnalysis = async () => {
     const firstQuarterStats = new Map()
     generateByQuarter(firstQuarter, firstQuarterStats)
     const firstQuarterData = {members: extractActiveMembers(firstQuarterStats), totalData: firstQuarterStats}
+    firstQuarterData.totalData.get('윤희철')['골'] = 50
+    firstQuarterData.totalData.set('만우절')['어시'] = 50
+    firstQuarterData.totalData.set('만우절', { '골': 0, '어시': 50, '출석': 0 })
 
     // 2분기 이름별 통계 취합
     const secondQuarter = fetchedData.filter(item => Number(item.id.slice(0, 2)) > 3 && Number(item.id.slice(0, 2)) <= 6)
