@@ -14,6 +14,7 @@ function StatusBoard(props) {
 
     const fetchAnalysis = async () => {
         const data = await dataAnalysis()
+        console.log(data)
         setAnalyzedData(data)
     }
 
