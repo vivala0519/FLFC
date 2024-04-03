@@ -173,8 +173,8 @@ function WeeklyTeam(props) {
         setMoveX(null);
     };
 
-    const votedPlayerMonthPlan = ['승진', '희종', '승호', '규진', '원효', '장식', '종우', '영진', '원진', '희철', '태훈']
-    const votedPlayerWeekPlan = ['민조', '정민']
+    const votedPlayerMonthPlan = []
+    const votedPlayerWeekPlan = []
 
     return (
       <div className='w-full relative' style={{height: '80vh'}}
@@ -208,21 +208,21 @@ function WeeklyTeam(props) {
                       : // 팀 생성 모드
                           <div className='flex flex-col gap-4'>
                               <div className='flex flex-col mb-6'>
-                                  <span className='mb-4 text-black'>금주 참여 투표 인원 (투표 시간 순)</span>
-                                  <div className='mr-2 mb-4'>
-                                      <span className='text-sm text-yellow-600'>월회비 : </span>
-                                      <div className='flex flex-wrap justify-center gap-1'>
-                                          {votedPlayerMonthPlan.map((player, index) => (
-                                                <span className=' text-black' key={index}>{player + ' '}</span>))}
-                                      </div>
-                                  </div>
-                                  <div className='mr-2'>
-                                      <span className='text-sm text-yellow-600'>주회비 : </span>
-                                      <div className='flex flex-wrap justify-center gap-1'>
-                                          {votedPlayerWeekPlan.map((player, index) => (
-                                              <span className=' text-black' key={index}>{player}</span>))}
-                                      </div>
-                                  </div>
+                                  {/*<span className='mb-4 text-black'>금주 참여 투표 인원 (투표 시간 순)</span>*/}
+                                  {/*<div className='mr-2 mb-4'>*/}
+                                  {/*    <span className='text-sm text-yellow-600'>월회비 : </span>*/}
+                                  {/*    <div className='flex flex-wrap justify-center gap-1'>*/}
+                                  {/*        {votedPlayerMonthPlan.map((player, index) => (*/}
+                                  {/*              <span className=' text-black' key={index}>{player + ' '}</span>))}*/}
+                                  {/*    </div>*/}
+                                  {/*</div>*/}
+                                  {/*<div className='mr-2'>*/}
+                                  {/*    <span className='text-sm text-yellow-600'>주회비 : </span>*/}
+                                  {/*    <div className='flex flex-wrap justify-center gap-1'>*/}
+                                  {/*        {votedPlayerWeekPlan.map((player, index) => (*/}
+                                  {/*            <span className=' text-black' key={index}>{player}</span>))}*/}
+                                  {/*    </div>*/}
+                                  {/*</div>*/}
                               </div>
                               <div className='flex flex-col gap-2 items-center'>
                                   {inputTeamData?.map((team, index) => (
