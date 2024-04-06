@@ -234,7 +234,7 @@ function DataTable(props) {
                         {/*실 출석 인원 먼저*/}
                         {
                             sortedNames?.map((name, index) =>
-                                (<><TableRowStat key={index} $tap={tap}>
+                                (<div key={'sorted-' + index}><TableRowStat key={index} $tap={tap}>
                                     {tap === '현황판' ?
                                         <FirstColumn>{kingList.includes(name) && <Trophy className='trophy' $king={findTrophy(name)}/>}<StatusBoardName style={{width: '72px', borderRight: '1px solid #ccc'}}>{name}</StatusBoardName></FirstColumn>
                                         :
@@ -264,11 +264,11 @@ function DataTable(props) {
                                     {tap === '어시' && tableData?.data?.map((data, index) => (<span style={{minWidth: '13% !important'}} key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
                                     {tap !== '현황판' && tableData?.data && <span>{quarterData.totalData.get(name)[tap]}</span>}
                                 </TableRowStat>
-                            <StyledHR $tap={tap} /></>))
+                            <StyledHR $tap={tap} /></div>))
                         }
                         {/*장기 미출석 인원*/}
                         {sortedAbsenteeNames?.map((name, index) =>
-                            (<><TableRowOther key={index}>
+                            (<div key={'sorted-ab-' + index}><TableRowOther key={index}>
                                 {tap === '현황판' ? <FirstColumn><div style={{width: '75px'}}>{name}</div></FirstColumn> : <div style={{minWidth: '20%', flex: '1'}}>{name}</div>}
                                 {
                                     tap === '출석' ? tableData?.data?.map((data, index) => (
@@ -280,7 +280,7 @@ function DataTable(props) {
                                 }
                                 <span className='flex items-center pre text-xs'></span>
                             </TableRowOther>
-                            <StyledHR $tap={tap} /></>))
+                            <StyledHR $tap={tap} /></div>))
                         }
                     </TableBody>
                 </Table>
