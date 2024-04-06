@@ -6,7 +6,7 @@ import help from '@/assets/help2.png'
 import {dataAnalysis} from "../apis/analyzeData.js";
 
 function StatusBoard(props) {
-    const {propsData, lastSeasonKings, setTap} = props
+    const {propsData, lastSeasonKings, setTap, setKingsChanged} = props
 
     const [analyzedData, setAnalyzedData] = useState({})
     const [isLastElementInViewport, setIsLastElementInViewport] = useState(false)
@@ -20,6 +20,17 @@ function StatusBoard(props) {
     useEffect(() => {
         fetchAnalysis()
     }, [])
+
+    // 지난 시즌 수상자 세팅
+    useEffect(() => {
+        if (analyzedData?.totalQuarterData) {
+            if (analyzedData.totalQuarterData[1].members.active.length > 0) {
+                setKingsChanged(true)
+            }
+        }
+    }, [analyzedData]);
+
+
   // useEffect(() => {
   //   // 초기 페이지 현재 월로 설정
   //   const currentTime = new Date()

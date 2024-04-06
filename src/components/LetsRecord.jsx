@@ -26,7 +26,7 @@ function LetsRecord(props) {
 
   // 기록 가능 시간 7:45 ~ 10:15
   const startTime = new Date()
-  startTime.setHours(7, 50, 0, 0)
+  startTime.setHours(7, 40, 0, 0)
   const endTime = new Date()
   endTime.setHours(23, 59, 0, 0)
   const currentTime = new Date()

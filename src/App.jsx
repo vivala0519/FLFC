@@ -19,6 +19,7 @@ function App() {
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
     const [historyData, setHistoryData] = useState([])
     const [lastSeasonKings, setLastSeasonKings] = useState(null)
+    const [kingsChanged, setKingsChanged] = useState(false)
     const [registeredTeam, setRegisteredTeam] = useState(null)
     const headerRef = useRef(null)
     const [headerHeight, setHeaderHeight] = useState(0)
@@ -69,12 +70,15 @@ function App() {
     // 지난 시즌 수상자 세팅
     useEffect(() => {
         if (historyData) {
-            const item = historyData.find(data => data.id === 'last_season')
+            let item = historyData.find(data => data.id === 'last_season')
+            if (kingsChanged) {
+                item = historyData.find(data => data.id === 'changed_last_season')
+            }
             if (item) {
                 setLastSeasonKings(item.data)
             }
         }
-    }, [historyData]);
+    }, [historyData, data, kingsChanged]);
 
     useEffect(() => {
         const day = currentTime.getDay()
@@ -139,7 +143,7 @@ function App() {
               </header>
               {/*{[1].includes(tap) && <div className='w-full h-32'></div>}*/}
               {tap === 0 && <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]} setTap={setTap} />}
-              {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} lastSeasonKings={lastSeasonKings} setTap={setTap} />}
+              {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} lastSeasonKings={lastSeasonKings} setTap={setTap} setKingsChanged={setKingsChanged}/>}
               {tap === 2 && <RecordRoom propsData={data} analyzedData={analyzedData} propsSetTap={setTap} />}
               {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} setWeeklyTeamLive={setWeeklyTeamLive} setShowFooter={setSHowFooter}/>}
               {[0, 3].includes(tap) && !open && showFooter &&
