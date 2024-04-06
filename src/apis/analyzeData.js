@@ -1,7 +1,7 @@
 import {collection, doc, getDoc, getDocs} from 'firebase/firestore'
 import { db } from '../../firebase.js'
 
-export const dataAnalysis = async () => {
+export const dataAnalysis = async (quarter) => {
     const collectionRef = collection(db, '2024')
     const snapshot = await getDocs(collectionRef)
     const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
@@ -51,26 +51,43 @@ export const dataAnalysis = async () => {
     const fourthQuarterData = {members: extractActiveMembers(fourthQuarterStats), totalData: fourthQuarterStats}
 
     // 현재 월이 포함된 분기 찾기
-    const currentTime = new Date()
-    const currentMonth = currentTime.getMonth() + 1
-    if (currentMonth <= 3) {
-        activeQuarterStats = firstQuarterStats
-    }
-    else if (currentMonth > 3 && currentMonth <= 6) {
-        activeQuarterStats = secondQuarterStats
-        if (secondQuarterStats.size === 0) {
+
+    if (quarter) {
+        if (quarter === 1) {
             activeQuarterStats = firstQuarterStats
         }
-    }
-    else if (currentMonth > 6 && currentMonth <= 9) {
-        activeQuarterStats = thirdQuarterStats
-        if (thirdQuarterStats.size === 0) {
-            activeQuarterStats = firstQuarterStats
+        else if (quarter === 2) {
+            activeQuarterStats = secondQuarterStats
+        }
+        else if (quarter === 3) {
+            activeQuarterStats = thirdQuarterStats
+        }
+        else {
+            activeQuarterStats = fourthQuarterStats
         }
     } else {
-        activeQuarterStats = fourthQuarterStats
-        if (fourthQuarterStats.size === 0) {
+        const currentTime = new Date()
+        const currentMonth = currentTime.getMonth() + 1
+
+        if (currentMonth <= 3) {
             activeQuarterStats = firstQuarterStats
+        }
+        else if (currentMonth > 3 && currentMonth <= 6) {
+            activeQuarterStats = secondQuarterStats
+            if (secondQuarterStats.size === 0) {
+                activeQuarterStats = firstQuarterStats
+            }
+        }
+        else if (currentMonth > 6 && currentMonth <= 9) {
+            activeQuarterStats = thirdQuarterStats
+            if (thirdQuarterStats.size === 0) {
+                activeQuarterStats = secondQuarterStats
+            }
+        } else {
+            activeQuarterStats = fourthQuarterStats
+            if (fourthQuarterStats.size === 0) {
+                activeQuarterStats = thirdQuarterStats
+            }
         }
     }
 

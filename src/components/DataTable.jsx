@@ -11,7 +11,7 @@ import attendance from '@/assets/attendance2.png'
 import './DataTable.css'
 
 function DataTable(props) {
-    const {tap, tableData, analyzedData, page, setPage, month, quarterData, lastSeasonKings} = props
+    const {tap, tableData, analyzedData, page, setPage, month, quarterData, lastSeasonKings, setQuarter, setBlockSetPage} = props
 
     const [sortedNames, setSortedNames] = useState([])
     const [sortedAbsenteeNames, setSortedAbsenteeNames] = useState([])
@@ -22,7 +22,9 @@ function DataTable(props) {
     const [arrowDirection, setArrowDirection] = useState(true)
 
     useEffect(() => {
-        // console.log('tableData.data', tableData.data)
+        // if (tableData?.data?.length > 0) {
+        //     console.log('tableData.data', tableData.data)
+        // }
         // console.log('analyzedData', analyzedData)
         // console.log('quarterData', quarterData)
     }, [tableData])
@@ -83,7 +85,7 @@ function DataTable(props) {
                 setSortedNames(analyzedData?.active?.members['active'].sort((a, b) => a.localeCompare(b)))
             }
         }
-    }, [tap, quarterData])
+    }, [analyzedData, tap, quarterData])
 
     const findTrophy = (name) => {
         if (lastSeasonKings?.goal_king === name) {
@@ -110,18 +112,25 @@ function DataTable(props) {
     
     // 페이지에 따른 분기 이름 설정
     useEffect(() => {
-        if (page < 3) {
-            setQuarterName('1')
-        } else if (page < 6) {
-            setQuarterName('2')
-        } else if (page < 9) {
-            setQuarterName('3')
-        } else {
-            setQuarterName('4')
+        if (page) {
+            if (page < 3) {
+                setQuarterName('1')
+                setQuarter(1)
+            } else if (page < 6) {
+                setQuarterName('2')
+                setQuarter(2)
+            } else if (page < 9) {
+                setQuarterName('3')
+                setQuarter(3)
+            } else {
+                setQuarterName('4')
+                setQuarter(4)
+            }
         }
     }, [page])
 
     const pageMoveHandler = (left) => {
+        setBlockSetPage(true)
         if (left && page > 0) {
             setPage(page - 1)
             return
@@ -262,7 +271,7 @@ function DataTable(props) {
                                     {tap === '출석' && tableData?.data?.map((data, index) => (<span style={{minWidth: '13% !important'}} key={name + index}>{data.data[name] ? 'O' : '-'}</span>))}
                                     {tap === '골' && tableData?.data?.map((data, index) => (<span style={{minWidth: '13% !important'}} key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
                                     {tap === '어시' && tableData?.data?.map((data, index) => (<span style={{minWidth: '13% !important'}} key={name + index}>{data.data[name] ? Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap] : '-'}</span>))}
-                                    {tap !== '현황판' && tableData?.data && <span>{quarterData.totalData.get(name)[tap]}</span>}
+                                    {tap !== '현황판' && quarterData?.totalData.get(name) && <span>{quarterData.totalData.get(name)[tap]}</span>}
                                 </TableRowStat>
                             <StyledHR $tap={tap} /></div>))
                         }

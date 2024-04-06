@@ -13,7 +13,7 @@ function StatusBoard(props) {
     const [isFirstElementInViewport, setIsFirstElementInViewport] = useState(false)
 
     const fetchAnalysis = async () => {
-        const data = await dataAnalysis()
+        const data = await dataAnalysis(0)
         setAnalyzedData(data)
     }
 

@@ -16,6 +16,8 @@ function RecordRoom(props) {
     const [month, setMonth] = useState([])
     const [weeksPerMonth, setWeeksPerMonth] = useState([])
     const [page, setPage] = useState(0)
+    const [quarter, setQuarter] = useState()
+    const [blockSetPage, setBlockSetPage] = useState(false)
     const [tableData, setTableData] = useState({})
     const [quarterData, setQuarterData] = useState([])
     const [showHelp, setShowHelp] = useState(false)
@@ -38,15 +40,17 @@ function RecordRoom(props) {
         const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
         setFetchData(fetchedData)
     }
-    const fetchAnalysis = async () => {
-        const data = await dataAnalysis()
-        setAnalyzedData(data)
+    const fetchAnalysis = async (quarter) => {
+        if (quarter) {
+            const data = await dataAnalysis(quarter)
+            setAnalyzedData(data)
+        }
     }
 
     useEffect(() => {
         dataGeneration()
-        fetchAnalysis()
-    }, [])
+        fetchAnalysis(quarter)
+    }, [quarter])
 
     useEffect(() => {
         // 월별 주차 계산
@@ -60,7 +64,9 @@ function RecordRoom(props) {
         // 진행된 월 set
         setMonth([...monthSet])
         // 초기 월 설정
-        setPage([...monthSet][monthSet.size - 1] - 1)
+        if (!blockSetPage) {
+            setPage([...monthSet][monthSet.size - 1] - 1)
+        }
         setWeeksPerMonth(weeksByMonth)
     }, [fetchData])
 
@@ -144,8 +150,7 @@ function RecordRoom(props) {
           <div>
               {
                   ['현황판', '출석', '골', '어시'].includes(tap)
-                      ? (<DataTable tap={tap} tableData={tableData} analyzedData={analyzedData} page={page} setPage={setPage}
-                             month={month} quarterData={quarterData}/>)
+                      ? (<DataTable tap={tap} tableData={tableData} analyzedData={analyzedData} page={page} setPage={setPage} month={month} quarterData={quarterData} quarter={quarter} setQuarter={setQuarter} setBlockSetPage={setBlockSetPage} />)
                       : <div></div>
               }
 

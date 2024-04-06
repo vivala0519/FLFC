@@ -122,7 +122,7 @@ function LetsRecord(props) {
 
                 if (goal !== "") {
                     players.forEach(player => {
-                        if (player.includes(goal)) {
+                        if (player.includes(goal) && stats[player]) {
                             stats[player]['골']++
                         }
                     })
@@ -130,7 +130,7 @@ function LetsRecord(props) {
 
                 if (assist !== "") {
                     players.forEach(player => {
-                        if (player.includes(assist)) {
+                        if (player.includes(assist) && stats[player]) {
                             stats[player]['어시']++
                         }
                     })
