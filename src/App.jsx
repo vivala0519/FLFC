@@ -4,7 +4,7 @@ import StatusBoard from './components/StatusBoard.jsx'
 import WeeklyTeam from './components/WeeklyTeam.jsx'
 import RecordRoom from './components/RecordRoom.jsx'
 import { dataAnalysis } from "./apis/analyzeData.js";
-import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore'
+import { collection, doc, getDocs, setDoc } from 'firebase/firestore'
 import { db } from '../firebase.js'
 import { Analytics } from "@vercel/analytics/react"
 import styled from 'styled-components'

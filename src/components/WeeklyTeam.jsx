@@ -13,7 +13,6 @@ function WeeklyTeam(props) {
     const {setRegisteredTeam, setTap, setShowFooter} = props
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
     const [lastDate, setLastDate] = useState('')
-    const [dynamicHeight, setDynamicHeight] = useState(0)
     const [page, setPage] = useState(0)
     const [editMode, setEditMode] = useState(false)
     const [canCreate, setCanCreate] = useState(true)
@@ -55,18 +54,6 @@ function WeeklyTeam(props) {
                 setCanCreate(false)
             }
         }
-
-        // 창 높이에 따라 높이 조절
-        function setHeight() {
-            const height = window.innerHeight - 350
-            setDynamicHeight(height)
-        }
-        setHeight()
-        window.addEventListener('resize', setHeight);
-
-        return () => {
-            window.removeEventListener('resize', setHeight);
-        };
     }, [lastDate]);
 
     useEffect(() => {

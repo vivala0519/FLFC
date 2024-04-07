@@ -1,4 +1,4 @@
-import {collection, doc, getDoc, getDocs} from 'firebase/firestore'
+import {collection, getDocs} from 'firebase/firestore'
 import { db } from '../../firebase.js'
 
 export const dataAnalysis = async (quarter) => {
@@ -167,7 +167,6 @@ export const dataAnalysis = async (quarter) => {
     const members = extractActiveMembers(activeQuarterStats)
     const activeQuarterData = {members: members, totalData: activeQuarterStats}
 
-    // return {members: members, totalData: activeQuarterStats}
     return {active: activeQuarterData, totalQuarterData: [firstQuarterData, secondQuarterData, thirdQuarterData, fourthQuarterData]}
 }
 
