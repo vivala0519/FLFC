@@ -190,37 +190,45 @@ function LetsRecord(props) {
 
   // RealTime Database 등록
   const registerHandler = () => {
+    const day = currentTime.getDay()
+    if (!([0, 7].includes(day) && currentTime >= startTime && currentTime <= endTime)) {
+      Swal.fire({
+        icon: 'error',
+        text: '기록 가능 시간이 아닙니다.'
+        })
+    } else {
       const db = getDatabase()
       const time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0')
       const id = uid()
 
       if (scorer.trim()) {
-          const record = {
-              id: id,
-              time: time,
-              goal: scorer.trim(),
-              assist: assistant.trim()
-          }
-          set(ref(db, '2024/' + today + '/' + id), record);
-          set(ref(db, '2024/' + today + '_backup' + '/' + id), record);
-          setScorer('')
-          setAssistant('')
+        const record = {
+          id: id,
+          time: time,
+          goal: scorer.trim(),
+          assist: assistant.trim()
+        }
+        set(ref(db, '2024/' + today + '/' + id), record);
+        set(ref(db, '2024/' + today + '_backup' + '/' + id), record);
+        setScorer('')
+        setAssistant('')
       }
 
       // 스크롤 내려주기
       const scrollToElement = () => {
-          const scrollContainer = scrollContainerRef.current;
+        const scrollContainer = scrollContainerRef.current;
 
-          if (scrollContainer) {
-              scrollContainer.scrollTo({
-                  top: scrollContainer.scrollTop + scrollContainer.clientHeight,
-                  behavior: 'smooth',
-              });
-          }
+        if (scrollContainer) {
+          scrollContainer.scrollTo({
+            top: scrollContainer.scrollTop + scrollContainer.clientHeight,
+            behavior: 'smooth',
+          });
+        }
       }
       setTimeout(() => {
-          scrollToElement()
+        scrollToElement()
       }, 300)
+    }
   }
 
   const deleteRecord = (index) => {
@@ -350,7 +358,7 @@ function LetsRecord(props) {
                       <div className={open ? 'relative bottom-4 top-10' : 'relative bottom-4'}>
                           <p className='mb-1' style={{fontFamily: 'DNFForgedBlade'}}>기록 가능 시간이 아닙니다.</p>
                           <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>Open : 07:50 ~ 10:05 Sun.</p>
-                          {open && <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>오늘의 기록은 오늘 하루 동안 유지됩니다.</p>}
+                          {open && <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>기록은 오늘 하루 동안 유지됩니다.</p>}
                       </div>
                   }
                 </div>
