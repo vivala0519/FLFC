@@ -37,7 +37,8 @@ function RecordRoom(props) {
     const dataGeneration = async () => {
         const collectionRef = collection(db, '2024')
         const snapshot = await getDocs(collectionRef)
-        const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+        let fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+        fetchedData = fetchedData.filter(data => data.id !== 'last_season_kings')
         setFetchData(fetchedData)
     }
     const fetchAnalysis = async (quarter) => {
