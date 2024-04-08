@@ -275,22 +275,16 @@ const LetsRecord = (props) => {
       setMoveX(e.touches[0].clientX);
   };
 
-    const handleTouchEnd = () => {
-        const diff = startX - moveX;
-        if (diff > 75) {
-            setTap(1)
-        } else if (diff < -75) {
-            setTap(3)
-        }
-        setStartX(null);
-        setMoveX(null);
-    };
   const handleTouchEnd = () => {
       const diff = startX - moveX;
       if (diff > 75) {
           setTap(1)
       } else if (diff < -75) {
           setTap(3)
+      }
+      setStartX(null);
+      setMoveX(null);
+  };
       }
       setStartX(null);
       setMoveX(null);
