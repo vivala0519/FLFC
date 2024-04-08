@@ -286,10 +286,6 @@ const LetsRecord = (props) => {
       setMoveX(null);
   };
       }
-      setStartX(null);
-      setMoveX(null);
-  };
-
 
     return (
         <div
