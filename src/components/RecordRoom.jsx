@@ -7,7 +7,7 @@ import {collection, getDocs} from "firebase/firestore";
 import {db} from "../../firebase.js";
 import {dataAnalysis} from "../apis/analyzeData.js";
 
-function RecordRoom(props) {
+const RecordRoom = (props) => {
     const {propsSetTap} = props
     const [fetchData, setFetchData] = useState([])
     const [analyzedData, setAnalyzedData] = useState({})

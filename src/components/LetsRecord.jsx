@@ -8,7 +8,7 @@ import styled from 'styled-components'
 import write from "@/assets/write.png"
 import './LetsRecord.css'
 
-function LetsRecord(props) {
+const LetsRecord = (props) => {
   const registerRef = useRef(null)
   const scrollContainerRef = useRef(null)
   const {open, setOpen, recordData, weeklyTeamData, headerHeight, setTap} = props
@@ -23,10 +23,11 @@ function LetsRecord(props) {
   const [writtenData, setWrittenData] = useState([])
   const [registerHeight, setRegisterHeight] = useState(0);
   const [canRegister, setCanRegister] = useState(false)
+  const [lastRecord, setLastRecord] = useState('')
 
-  // 기록 가능 시간 7:45 ~ 10:15
+  // 기록 가능 시간 7:50 ~ 10:05
   const startTime = new Date()
-  startTime.setHours(7, 40, 0, 0)
+  startTime.setHours(7, 50, 0, 0)
   const endTime = new Date()
   endTime.setHours(23, 59, 0, 0)
   const currentTime = new Date()
@@ -85,22 +86,23 @@ function LetsRecord(props) {
       }
   }, [recordData])
 
+  const parseTimeString = (record) => {
+    const [hours, minutes, seconds] = record.split(':')
+    return new Date(0, 0, 0, hours, minutes, seconds)
+  }
+
   // 실시간 데이터 연동
   useEffect(() => {
       const isData = todayRecordObject[today]
       if (isData) {
-          const recordArray = Object.values(isData)
-          const sortedRecordArray = recordArray.sort((a, b) => {
-              const timeA = a.time.split(":").map(Number)
-              const timeB = b.time.split(":").map(Number)
+        const recordArray = Object.values(isData)
+        const sortedRecordArray = recordArray.sort((a, b) => {
+          const timeA = parseTimeString(a.time)
+          const timeB = parseTimeString(b.time)
 
-              if (timeA[0] !== timeB[0]) {
-                  return timeA[0] - timeB[0]
-              } else {
-                  return timeA[1] - timeB[1]
-              }
-          });
-          setTodayRecord(sortedRecordArray)
+          return timeA - timeB
+        });
+        setTodayRecord(sortedRecordArray)
       }
   }, [todayRecordObject])
 
@@ -198,7 +200,7 @@ function LetsRecord(props) {
         })
     } else {
       const db = getDatabase()
-      const time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0')
+      const time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0') + ':' + currentTime.getSeconds().toString().padStart(2, '0')
       const id = uid()
 
       if (scorer.trim()) {
@@ -210,6 +212,7 @@ function LetsRecord(props) {
         }
         set(ref(db, '2024/' + today + '/' + id), record);
         set(ref(db, '2024/' + today + '_backup' + '/' + id), record);
+        setLastRecord(id)
         setScorer('')
         setAssistant('')
       }
@@ -260,17 +263,17 @@ function LetsRecord(props) {
     // }
 
   // 슬라이드 시 탭 이동
-    const [startX, setStartX] = useState(null);
-    const [moveX, setMoveX] = useState(null);
+  const [startX, setStartX] = useState(null);
+  const [moveX, setMoveX] = useState(null);
 
-    const handleTouchStart = (e) => {
-        setStartX(e.touches[0].clientX);
-        setMoveX(e.touches[0].clientX);
-    };
+  const handleTouchStart = (e) => {
+      setStartX(e.touches[0].clientX);
+      setMoveX(e.touches[0].clientX);
+  };
 
-    const handleTouchMove = (e) => {
-        setMoveX(e.touches[0].clientX);
-    };
+  const handleTouchMove = (e) => {
+      setMoveX(e.touches[0].clientX);
+  };
 
     const handleTouchEnd = () => {
         const diff = startX - moveX;
@@ -282,6 +285,17 @@ function LetsRecord(props) {
         setStartX(null);
         setMoveX(null);
     };
+  const handleTouchEnd = () => {
+      const diff = startX - moveX;
+      if (diff > 75) {
+          setTap(1)
+      } else if (diff < -75) {
+          setTap(3)
+      }
+      setStartX(null);
+      setMoveX(null);
+  };
+
 
     return (
         <div
@@ -300,13 +314,13 @@ function LetsRecord(props) {
                      style={{height: open && dynamicHeight, display: open ? 'flex' : 'none'}}>
                     {
                         todayRecord?.map((record, index) =>
-                            <div className='relative flex items-center gap-5 pt-1 in-desktop' key={index} style={{width: '80%'}}>
+                            <div className={`relative flex items-center gap-5 pt-1 in-desktop ${record.id === lastRecord ? 'bg-effect' : ''}`} key={index} style={{width: '80%'}}>
                                 <span style={{
                                     width: '30px',
                                     fontSize: '12px',
                                     fontFamily: 'Hahmlet',
                                     color: 'grey'
-                                }}>{record.time}</span>
+                                }}>{record.time.split(':')[0] + ':' + record.time.split(':')[1]}</span>
                                 <div className='flex items-center pl-2 pr-2 border-b-green-600 border-b-2'>
                                     <span
                                         className='flex justify-center relative bottom-2 mr-0.5'

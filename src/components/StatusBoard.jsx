@@ -5,7 +5,7 @@ import './LetsRecord.css'
 import help from '@/assets/help2.png'
 import {dataAnalysis} from "../apis/analyzeData.js";
 
-function StatusBoard(props) {
+const StatusBoard = (props) => {
     const {propsData, setTap} = props
 
     const [analyzedData, setAnalyzedData] = useState({})

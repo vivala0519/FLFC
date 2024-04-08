@@ -10,7 +10,7 @@ import assist from '@/assets/assist2.png'
 import attendance from '@/assets/attendance2.png'
 import './DataTable.css'
 
-function DataTable(props) {
+const DataTable = (props) => {
     const {tap, tableData, analyzedData, page, setPage, month, quarterData, lastSeasonKings, setQuarter, setBlockSetPage} = props
 
     const [sortedNames, setSortedNames] = useState([])
