@@ -2,9 +2,11 @@ import {collection, getDocs} from 'firebase/firestore'
 import { db } from '../../firebase.js'
 
 export const dataAnalysis = async (quarter) => {
-    const collectionRef = collection(db, '2024')
+    const year = '2024'
+    const collectionRef = collection(db, year)
     const snapshot = await getDocs(collectionRef)
     const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+
     // 현황판 데이터 Map
     let activeQuarterStats = null
 
@@ -26,32 +28,35 @@ export const dataAnalysis = async (quarter) => {
         })
     }
 
+    const lastSeasonKings = fetchedData.find(data => data.id === 'last_season_kings').data
+
     // 1분기 이름별 통계 취합
     const firstQuarter = fetchedData.filter(item => Number(item.id.slice(0, 2)) <= 3)
     const firstQuarterStats = new Map()
     generateByQuarter(firstQuarter, firstQuarterStats)
-    const firstQuarterData = {members: extractActiveMembers(firstQuarterStats), totalData: firstQuarterStats}
+    const firstQuarterData = {members: extractActiveMembers(firstQuarterStats), totalData: firstQuarterStats, lastSeasonKings: lastSeasonKings[Number(year) - 1 + '_4th']}
 
     // 2분기 이름별 통계 취합
     const secondQuarter = fetchedData.filter(item => Number(item.id.slice(0, 2)) > 3 && Number(item.id.slice(0, 2)) <= 6)
     const secondQuarterStats = new Map()
     generateByQuarter(secondQuarter, secondQuarterStats)
-    const secondQuarterData = {members: extractActiveMembers(secondQuarterStats), totalData: secondQuarterStats}
+    const secondQuarterData = {members: extractActiveMembers(secondQuarterStats), totalData: secondQuarterStats, lastSeasonKings: lastSeasonKings[year + '_1st']}
 
     // 3분기 이름별 통계 취합
     const thirdQuarter = fetchedData.filter(item => Number(item.id.slice(0, 2)) > 6 && Number(item.id.slice(0, 2)) <= 9)
     const thirdQuarterStats = new Map()
     generateByQuarter(thirdQuarter, thirdQuarterStats)
-    const thirdQuarterData = {members: extractActiveMembers(thirdQuarterStats), totalData: thirdQuarterStats}
+    const thirdQuarterData = {members: extractActiveMembers(thirdQuarterStats), totalData: thirdQuarterStats, lastSeasonKings: lastSeasonKings[year + '_2nd']}
 
     // 4분기 이름별 통계 취합
     const fourthQuarter = fetchedData.filter(item => Number(item.id.slice(0, 2)) > 9)
     const fourthQuarterStats = new Map()
     generateByQuarter(fourthQuarter, fourthQuarterStats)
-    const fourthQuarterData = {members: extractActiveMembers(fourthQuarterStats), totalData: fourthQuarterStats}
+    const fourthQuarterData = {members: extractActiveMembers(fourthQuarterStats), totalData: fourthQuarterStats, lastSeasonKings: lastSeasonKings[year + '3rd']}
+
+    let lastKings = null
 
     // 현재 월이 포함된 분기 찾기
-
     if (quarter) {
         if (quarter === 1) {
             activeQuarterStats = firstQuarterStats
@@ -71,22 +76,29 @@ export const dataAnalysis = async (quarter) => {
 
         if (currentMonth <= 3) {
             activeQuarterStats = firstQuarterStats
+            lastKings = lastSeasonKings[Number(year) - 1 + '_4th']
         }
         else if (currentMonth > 3 && currentMonth <= 6) {
             activeQuarterStats = secondQuarterStats
+            lastKings = lastSeasonKings[year + '_1st']
             if (secondQuarterStats.size === 0) {
                 activeQuarterStats = firstQuarterStats
+                lastKings = lastSeasonKings[Number(year) - 1 + '_4th']
             }
         }
         else if (currentMonth > 6 && currentMonth <= 9) {
             activeQuarterStats = thirdQuarterStats
+            lastKings = lastSeasonKings[year + '_2nd']
             if (thirdQuarterStats.size === 0) {
                 activeQuarterStats = secondQuarterStats
+                lastKings = lastSeasonKings[year + '_1st']
             }
         } else {
             activeQuarterStats = fourthQuarterStats
+            lastKings = lastSeasonKings[year + '_3rd']
             if (fourthQuarterStats.size === 0) {
                 activeQuarterStats = thirdQuarterStats
+                lastKings = lastSeasonKings[year + '_2nd']
             }
         }
     }
@@ -165,7 +177,7 @@ export const dataAnalysis = async (quarter) => {
         }
     })
     const members = extractActiveMembers(activeQuarterStats)
-    const activeQuarterData = {members: members, totalData: activeQuarterStats}
+    const activeQuarterData = {members: members, totalData: activeQuarterStats, lastSeasonKings: lastKings}
 
     return {active: activeQuarterData, totalQuarterData: [firstQuarterData, secondQuarterData, thirdQuarterData, fourthQuarterData]}
 }

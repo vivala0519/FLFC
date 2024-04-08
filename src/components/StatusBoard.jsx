@@ -6,9 +6,10 @@ import help from '@/assets/help2.png'
 import {dataAnalysis} from "../apis/analyzeData.js";
 
 function StatusBoard(props) {
-    const {propsData, lastSeasonKings, setTap} = props
+    const {propsData, setTap} = props
 
     const [analyzedData, setAnalyzedData] = useState({})
+    const [lastSeasonKings, setLastSeasonKings] = useState({goal_king: '', assist_king: '', attendance_king: []})
     const [isLastElementInViewport, setIsLastElementInViewport] = useState(false)
     const [isFirstElementInViewport, setIsFirstElementInViewport] = useState(false)
 
@@ -22,51 +23,11 @@ function StatusBoard(props) {
     }, [])
 
 
-  // useEffect(() => {
-  //   // 초기 페이지 현재 월로 설정
-  //   const currentTime = new Date()
-  //   const month = currentTime.getMonth()
-  //   setPage(month)
-  //
-  //   // 월별 주차 계산
-  //   const monthSet = new Set()
-  //   const weeksByMonth = propsData?.reduce((acc, cur) => {
-  //     const key = Number(cur.id.slice(0, 2))
-  //     monthSet.add(key)
-  //     acc[key] ? acc[key]++ : (acc[key] = 1)
-  //     return acc
-  //   }, {})
-  //   // 진행된 월 set
-  //   setMonth([...monthSet])
-  //   setWeeksPerMonth(weeksByMonth)
-  // }, [])
-  //
-  // useEffect(() => {
-  //   // console.log(propsData)
-  // }, [propsData])
-  //
-  // useEffect(() => {
-  //   const tableData = propsData?.filter(data => Number(data.id.slice(0, 2)) === month[page])
-  //   const obj = {month: month[page], weeks: weeksPerMonth[month[page]], data: tableData}
-  //   setTableData(obj)
-  //
-  //   const selectedMonth = month[page]
-  //   let quarterData = []
-  //   if (selectedMonth <= 3) {
-  //     quarterData = analyzedData.totalQuarterData[0]
-  //   }
-  //   else if (selectedMonth > 3 && selectedMonth <= 6) {
-  //     quarterData = analyzedData.totalQuarterData[1]
-  //   }
-  //   else if (selectedMonth > 6 && selectedMonth <= 9) {
-  //     quarterData = analyzedData.totalQuarterData[2]
-  //   } else {
-  //     quarterData = analyzedData.totalQuarterData[3]
-  //   }
-  //   setQuarterData(quarterData)
-  //
-  // }, [page, month, weeksPerMonth]);
-
+    useEffect(() => {
+        if (analyzedData['active']) {
+            setLastSeasonKings(analyzedData['active']['lastSeasonKings'])
+        }
+    }, [analyzedData])
 
     // 슬라이드 시 탭 이동
     const [startX, setStartX] = useState(null)
@@ -76,7 +37,6 @@ function StatusBoard(props) {
         setStartX(e.touches[0].clientX)
         setMoveX(e.touches[0].clientX)
         const isElementInViewport = (element) => {
-            console.log(element)
             const rect = element.getBoundingClientRect()
             return (
                 rect.top >= 0 &&
@@ -112,21 +72,6 @@ function StatusBoard(props) {
 
     return (
       <div className='w-full relative' style={{top: '-10px'}}  onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
-        {/*<div className='flex flex-row justify-center gap-14 w-full mb-3 p-2' style={{fontFamily: 'Giants-Inline'}}>*/}
-        {/*  /!*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*!/*/}
-        {/*  /!*     onClick={() => setTap(tapName[0])}>현황판*!/*/}
-        {/*  /!*</div>*!/*/}
-        {/*  <Tap className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '출석' && 'text-rose-600'}`} style={{width: '40px'}}*/}
-        {/*       onClick={() => setTap(tapName[0])}>출석*/}
-        {/*  </Tap>*/}
-        {/*  <Tap className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '골' && 'text-rose-600'}`} style={{width: '40px'}}*/}
-        {/*       onClick={() => setTap(tapName[1])}>골*/}
-        {/*  </Tap>*/}
-        {/*  <Tap className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '어시' && 'text-rose-600'}`} style={{width: '40px'}}*/}
-        {/*       onClick={() => setTap(tapName[2])}>어시*/}
-        {/*  </Tap>*/}
-        {/*  <Help />*/}
-        {/*</div>*/}
         <div>
           <DataTable tap={'현황판'} tableData={propsData} analyzedData={analyzedData} lastSeasonKings={lastSeasonKings} />
         </div>

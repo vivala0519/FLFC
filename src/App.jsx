@@ -17,8 +17,7 @@ function App() {
     const [data, setData] = useState([])
     const [analyzedData, setAnalyzedData] = useState({})
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
-    const [historyData, setHistoryData] = useState([])
-    const [lastSeasonKings, setLastSeasonKings] = useState(null)
+    // const [historyData, setHistoryData] = useState([])
     const [registeredTeam, setRegisteredTeam] = useState(null)
     const headerRef = useRef(null)
     const [headerHeight, setHeaderHeight] = useState(0)
@@ -36,16 +35,16 @@ function App() {
     const dataGeneration = async () => {
         const collectionRef = collection(db, '2024')
         const weeklyTeamRef = collection(db, 'weeklyTeam')
-        const historyRef = collection(db, 'history')
+        // const historyRef = collection(db, 'history')
         const snapshot = await getDocs(collectionRef)
         const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
-        const historySnapshot = await getDocs(historyRef)
+        // const historySnapshot = await getDocs(historyRef)
         const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
         const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
-        const fetchedHistoryData = historySnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+        // const fetchedHistoryData = historySnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
         setData(fetchedData)
         setWeeklyTeamData(fetchedWeeklyTeamData)
-        setHistoryData(fetchedHistoryData)
+        // setHistoryData(fetchedHistoryData)
 
         const lastDate = fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id
         const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
@@ -65,16 +64,6 @@ function App() {
             }
         }
     }
-
-    // 지난 시즌 수상자 세팅
-    useEffect(() => {
-        if (historyData) {
-            let item = historyData.find(data => data.id === 'last_season')
-            if (item) {
-                setLastSeasonKings(item.data)
-            }
-        }
-    }, [historyData, data]);
 
     useEffect(() => {
         const day = currentTime.getDay()
@@ -139,7 +128,7 @@ function App() {
               </header>
               {/*{[1].includes(tap) && <div className='w-full h-32'></div>}*/}
               {tap === 0 && <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]} setTap={setTap} />}
-              {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} lastSeasonKings={lastSeasonKings} setTap={setTap} />}
+              {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} setTap={setTap} />}
               {tap === 2 && <RecordRoom propsData={data} analyzedData={analyzedData} propsSetTap={setTap} />}
               {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} setWeeklyTeamLive={setWeeklyTeamLive} setShowFooter={setSHowFooter}/>}
               {[0, 3].includes(tap) && !open && showFooter &&
