@@ -18,6 +18,12 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --d: 2500ms;
+  --angle: 90deg;
+  --gradX: 100%;
+  --gradY: 50%;
+  --c1: rgba(234, 179, 8, 1);
+  --c2: rgba(234, 179, 8, 0.2);
 }
 
 a {

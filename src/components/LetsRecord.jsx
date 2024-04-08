@@ -1,9 +1,10 @@
 import {useEffect, useState, useRef} from 'react'
-import { getDatabase, ref, get, set, child, onValue, remove } from 'firebase/database'
+import { getDatabase, ref, set, onValue, remove } from 'firebase/database'
 import { uid } from "uid"
-import {doc, setDoc} from "firebase/firestore";
-import {db} from "../../firebase.js";
+import {doc, setDoc} from "firebase/firestore"
+import {db} from "../../firebase.js"
 import Swal from "sweetalert2"
+import DailyMVP from "./DailyMVP.jsx"
 import styled from 'styled-components'
 import write from "@/assets/write.png"
 import './LetsRecord.css'
@@ -24,6 +25,7 @@ const LetsRecord = (props) => {
   const [registerHeight, setRegisterHeight] = useState(0);
   const [canRegister, setCanRegister] = useState(false)
   const [lastRecord, setLastRecord] = useState('')
+  const [showMVP, setShowMVP] = useState(false)
 
   // 기록 가능 시간 7:50 ~ 10:05
   const startTime = new Date()
@@ -33,6 +35,9 @@ const LetsRecord = (props) => {
   const currentTime = new Date()
 
   const registerEndTime = new Date()
+  registerEndTime.setHours(10, 5, 0, 0)
+
+  const showMVPStartTime = new Date()
   registerEndTime.setHours(10, 5, 0, 0)
 
   useEffect(() => {
@@ -46,6 +51,9 @@ const LetsRecord = (props) => {
     }
     if ([0, 7].includes(day) && currentTime >= startTime && currentTime <= registerEndTime) {
       setCanRegister(true)
+    }
+    if ([0, 7].includes(day) && currentTime >= showMVPStartTime && currentTime <= endTime) {
+      setShowMVP(true)
     }
 
     // 오늘 날짜 형식 포맷 (MMDD)
@@ -285,7 +293,16 @@ const LetsRecord = (props) => {
       setStartX(null);
       setMoveX(null);
   };
+
+  // MVP 화면 닫으면 퍼레이드 종료
+  useEffect(() => {
+    if (!showMVP) {
+      const canvasElements = document.getElementsByTagName('canvas')
+      while (canvasElements.length > 0) {
+        canvasElements[0].parentNode.removeChild(canvasElements[0])
       }
+    }
+  }, [showMVP]);
 
     return (
         <div
@@ -299,6 +316,7 @@ const LetsRecord = (props) => {
             <hr className='w-1/2 mb-5 border-green-700'/>
             <div className='flex flex-col items-center w-full'>
                 <>
+                {showMVP && <DailyMVP showMVP={showMVP} setShowMVP={setShowMVP} todayRecord={todayRecord} year={thisYear} today={today} players={players}/>}
                 <div className={canRegister ? 'custom-record-border' : open ? 'default-border' : 'none-border'}>
                 <div ref={scrollContainerRef} className='w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2'
                      style={{height: open && dynamicHeight, display: open ? 'flex' : 'none'}}>
