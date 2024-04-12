@@ -6,7 +6,7 @@ import styled from 'styled-components'
 import './LetsRecord.css'
 
 const DailyMVP = (props) => {
-  const { setShowMVP, todayRecord, year, today, players } = props
+  const { setShowMVP, recordData, year, today } = props
   const [bestPlayers, setBestPlayers] = useState([])
   const confetti = new JSConfetti()
 
@@ -31,65 +31,41 @@ const DailyMVP = (props) => {
     }, 5000);
   }, []);
 
+
   useEffect(() => {
-    // 이름별 포인트 합산 계산
     const dailyRecordMap = new Map()
+    const data = recordData.find(data => data.id === today)
+    if (data) {
+      Object.entries(data.data).forEach(([key, value]) => {
+        dailyRecordMap.set(key, {total: value['골'] + value['어시'], goal: value['골'], assist: value['어시']})
+      })
+    }
 
-    todayRecord.forEach(record => {
-      let scorerName = record.goal.trim() !== '용병' ? record.goal.trim() : null
-      let assistantName = record.assist.trim() ? record.assist.trim() !== '용병' ? record.assist.trim() : null : null
-
-      if (scorerName) {
-        if (dailyRecordMap.has(scorerName)) {
-          const goalCount = dailyRecordMap.get(scorerName)
-          dailyRecordMap.set(scorerName, goalCount + 1)
-        } else {
-          dailyRecordMap.set(scorerName, 1)
-        }
-      }
-
-      if (assistantName) {
-        if (dailyRecordMap.has(assistantName)) {
-          const assistCount = dailyRecordMap.get(assistantName)
-          dailyRecordMap.set(assistantName, assistCount + 1)
-        } else {
-          dailyRecordMap.set(assistantName, 1)
-        }
-      }
-    })
-
-    // 최다 공포 찾기
+    // // 최다 공포 찾기
     let maxPlayers = []
     let maxValue = 0
 
     for (const [key, value] of dailyRecordMap.entries()) {
-      if (value > maxValue) {
-        maxPlayers = [key]
-        maxValue = value
-      } else if (value === maxValue) {
-        maxPlayers.push(key)
+      if (value['total'] > maxValue) {
+        maxPlayers = [{name: key, goal: value['goal'], assist: value['assist']}]
+        maxValue = value['total']
+      } else if (value['total'] === maxValue) {
+        maxPlayers.push({name: key, goal: value['goal'], assist: value['assist']})
       }
     }
+    setBestPlayers(maxPlayers)
 
-    if (maxPlayers.length > 0 && maxPlayers.length < 4) {
-      const maxPlayersFullName = []
-      players.forEach(player => {
-        maxPlayers.forEach(max => {
-          if (player.includes(max)) {
-            maxPlayersFullName.push(player)
-          }
-        })
-      })
-      setBestPlayers(maxPlayersFullName)
-    }
-
-  }, [todayRecord])
+  }, [recordData]);
 
   const registerDailyMVP = async () => {
     const docRef = doc(db, 'daily_mvp', today)
     const docSnap = await getDoc(docRef);
+    const data = {}
+    bestPlayers.forEach(player => {
+      data[player.name] = {goal: player.goal, assist: player.assist}
+    })
     if (!docSnap.exists()) {
-      await setDoc(docRef, {bestPlayers: bestPlayers})
+      await setDoc(docRef, data)
     }
   }
 
@@ -112,7 +88,10 @@ const DailyMVP = (props) => {
       <DayText className='underline decoration-2 decoration-solid decoration-yellow-400'>{year.slice(2, 4) + today}</DayText>
       <div className='flex flex-row mt-5 gap-3 justify-center' style={{height: '35%', fontSize: bestPlayers.length > 2 ? '25px' : '27px'}}>
         {bestPlayers.map((player, index) => (
-          <BestPlayer className='underline decoration-2 decoration-double decoration-yellow-400' key={index}>{player}</BestPlayer>
+            <div key={index} className='flex flex-col'>
+              <BestPlayer className='underline decoration-2 decoration-double decoration-yellow-400'>{player.name}</BestPlayer>
+              <span className='text-rose-800 text-xs'>{Number(player.goal) > 0 && player.goal + '골'} {Number(player.assist) > 0 && player.assist + '어시'}</span>
+            </div>
         ))}
       </div>
       <Close className='relative text-sm text-gray-300'>터치하면 사라집니다</Close>
