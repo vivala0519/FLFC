@@ -168,7 +168,7 @@ function App() {
                           }
                       </div>
                   }/>
-                  <Route path='/admin' element={<AdminPage />}/>
+                  <Route path='/admin' element={<AdminPage weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]}  recordData={data} />}/>
               </Routes>
           </BrowserRouter>
       )

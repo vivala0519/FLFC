@@ -27,7 +27,7 @@ const LetsRecord = (props) => {
   const [canRegister, setCanRegister] = useState(false)
   const [lastRecord, setLastRecord] = useState('')
   const [showMVP, setShowMVP] = useState(false)
-  const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(true)
+  const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
   const [requestText, setRequestText] = useState('')
   const [requestList, setRequestList] = useState([])
@@ -190,7 +190,7 @@ const LetsRecord = (props) => {
       const stats = formatRecordByName(todayRecord)
       if (stats) {
         const registerRecord = async () => {
-          const docRef = doc(db, '2024', today)
+          const docRef = doc(db, thisYear, today)
           await setDoc(docRef, stats)
           console.log("Document written with ID: ", docRef.id);
         }
@@ -237,8 +237,8 @@ const LetsRecord = (props) => {
           goal: scorer.trim(),
           assist: assistant.trim()
         }
-        set(ref(db, '2024/' + today + '/' + id), record);
-        set(ref(db, '2024/' + today + '_backup' + '/' + id), record);
+        set(ref(db, thisYear + '/' + today + '/' + id), record);
+        set(ref(db, thisYear +'/' + today + '_backup' + '/' + id), record);
         setLastRecord(id)
         setScorer('')
         setAssistant('')
@@ -273,8 +273,8 @@ const LetsRecord = (props) => {
         }).then((result) => {
             if (result.isConfirmed) {
                 const db = getDatabase()
-                const recordRef = ref(db, '2024/' + today + '/' + todayRecord[index].id)
-                remove(ref(db, '2024/' + today + '/' + todayRecord[index].id))
+                const recordRef = ref(db, thisYear + '/' + today + '/' + todayRecord[index].id)
+                remove(ref(db, thisYear + '/' + today + '/' + todayRecord[index].id))
                 remove(recordRef).then(() => {
                     console.log('Document successfully deleted!')
                 })
@@ -335,7 +335,7 @@ const LetsRecord = (props) => {
   const sendRequest = () => {
     if (requestText.trim()) {
       const db = getDatabase()
-      const time = currentTime
+      const time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0') + ':' + currentTime.getSeconds().toString().padStart(2, '0')
       const id = uid()
 
       const request = {
@@ -431,7 +431,7 @@ const LetsRecord = (props) => {
                             {open && <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>기록은 오늘 하루 동안
                               유지됩니다.</p>}
                         </div>
-                        {open && showRequestUpdateButton &&
+                        {showRequestUpdateButton &&
                           <Request className='absolute right-0 top-6 cursor-pointer' onClick={() => setRequestUpdateMode(true)}>
                             <div className='flex flex-col relative top-4'>
                               <span className='text-white' style={{fontSize: '12px'}}>수정</span>
@@ -447,8 +447,8 @@ const LetsRecord = (props) => {
                             <RequestList className='w-full'>
                               {requestList.map((request, index) => (
                                 <div key={index} className='flex border-b-2 border-b-yellow-500 p-1 pr-3 pl-2 justify-between'>
-                                  <span className='text-xs'>{request.text}</span>
-                                  {request.status === 'processing' && <span className='text-xs text-rose-700'>{'처리중'}</span>}
+                                  <span className='text-xs' style={{textAlign: 'left'}}>{request.text}</span>
+                                  {request.status === 'processing' && <span className='text-xs text-rose-700' style={{width: '42px', textAlign: 'right'}}>{'처리중'}</span>}
                                   {request.status === 'resolved' && <span className='text-xs text-blue-700'>{'완료'}</span>}
                                 </div>
                               ))}
