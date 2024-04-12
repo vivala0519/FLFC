@@ -431,7 +431,7 @@ const LetsRecord = (props) => {
                             {open && <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>기록은 오늘 하루 동안
                               유지됩니다.</p>}
                         </div>
-                        {showRequestUpdateButton &&
+                        {open && showRequestUpdateButton &&
                           <Request className='absolute right-0 top-6 cursor-pointer' onClick={() => setRequestUpdateMode(true)}>
                             <div className='flex flex-col relative top-4'>
                               <span className='text-white' style={{fontSize: '12px'}}>수정</span>
