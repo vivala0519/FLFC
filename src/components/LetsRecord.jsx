@@ -7,7 +7,6 @@ import Swal from "sweetalert2"
 import DailyMVP from "./DailyMVP.jsx"
 import styled from 'styled-components'
 import write from "@/assets/write.png"
-import request from '@/assets/request.png'
 import './LetsRecord.css'
 
 const LetsRecord = (props) => {
@@ -27,10 +26,6 @@ const LetsRecord = (props) => {
   const [canRegister, setCanRegister] = useState(false)
   const [lastRecord, setLastRecord] = useState('')
   const [showMVP, setShowMVP] = useState(false)
-  const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(true)
-  const [requestUpdateMode, setRequestUpdateMode] = useState(false)
-  const [requestText, setRequestText] = useState('')
-  const [requestList, setRequestList] = useState([])
 
   // 기록 가능 시간 7:50 ~ 10:05
   const startTime = new Date()
@@ -59,7 +54,6 @@ const LetsRecord = (props) => {
     }
     if ([0, 7].includes(day) && currentTime >= showMVPStartTime && currentTime <= endTime) {
       setShowMVP(true)
-      setShowRequestUpdateButton(true)
     }
 
     // 오늘 날짜 형식 포맷 (MMDD)
@@ -107,30 +101,17 @@ const LetsRecord = (props) => {
 
   // 실시간 데이터 연동
   useEffect(() => {
-    // today's record
-    const isData = todayRecordObject[today]
-    if (isData) {
-      const recordArray = Object.values(isData)
-      const sortedRecordArray = recordArray.sort((a, b) => {
-        const timeA = parseTimeString(a.time)
-        const timeB = parseTimeString(b.time)
+      const isData = todayRecordObject[today]
+      if (isData) {
+        const recordArray = Object.values(isData)
+        const sortedRecordArray = recordArray.sort((a, b) => {
+          const timeA = parseTimeString(a.time)
+          const timeB = parseTimeString(b.time)
 
-        return timeA - timeB
-      });
-      setTodayRecord(sortedRecordArray)
-    }
-    // request update list
-    const isRequestList = todayRecordObject[today + '_request']
-    if (isRequestList) {
-      const requestList = Object.values(isRequestList)
-      const sortedRequestArray = requestList.sort((a, b) => {
-        const timeA = parseTimeString(a.time)
-        const timeB = parseTimeString(b.time)
-
-        return timeA - timeB
-      });
-      setRequestList(sortedRequestArray)
-    }
+          return timeA - timeB
+        });
+        setTodayRecord(sortedRecordArray)
+      }
   }, [todayRecordObject])
 
     const formatRecordByName = (record) => {
@@ -187,26 +168,26 @@ const LetsRecord = (props) => {
     }
     // Firestore 데이터 등록
     useEffect(() => {
-      const stats = formatRecordByName(todayRecord)
-      if (stats) {
-        const registerRecord = async () => {
-          const docRef = doc(db, '2024', today)
-          await setDoc(docRef, stats)
-          console.log("Document written with ID: ", docRef.id);
+        const stats = formatRecordByName(todayRecord)
+        if (stats) {
+            const registerRecord = async () => {
+                const docRef = doc(db, '2024', today)
+                await setDoc(docRef, stats)
+                console.log("Document written with ID: ", docRef.id);
+            }
+            if (!compareObjects(stats, writtenData) && canRegister) {
+                registerRecord()
+            }
         }
-        if (!compareObjects(stats, writtenData) && canRegister) {
-          registerRecord()
+        // 스크롤 맨 밑으로
+        const scrollContainer = scrollContainerRef.current;
+        if (scrollContainer) {
+            const scrollHeight = scrollContainer.scrollHeight;
+            scrollContainer.scrollTo({
+                top: scrollHeight,
+                behavior: 'smooth',
+            });
         }
-      }
-      // 스크롤 맨 밑으로
-      const scrollContainer = scrollContainerRef.current;
-      if (scrollContainer) {
-        const scrollHeight = scrollContainer.scrollHeight;
-        scrollContainer.scrollTo({
-          top: scrollHeight,
-          behavior: 'smooth',
-        });
-      }
     }, [todayRecord])
 
   const scorerHandler = (e) => {
@@ -323,32 +304,6 @@ const LetsRecord = (props) => {
     }
   }, [showMVP]);
 
-  useEffect(() => {
-    function setHeight() {
-      const additionalHeight = requestUpdateMode ? 300 : 200
-      const height = window.innerHeight - (headerHeight + registerHeight + additionalHeight)
-      setDynamicHeight(height)
-    }
-    setHeight()
-  }, [requestUpdateMode])
-
-  const sendRequest = () => {
-    if (requestText.trim()) {
-      const db = getDatabase()
-      const time = currentTime
-      const id = uid()
-
-      const request = {
-        id: id,
-        time: time,
-        text: requestText,
-        status: 'processing'
-      }
-      set(ref(db, '2024/' + today + '_request' + '/' + id), request);
-      setRequestText('')
-    }
-  }
-
     return (
         <div
             className={`flex flex-col items-center w-full relative ${!open && 'justify-center'}`}
@@ -398,7 +353,7 @@ const LetsRecord = (props) => {
                 </div>
                 </div>
                 {/*Write Container*/}
-                <div className={!canRegister && 'w-full'}>
+                <div>
                   <hr className={canRegister ? 'border-1 border-green-600 w-full mb-4' : 'hidden'}/>
                   {canRegister ?
                       <div ref={registerRef} className='flex items-center gap-5 mb-1'>
@@ -422,44 +377,10 @@ const LetsRecord = (props) => {
                           <span className='text-black'>등록</span><Write/></button>
                       </div>
                     :
-                      <div className='relative'>
-                        {!requestUpdateMode ?
-                            <div>
-                        <div className={open ? 'relative top-6' : 'relative bottom-4'}>
+                      <div className={open ? 'relative bottom-4 top-10' : 'relative bottom-4'}>
                           <p className='mb-1' style={{fontFamily: 'DNFForgedBlade'}}>기록 가능 시간이 아닙니다.</p>
                           <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>Open : 07:50 ~ 10:05 Sun.</p>
-                            {open && <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>기록은 오늘 하루 동안
-                              유지됩니다.</p>}
-                        </div>
-                        {showRequestUpdateButton &&
-                          <Request className='absolute right-0 top-6 cursor-pointer' onClick={() => setRequestUpdateMode(true)}>
-                            <div className='flex flex-col relative top-4'>
-                              <span className='text-white' style={{fontSize: '12px'}}>수정</span>
-                              <span className='text-white' style={{fontSize: '12px'}}>요청</span>
-                            </div>
-                          </Request>
-                        }
-                        </div>
-                        :
-                        <div className='absolute -bottom-44 w-full h-40 bg-white flex justify-center'>
-                          <div className='relative border-t-2 w-11/12 f-full border-b-2 border-t-green-700 border-b-green-700'>
-                            <span className='absolute top-0 -right-4 text-xl' onClick={() => setRequestUpdateMode(false)}>X</span>
-                            <RequestList className='w-full'>
-                              {requestList.map((request, index) => (
-                                <div key={index} className='flex border-b-2 border-b-yellow-500 p-1 pr-3 pl-2 justify-between'>
-                                  <span className='text-xs'>{request.text}</span>
-                                  {request.status === 'processing' && <span className='text-xs text-rose-700'>{'처리중'}</span>}
-                                  {request.status === 'resolved' && <span className='text-xs text-blue-700'>{'완료'}</span>}
-                                </div>
-                              ))}
-                            </RequestList>
-                            <div className='absolute bottom-0 w-full h-8 flex flex-row'>
-                              <RequestInput className='w-10/12 border-2 border-b-0 pl-1' placeholder='ex) 8시 13분 골 OO -> OO 로 수정 요청합니다~' value={requestText} onChange={(event) => setRequestText(event.target.value)}/>
-                              <div className='w-2/12 flex items-center content-center justify-center border-2 border-b-0 border-l-0' onClick={sendRequest}>요청</div>
-                            </div>
-                          </div>
-                        </div>
-                        }
+                          {open && <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>기록은 오늘 하루 동안 유지됩니다.</p>}
                       </div>
                   }
                 </div>
@@ -472,27 +393,11 @@ const LetsRecord = (props) => {
 export default LetsRecord
 
 const Write = styled.div`
-  background: url(${write}) no-repeat center center;
-  background-size: 100% 100%;
-  width: 20px;
-  height: 20px;
-  position: relative;
-  top: 3px;
-  left: 7px;
-`
-
-const Request = styled.div`
-  background: url(${request}) no-repeat center center;
-  background-size: 100% 100%;
-  width: 60px;
-  height: 60px;
-`
-
-const RequestList = styled.div`
-  height: calc(100% - 32px);
-  overflow-y: auto;
-`
-
-const RequestInput = styled.input`
-  font-size: 12px;
+    background: url(${write}) no-repeat center center;
+    background-size: 100% 100%;
+    width: 20px;
+    height: 20px;
+    position: relative;
+    top: 3px;
+    left: 7px;
 `

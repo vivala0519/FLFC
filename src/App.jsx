@@ -1,5 +1,4 @@
 import {useEffect, useState, useRef} from 'react'
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LetsRecord from './components/LetsRecord.jsx'
 import StatusBoard from './components/StatusBoard.jsx'
 import WeeklyTeam from './components/WeeklyTeam.jsx'
@@ -11,7 +10,6 @@ import { Analytics } from "@vercel/analytics/react"
 import styled from 'styled-components'
 import './App.css'
 import sun from '@/assets/sun2.png'
-import AdminPage from "./pages/AdminPage.jsx";
 
 function App() {
     const [tap, setTap] = useState(0)
@@ -96,81 +94,55 @@ function App() {
     }, [registeredTeam])
 
       return (
-          <BrowserRouter>
-              <Routes>
-                  <Route path='/' element={
-                      <div className='flex flex-col items-center' style={{height: '100vh'}}>
-                          <Analytics/>
-                          <header ref={headerRef} className='flex flex-col items-center w-full top-5'>
-                              <span className='relative text-green-800' style={{
-                                  left: '4px',
-                                  letterSpacing: '3px',
-                                  fontSize: '35px',
-                                  fontFamily: 'Giants-Inline',
-                                  fontStyle: 'normal',
-                                  fontWeight: '400'
-                              }}>FLFC</span>
-                              <span className='mb-3 text-yellow-500' style={{
-                                  fontSize: '8px',
-                                  fontFamily: 'SUITE-Regular',
-                                  fontStyle: 'normal',
-                                  fontWeight: '200'
-                              }}>Football Love Futsal Club</span>
-                              <div
-                                  className='flex flex-row justify-around w-full border-double border-0 border-b-2 border-t-2 border-green-500 mb-5 p-2'
-                                  style={{fontFamily: 'DNFForgedBlade'}}>
-                                  <div
-                                      className={`relative cursor-pointer w-full ${tap === 0 && 'text-yellow-500'}`}
-                                      onClick={() => setTap(0)}><span className='relative'>{live &&
-                                      <Live $left='-13px'>Live</Live>}{tapName[0]}</span>
-                                  </div>
-                                  {/*<span className={`relative top-1`}>*</span>*/}
-                                  <Sun className='spin'/>
-                                  <div
-                                      className={`cursor-pointer w-full ${tap === 1 && 'text-yellow-500'}`}
-                                      onClick={() => setTap(1)}><span className='relative'><Live
-                                      $left='-13px'>Live</Live>{tapName[1]}</span>
-                                  </div>
-                                  {/*<span className={`relative top-1`}>*</span>*/}
-                                  <Sun className='spin'/>
-                                  <div
-                                      className={`relative cursor-pointer w-full ${tap === 2 && 'text-yellow-500'}`}
-                                      onClick={() => setTap(2)}>{tapName[2]}
-                                  </div>
-                                  {/*<span className={`relative top-1`}>*</span>*/}
-                                  <Sun className='spin'/>
-                                  <div
-                                      className={`relative cursor-pointer w-full ${tap === 3 && 'text-yellow-500'}`}
-                                      onClick={() => setTap(3)}><span className='relative'>{weeklyTeamLive &&
-                                      <Live $left='-13px'>Live</Live>}{tapName[3]}</span>
-                                  </div>
-                              </div>
-                          </header>
-                          {/*{[1].includes(tap) && <div className='w-full h-32'></div>}*/}
-                          {tap === 0 &&
-                              <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data}
-                                          weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]} setTap={setTap}/>}
-                          {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} setTap={setTap}/>}
-                          {tap === 2 && <RecordRoom propsData={data} analyzedData={analyzedData} propsSetTap={setTap}/>}
-                          {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam}
-                                                    setTap={setTap} setWeeklyTeamLive={setWeeklyTeamLive}
-                                                    setShowFooter={setSHowFooter}/>}
-                          {[0, 3].includes(tap) && !open && showFooter &&
-                              <footer className='absolute bottom-3'>
-                                  <CopyRight>
-                                      Developed by. Seungho Lee
-                                  </CopyRight>
-                                  <CopyRight>
-                                      {/*Copyright*/}
-                                      Copyright 2024 Seungho Lee. All rights reserved.
-                                  </CopyRight>
-                              </footer>
-                          }
+          <div className='flex flex-col items-center' style={{height: '100vh'}}>
+              <Analytics />
+              <header ref={headerRef} className='flex flex-col items-center w-full top-5'>
+                  <span className='relative text-green-800' style={{ left: '4px', letterSpacing: '3px', fontSize: '35px', fontFamily: 'Giants-Inline', fontStyle: 'normal', fontWeight: '400' }}>FLFC</span>
+                  <span className='mb-3 text-yellow-500' style={{ fontSize: '8px', fontFamily: 'SUITE-Regular', fontStyle: 'normal', fontWeight: '200' }}>Football Love Futsal Club</span>
+                  <div
+                      className='flex flex-row justify-around w-full border-double border-0 border-b-2 border-t-2 border-green-500 mb-5 p-2'
+                      style={{fontFamily: 'DNFForgedBlade'}}>
+                      <div
+                          className={`relative cursor-pointer w-full ${tap === 0 && 'text-yellow-500'}`}
+                          onClick={() => setTap(0)}><span className='relative'>{live && <Live $left='-13px'>Live</Live>}{tapName[0]}</span>
                       </div>
-                  }/>
-                  <Route path='/admin' element={<AdminPage />}/>
-              </Routes>
-          </BrowserRouter>
+                      {/*<span className={`relative top-1`}>*</span>*/}
+                      <Sun className='spin'/>
+                      <div
+                          className={`cursor-pointer w-full ${tap === 1 && 'text-yellow-500'}`}
+                          onClick={() => setTap(1)}><span className='relative'><Live $left='-13px'>Live</Live>{tapName[1]}</span>
+                      </div>
+                      {/*<span className={`relative top-1`}>*</span>*/}
+                      <Sun className='spin'/>
+                      <div
+                          className={`relative cursor-pointer w-full ${tap === 2 && 'text-yellow-500'}`}
+                          onClick={() => setTap(2)}>{tapName[2]}
+                      </div>
+                      {/*<span className={`relative top-1`}>*</span>*/}
+                      <Sun className='spin'/>
+                      <div
+                          className={`relative cursor-pointer w-full ${tap === 3 && 'text-yellow-500'}`}
+                          onClick={() => setTap(3)}><span className='relative'>{weeklyTeamLive && <Live $left='-13px'>Live</Live>}{tapName[3]}</span>
+                      </div>
+                  </div>
+              </header>
+              {/*{[1].includes(tap) && <div className='w-full h-32'></div>}*/}
+              {tap === 0 && <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={data} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]} setTap={setTap} />}
+              {tap === 1 && <StatusBoard propsData={data} analyzedData={analyzedData} setTap={setTap} />}
+              {tap === 2 && <RecordRoom propsData={data} analyzedData={analyzedData} propsSetTap={setTap} />}
+              {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setTap={setTap} setWeeklyTeamLive={setWeeklyTeamLive} setShowFooter={setSHowFooter}/>}
+              {[0, 3].includes(tap) && !open && showFooter &&
+                  <footer className='absolute bottom-3'>
+                      <CopyRight>
+                          Developed by. Seungho Lee
+                      </CopyRight>
+                      <CopyRight>
+                          {/*Copyright*/}
+                          Copyright 2024 Seungho Lee. All rights reserved.
+                      </CopyRight>
+                  </footer>
+              }
+          </div>
       )
 }
 
@@ -190,15 +162,15 @@ const CopyRight = styled.span`
         font-size: 8px;
     };
 `
-const Sun = styled.span`
-    position: relative;
-    width: 100px;
-    height: 24px;
-    background-image: url(${sun});
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 42% 37%;
-`
+ const Sun = styled.span`
+     position: relative;
+     width: 100px;
+     height: 24px;
+     background-image: url(${sun});
+     background-position: center;
+     background-repeat: no-repeat;
+     background-size: 42% 37%;
+ `
 
 const Live = styled.span`
     position: absolute;
