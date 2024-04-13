@@ -43,7 +43,7 @@ const LetsRecord = (props) => {
   registerEndTime.setHours(10, 5, 0, 0)
 
   const showMVPStartTime = new Date()
-  registerEndTime.setHours(10, 5, 0, 0)
+  showMVPStartTime.setHours(10, 5, 0, 0)
 
   useEffect(() => {
     if (registerRef.current) {
