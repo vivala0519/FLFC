@@ -28,7 +28,7 @@ const DailyMVP = (props) => {
       while (canvasElements.length > 0) {
         canvasElements[0].parentNode.removeChild(canvasElements[0])
       }
-    }, 5000);
+    }, 3000);
   }, []);
 
 
