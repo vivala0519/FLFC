@@ -422,7 +422,7 @@ const LetsRecord = (props) => {
                           <span className='text-black'>등록</span><Write/></button>
                       </div>
                     :
-                      <div className='relative'>
+                      <div className='relative flex justify-center'>
                         {!requestUpdateMode ?
                             <div>
                         <div className={open ? 'relative top-6' : 'relative bottom-4'}>
@@ -441,8 +441,8 @@ const LetsRecord = (props) => {
                         }
                         </div>
                         :
-                        <div className='absolute -bottom-44 w-full h-40 bg-white flex justify-center'>
-                          <div className='relative border-t-2 w-11/12 f-full border-b-2 border-t-green-700 border-b-green-700'>
+                        <div className='absolute -bottom-44 w-11/12 h-40 bg-white flex justify-center'>
+                          <div className='relative border-t-2 w-full border-b-2 border-t-green-700 border-b-green-700'>
                             <span className='absolute top-0 -right-4 text-xl text-black bg-white cursor-pointer' onClick={() => setRequestUpdateMode(false)}>X</span>
                             <RequestList className='w-full'>
                               {requestList.map((request, index) => (
