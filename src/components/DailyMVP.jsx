@@ -84,7 +84,7 @@ const DailyMVP = (props) => {
 
   return (
     <MVP className='box cursor-pointer flex flex-col' onClick={closeHandler}>
-      <span className='absolute -top-6 right-1 text-yellow-600'>오늘 저녁은 치킨이닭!</span>
+      <Chicken className='absolute -top-6 right-1 text-yellow-600'>오늘 저녁은 치킨이닭!</Chicken>
       <MVPText>Daily MVP</MVPText>
       <DayText className='underline decoration-2 decoration-solid decoration-yellow-400'>{year.slice(2, 4) + today}</DayText>
       <div className='flex flex-row mt-5 gap-3 justify-center' style={{height: '35%', fontSize: bestPlayers.length > 2 ? '25px' : '27px'}}>
@@ -110,6 +110,9 @@ const MVP = styled.div`
   width: 90%;
   height: 200px;
   background-color: white;
+  @media (min-width: 812px) {
+    width: 30%;
+  }
 `
 
 const MVPText = styled.span`
@@ -134,4 +137,10 @@ const BestPlayer = styled.span`
 
 const Close = styled.span`
   bottom: -12%;
+`
+
+const Chicken = styled.span`
+  @media (min-width: 812px) {
+    font-size: 15px;
+  }
 `
