@@ -447,7 +447,7 @@ const LetsRecord = (props) => {
                             <RequestList className='w-full'>
                               {requestList.map((request, index) => (
                                 <div key={index} className='flex border-b-2 border-b-yellow-500 p-1 pr-3 pl-2 justify-between'>
-                                  <span className='text-xs' style={{textAlign: 'left'}}>{request.text}</span>
+                                  <span className='text-xs text-black' style={{textAlign: 'left'}}>{request.text}</span>
                                   {request.status === 'processing' && <span className='text-xs text-rose-700' style={{width: '42px', textAlign: 'right'}}>{'처리중'}</span>}
                                   {request.status === 'resolved' && <span className='text-xs text-blue-700'>{'완료'}</span>}
                                 </div>
