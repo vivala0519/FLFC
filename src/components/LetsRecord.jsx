@@ -443,7 +443,7 @@ const LetsRecord = (props) => {
                         :
                         <div className='absolute -bottom-44 w-11/12 h-40 bg-white flex justify-center'>
                           <div className='relative border-t-2 w-full border-b-2 border-t-green-700 border-b-green-700'>
-                            <span className='absolute top-0 -right-4 text-xl text-black bg-white cursor-pointer' onClick={() => setRequestUpdateMode(false)}>X</span>
+                            <CloseRequest className='absolute top-0 -right-4 text-xl text-black bg-white cursor-pointer' onClick={() => setRequestUpdateMode(false)}>X</CloseRequest>
                             <RequestList className='w-full'>
                               {requestList.map((request, index) => (
                                 <div key={index} className='flex border-b-2 border-b-yellow-500 p-1 pr-3 pl-2 justify-between'>
@@ -495,4 +495,11 @@ const RequestList = styled.div`
 
 const RequestInput = styled.input`
   font-size: 12px;
+`
+
+const CloseRequest = styled.div`
+    @media (prefers-color-scheme: dark) {
+        background-color: black;
+        color: white;
+    };
 `
