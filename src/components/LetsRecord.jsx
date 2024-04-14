@@ -454,7 +454,7 @@ const LetsRecord = (props) => {
                               ))}
                             </RequestList>
                             <div className='absolute bottom-0 w-full h-8 flex flex-row'>
-                              <RequestInput className='w-10/12 border-2 border-b-0 pl-1' placeholder='ex) 8시 13분 골 OO -> OO 로 수정 요청합니다~' value={requestText} onChange={(event) => setRequestText(event.target.value)}/>
+                              <RequestInput className='w-10/12 border-2 border-b-0 pl-1' placeholder='ex) O시 O분 골 OO -> OO 로 수정 요청합니다~' value={requestText} onChange={(event) => setRequestText(event.target.value)}/>
                               <div className='w-2/12 flex items-center content-center justify-center border-2 border-b-0 border-l-0' onClick={sendRequest}>요청</div>
                             </div>
                           </div>
