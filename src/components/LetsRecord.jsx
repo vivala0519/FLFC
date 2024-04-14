@@ -443,7 +443,7 @@ const LetsRecord = (props) => {
                         :
                         <div className='absolute -bottom-44 w-full h-40 bg-white flex justify-center'>
                           <div className='relative border-t-2 w-11/12 f-full border-b-2 border-t-green-700 border-b-green-700'>
-                            <span className='absolute top-0 -right-4 text-xl' onClick={() => setRequestUpdateMode(false)}>X</span>
+                            <span className='absolute top-0 -right-4 text-xl text-black bg-white cursor-pointer' onClick={() => setRequestUpdateMode(false)}>X</span>
                             <RequestList className='w-full'>
                               {requestList.map((request, index) => (
                                 <div key={index} className='flex border-b-2 border-b-yellow-500 p-1 pr-3 pl-2 justify-between'>
@@ -455,7 +455,7 @@ const LetsRecord = (props) => {
                             </RequestList>
                             <div className='absolute bottom-0 w-full h-8 flex flex-row'>
                               <RequestInput className='w-10/12 border-2 border-b-0 pl-1' placeholder='ex) O시 O분 골 OO -> OO 로 수정 요청합니다~' value={requestText} onChange={(event) => setRequestText(event.target.value)}/>
-                              <div className='w-2/12 flex items-center content-center justify-center border-2 border-b-0 border-l-0' onClick={sendRequest}>요청</div>
+                              <div className='w-2/12 flex items-center content-center justify-center border-2 border-b-0 border-l-0 text-black bg-white' onClick={sendRequest}>요청</div>
                             </div>
                           </div>
                         </div>
