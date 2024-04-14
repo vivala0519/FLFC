@@ -31,7 +31,7 @@ function App() {
     const startTime = new Date()
     startTime.setHours(7, 50, 0, 0)
     const endTime = new Date()
-    endTime.setHours(10, 15, 0, 0)
+    endTime.setHours(10, 5, 0, 0)
     const currentTime = new Date()
 
     const dataGeneration = async () => {
