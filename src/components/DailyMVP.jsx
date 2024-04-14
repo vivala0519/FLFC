@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react"
-import { doc, getDoc, setDoc } from "firebase/firestore"
+import { doc, collection, setDoc, getDocs } from "firebase/firestore"
 import {db} from "../../firebase.js"
 import JSConfetti from "js-confetti"
 import styled from 'styled-components'
@@ -58,13 +58,17 @@ const DailyMVP = (props) => {
   }, [recordData]);
 
   const registerDailyMVP = async () => {
+    const mvpRef = collection(db, 'daily_mvp')
+    const mvpSnapshot = await getDocs(mvpRef)
     const docRef = doc(db, 'daily_mvp', today)
-    const docSnap = await getDoc(docRef);
+
     const data = {}
     bestPlayers.forEach(player => {
       data[player.name] = {goal: player.goal, assist: player.assist}
     })
-    if (!docSnap.exists()) {
+
+    const todayMVP = mvpSnapshot.docs.find(doc => doc.id === '0414')
+    if (!todayMVP) {
       await setDoc(docRef, data)
     }
   }
@@ -79,7 +83,6 @@ const DailyMVP = (props) => {
 
   const closeHandler = () => {
     setShowMVP(false)
-    // firework()
   }
 
   return (
