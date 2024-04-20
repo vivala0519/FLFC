@@ -16,6 +16,11 @@ const DailyMVP = (props) => {
       confettiRadius: 4,
       confettiColors: ['#EAB308', '#F59E0B', '#FBBF24', '#FCD34D', '#FDE68A']
     })
+    confetti.addConfetti({
+      emojis: ["🍗"],
+      emojiSize: 100,
+      confettiNumber: 1,
+    });
   }
 
   useEffect(() => {

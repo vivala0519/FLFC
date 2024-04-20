@@ -5,7 +5,8 @@ import './LetsRecord.css'
 import help from '@/assets/help.png'
 import {collection, getDocs} from "firebase/firestore";
 import {db} from "../../firebase.js";
-import {dataAnalysis} from "../apis/analyzeData.js";
+import { dataAnalysis } from "../apis/analyzeData.js";
+import { extractQuarterData } from '../apis/calculateQuarterData.js'
 
 const RecordRoom = (props) => {
     const {propsSetTap} = props
@@ -13,6 +14,9 @@ const RecordRoom = (props) => {
     const [analyzedData, setAnalyzedData] = useState({})
     const tapName = ['출석', '골', '어시', '히스토리']
     const [tap, setTap] = useState('출석')
+    const [year, setYear] = useState('2024')
+    const [yearData, setYearData] = useState({})
+    const [analyedYearData, setAnalyzedYearData] = useState({})
     const [month, setMonth] = useState([])
     const [weeksPerMonth, setWeeksPerMonth] = useState([])
     const [page, setPage] = useState(0)
@@ -35,25 +39,69 @@ const RecordRoom = (props) => {
 
 
     const dataGeneration = async () => {
-        const collectionRef = collection(db, '2024')
+        const collectionRef = collection(db, year)
         const snapshot = await getDocs(collectionRef)
         let fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
         fetchedData = fetchedData.filter(data => data.id !== 'last_season_kings')
-        setFetchData(fetchedData)
+        // setFetchData(fetchedData)
+        const yearsData = {}
+        yearsData[year] = fetchedData
+        setYearData(yearsData)
     }
     const fetchAnalysis = async (quarter) => {
         if (quarter) {
             const data = await dataAnalysis(quarter)
+            console.log('analyzedData', data)
             setAnalyzedData(data)
         }
     }
 
+    const getYearData = async (year) => {
+        const collectionRef = collection(db, year)
+        const snapshot = await getDocs(collectionRef)
+        let fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+        fetchedData = fetchedData.filter(data => data.id !== 'last_season_kings')
+        const quarterData = await extractQuarterData(year)
+        console.log('quarterData: ', year, '년 ', quarterData)
+
+        const yearsData = {...yearData}
+        yearsData[year] = fetchedData
+
+        const analyzedYearsData = {...analyedYearData}
+        analyzedYearsData[year] = quarterData
+
+        setYearData(yearsData)
+        setAnalyzedYearData(analyzedYearsData)
+        setFetchData(fetchedData)
+        setAnalyzedData(quarterData)
+    }
+
+    // 연도 변경
     useEffect(() => {
-        dataGeneration()
-        fetchAnalysis(quarter)
+        setBlockSetPage(false)
+        if (!yearData[year]) {
+            getYearData(year)
+        } else {
+            setFetchData(yearData[year])
+            setAnalyzedData(analyedYearData[year])
+        }
+    }, [year])
+
+    useEffect(() => {
+        // console.log(quarter)
+        // if (quarter) {
+        //     const tempData = {...analyzedData}
+        //     tempData.members = analyzedData.totalQuarterData[quarter - 1].members
+        //     setAnalyzedData(tempData)
+        //     console.log(tempData)
+        // }
+
+        // dataGeneration()
+        // fetchAnalysis(quarter)
     }, [quarter])
 
     useEffect(() => {
+        console.log(fetchData)
         // 월별 주차 계산
         const monthSet = new Set()
         const weeksByMonth = fetchData?.reduce((acc, cur) => {
@@ -66,7 +114,11 @@ const RecordRoom = (props) => {
         setMonth([...monthSet])
         // 초기 월 설정
         if (!blockSetPage) {
-            setPage([...monthSet][monthSet.size - 1] - 1)
+            if (year === '2021') {
+                setPage(2)
+            } else {
+                setPage([...monthSet][monthSet.size - 1] - 1)
+            }
         }
         setWeeksPerMonth(weeksByMonth)
     }, [fetchData])
@@ -74,6 +126,7 @@ const RecordRoom = (props) => {
     useEffect(() => {
         const tableData = fetchData?.filter(data => Number(data.id.slice(0, 2)) === month[page])
         const obj = {month: month[page], weeks: weeksPerMonth[month[page]], data: tableData}
+        console.log(obj)
         setTableData(obj)
 
     }, [page, month, weeksPerMonth, fetchData]);
@@ -94,6 +147,7 @@ const RecordRoom = (props) => {
                 quarterData = analyzedData.totalQuarterData[3]
             }
         }
+        console.log(quarterData);
         setQuarterData(quarterData)
 
     }, [tableData, analyzedData])
@@ -128,7 +182,7 @@ const RecordRoom = (props) => {
            onTouchStart={handleTouchStart}
            onTouchMove={handleTouchMove}
            onTouchEnd={handleTouchEnd}>
-          <div className='flex flex-row w-full mb-3 p-2' style={{fontFamily: 'DNFForgedBlade'}}>
+          <div className='flex flex-row w-full mb-2 p-1' style={{fontFamily: 'DNFForgedBlade'}}>
               {/*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*/}
               {/*     onClick={() => setTap(tapName[0])}>현황판*/}
               {/*</div>*/}
@@ -151,7 +205,7 @@ const RecordRoom = (props) => {
           <div>
               {
                   ['현황판', '출석', '골', '어시'].includes(tap)
-                      ? (<DataTable tap={tap} tableData={tableData} analyzedData={analyzedData} page={page} setPage={setPage} month={month} quarterData={quarterData} quarter={quarter} setQuarter={setQuarter} setBlockSetPage={setBlockSetPage} />)
+                      ? (<DataTable tap={tap} tableData={tableData} analyzedData={analyzedData} page={page} setPage={setPage} year={year} setYear={setYear} month={month} quarterData={quarterData} quarter={quarter} setQuarter={setQuarter} setBlockSetPage={setBlockSetPage} />)
                       : <div></div>
               }
 

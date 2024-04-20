@@ -11,7 +11,7 @@ import attendance from '@/assets/attendance2.png'
 import './DataTable.css'
 
 const DataTable = (props) => {
-    const {tap, tableData, analyzedData, page, setPage, month, quarterData, lastSeasonKings, setQuarter, setBlockSetPage} = props
+    const {tap, tableData, analyzedData, page, setPage, year, setYear, month, quarterData, lastSeasonKings, quarter, setQuarter, setBlockSetPage} = props
 
     const [sortedNames, setSortedNames] = useState([])
     const [sortedAbsenteeNames, setSortedAbsenteeNames] = useState([])
@@ -22,18 +22,42 @@ const DataTable = (props) => {
     const [arrowDirection, setArrowDirection] = useState(true)
 
     useEffect(() => {
-        // if (tableData?.data?.length > 0) {
-        //     console.log('tableData.data', tableData.data)
-        // }
+        if (tableData?.data?.length > 0) {
+            console.log('tableData.data', tableData.data)
+        }
         // console.log('analyzedData', analyzedData)
         // console.log('quarterData', quarterData)
     }, [tableData])
 
+    // useEffect(() => {
+    //     console.log(sortedNames)
+    // }, [sortedNames])
+    //
+    useEffect(() => {
+        console.log(sortedAbsenteeNames)
+    }, [sortedAbsenteeNames])
+    //
+    // useEffect(() => {
+    //     console.log(analyzedData)
+    // }, [analyzedData])
+
+
     useEffect(() => {
         if (analyzedData?.active?.members && tap === '현황판') {
             setSortedNames(analyzedData?.active?.members['active'].sort((a, b) => a.localeCompare(b)))
+            setSortedAbsenteeNames(analyzedData?.active?.members['inactive'].sort((a, b) => a.localeCompare(b)))
+        } else {
+            if (analyzedData['members']) {
+                console.log(quarter)
+                console.log(analyzedData['members']['inactive'])
+                // console.log(analyzedData['totalQuarterData'][Number(quarter) - 1])
+                // setSortedAbsenteeNames(analyzedData['members']['inactive'].sort((a, b) => a.localeCompare(b)))
+            }
+
         }
-        setSortedAbsenteeNames(analyzedData?.active?.members['inactive'].sort((a, b) => a.localeCompare(b)))
+        console.log(analyzedData)
+
+        // setSortedAbsenteeNames(analyzedData?.active?.members['inactive'].sort((a, b) => a.localeCompare(b)))
     }, [analyzedData])
 
     const extractWinners = (sortedByValue) => {
@@ -53,6 +77,7 @@ const DataTable = (props) => {
 
     // 탭에 따른 정렬
     useEffect(() => {
+        console.log(quarterData)
         if (quarterData?.members) {
             if (tap === '골') {
                 // eslint-disable-next-line no-unsafe-optional-chaining
@@ -112,22 +137,25 @@ const DataTable = (props) => {
     
     // 페이지에 따른 분기 이름 설정
     useEffect(() => {
-        if (page) {
-            if (page < 3) {
-                setQuarterName('1')
-                setQuarter(1)
-            } else if (page < 6) {
-                setQuarterName('2')
-                setQuarter(2)
-            } else if (page < 9) {
-                setQuarterName('3')
-                setQuarter(3)
-            } else {
-                setQuarterName('4')
-                setQuarter(4)
+        if (tap !== '현황판') {
+            const selectedMonth = month[page]
+            if (selectedMonth) {
+                if (selectedMonth < 4) {
+                    setQuarterName('1')
+                    setQuarter(1)
+                } else if (selectedMonth < 7) {
+                    setQuarterName('2')
+                    setQuarter(2)
+                } else if (selectedMonth < 10) {
+                    setQuarterName('3')
+                    setQuarter(3)
+                } else {
+                    setQuarterName('4')
+                    setQuarter(4)
+                }
             }
         }
-    }, [page])
+    }, [month, page])
 
     const pageMoveHandler = (left) => {
         setBlockSetPage(true)
@@ -164,19 +192,30 @@ const DataTable = (props) => {
     return (
         <div>
             {tap !== '현황판' &&
-                <MonthContainer className=''>
-                    <PageButton onClick={() => pageMoveHandler(true)} $direction='left' $show={page !== 0} />
-                    <Month className=''>
-                        {tableData.month}월
-                    </Month>
-                    <PageButton onClick={() => pageMoveHandler(false)} $direction='right' $show={page !== month.length - 1} />
-                </MonthContainer>
+                <div
+                    className='flex flex-row gap-9 items-center justify-start border-t-2 border-t-gray-200 pl-4 mb-2 border-b-2 border-b-gray-200'>
+                    <YearContainer className='' value={year} onChange={(e) => setYear(e.target.value)}>
+                        <option value="2021">2021년</option>
+                        <option value="2022">2022년</option>
+                        <option value="2023">2023년</option>
+                        <option value="2024">2024년</option>
+                    </YearContainer>
+                    <MonthContainer className=''>
+                        <PageButton onClick={() => pageMoveHandler(true)} $direction='left' $show={page !== 0}/>
+                        <Month className=''>
+                            {tableData.month}월
+                        </Month>
+                        <PageButton onClick={() => pageMoveHandler(false)} $direction='right'
+                                    $show={page !== month.length - 1}/>
+                    </MonthContainer>
+                </div>
             }
             <TableContainer>
                 <Table>
                     {tap === '현황판' ?
                         <TableHeaderStat>
-                            <StatTd id='first_element'  style={{minWidth: '72px', maxWidth: '75px'}} onClick={() => sortBy('이름')}>
+                            <StatTd id='first_element' style={{minWidth: '72px', maxWidth: '75px'}}
+                                    onClick={() => sortBy('이름')}>
                                 <span>이름</span>
                                 {arrowState === '이름' && (arrowDirection ? <DownArrow className='arrow' /> : <UpArrow className='arrow' /> )}
                             </StatTd>
@@ -245,7 +284,7 @@ const DataTable = (props) => {
                             sortedNames?.map((name, index) =>
                                 (<div key={'sorted-' + index}><TableRowStat key={index} $tap={tap}>
                                     {tap === '현황판' ?
-                                        <FirstColumn>{kingList.includes(name) && <Trophy className='trophy' $king={findTrophy(name)}/>}<StatusBoardName style={{width: '72px', borderRight: '1px solid #ccc'}}>{name}</StatusBoardName></FirstColumn>
+                                        <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)}>{kingList.includes(name) && <Trophy className='trophy' $king={findTrophy(name)}/>}<StatusBoardName style={{width: '72px', borderRight: '1px solid #ccc'}}>{name}</StatusBoardName></FirstColumn>
                                         :
                                         <div className='flex items-center justify-center' style={{minWidth: '20%', flex: '1', borderRight: '1px solid #ccc'}}>
                                             {winnerList.includes(name) && <Medal />}
@@ -278,7 +317,7 @@ const DataTable = (props) => {
                         {/*장기 미출석 인원*/}
                         {sortedAbsenteeNames?.map((name, index) =>
                             (<div key={'sorted-ab-' + index}><TableRowOther key={index}>
-                                {tap === '현황판' ? <FirstColumn><div style={{width: '75px'}}>{name}</div></FirstColumn> : <div style={{minWidth: '20%', flex: '1'}}>{name}</div>}
+                                {tap === '현황판' ? <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)}><div style={{width: '75px'}}>{name}</div></FirstColumn> : <div style={{minWidth: '20%', flex: '1'}}>{name}</div>}
                                 {
                                     tap === '출석' ? tableData?.data?.map((data, index) => (
                                             <span key={name + index}>{data.data[name] ? 'O' : ''}</span>))
@@ -305,16 +344,16 @@ const MonthContainer = styled.div`
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    gap: 20px;
-    margin-bottom: 10px;
+    gap: 15px;
     font-size: 30px;
-    border-top: 1px solid #ccc;
-    border-bottom: 1px solid #ccc;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
     @media (max-width: 812px) {
         font-size: 15px;
     }
+`
+const YearContainer = styled.select`
+    font-size: 13px;
 `
 
 const PageButton = styled.div`
@@ -480,6 +519,15 @@ const FirstColumn = styled.div`
     z-index: 1;
     @media (prefers-color-scheme: dark) {
         background: black;
+    }
+    &::after {
+        content: '';
+        width: 100%;
+        height: 100%;
+        top: 0;
+        right: 0;
+        position: absolute;
+        border-right: ${props => props.$realActive ? '5px double #166534' : '1px solid #ccc'};
     }
 `
 

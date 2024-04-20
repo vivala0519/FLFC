@@ -1,11 +1,43 @@
 import {collection, getDocs} from 'firebase/firestore'
 import { db } from '../../firebase.js'
+import { extractActiveMembers } from './members.js'
 
-export const dataAnalysis = async (quarter) => {
-    const year = '2024'
+function getLastFourSundays() {
+    const today = new Date();
+    if ([0, 7].includes(today.getDay())) {
+        today.setDate(today.getDate() - 7);
+    }
+    const sundays = [];
+
+    const todayDay = today.getDay();
+
+    for (let i = 0; i < 4; i++) {
+        let sunday = new Date(today);
+
+        const daysToSubtract = todayDay + (7 * i);
+        sunday.setDate(today.getDate() - daysToSubtract);
+        sunday = String(sunday.getMonth() + 1).padStart(2, '0') + String(sunday.getDate()).padStart(2, '0')
+
+        sundays.push(sunday);
+    }
+
+    return sundays;
+}
+
+export const dataAnalysis = async (quarter, yearParameter) => {
+    const year = yearParameter ? yearParameter : '2024'
     const collectionRef = collection(db, year)
     const snapshot = await getDocs(collectionRef)
     const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+
+    const lastFourSundays = getLastFourSundays();
+    const lastFourWeeksAttendance = new Set();
+    lastFourSundays.forEach(sunday => {
+        const dayData = fetchedData.find(data => data.id === sunday);
+        Object.keys(dayData.data).forEach(key => {
+            lastFourWeeksAttendance.add(key);
+        })
+    })
 
     // 현황판 데이터 Map
     let activeQuarterStats = null
@@ -179,16 +211,9 @@ export const dataAnalysis = async (quarter) => {
     const members = extractActiveMembers(activeQuarterStats)
     const activeQuarterData = {members: members, totalData: activeQuarterStats, lastSeasonKings: lastKings}
 
-    return {active: activeQuarterData, totalQuarterData: [firstQuarterData, secondQuarterData, thirdQuarterData, fourthQuarterData]}
+    return {active: activeQuarterData, totalQuarterData: [firstQuarterData, secondQuarterData, thirdQuarterData, fourthQuarterData], lastFourWeeksAttendance: lastFourWeeksAttendance}
 }
 
-const extractActiveMembers = (totalStats) => {
-    const names = ['홍원진', '우장식', '임희재', '윤희철', '김동휘', '이승호', '임건휘', '방승진', '김민관', '김규진', '임준휘', '전희종', '한상태', '임종우', '노태훈', '윤영진', '이원효', '황정민', '양대열', '정우진', '김남구', '박근한', '손지원', '황철민', '최봉호', '선민조', '최수혁', '김병일', '김대건', '전의준', '황은집', '진장용', '이진헌', '윤준석', '김동주', '선우용', '이재진', '김성록', '박남호', '안용현', '장성민', '하민수']
-    const includedNames = names.filter(name => totalStats.has(name))
-    const excludedNames = names.filter(name => !totalStats.has(name))
-
-    return {active: includedNames, inactive: excludedNames}
-}
 export default {
     dataAnalysis,
 }
