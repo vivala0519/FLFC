@@ -77,7 +77,6 @@ const DataTable = (props) => {
 
     // 탭에 따른 정렬
     useEffect(() => {
-        console.log(quarterData)
         if (quarterData?.members) {
             if (tap === '골') {
                 // eslint-disable-next-line no-unsafe-optional-chaining

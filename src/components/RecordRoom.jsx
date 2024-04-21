@@ -147,7 +147,6 @@ const RecordRoom = (props) => {
                 quarterData = analyzedData.totalQuarterData[3]
             }
         }
-        console.log(quarterData);
         setQuarterData(quarterData)
 
     }, [tableData, analyzedData])
