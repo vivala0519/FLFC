@@ -362,7 +362,7 @@ const LetsRecord = (props) => {
             <div className='flex flex-col items-center w-full'>
                 <>
                 {showMVP && <DailyMVP showMVP={showMVP} setShowMVP={setShowMVP}recordData={recordData} year={thisYear} today={today} />}
-                <div className={canRegister ? 'custom-record-border' : open ? 'default-border' : 'none-border'}>
+                <div className={canRegister ? 'default-border' : open ? 'default-border' : 'none-border'}>
                 <div ref={scrollContainerRef} className='w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2'
                      style={{height: open && dynamicHeight, display: open ? 'flex' : 'none', opacity: showMVP ? '0.1' : '1'}}>
                     {

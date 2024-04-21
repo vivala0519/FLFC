@@ -23,7 +23,7 @@ const DataTable = (props) => {
 
     useEffect(() => {
         if (tableData?.data?.length > 0) {
-            console.log('tableData.data', tableData.data)
+            // console.log('tableData.data', tableData.data)
         }
         // console.log('analyzedData', analyzedData)
         // console.log('quarterData', quarterData)
@@ -34,8 +34,8 @@ const DataTable = (props) => {
     // }, [sortedNames])
     //
     useEffect(() => {
-        console.log(sortedAbsenteeNames)
-    }, [sortedAbsenteeNames])
+        // console.log(analyzedData.lastFourWeeksAttendance)
+    }, [analyzedData])
     //
     // useEffect(() => {
     //     console.log(analyzedData)
@@ -48,14 +48,14 @@ const DataTable = (props) => {
             setSortedAbsenteeNames(analyzedData?.active?.members['inactive'].sort((a, b) => a.localeCompare(b)))
         } else {
             if (analyzedData['members']) {
-                console.log(quarter)
-                console.log(analyzedData['members']['inactive'])
+                // console.log(quarter)
+                // console.log(analyzedData['members']['inactive'])
                 // console.log(analyzedData['totalQuarterData'][Number(quarter) - 1])
                 // setSortedAbsenteeNames(analyzedData['members']['inactive'].sort((a, b) => a.localeCompare(b)))
             }
 
         }
-        console.log(analyzedData)
+        // console.log(analyzedData)
 
         // setSortedAbsenteeNames(analyzedData?.active?.members['inactive'].sort((a, b) => a.localeCompare(b)))
     }, [analyzedData])
@@ -213,6 +213,8 @@ const DataTable = (props) => {
             <TableContainer>
                 <Table>
                     {tap === '현황판' ?
+                        <div>
+                        <p className='w-full' style={{textAlign: 'left', marginBottom: '2px'}}>실참여 인원 : {analyzedData?.lastFourWeeksAttendance && analyzedData.lastFourWeeksAttendance.size}</p>
                         <TableHeaderStat>
                             <StatTd id='first_element' style={{minWidth: '72px', maxWidth: '75px'}}
                                     onClick={() => sortBy('이름')}>
@@ -268,6 +270,7 @@ const DataTable = (props) => {
                                 {arrowState === '포인트총합' && <DownArrow className='arrow' />}
                             </CustomMinWidthDiv>
                         </TableHeaderStat>
+                        </div>
                         :
                         <TableHeaderOther>
                             <div style={{width: '75px'}}>이름</div>
