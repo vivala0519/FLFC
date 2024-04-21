@@ -51,7 +51,6 @@ const RecordRoom = (props) => {
     const fetchAnalysis = async (quarter) => {
         if (quarter) {
             const data = await dataAnalysis(quarter)
-            console.log('analyzedData', data)
             setAnalyzedData(data)
         }
     }
@@ -62,7 +61,6 @@ const RecordRoom = (props) => {
         let fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
         fetchedData = fetchedData.filter(data => data.id !== 'last_season_kings')
         const quarterData = await extractQuarterData(year)
-        console.log('quarterData: ', year, '년 ', quarterData)
 
         const yearsData = {...yearData}
         yearsData[year] = fetchedData
@@ -101,7 +99,6 @@ const RecordRoom = (props) => {
     }, [quarter])
 
     useEffect(() => {
-        console.log(fetchData)
         // 월별 주차 계산
         const monthSet = new Set()
         const weeksByMonth = fetchData?.reduce((acc, cur) => {
@@ -126,7 +123,6 @@ const RecordRoom = (props) => {
     useEffect(() => {
         const tableData = fetchData?.filter(data => Number(data.id.slice(0, 2)) === month[page])
         const obj = {month: month[page], weeks: weeksPerMonth[month[page]], data: tableData}
-        console.log(obj)
         setTableData(obj)
 
     }, [page, month, weeksPerMonth, fetchData]);
