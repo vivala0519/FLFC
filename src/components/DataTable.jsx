@@ -214,7 +214,7 @@ const DataTable = (props) => {
                 <Table>
                     {tap === '현황판' ?
                         <div>
-                        <p className='w-full' style={{textAlign: 'left', marginBottom: '2px'}}>실참여 인원 : {analyzedData?.lastFourWeeksAttendance && analyzedData.lastFourWeeksAttendance.size}</p>
+                        <p className='w-full text-sm' style={{textAlign: 'left', marginBottom: '2px'}}>실참여 인원 : {analyzedData?.lastFourWeeksAttendance && analyzedData.lastFourWeeksAttendance.size}</p>
                         <TableHeaderStat>
                             <StatTd id='first_element' style={{minWidth: '72px', maxWidth: '75px'}}
                                     onClick={() => sortBy('이름')}>

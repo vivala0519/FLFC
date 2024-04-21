@@ -31,13 +31,22 @@ export const dataAnalysis = async (quarter, yearParameter) => {
     const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
 
     const lastFourSundays = getLastFourSundays();
-    const lastFourWeeksAttendance = new Set();
+    let keyCounts = new Map();
+
     lastFourSundays.forEach(sunday => {
         const dayData = fetchedData.find(data => data.id === sunday);
         Object.keys(dayData.data).forEach(key => {
-            lastFourWeeksAttendance.add(key);
+            keyCounts.set(key, (keyCounts.get(key) || 0) + 1);
         })
     })
+
+    let lastFourWeeksAttendance = new Set();
+
+    keyCounts.forEach((count, key) => {
+        if (count >= 2) {
+            lastFourWeeksAttendance.add(key);
+        }
+    });
 
     // 현황판 데이터 Map
     let activeQuarterStats = null
