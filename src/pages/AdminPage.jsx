@@ -1,9 +1,10 @@
 import {useEffect, useState} from "react"
-import {getDatabase, ref, child, onValue, push, update, remove} from 'firebase/database'
-import Swal from "sweetalert2"
+import {getDatabase, ref, onValue, update, set} from 'firebase/database'
 import {db} from "../../firebase.js"
+import Swal from "sweetalert2"
 import styled from 'styled-components'
 import {doc, setDoc} from "firebase/firestore";
+import { uid } from "uid"
 
 const AdminPage = (props) => {
     const { recordData, weeklyTeamData } = props
@@ -21,6 +22,9 @@ const AdminPage = (props) => {
     const [resolvedList, setResolvedList] = useState([])
     const [requestList, setRequestList] = useState([])
     const [writtenData, setWrittenData] = useState([])
+    const [showRecordInput, setShowRecordInput] = useState(false)
+    const [scorer, setScorer] = useState('')
+    const [assistant, setAssistant] = useState('')
 
     const passwordCheck = async () => {
         const {value: password} = await Swal.fire({
@@ -169,6 +173,39 @@ const AdminPage = (props) => {
         }
         return true
     }
+    const addRecordHandler = () => {
+        const rtdb = getDatabase()
+        const time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0') + ':' + currentTime.getSeconds().toString().padStart(2, '0')
+        const id = uid()
+
+        if (scorer.trim()) {
+            const record = {
+                id: id,
+                time: time,
+                goal: scorer.trim(),
+                assist: assistant.trim()
+            }
+            set(ref(rtdb, thisYear + '/' + today + '/' + id), record);
+            set(ref(rtdb, thisYear + '/' + today + '_backup' + '/' + id), record);
+
+            const copiedRecord = [...todayRecord]
+            copiedRecord.push(record)
+            const stats = formatRecordByName(copiedRecord)
+            if (stats) {
+                const registerRecord = async () => {
+                    const docRef = doc(db, thisYear, today)
+                    await setDoc(docRef, stats)
+                    console.log("Document written with ID: ", docRef.id);
+                }
+                if (!compareObjects(stats, writtenData)) {
+                    registerRecord()
+                }
+            }
+        }
+        setScorer('')
+        setAssistant('')
+        setShowRecordInput(false)
+    }
     const updateRecordHandler = (id) => {
         const updateRecord = todayRecord.find(record => record.id === id)
         const rtdb = getDatabase()
@@ -189,6 +226,14 @@ const AdminPage = (props) => {
         }).catch((error) => {
             console.error('Error updating document: ', error)
         })
+    }
+
+    const scorerHandler = (e) => {
+        setScorer(e.target.value)
+    }
+
+    const assistantHandler = (e) => {
+        setAssistant(e.target.value)
     }
 
   return (
@@ -232,7 +277,24 @@ const AdminPage = (props) => {
                         )
                     })}
                 </div>
-                <div className='mt-5'>오늘의 기록</div>
+                <div className={`flex items-center justify-center mt-5 ${!showRecordInput ? 'pl-12' : 'pl-0'}`}>
+                    <span>오늘의 기록</span>
+                    {showRecordInput &&
+                        <div className='flex ml-4 items-center'>
+                            <span className='w-8 text-xs flex items-center justify-center h-full'>골 :</span>
+                            <input className='w-12 text-xs border-2 border-amber-100' style={{textAlign: 'center'}} onChange={scorerHandler} />
+                            <span className='w-8 text-xs flex items-center justify-center h-full'>어시 :</span>
+                            <input className='w-12 text-xs border-2 border-amber-100' style={{textAlign: 'center'}} onChange={assistantHandler}/>
+                        </div>
+                    }
+                    {!showRecordInput ?
+                        <div className='relative left-16 text-xs border-2 border-indigo-100 cursor-pointer'
+                             onClick={() => setShowRecordInput(true)}>기록 추가하기</div>
+                        :
+                        <div className='ml-2 text-xs border-2 border-indigo-100 cursor-pointer'
+                             onClick={() => addRecordHandler()}>추가</div>
+                    }
+                </div>
                 <RecordBox className='border-2 border-amber-200 mt-2 overflow-y-auto p-1'>
                     <div>
                         {todayRecord.map((record, index) => {
@@ -244,15 +306,15 @@ const AdminPage = (props) => {
                                             <div className='border-r-2 border-r-indigo-300 h-4'></div>
                                             <div className='flex'>
                                                 <span className='w-6 text-xs flex items-center justify-center h-full'>골 :</span>
-                                                <input className='w-12 text-xs' style={{textAlign: 'center'}} value={record.goal} onChange={e => goalInputChangeHandler(index, e.target.value)} />
+                                                <input className='w-12 text-xs border-2 border-amber-100' style={{textAlign: 'center'}} value={record.goal} onChange={e => goalInputChangeHandler(index, e.target.value)} />
                                             </div>
                                             <div className='border-r-2 border-r-indigo-300 h-4'></div>
                                             <div className='flex'>
                                                 <span className='w-10 text-xs flex items-center  justify-center h-full'>어시 : </span>
-                                                <input className='w-12 text-xs' style={{textAlign: 'center'}} value={record.assist} onChange={e => assistInputChangeHandler(index, e.target.value)} />
+                                                <input className='w-12 text-xs border-2 border-amber-100' style={{textAlign: 'center'}} value={record.assist} onChange={e => assistInputChangeHandler(index, e.target.value)} />
                                             </div>
                                             <div className='border-r-2 border-r-indigo-300 h-4'></div>
-                                            <div className='text-xs flex items-center  justify-center h-full w-12 border-2 border-indigo-100' onClick={() => updateRecordHandler(record.id)}>수정</div>
+                                            <div className='text-xs flex items-center justify-center h-full w-12 border-2 border-indigo-100' onClick={() => updateRecordHandler(record.id)}>수정</div>
                                         </div>
                                     </div>
                                 </div>
