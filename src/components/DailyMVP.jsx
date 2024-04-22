@@ -72,7 +72,7 @@ const DailyMVP = (props) => {
       data[player.name] = {goal: player.goal, assist: player.assist}
     })
 
-    const todayMVP = mvpSnapshot.docs.find(doc => doc.id === '0414')
+    const todayMVP = mvpSnapshot.docs.find(doc => doc.id === today)
     if (!todayMVP) {
       await setDoc(docRef, data)
     }
