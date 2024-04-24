@@ -131,16 +131,20 @@ const RecordRoom = (props) => {
         const selectedMonth = month[page]
         let quarterData = []
         if (analyzedData?.totalQuarterData) {
-            if (selectedMonth <= 3) {
+            if (year === '2021') {
                 quarterData = analyzedData.totalQuarterData[0]
-            }
-            else if (selectedMonth > 3 && selectedMonth <= 6) {
-                quarterData = analyzedData.totalQuarterData[1]
-            }
-            else if (selectedMonth > 6 && selectedMonth <= 9) {
-                quarterData = analyzedData.totalQuarterData[2]
             } else {
-                quarterData = analyzedData.totalQuarterData[3]
+                if (selectedMonth <= 3) {
+                    quarterData = analyzedData.totalQuarterData[0]
+                }
+                else if (selectedMonth > 3 && selectedMonth <= 6) {
+                    quarterData = analyzedData.totalQuarterData[1]
+                }
+                else if (selectedMonth > 6 && selectedMonth <= 9) {
+                    quarterData = analyzedData.totalQuarterData[2]
+                } else {
+                    quarterData = analyzedData.totalQuarterData[3]
+                }
             }
         }
         setQuarterData(quarterData)

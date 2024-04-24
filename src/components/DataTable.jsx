@@ -276,7 +276,11 @@ const DataTable = (props) => {
                             {
                                 tableData?.data?.map((data) => <span key={data.id}>{Number(data.id.slice(2, 4)) + '일'}</span>)
                             }
-                            {<span style={{fontSize: '9px'}}>{`${quarterName}분기\n총합`}</span>}
+                            {year !== '2021' ? 
+                                <span style={{fontSize: '9px'}}>{`${quarterName}분기\n총합`}</span>
+                                :
+                                <span style={{fontSize: '9px', whiteSpace: 'pre-line'}}>{`2021\n코로나 시대`}</span>
+                            }
                         </TableHeaderOther>
                     }
                     <StyledHR $tap={tap} />

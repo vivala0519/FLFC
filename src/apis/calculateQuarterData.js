@@ -26,6 +26,14 @@ export const extractQuarterData = async (yearParameter) => {
     })
   }
 
+  // 2021년은 분기없이 총합
+  if (year === '2021') {
+    const totalQuarterStats = new Map()
+    generateByQuarter(fetchedData, totalQuarterStats)
+    const totalQuarterData = {members: extractActiveMembers(totalQuarterStats, true), totalData: totalQuarterStats}
+    return {totalQuarterData: [totalQuarterData]}
+  }
+
   // 1분기 이름별 통계 취합
   const firstQuarter = fetchedData.filter(item => Number(item.id.slice(0, 2)) <= 3)
   const firstQuarterStats = new Map()
