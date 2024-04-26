@@ -192,7 +192,7 @@ const DataTable = (props) => {
         <div>
             {tap !== '현황판' &&
                 <div
-                    className='flex flex-row gap-9 items-center justify-start border-t-2 border-t-gray-200 pl-4 mb-2 border-b-2 border-b-gray-200'>
+                    className='flex flex-row gap-14 items-center justify-start border-t-2 border-t-gray-200 pl-4 mb-2 border-b-2 border-b-gray-200'>
                     <YearContainer className='' value={year} onChange={(e) => setYear(e.target.value)}>
                         <option value="2021">2021년</option>
                         <option value="2022">2022년</option>
@@ -213,7 +213,7 @@ const DataTable = (props) => {
                 <Table>
                     {tap === '현황판' ?
                         <div>
-                        <p className='w-full text-sm' style={{textAlign: 'left', marginBottom: '2px'}}>실참여 인원 : {analyzedData?.lastFourWeeksAttendance && analyzedData.lastFourWeeksAttendance.size}</p>
+                        <p className='w-full text-green-800' style={{fontSize: '12px', textAlign: 'left', marginBottom: '2px'}}>실참여 인원 : <span style={{fontSize: '13px'}} className={analyzedData.lastFourWeeksAttendance.size < 25 ? 'text-rose-700' : 'text-green-600'}>{analyzedData?.lastFourWeeksAttendance && analyzedData.lastFourWeeksAttendance.size}</span></p>
                         <TableHeaderStat>
                             <StatTd id='first_element' style={{minWidth: '72px', maxWidth: '75px'}}
                                     onClick={() => sortBy('이름')}>
