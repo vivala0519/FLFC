@@ -199,7 +199,7 @@ const RecordRoom = (props) => {
                   {/*     onClick={() => setTap(tapName[3])}>히스토리*/}
                   {/*</Tap>*/}
               </div>
-              <Help onClick={() => setShowHelp(true)}/>
+              {/*<Help onClick={() => setShowHelp(true)}/>*/}
           </div>
           <div>
               {
@@ -209,14 +209,14 @@ const RecordRoom = (props) => {
               }
 
           </div>
-          {showHelp &&
-              <div className='absolute top-0 bg-amber-50 overflow-hidden whitespace-break-spaces p-4 text-xs w-fit h-fit right-0 text-black' style={{filter: 'drop-shadow(2px 4px 13px black)'}}>
-                  {infoText}
-                  <div className='absolute top-1 -right-2 bg-transparent text-center cursor-pointer' style={{width: '40px', height: '30px'}} onClick={()=> setShowHelp(false)}>
-                      <span className='relative cursor-pointer'>X</span>
-                  </div>
-              </div>
-          }
+          {/*{showHelp &&*/}
+          {/*    <div className='absolute top-0 bg-amber-50 overflow-hidden whitespace-break-spaces p-4 text-xs w-fit h-fit right-0 text-black' style={{filter: 'drop-shadow(2px 4px 13px black)'}}>*/}
+          {/*        {infoText}*/}
+          {/*        <div className='absolute top-1 -right-2 bg-transparent text-center cursor-pointer' style={{width: '40px', height: '30px'}} onClick={()=> setShowHelp(false)}>*/}
+          {/*            <span className='relative cursor-pointer'>X</span>*/}
+          {/*        </div>*/}
+          {/*    </div>*/}
+          {/*}*/}
       </div>
     )
 }
