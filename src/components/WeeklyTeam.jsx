@@ -113,9 +113,9 @@ function WeeklyTeam(props) {
         let canRegister = true;
         Object.values(newData).forEach(team => {
             const players = team.filter(player => player.trim())
-            if (players.length < 5) {
-                canRegister = false;
-            }})
+            // if (players.length < 5) {
+            //     canRegister = false;
+            // }})
 
         if (canRegister) {
             newWeeklyTeamData[weeklyTeamData.length - 1].data = newData
