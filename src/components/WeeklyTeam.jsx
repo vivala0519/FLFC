@@ -41,7 +41,7 @@ function WeeklyTeam(props) {
         fetchWeeklyTeamData()
 
         if (currentDayOfWeek < 4) {
-            setCanCreate(true)
+            setCanCreate(false)
         }
         if (lastDate) {
             const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
