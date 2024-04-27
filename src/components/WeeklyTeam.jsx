@@ -41,7 +41,7 @@ function WeeklyTeam(props) {
         fetchWeeklyTeamData()
 
         if (currentDayOfWeek < 4) {
-            setCanCreate(false)
+            setCanCreate(true)
         }
         if (lastDate) {
             const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
@@ -191,7 +191,7 @@ function WeeklyTeam(props) {
                                         <span style={{width: '25px'}}
                                               className='text-black relative left-1'>{team}팀</span>
                                         <div className='flex gap-1'>
-                                            {weeklyTeamData[page]?.data[team].map((player, idx) => (
+                                            {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
                                                 <span key={idx} className='text-black'>{player}</span>
                                             ))}
                                         </div>
