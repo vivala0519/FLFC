@@ -4,6 +4,7 @@ import {db} from "../../firebase.js"
 import JSConfetti from "js-confetti"
 import styled from 'styled-components'
 import './LetsRecord.css'
+import laurel from '@/assets/laurel.png'
 
 const DailyMVP = (props) => {
   const { setShowMVP, recordData, year, today } = props
@@ -39,7 +40,7 @@ const DailyMVP = (props) => {
 
   useEffect(() => {
     const dailyRecordMap = new Map()
-    const data = recordData.find(data => data.id === today)
+    const data = recordData.find(data => data.id === '0428')
     if (data) {
       Object.entries(data.data).forEach(([key, value]) => {
         dailyRecordMap.set(key, {total: value['골'] + value['어시'], goal: value['골'], assist: value['어시']})
@@ -95,7 +96,8 @@ const DailyMVP = (props) => {
       <Chicken className='absolute -top-6 right-1 text-yellow-600'>오늘 저녁은 치킨이닭!</Chicken>
       <MVPText>Daily MVP</MVPText>
       <DayText className='underline decoration-2 decoration-solid decoration-yellow-400'>{year.slice(2, 4) + today}</DayText>
-      <div className='flex flex-row mt-5 gap-3 justify-center' style={{height: '35%', fontSize: bestPlayers.length > 2 ? '25px' : '27px'}}>
+      <Laurel />
+      <div className='flex flex-row mt-3 gap-3 justify-center' style={{zIndex: '1', height: '35%', fontSize: bestPlayers.length > 2 ? '25px' : '27px'}}>
         {bestPlayers.map((player, index) => (
             <div key={index} className='flex flex-col'>
               <BestPlayer className='underline decoration-2 decoration-double decoration-yellow-400'>{player.name}</BestPlayer>
@@ -103,7 +105,7 @@ const DailyMVP = (props) => {
             </div>
         ))}
       </div>
-      <Close className='relative text-sm text-gray-300'>터치하면 사라집니다</Close>
+      <Close className='mt-3 relative text-sm text-gray-300'>터치하면 사라집니다</Close>
     </MVP>
   )
 }
@@ -141,6 +143,25 @@ const DayText = styled.span`
 const BestPlayer = styled.span`
   font-family: 'DNFForgedBlade', serif;
   color: #166534;
+`
+
+const Laurel = styled.div`
+    //width: 20px;
+    //height: 20px;
+    &::after {
+        position: absolute;
+        content: '';
+        background-image: url(${laurel});
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: 100% 100%;
+        width: 50%;
+        height: 62%;
+        left: 25%;
+        top: 21%;
+        opacity: 45%;
+        z-index: 0;
+    }
 `
 
 const Close = styled.span`
