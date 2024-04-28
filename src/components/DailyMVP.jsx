@@ -40,7 +40,7 @@ const DailyMVP = (props) => {
 
   useEffect(() => {
     const dailyRecordMap = new Map()
-    const data = recordData.find(data => data.id === '0428')
+    const data = recordData.find(data => data.id === today)
     if (data) {
       Object.entries(data.data).forEach(([key, value]) => {
         dailyRecordMap.set(key, {total: value['골'] + value['어시'], goal: value['골'], assist: value['어시']})
