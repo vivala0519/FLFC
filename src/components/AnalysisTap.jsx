@@ -789,11 +789,11 @@ const AnalysisTap = () => {
         {[1, 2].includes(tap) && <BackgroundImage $propsImage={tapImage[tap]} $propsSize={tapImageSize[tap]} $propsTap={tap} />}
       </div>
       <PlayersBox className='flex gap-5 flex-wrap fixed bottom-5 justify-center overflow-y-auto border-t-2 border-t-gray-200 border-b-2 border-b-gray-200' $showDetail={showDetail}>
-        {!showDetail && thisQuarterPlayers.map(player => <span key={player} className='text-green-900 cursor-pointer' onClick={() => playerDetailHandler(player)}>{player}</span>)}
+        {!showDetail && thisQuarterPlayers.map(player => <ActivePlayer key={player} className='text-green-900 cursor-pointer' onClick={() => playerDetailHandler(player)}>{player}</ActivePlayer>)}
         {showDetail &&
           <div>
             <div className='flex flex-col'>
-              <span className='underline decoration-2 decoration-solid decoration-yellow-400 text-green-800 mb-2'>{playerDetail['name']}</span>
+              <ActivePlayer className='underline decoration-2 decoration-solid decoration-yellow-400 text-green-800 mb-2'>{playerDetail['name']}</ActivePlayer>
               {playerDetail['description']
                 ?
                 <span>{playerDetail['description']}</span>
@@ -858,6 +858,15 @@ const SubTitle = styled.span`
 const PlayerName = styled.span`
   position: relative;
   z-index: 1;
+  @media (prefers-color-scheme: dark) {
+    color: #eab308;
+  }
+`
+
+const ActivePlayer = styled.span`
+  @media (prefers-color-scheme: dark) {
+    color: #eab308;
+  }
 `
 
 const BackgroundImage = styled.div`
