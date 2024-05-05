@@ -720,7 +720,7 @@ const AnalysisTap = () => {
           {twentyTwentyClub?.map(player => <PlayerName key={player} className='text-xl text-green-800'>{player}</PlayerName>)}
           {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
           {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
-          {tenTenClub.length === 0 && <PlayerName style={{top: '120px'}}>아직 달성한 플레이어가 없습니다</PlayerName>}
+          {twentyTwentyClub.length === 0 && <PlayerName style={{top: '120px'}}>아직 달성한 플레이어가 없습니다</PlayerName>}
         </div>
       }
       {// Best 얼리 스타터
