@@ -63,14 +63,15 @@ const DailyMVP = (props) => {
 
   }, [recordData]);
 
+  // MVP 등록
   const registerDailyMVP = async () => {
     const mvpRef = collection(db, 'daily_mvp')
     const mvpSnapshot = await getDocs(mvpRef)
     const docRef = doc(db, 'daily_mvp', today)
 
-    const data = {}
+    let data = {}
     bestPlayers.forEach(player => {
-      data[player.name] = {goal: player.goal, assist: player.assist}
+      data = {goal: player.goal, assist: player.assist, name: player.name}
     })
 
     const todayMVP = mvpSnapshot.docs.find(doc => doc.id === today)

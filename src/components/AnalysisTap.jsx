@@ -235,25 +235,25 @@ const AnalysisTap = () => {
     if (thisMonth < 4) {
       fetchedData.forEach(data => {
         if (data.id.slice(0, 2) <= 3) {
-          filteredData.push(Object.keys(data.data)[0])
+          filteredData.push(data.data.name)
         }
       })
     } else if (thisMonth < 7) {
       fetchedData.forEach(data => {
         if (data.id.slice(0, 2) > 3 && data.id.slice(0, 2) <= 6) {
-          filteredData.push(Object.keys(data.data)[0])
+          filteredData.push(data.data.name)
         }
       })
     } else if (thisMonth < 10) {
       fetchedData.forEach(data => {
         if (data.id.slice(0, 2) > 6 && data.id.slice(0, 2) <= 9) {
-          filteredData.push(Object.keys(data.data)[0])
+          filteredData.push(data.data.name)
         }
       })
     } else {
       fetchedData.filter(data => {
         if (data.id.slice(0, 2) > 9) {
-          filteredData.push(Object.keys(data.data)[0])
+          filteredData.push(data.data.name)
         }
       })
     }
@@ -615,7 +615,7 @@ const AnalysisTap = () => {
       // mvp count
       let mvpCount = 0
       thisQuarterMVP.forEach(mvp => {
-        if (mvp.includes(name)) {
+        if (mvp && mvp.includes(name)) {
           mvpCount += 1
         }
       })
