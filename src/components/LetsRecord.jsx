@@ -408,14 +408,14 @@ const LetsRecord = (props) => {
                                     style={{width: '70px', fontFamily: 'Giants-Inline', color: '#bb2649'}}>GOAL</span>
                             <input
                                 className='w-24 border-solid border-0 border-b-2 border-green-600 text-center outline-none'
-                                value={scorer} onChange={scorerHandler}/>
+                                value={scorer} onChange={scorerHandler} maxLength={2} />
                           </div>
                           <div className='flex gap-0.5 items-center'>
                               <span className='flex justify-center'
                                     style={{width: '70px', fontFamily: 'Giants-Inline',  color: '#eab308'}}>ASSIST</span>
                             <input
                                 className='w-24 border-solid border-0 border-b-2 border-green-600 text-center outline-none'
-                                value={assistant} onChange={assistantHandler}/>
+                                value={assistant} onChange={assistantHandler} maxLength={2} />
                           </div>
                         </div>
                         <button className='flex relative bottom-2 mt-5 underline-border bg-gray-50' onClick={registerHandler}>
