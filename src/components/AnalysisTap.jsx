@@ -706,7 +706,7 @@ const AnalysisTap = () => {
             <div className='flex flex-col gap-1'>
               <Title className='text-xl'>10-10 클럽</Title>
               <SubTitle className=''>골, 어시 각각 10개 이상 달성한 플레이어</SubTitle>
-              {tenTenClub?.map(player => <PlayerName key={player} className='text-xl text-green-800' style={{top: '50px'}}>{player}</PlayerName>)}
+              {tenTenClub?.map(player => <PlayerName key={player} className='text-xl text-green-800' style={{top: '20px'}}>{player}</PlayerName>)}
               {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
               {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
               {tenTenClub.length === 0 && <PlayerName style={{top: '120px'}}>아직 달성한 플레이어가 없습니다</PlayerName>}
@@ -717,7 +717,7 @@ const AnalysisTap = () => {
         <div className='flex flex-col gap-1'>
           <Title className='text-xl'>20-20 클럽</Title>
           <SubTitle className=''>골, 어시 각각 20개 이상 달성한 플레이어</SubTitle>
-          {twentyTwentyClub?.map(player => <PlayerName key={player} className='text-xl text-green-800'>{player}</PlayerName>)}
+          {twentyTwentyClub?.map(player => <PlayerName key={player} className='text-xl text-green-800' style={{top: '20px'}}>{player}</PlayerName>)}
           {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
           {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
           {twentyTwentyClub.length === 0 && <PlayerName style={{top: '120px'}}>아직 달성한 플레이어가 없습니다</PlayerName>}
