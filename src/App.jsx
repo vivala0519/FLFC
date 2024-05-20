@@ -1,17 +1,17 @@
 import {useEffect, useState, useRef} from 'react'
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom"
 import LetsRecord from './components/LetsRecord.jsx'
 import StatusBoard from './components/StatusBoard.jsx'
 import WeeklyTeam from './components/WeeklyTeam.jsx'
 import RecordRoom from './components/RecordRoom.jsx'
-import { dataAnalysis } from "./apis/analyzeData.js";
+import { dataAnalysis } from "./apis/analyzeData.js"
 import { collection, doc, getDocs, setDoc } from 'firebase/firestore'
 import { db } from '../firebase.js'
 import { Analytics } from "@vercel/analytics/react"
 import styled from 'styled-components'
 import './App.css'
 import sun from '@/assets/sun2.png'
-import AdminPage from "./pages/AdminPage.jsx";
+import AdminPage from "./pages/AdminPage.jsx"
 
 function App() {
     const [tap, setTap] = useState(0)
@@ -88,7 +88,7 @@ function App() {
         const registerTeam = async () => {
             const docRef = doc(db, 'weeklyTeam', registeredTeam.id)
             await setDoc(docRef, registeredTeam.data)
-            console.log("Document written with ID: ", docRef.id);
+            console.log("Document written with ID: ", docRef.id)
         }
         if (registeredTeam) {
             registerTeam()

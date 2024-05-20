@@ -3,7 +3,7 @@ import {getDatabase, ref, onValue, update, set} from 'firebase/database'
 import {db} from "../../firebase.js"
 import Swal from "sweetalert2"
 import styled from 'styled-components'
-import {doc, setDoc} from "firebase/firestore";
+import {doc, setDoc} from "firebase/firestore"
 import { uid } from "uid"
 
 const AdminPage = (props) => {
@@ -13,7 +13,7 @@ const AdminPage = (props) => {
     const month = (currentTime.getMonth() + 1).toString().padStart(2, '0')
     const date = currentTime.getDate().toString().padStart(2, '0')
     const today = month + date
-    const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '안용현', '윤준석', '이재진', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은집']
+    const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '윤준석', '이재진', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은집']
 
     const [showTable, setShowTable] = useState(true)
     const [password, setPassword] = useState('')
@@ -36,7 +36,7 @@ const AdminPage = (props) => {
     }
     useEffect(() => {
         passwordCheck()
-    }, []);
+    }, [])
 
     useEffect(() => {
         if (password === '0413') {
@@ -61,7 +61,7 @@ const AdminPage = (props) => {
                 setWrittenData(data.data)
             }
         }
-    }, [showTable]);
+    }, [showTable])
 
     const parseTimeString = (record) => {
         const [hours, minutes, seconds] = record.split(':')
@@ -77,7 +77,7 @@ const AdminPage = (props) => {
                 const timeB = parseTimeString(b.time)
 
                 return timeA - timeB
-            });
+            })
             setTodayRecord(sortedRecordArray)
         }
         const isRequestList = todayRecordObj[today + '_request']
@@ -88,11 +88,11 @@ const AdminPage = (props) => {
                 const timeB = parseTimeString(b.time)
 
                 return timeA - timeB
-            });
+            })
             setRequestList(sortedRequestArray.filter(request => request.status === 'processing'))
             setResolvedList(sortedRequestArray.filter(request => request.status === 'resolved'))
         }
-    }, [todayRecordObj]);
+    }, [todayRecordObj])
 
     const resolveHandler = (id) => {
         const updateData = requestList.find(request => request.id === id)
@@ -111,7 +111,7 @@ const AdminPage = (props) => {
             const newRecords = [...prevRecords]
             newRecords[index] = {...newRecords[index], goal: newGoal}
             return newRecords
-        });
+        })
     }
 
     const assistInputChangeHandler = (index, newAssist) => {
@@ -119,7 +119,7 @@ const AdminPage = (props) => {
             const newRecords = [...prevRecords]
             newRecords[index] = {...newRecords[index], assist: newAssist}
             return newRecords
-        });
+        })
     }
 
     const formatRecordByName = (record) => {
@@ -153,7 +153,7 @@ const AdminPage = (props) => {
                         }
                     })
                 }
-            });
+            })
             return stats
         }
     }
@@ -185,8 +185,8 @@ const AdminPage = (props) => {
                 goal: scorer.trim(),
                 assist: assistant.trim()
             }
-            set(ref(rtdb, thisYear + '/' + today + '/' + id), record);
-            set(ref(rtdb, thisYear + '/' + today + '_backup' + '/' + id), record);
+            set(ref(rtdb, thisYear + '/' + today + '/' + id), record)
+            set(ref(rtdb, thisYear + '/' + today + '_backup' + '/' + id), record)
 
             const copiedRecord = [...todayRecord]
             copiedRecord.push(record)
@@ -195,7 +195,7 @@ const AdminPage = (props) => {
                 const registerRecord = async () => {
                     const docRef = doc(db, thisYear, today)
                     await setDoc(docRef, stats)
-                    console.log("Document written with ID: ", docRef.id);
+                    console.log("Document written with ID: ", docRef.id)
                 }
                 if (!compareObjects(stats, writtenData)) {
                     registerRecord()
@@ -217,7 +217,7 @@ const AdminPage = (props) => {
                 const registerRecord = async () => {
                     const docRef = doc(db, thisYear, today)
                     await setDoc(docRef, stats)
-                    console.log("Document written with ID: ", docRef.id);
+                    console.log("Document written with ID: ", docRef.id)
                 }
                 if (!compareObjects(stats, writtenData)) {
                     registerRecord()

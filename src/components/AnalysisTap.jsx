@@ -18,7 +18,7 @@ import friend from '@/assets/friend2.png'
 import mining from '@/assets/minning.gif'
 
 const AnalysisTap = () => {
-  const players = ['홍원진', '우장식', '임희재', '윤희철', '김동휘', '이승호', '임건휘', '방승진', '김민관', '김규진', '임준휘', '전희종', '한상태', '임종우', '노태훈', '윤영진', '이원효', '황정민', '양대열', '정우진', '김남구', '박근한', '손지원', '황철민', '최봉호', '선민조', '최수혁', '김병일', '김대건', '전의준', '황은집', '진장용', '이진헌', '윤준석', '김동주', '선우용', '이재진', '김성록', '박남호', '안용현', '장성민', '하민수']
+  const players = ['홍원진', '우장식', '임희재', '윤희철', '김동휘', '이승호', '임건휘', '방승진', '김민관', '김규진', '임준휘', '전희종', '한상태', '임종우', '노태훈', '윤영진', '이원효', '황정민', '양대열', '정우진', '김남구', '박근한', '손지원', '황철민', '최봉호', '선민조', '최수혁', '김병일', '김대건', '전의준', '황은집', '진장용', '이진헌', '윤준석', '김동주', '선우용', '이재진', '김성록', '박남호', '장성민', '하민수']
   const year = '2024'
   const tapList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
   const tapImage = [laurel, ten, twenty, early, slow, sonkae, greedy, altruistic, duo, friend]
@@ -681,7 +681,7 @@ const AnalysisTap = () => {
         <div className='flex flex-col gap-3 items-center'>
           <span className='text-xl'>데이터를 모으는 중 입니다</span>
           <Mining />
-          <span className='text-sm'>최소 4주 이상의 데이터 필요 ({thisQuarterData.length}/4)</span>
+          <span className='text-sm'>4주 이상의 데이터 필요.. ({thisQuarterData.length}/4)</span>
         </div>
       }
       {!needMoreData &&

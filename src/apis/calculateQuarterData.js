@@ -1,5 +1,5 @@
-import {collection, getDocs} from "firebase/firestore";
-import {db} from "../../firebase.js";
+import {collection, getDocs} from "firebase/firestore"
+import {db} from "../../firebase.js"
 import { extractActiveMembers } from "./members.js"
 
 export const extractQuarterData = async (yearParameter) => {
@@ -61,4 +61,4 @@ export const extractQuarterData = async (yearParameter) => {
   return {totalQuarterData: [firstQuarterData, secondQuarterData, thirdQuarterData, fourthQuarterData]}
 }
 
-export default extractQuarterData;
+export default extractQuarterData

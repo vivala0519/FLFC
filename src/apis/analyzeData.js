@@ -3,25 +3,25 @@ import { db } from '../../firebase.js'
 import { extractActiveMembers } from './members.js'
 
 function getLastFourSundays() {
-    const today = new Date();
+    const today = new Date()
     if ([0, 7].includes(today.getDay())) {
-        today.setDate(today.getDate() - 7);
+        today.setDate(today.getDate() - 7)
     }
-    const sundays = [];
+    const sundays = []
 
-    const todayDay = today.getDay();
+    const todayDay = today.getDay()
 
     for (let i = 0; i < 4; i++) {
-        let sunday = new Date(today);
+        let sunday = new Date(today)
 
-        const daysToSubtract = todayDay + (7 * i);
-        sunday.setDate(today.getDate() - daysToSubtract);
+        const daysToSubtract = todayDay + (7 * i)
+        sunday.setDate(today.getDate() - daysToSubtract)
         sunday = String(sunday.getMonth() + 1).padStart(2, '0') + String(sunday.getDate()).padStart(2, '0')
 
-        sundays.push(sunday);
+        sundays.push(sunday)
     }
 
-    return sundays;
+    return sundays
 }
 
 export const dataAnalysis = async (quarter, yearParameter) => {
@@ -30,23 +30,23 @@ export const dataAnalysis = async (quarter, yearParameter) => {
     const snapshot = await getDocs(collectionRef)
     const fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
 
-    const lastFourSundays = getLastFourSundays();
-    let keyCounts = new Map();
+    const lastFourSundays = getLastFourSundays()
+    let keyCounts = new Map()
 
     lastFourSundays.forEach(sunday => {
-        const dayData = fetchedData.find(data => data.id === sunday);
+        const dayData = fetchedData.find(data => data.id === sunday)
         Object.keys(dayData.data).forEach(key => {
-            keyCounts.set(key, (keyCounts.get(key) || 0) + 1);
+            keyCounts.set(key, (keyCounts.get(key) || 0) + 1)
         })
     })
 
-    let lastFourWeeksAttendance = new Set();
+    let lastFourWeeksAttendance = new Set()
 
     keyCounts.forEach((count, key) => {
         if (count >= 2) {
-            lastFourWeeksAttendance.add(key);
+            lastFourWeeksAttendance.add(key)
         }
-    });
+    })
 
     // 현황판 데이터 Map
     let activeQuarterStats = null
@@ -159,62 +159,62 @@ export const dataAnalysis = async (quarter, yearParameter) => {
     const totalStatsArray = Array.from(activeQuarterStats.entries())
     // 골 순위
     const goalRank = totalStatsArray.sort((a, b) => b[1]['골'] - a[1]['골'])
-    let prevGoal = null, prevGoalRank = 1;
+    let prevGoal = null, prevGoalRank = 1
     goalRank.forEach((item, index) => {
         if (prevGoal === item[1]['골']) {
-            activeQuarterStats.get(item[0])['골순위'] = prevGoalRank;
+            activeQuarterStats.get(item[0])['골순위'] = prevGoalRank
         } else {
-            prevGoal = item[1]['골'];
-            prevGoalRank = index + 1;
-            activeQuarterStats.get(item[0])['골순위'] = prevGoalRank;
+            prevGoal = item[1]['골']
+            prevGoalRank = index + 1
+            activeQuarterStats.get(item[0])['골순위'] = prevGoalRank
         }
     })
     // 어시 순위
     const assistRank = totalStatsArray.sort((a, b) => b[1]['어시'] - a[1]['어시'])
-    let prevAssist = null, prevAssistRank = 1;
+    let prevAssist = null, prevAssistRank = 1
     assistRank.forEach((item, index) => {
         if (prevAssist === item[1]['어시']) {
-            activeQuarterStats.get(item[0])['어시순위'] = prevAssistRank;
+            activeQuarterStats.get(item[0])['어시순위'] = prevAssistRank
         } else {
-            prevAssist = item[1]['어시'];
-            prevAssistRank = index + 1;
-            activeQuarterStats.get(item[0])['어시순위'] = prevAssistRank;
+            prevAssist = item[1]['어시']
+            prevAssistRank = index + 1
+            activeQuarterStats.get(item[0])['어시순위'] = prevAssistRank
         }
     })
     // 출석 순위
     const showRank = totalStatsArray.sort((a, b) => b[1]['출석'] - a[1]['출석'])
-    let prevShow = null, prevShowRank = 1;
+    let prevShow = null, prevShowRank = 1
     showRank.forEach((item, index) => {
         if (prevShow === item[1]['출석']) {
-            activeQuarterStats.get(item[0])['출석순위'] = prevShowRank;
+            activeQuarterStats.get(item[0])['출석순위'] = prevShowRank
         } else {
-            prevShow = item[1]['출석'];
-            prevShowRank = index + 1;
-            activeQuarterStats.get(item[0])['출석순위'] = prevShowRank;
+            prevShow = item[1]['출석']
+            prevShowRank = index + 1
+            activeQuarterStats.get(item[0])['출석순위'] = prevShowRank
         }
     })
     // 공격포인트 순위
     const attackPointRank = totalStatsArray.sort((a, b) => b[1]['공격포인트'] - a[1]['공격포인트'])
-    let prevAttackPoint = null, prevAttackPointRank = 1;
+    let prevAttackPoint = null, prevAttackPointRank = 1
     attackPointRank.forEach((item, index) => {
         if (prevAttackPoint === item[1]['공격포인트']) {
-            activeQuarterStats.get(item[0])['공격포인트순위'] = prevAttackPointRank;
+            activeQuarterStats.get(item[0])['공격포인트순위'] = prevAttackPointRank
         } else {
-            prevAttackPoint = item[1]['공격포인트'];
-            prevAttackPointRank = index + 1;
-            activeQuarterStats.get(item[0])['공격포인트순위'] = prevAttackPointRank;
+            prevAttackPoint = item[1]['공격포인트']
+            prevAttackPointRank = index + 1
+            activeQuarterStats.get(item[0])['공격포인트순위'] = prevAttackPointRank
         }
     })
     // 포인트 총합 순위
     const totalPointRank = totalStatsArray.sort((a, b) => b[1]['포인트총합'] - a[1]['포인트총합'])
-    let prevTotalPoint = null, prevTotalPointRank = 1;
+    let prevTotalPoint = null, prevTotalPointRank = 1
     totalPointRank.forEach((item, index) => {
         if (prevTotalPoint === item[1]['포인트총합']) {
-            activeQuarterStats.get(item[0])['포인트총합순위'] = prevTotalPointRank;
+            activeQuarterStats.get(item[0])['포인트총합순위'] = prevTotalPointRank
         } else {
-            prevTotalPoint = item[1]['포인트총합'];
-            prevTotalPointRank = index + 1;
-            activeQuarterStats.get(item[0])['포인트총합순위'] = prevTotalPointRank;
+            prevTotalPoint = item[1]['포인트총합']
+            prevTotalPointRank = index + 1
+            activeQuarterStats.get(item[0])['포인트총합순위'] = prevTotalPointRank
         }
     })
     const members = extractActiveMembers(activeQuarterStats)
