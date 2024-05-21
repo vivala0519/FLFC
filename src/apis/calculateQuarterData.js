@@ -1,6 +1,6 @@
-import {collection, getDocs} from "firebase/firestore"
-import {db} from "../../firebase.js"
-import { extractActiveMembers } from "./members.js"
+import {collection, getDocs} from 'firebase/firestore'
+import {db} from '../../firebase.js'
+import { extractActiveMembers } from './members.js'
 
 export const extractQuarterData = async (yearParameter) => {
   const year = yearParameter ? yearParameter : '2024'

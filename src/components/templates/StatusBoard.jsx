@@ -1,9 +1,9 @@
 import {useEffect, useState} from 'react'
-import DataTable from './DataTable'
+import DataTable from '../DataTable.jsx'
 import styled from 'styled-components'
-import './LetsRecord.css'
+import '../LetsRecord.css'
 import help from '@/assets/help2.png'
-import {dataAnalysis} from "../apis/analyzeData.js";
+import {dataAnalysis} from "../../apis/analyzeData.js";
 
 const StatusBoard = (props) => {
     const {propsData, setTap} = props

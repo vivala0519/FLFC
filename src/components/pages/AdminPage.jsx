@@ -1,10 +1,10 @@
-import {useEffect, useState} from "react"
+import {useEffect, useState} from 'react'
 import {getDatabase, ref, onValue, update, set} from 'firebase/database'
-import {db} from "../../firebase.js"
-import Swal from "sweetalert2"
+import {db} from '../../../firebase.js'
+import Swal from 'sweetalert2'
 import styled from 'styled-components'
-import {doc, setDoc} from "firebase/firestore"
-import { uid } from "uid"
+import {doc, setDoc} from 'firebase/firestore'
+import { uid } from 'uid'
 
 const AdminPage = (props) => {
     const { recordData, weeklyTeamData } = props

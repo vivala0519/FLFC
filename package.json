@@ -19,7 +19,8 @@
     "styled-components": "^6.1.8",
     "sweetalert2": "^11.10.7",
     "uid": "^2.0.2",
-    "vite-plugin-svgr": "^4.2.0"
+    "vite-plugin-svgr": "^4.2.0",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.56",

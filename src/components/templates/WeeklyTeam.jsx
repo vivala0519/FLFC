@@ -6,8 +6,8 @@ import right from "@/assets/right.png"
 import write from "@/assets/write.png"
 import check from "@/assets/check.png"
 import './WeeklyTeam.css'
-import {collection, getDocs} from "firebase/firestore";
-import {db} from "../../firebase.js";
+import {collection, getDocs} from "firebase/firestore"
+import {db} from "../../../firebase.js"
 
 function WeeklyTeam(props) {
     const {setRegisteredTeam, setTap, setShowFooter} = props
@@ -238,21 +238,21 @@ function WeeklyTeam(props) {
                 <div className='w-full flex justify-center'>
                     {canCreate ?
                         (!editMode ?
-                                <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                     onClick={() => createWeeklyTeamHandler(true)} style={{
-                                    fontFamily: 'DNFForgedBlade',
-                                    width: '188px',
-                                    height: '45px',
-                                    borderRadius: '3px'
-                                }}><span className='text-black'>이번 주 팀 생성하기</span><Write/></div>
-                                :
-                                <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                     onClick={registerTeamHandler} style={{
-                                    fontFamily: 'DNFForgedBlade',
-                                    width: '188px',
-                                    height: '45px',
-                                    borderRadius: '3px'
-                                }}><span className='text-black'>등록하기</span><Register/></div>
+                            <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
+                                 onClick={() => createWeeklyTeamHandler(true)} style={{
+                                fontFamily: 'DNFForgedBlade',
+                                width: '188px',
+                                height: '45px',
+                                borderRadius: '3px'
+                            }}><span className='text-black'>이번 주 팀 생성하기</span><Write/></div>
+                            :
+                            <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
+                                 onClick={registerTeamHandler} style={{
+                                fontFamily: 'DNFForgedBlade',
+                                width: '188px',
+                                height: '45px',
+                                borderRadius: '3px'
+                            }}><span className='text-black'>등록하기</span><Register/></div>
                         )
                         :
                         (!activeBorder ?

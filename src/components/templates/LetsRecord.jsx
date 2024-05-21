@@ -1,29 +1,29 @@
 import {useEffect, useState, useRef} from 'react'
 import { getDatabase, ref, set, onValue, remove } from 'firebase/database'
 import { uid } from "uid"
-import {doc, setDoc} from "firebase/firestore"
-import {db} from "../../firebase.js"
+import {doc, setDoc, collection, addDoc} from "firebase/firestore"
+import {db} from "../../../firebase.js"
 import Swal from "sweetalert2"
-import DailyMVP from "./DailyMVP.jsx"
+import DailyMVP from "../DailyMVP.jsx"
 import styled from 'styled-components'
 import write from "@/assets/write.png"
 import request from '@/assets/request.png'
-import './LetsRecord.css'
+import '../LetsRecord.css'
 
 const LetsRecord = (props) => {
+  const {open, setOpen, recordData, weeklyTeamData, headerHeight, setTap} = props
   const registerRef = useRef(null)
   const scrollContainerRef = useRef(null)
-  const {open, setOpen, recordData, weeklyTeamData, headerHeight, setTap} = props
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
   const [todayRecordObject, setTodayRecordObject] = useState({})
   const [todayRecord, setTodayRecord] = useState([])
-  const [dynamicHeight, setDynamicHeight] = useState(0);
+  const [dynamicHeight, setDynamicHeight] = useState(0)
   const [today, setToday] = useState('')
   const [thisYear, setThisYear] = useState('2024')
-  const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '안용현', '윤준석', '이재진', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은집']
+  const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '윤준석', '이재진', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은집']
   const [writtenData, setWrittenData] = useState([])
-  const [registerHeight, setRegisterHeight] = useState(0);
+  const [registerHeight, setRegisterHeight] = useState(0)
   const [canRegister, setCanRegister] = useState(false)
   const [lastRecord, setLastRecord] = useState('')
   const [showMVP, setShowMVP] = useState(false)
@@ -77,7 +77,7 @@ const LetsRecord = (props) => {
       setTodayRecordObject(data)
     })
 
-  }, []);
+  }, [])
 
   useEffect(() => {
     function setHeight() {
@@ -85,19 +85,19 @@ const LetsRecord = (props) => {
       setDynamicHeight(height)
     }
     setHeight()
-    window.addEventListener('resize', setHeight);
+    window.addEventListener('resize', setHeight)
 
     return () => {
-        window.removeEventListener('resize', setHeight);
-    };
-  }, [headerHeight, registerHeight]);
+      window.removeEventListener('resize', setHeight)
+    }
+  }, [headerHeight, registerHeight])
 
   // 오늘의 기록된 데이터 가져오기
   useEffect(() => {
-      const data = recordData?.find(obj => obj.id === today)
-      if (data?.data) {
-          setWrittenData(data.data)
-      }
+    const data = recordData?.find(obj => obj.id === today)
+    if (data?.data) {
+      setWrittenData(data.data)
+    }
   }, [recordData])
 
   const parseTimeString = (record) => {
@@ -116,7 +116,7 @@ const LetsRecord = (props) => {
         const timeB = parseTimeString(b.time)
 
         return timeA - timeB
-      });
+      })
       setTodayRecord(sortedRecordArray)
     }
     // request update list
@@ -128,45 +128,48 @@ const LetsRecord = (props) => {
         const timeB = parseTimeString(b.time)
 
         return timeA - timeB
-      });
+      })
       setRequestList(sortedRequestArray)
     }
   }, [todayRecordObject])
 
     const formatRecordByName = (record) => {
-        const stats = {}
-        if (weeklyTeamData?.data && weeklyTeamData?.id === today) {
-            const data = weeklyTeamData.data
-            const thisWeekMembers = data[1].concat(data[2], data[3])
-            thisWeekMembers.forEach(member => {
-                players.forEach(player => {
-                    if (member && player.includes(member)) {
-                        stats[player] = {'출석': true, '골': 0, '어시': 0}
-                    }
-                })
-            })
+      const stats = {}
+      if (weeklyTeamData?.data && weeklyTeamData?.id === today) {
+        const data = weeklyTeamData.data
+        const thisWeekMembers = data[1].concat(data[2], data[3])
+        thisWeekMembers.forEach(member => {
+          for (let i = 0; i < players.length; i++) {
+            if (member && players[i].includes(member)) {
+              stats[players[i]] = {'출석': true, '골': 0, '어시': 0}
+              break
+            }
+          }
+        })
 
-            record.forEach(item => {
-                const { assist, goal } = item
+        record.forEach(item => {
+          const { assist, goal } = item
 
-                if (goal !== "") {
-                    players.forEach(player => {
-                        if (player.includes(goal) && stats[player]) {
-                            stats[player]['골']++
-                        }
-                    })
-                }
+          if (goal !== "") {
+            for (let i = 0; i < players.length; i++) {
+              if (players[i].includes(goal) && stats[players[i]]) {
+                stats[players[i]]['골']++
+                break
+              }
+            }
+          }
 
-                if (assist !== "") {
-                    players.forEach(player => {
-                        if (player.includes(assist) && stats[player]) {
-                            stats[player]['어시']++
-                        }
-                    })
-                }
-            });
-            return stats
-        }
+          if (assist !== "") {
+            for (let i = 0; i < players.length; i++) {
+              if (players[i].includes(goal) && stats[players[i]]) {
+                stats[players[i]]['어시']++
+                break
+              }
+            }
+          }
+        });
+        return stats
+      }
     }
 
     function compareObjects(objA, objB) {
@@ -262,32 +265,28 @@ const LetsRecord = (props) => {
   }
 
   const deleteRecord = (index) => {
-      Swal.fire({
-            title: '삭제, Really?',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: '삭제',
-            cancelButtonText: '취소'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                const db = getDatabase()
-                const recordRef = ref(db, thisYear + '/' + today + '/' + todayRecord[index].id)
-                remove(ref(db, thisYear + '/' + today + '/' + todayRecord[index].id))
-                remove(recordRef).then(() => {
-                    console.log('Document successfully deleted!')
-                })
-                .catch((error) => {
-                    console.log(error)
-                });
-            }
-      })
+    Swal.fire({
+      title: '삭제, Really?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: '삭제',
+      cancelButtonText: '취소'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          const db = getDatabase()
+          const recordRef = ref(db, thisYear + '/' + today + '/' + todayRecord[index].id)
+          remove(ref(db, thisYear + '/' + today + '/' + todayRecord[index].id))
+          remove(recordRef).then(() => {
+              console.log('Document successfully deleted!')
+          })
+          .catch((error) => {
+              console.log(error)
+          });
+        }
+    })
   }
-
-    // const showLastRecord = () => {
-    //     console.log('click')
-    // }
 
   // 슬라이드 시 탭 이동
   const [startX, setStartX] = useState(null);
