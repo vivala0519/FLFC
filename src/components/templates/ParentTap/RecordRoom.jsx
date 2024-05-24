@@ -1,14 +1,14 @@
 import {useEffect, useState} from 'react'
-import DataTable from '../DataTable.jsx'
+import DataTable from '../../DataTable.jsx'
 import styled from 'styled-components'
-import '../LetsRecord.css'
+import './LetsRecord.css'
 import help from '@/assets/help.png'
 import {collection, getDocs} from "firebase/firestore"
-import {db} from "../../../firebase.js"
-import { dataAnalysis } from "../../apis/analyzeData.js"
-import { extractQuarterData } from '../../apis/calculateQuarterData.js'
-import HistoryTap from '../HistoryTap.jsx'
-import AnalysisTap from "../AnalysisTap.jsx"
+import {db} from "../../../../firebase.js"
+import { dataAnalysis } from "../../../apis/analyzeData.js"
+import { extractQuarterData } from '../../../apis/calculateQuarterData.js'
+import HistoryTap from '../ChildTap/HistoryTap.jsx'
+import AnalysisTap from "../ChildTap/AnalysisTap.jsx"
 
 const RecordRoom = (props) => {
     const {propsSetTap} = props

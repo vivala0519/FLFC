@@ -3,7 +3,7 @@ import { doc, collection, setDoc, getDocs } from "firebase/firestore"
 import {db} from "../../firebase.js"
 import JSConfetti from "js-confetti"
 import styled from 'styled-components'
-import './LetsRecord.css'
+import './templates/ParentTap/LetsRecord.css'
 import laurel from '@/assets/laurel.png'
 
 const DailyMVP = (props) => {

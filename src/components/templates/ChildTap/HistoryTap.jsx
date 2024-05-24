@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react"
-import {db} from "../../firebase.js"
+import {db} from "../../../../firebase.js"
 import {collection, getDocs} from "firebase/firestore";
 import styled from 'styled-components'
 import trophy from '@/assets/trophy.png'

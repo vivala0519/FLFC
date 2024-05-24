@@ -7,7 +7,7 @@ import write from "@/assets/write.png"
 import check from "@/assets/check.png"
 import './WeeklyTeam.css'
 import {collection, getDocs} from "firebase/firestore"
-import {db} from "../../../firebase.js"
+import {db} from "../../../../firebase.js"
 
 function WeeklyTeam(props) {
     const {setRegisteredTeam, setTap, setShowFooter} = props
