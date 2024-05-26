@@ -139,33 +139,30 @@ const LetsRecord = (props) => {
         const data = weeklyTeamData.data
         const thisWeekMembers = data[1].concat(data[2], data[3])
         thisWeekMembers.forEach(member => {
-          for (let i = 0; i < players.length; i++) {
-            if (member && players[i].includes(member)) {
-              stats[players[i]] = {'출석': true, '골': 0, '어시': 0}
-              break
+          players.forEach(player => {
+            if (member && player.includes(member)) {
+              stats[player] = {'출석': true, '골': 0, '어시': 0}
             }
-          }
+          })
         })
 
         record.forEach(item => {
           const { assist, goal } = item
 
           if (goal !== "") {
-            for (let i = 0; i < players.length; i++) {
-              if (players[i].includes(goal) && stats[players[i]]) {
-                stats[players[i]]['골']++
-                break
+            players.forEach(player => {
+              if (player.includes(goal) && stats[player]) {
+                stats[player]['골']++
               }
-            }
+            })
           }
 
           if (assist !== "") {
-            for (let i = 0; i < players.length; i++) {
-              if (players[i].includes(goal) && stats[players[i]]) {
-                stats[players[i]]['어시']++
-                break
+            players.forEach(player => {
+              if (player.includes(assist) && stats[player]) {
+                stats[player]['어시']++
               }
-            }
+            })
           }
         });
         return stats
