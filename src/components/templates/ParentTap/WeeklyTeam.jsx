@@ -45,7 +45,7 @@ function WeeklyTeam(props) {
         if ((currentDay === 0 && currentHour >= 10) || (currentDay === 1) || (currentDay === 2 && currentHour <= 23 && currentMinute <= 59)) {
             setCanCreate(false)
         }
-    }, [lastDate]);
+    }, [lastDate])
 
     useEffect(() => {
         if (!editMode) {
@@ -53,7 +53,7 @@ function WeeklyTeam(props) {
         } else {
             setShowFooter(false)
         }
-    }, [editMode]);
+    }, [editMode])
 
     const pageMoveHandler = (left) => {
         if (left && page > 0) {
@@ -109,34 +109,29 @@ function WeeklyTeam(props) {
         setCanCreate(false)
     }
 
-    useEffect(() => {
-        // console.log(page, weeklyTeamData)
-    }, [page, weeklyTeamData]);
-
-
     // 슬라이드 시 탭 이동
     const [startX, setStartX] = useState(null);
     const [moveX, setMoveX] = useState(null);
 
     const handleTouchStart = (e) => {
-        setStartX(e.touches[0].clientX);
-        setMoveX(e.touches[0].clientX);
-    };
+        setStartX(e.touches[0].clientX)
+        setMoveX(e.touches[0].clientX)
+    }
 
     const handleTouchMove = (e) => {
-        setMoveX(e.touches[0].clientX);
-    };
+        setMoveX(e.touches[0].clientX)
+    }
 
     const handleTouchEnd = () => {
-        const diff = startX - moveX;
+        const diff = startX - moveX
         if (diff > 75) {
             setTap(0)
         } else if (diff < -75) {
             setTap(2)
         }
-        setStartX(null);
-        setMoveX(null);
-    };
+        setStartX(null)
+        setMoveX(null)
+    }
 
     const votedPlayerMonthPlan = []
     const votedPlayerWeekPlan = []
