@@ -20,8 +20,10 @@ function WeeklyTeam(props) {
     const [inputTeamData, setInputTeamData] = useState([['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', '']])
 
     const today = new Date()
-    const currentDayOfWeek = today.getDay()
-    const daysUntilSunday = 7 - currentDayOfWeek
+    const currentDay = today.getDay()
+    const currentHour = today.getHours()
+    const currentMinute = today.getMinutes()
+    const daysUntilSunday = 7 - currentDay
     const nextSunday = new Date(today)
     nextSunday.setDate(today.getDate() + daysUntilSunday)
 
@@ -39,20 +41,9 @@ function WeeklyTeam(props) {
 
     useEffect(() => {
         fetchWeeklyTeamData()
-
-        if (currentDayOfWeek < 4) {
+        // 수요일까지 팀 생성 가능
+        if ((currentDay === 0 && currentHour >= 10) || (currentDay === 1) || (currentDay === 2 && currentHour <= 23 && currentMinute <= 59)) {
             setCanCreate(false)
-        }
-        if (lastDate) {
-            const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
-            const lastDateDay = parseInt(lastDate.slice(2, 4), 10) + 1
-
-            const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
-
-            if (lastTeamDate > today) {
-                setActiveBorder(true)
-                setCanCreate(false)
-            }
         }
     }, [lastDate]);
 
@@ -110,25 +101,12 @@ function WeeklyTeam(props) {
     const registerTeamHandler = () => {
         const newWeeklyTeamData = [...weeklyTeamData]
         const newData = {1: inputTeamData[0], 2: inputTeamData[1], 3: inputTeamData[2]}
-        let canRegister = true;
-        // Object.values(newData).forEach(team => {
-            // const players = team.filter(player => player.trim())
-            // if (players.length < 5) {
-            //     canRegister = false;
-            // }})
 
-        if (canRegister) {
-            newWeeklyTeamData[weeklyTeamData.length - 1].data = newData
-            setRegisteredTeam(weeklyTeamData[weeklyTeamData.length - 1])
-            setWeeklyTeamData(newWeeklyTeamData)
-            setEditMode(false)
-            setCanCreate(false)
-        } else {
-            Swal.fire({
-                icon: "error",
-                title: "팀당 최소 5명!",
-            })
-        }
+        newWeeklyTeamData[weeklyTeamData.length - 1].data = newData
+        setRegisteredTeam(weeklyTeamData[weeklyTeamData.length - 1])
+        setWeeklyTeamData(newWeeklyTeamData)
+        setEditMode(false)
+        setCanCreate(false)
     }
 
     useEffect(() => {
@@ -274,7 +252,7 @@ function WeeklyTeam(props) {
                                         }} onClick={registerTeamHandler}><span
                                         className='text-black'>등록하기</span><Register/></div>
                                     :
-                                    currentDayOfWeek <= 6 && currentDayOfWeek > 3 && <div
+                                    currentDay <= 6 && currentDay > 3 && <div
                                         className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
                                         style={{
                                             fontFamily: 'DNFForgedBlade',
