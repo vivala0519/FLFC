@@ -26,6 +26,36 @@ const RecordRoom = (props) => {
     const [blockSetPage, setBlockSetPage] = useState(false)
     const [tableData, setTableData] = useState({})
     const [quarterData, setQuarterData] = useState([])
+    // const [showHelp, setShowHelp] = useState(false)
+    // const infoText = '각 분기마다 스탯은 초기화 됩니다.\n\n' +
+    //     '다음 분기까지 현황판의 회원명 앞에\n득점왕/어시왕/출석왕 트로피 부착\n\n' +
+    //     '출석\n' +
+    //     '- 공동 1위의 경우 해당 인원 모두 인정.\n\n' +
+    //     '득점 & 어시\n' +
+    //     '- 공동 1위의 경우 다음 순서대로 1위를 가린다.\n' +
+    //     '1. 출석 + 골 + 어시 총합 순\n' +
+    //     '2. 1:1 PK(선공 가위바위보)\n\n' +
+    //     '- 수상인원은 다음 분기 동일 부분 수상에서 제외.\n\n' +
+    //     "- 각 분야의 1위가 같을 경우: 득점/어시 타이틀 수상이 우선\n- 득점, 어시가 겹칠경우: 두 분야중 더 높은 포인트를 기록한 분야로 수상.\n" +
+    //     "-> '출석+골+어시 총합'이 다음으로 높은 인원이 대체 수상"
+
+
+    const dataGeneration = async () => {
+        const collectionRef = collection(db, year)
+        const snapshot = await getDocs(collectionRef)
+        let fetchedData = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
+        fetchedData = fetchedData.filter(data => data.id !== 'last_season_kings')
+        // setFetchData(fetchedData)
+        const yearsData = {}
+        yearsData[year] = fetchedData
+        setYearData(yearsData)
+    }
+    const fetchAnalysis = async (quarter) => {
+        if (quarter) {
+            const data = await dataAnalysis(quarter)
+            setAnalyzedData(data)
+        }
+    }
 
     const getYearData = async (year) => {
         const collectionRef = collection(db, year)
@@ -56,6 +86,19 @@ const RecordRoom = (props) => {
             setAnalyzedData(analyedYearData[year])
         }
     }, [year])
+
+    useEffect(() => {
+        // console.log(quarter)
+        // if (quarter) {
+        //     const tempData = {...analyzedData}
+        //     tempData.members = analyzedData.totalQuarterData[quarter - 1].members
+        //     setAnalyzedData(tempData)
+        //     console.log(tempData)
+        // }
+
+        // dataGeneration()
+        // fetchAnalysis(quarter)
+    }, [quarter])
 
     useEffect(() => {
         // 월별 주차 계산
@@ -134,7 +177,6 @@ const RecordRoom = (props) => {
         setMoveX(null);
     };
 
-    const tapStyle = 'underline decoration-2 decoration-solid decoration-green-700 cursor-pointer'
 
     return (
       <div className='w-full relative' style={{top: '-10px'}}
@@ -146,19 +188,19 @@ const RecordRoom = (props) => {
               {/*     onClick={() => setTap(tapName[0])}>현황판*/}
               {/*</div>*/}
               <div className='flex flex-row w-full justify-center' style={{gap : '10%'}}>
-                  <Tap className={`${tapStyle} ${tap === '출석' && 'text-yellow-500'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer ${tap === '출석' && 'text-yellow-500'}`}
                        style={{width: 'fit-content'}} onClick={() => setTap(tapName[0])}>출석
                   </Tap>
-                  <Tap className={`${tapStyle} ${tap === '골' && 'text-yellow-500'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer ${tap === '골' && 'text-yellow-500'}`}
                        style={{width: 'fit-content'}} onClick={() => setTap(tapName[1])}>골
                   </Tap>
-                  <Tap className={`${tapStyle} ${tap === '어시' && 'text-yellow-500'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer ${tap === '어시' && 'text-yellow-500'}`}
                        style={{width: 'fit-content'}} onClick={() => setTap(tapName[2])}>어시
                   </Tap>
-                  <Tap className={`${tapStyle} ${tap === '분석' && 'text-yellow-500'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer ${tap === '분석' && 'text-yellow-500'}`}
                        style={{width: 'fit-content'}} onClick={() => setTap(tapName[4])}>분석
                   </Tap>
-                  <Tap className={`${tapStyle} ${tap === '히스토리' && 'text-yellow-500'}`}
+                  <Tap className={`underline decoration-2 decoration-solid decoration-green-700 cursor-pointer ${tap === '히스토리' && 'text-yellow-500'}`}
                        style={{width: 'fit-content'}} onClick={() => setTap(tapName[3])}>히스토리
                   </Tap>
               </div>
