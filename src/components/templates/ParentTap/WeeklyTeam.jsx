@@ -42,7 +42,9 @@ function WeeklyTeam(props) {
     useEffect(() => {
         fetchWeeklyTeamData()
         // 수요일까지 팀 생성 가능
-        if ((currentDay === 0 && currentHour >= 10) || (currentDay === 1) || (currentDay === 2 && currentHour <= 23 && currentMinute <= 59)) {
+        console.log(currentDay)
+        if ((currentDay === 0 && currentHour <= 10) || (currentDay === 1) || (currentDay === 2 && currentHour <= 23 && currentMinute <= 59)) {
+            setActiveBorder(true)
             setCanCreate(false)
         }
     }, [lastDate])
@@ -229,33 +231,33 @@ function WeeklyTeam(props) {
                         )
                         :
                         (!activeBorder ?
-                                <div className='flex flex-col mt-3'>
-                                    <p className='mb-1 text-gray-400'
-                                       style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀
-                                        생성하기</p>
-                                    <p className='text-xs' style={{fontFamily: 'DNFForgedBlade'}}>Open : 참여투표 종료 후</p>
-                                </div>
+                            <div className='flex flex-col mt-3'>
+                                <p className='mb-1 text-gray-400'
+                                   style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀
+                                    생성하기</p>
+                                <p className='text-xs' style={{fontFamily: 'DNFForgedBlade'}}>Open : 참여투표 종료 후</p>
+                            </div>
+                            :
+                            editMode ?
+                                <div
+                                    className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
+                                    style={{
+                                        fontFamily: 'DNFForgedBlade',
+                                        width: '188px',
+                                        height: '45px',
+                                        borderRadius: '3px'
+                                    }} onClick={registerTeamHandler}><span
+                                    className='text-black'>등록하기</span><Register/></div>
                                 :
-                                editMode ?
-                                    <div
-                                        className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                        style={{
-                                            fontFamily: 'DNFForgedBlade',
-                                            width: '188px',
-                                            height: '45px',
-                                            borderRadius: '3px'
-                                        }} onClick={registerTeamHandler}><span
-                                        className='text-black'>등록하기</span><Register/></div>
-                                    :
-                                    currentDay <= 6 && currentDay > 3 && <div
-                                        className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                        style={{
-                                            fontFamily: 'DNFForgedBlade',
-                                            width: '188px',
-                                            height: '45px',
-                                            borderRadius: '3px'
-                                        }} onClick={() => createWeeklyTeamHandler(false)}><span
-                                        className='text-black'>수정</span></div>
+                                [0, 4, 5, 6, 7].includes(currentDay) && <div
+                                    className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
+                                    style={{
+                                        fontFamily: 'DNFForgedBlade',
+                                        width: '188px',
+                                        height: '45px',
+                                        borderRadius: '3px'
+                                    }} onClick={() => createWeeklyTeamHandler(false)}><span
+                                    className='text-black'>수정</span></div>
                         )
                     }
                 </div>
