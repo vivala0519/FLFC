@@ -42,7 +42,6 @@ function WeeklyTeam(props) {
     useEffect(() => {
         fetchWeeklyTeamData()
         // 수요일까지 팀 생성 가능
-        console.log(currentDay)
         if ((currentDay === 0 && currentHour <= 10) || (currentDay === 1) || (currentDay === 2 && currentHour <= 23 && currentMinute <= 59)) {
             setActiveBorder(true)
             setCanCreate(false)
