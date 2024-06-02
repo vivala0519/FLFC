@@ -19,10 +19,8 @@ function WeeklyTeam(props) {
     const [activeBorder, setActiveBorder] = useState(false)
     const [inputTeamData, setInputTeamData] = useState([['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', '']])
 
-    const today = new Date()
+    const today = new Date();
     const currentDay = today.getDay()
-    const currentHour = today.getHours()
-    const currentMinute = today.getMinutes()
     const daysUntilSunday = 7 - currentDay
     const nextSunday = new Date(today)
     nextSunday.setDate(today.getDate() + daysUntilSunday)
@@ -41,10 +39,21 @@ function WeeklyTeam(props) {
 
     useEffect(() => {
         fetchWeeklyTeamData()
-        // 수요일까지 팀 생성 가능
-        if ((currentDay === 0 && currentHour <= 10) || (currentDay === 1) || (currentDay === 2 && currentHour <= 23 && currentMinute <= 59)) {
-            setActiveBorder(true)
-            setCanCreate(false)
+
+        if (lastDate) {
+            if ([0, 1, 2].includes(currentDay)) {
+                setCanCreate(false)
+            }
+
+            const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
+            const lastDateDay = parseInt(lastDate.slice(2, 4), 10)
+
+            const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
+            lastTeamDate.setHours(10, 0, 0, 0)
+
+            if (lastTeamDate > today) {
+                setActiveBorder(true)
+            }
         }
     }, [lastDate])
 
@@ -230,6 +239,7 @@ function WeeklyTeam(props) {
                         )
                         :
                         (!activeBorder ?
+                            currentDay !== 0 &&
                             <div className='flex flex-col mt-3'>
                                 <p className='mb-1 text-gray-400'
                                    style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀
