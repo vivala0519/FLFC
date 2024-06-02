@@ -381,6 +381,7 @@ const AnalysisTap = () => {
 
     // 용병 최다 횟수 인원 1명이면 set
     const temp = []
+    delete mercenary['용병']
     Object.entries(mercenary).forEach(([key, value]) => {
       if (value === maxMercenaryCount) {
         temp.push(key)
