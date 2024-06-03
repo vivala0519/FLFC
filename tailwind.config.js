@@ -5,7 +5,14 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        'dnf-bit': ['DNFBitBitv2', 'serif'], // 폰트 패밀리 정의
+      },
+      backgroundImage: {
+        'sun': "url('@/assets/sun2.png')",
+      },
+    },
   },
   plugins: [],
 }
