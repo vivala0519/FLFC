@@ -1,5 +1,5 @@
-import React from "react";
-import LiveBadge from "./LiveBadge.jsx";
+import React from "react"
+import LiveBadge from "./LiveBadge.jsx"
 
 const ParentTap = (props) => {
   const { isLiveBadge, tapName, isActive, onClick } = props

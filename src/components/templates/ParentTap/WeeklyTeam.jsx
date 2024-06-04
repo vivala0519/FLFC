@@ -8,6 +8,7 @@ import check from "@/assets/check.png"
 import './WeeklyTeam.css'
 import {collection, getDocs} from "firebase/firestore"
 import {db} from "../../../../firebase.js"
+import TapTitle from "@/components/atoms/TapTitle.jsx";
 
 function WeeklyTeam(props) {
     const {setRegisteredTeam, setTap, setShowFooter} = props
@@ -119,49 +120,20 @@ function WeeklyTeam(props) {
         setCanCreate(false)
     }
 
-    // 슬라이드 시 탭 이동
-    const [startX, setStartX] = useState(null);
-    const [moveX, setMoveX] = useState(null);
-
-    const handleTouchStart = (e) => {
-        setStartX(e.touches[0].clientX)
-        setMoveX(e.touches[0].clientX)
-    }
-
-    const handleTouchMove = (e) => {
-        setMoveX(e.touches[0].clientX)
-    }
-
-    const handleTouchEnd = () => {
-        const diff = startX - moveX
-        if (diff > 75) {
-            setTap(0)
-        } else if (diff < -75) {
-            setTap(2)
-        }
-        setStartX(null)
-        setMoveX(null)
-    }
-
     const votedPlayerMonthPlan = []
     const votedPlayerWeekPlan = []
 
     return (
-        <div className='w-full relative' style={{height: '80vh'}}
-             onTouchStart={handleTouchStart}
-             onTouchMove={handleTouchMove}
-             onTouchEnd={handleTouchEnd}>
+        <div className='w-full relative' style={{height: '80vh'}}>
             <div className='flex gap-5 justify-center items-center'>
                 {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page !== 0}/>}
-                <Week $thisWeek={page === weeklyTeamData.length - 1 && activeBorder}
-                      className='mt-3 mb-1 underline underline-offset-1 relative bottom-1'
-                      style={{fontFamily: 'DNFForgedBlade'}}>{weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 '}{"Weekly Team"}</Week>
+                <TapTitle active={page === weeklyTeamData.length - 1 && activeBorder} title={weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 Weekly Team'} />
                 {!editMode &&
                     <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1}/>}
             </div>
             <div className='flex flex-col'>
                 <div className='flex flex-col items-end mb-5'>
-                    <hr className='w-full border-green-800'/>
+                    <hr className='w-full border-green-700'/>
                     {/*<RelationButton>관계도</RelationButton>*/}
                 </div>
                 <div className='w-full flex justify-center mb-5'>

@@ -1,7 +1,7 @@
 import {useEffect, useState} from "react"
-import {db} from "../../../../firebase.js"
-import {collection, getDocs} from "firebase/firestore";
-import {getDatabase, onValue, ref} from "firebase/database";
+import {db} from '../../../../firebase.js'
+import {collection, getDocs} from 'firebase/firestore'
+import {getDatabase, onValue, ref} from 'firebase/database'
 import styled from 'styled-components'
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
@@ -85,7 +85,7 @@ const AnalysisTap = () => {
           for (let i = 0; i < players.length; i++) {
             if (players[i].includes(name)) {
               temp.push(players[i])
-              break;
+              break
             }
           }
         })

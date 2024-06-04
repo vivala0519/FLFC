@@ -1,31 +1,16 @@
-import styled from 'styled-components'
-
 const Footer = () => {
+  const footerStyle = 'absolute flex flex-col gap-[5px] bottom-3 font-hahmlet font-normal text-[#5a5a5a] text-[12px] mobile:text-[8px]'
+
   return (
-    <footer className='absolute bottom-3'>
-      <CopyRight>
+    <footer className={footerStyle}>
+      <p>
         Developed by. Seungho Lee
-      </CopyRight>
-      <CopyRight>
+      </p>
+      <p>
         Copyright 2024 Seungho Lee. All rights reserved.
-      </CopyRight>
+      </p>
     </footer>
   )
 }
 
-export default Footer;
-
-const CopyRight = styled.span`
-  font-size: 12px;
-  font-family: "Hahmlet", serif;
-  font-style: normal;
-  font-weight: 400;
-  color: #5a5a5a;
-  display: flex;
-  justify-content: center;
-  margin-top: 5px;
-  width: 100%;
-  @media (max-width: 821px) {
-      font-size: 8px;
-  };
-`
+export default Footer

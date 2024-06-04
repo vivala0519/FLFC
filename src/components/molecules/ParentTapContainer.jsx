@@ -1,6 +1,6 @@
 import React from 'react'
-import ParentTap from "../atoms/ParentTap.jsx";
-import SpinningSun from "../atoms/SpinningSun.jsx";
+import ParentTap from "@/components/atoms/ParentTap.jsx"
+import SpinningSun from "@/components/atoms/SpinningSun.jsx"
 
 const ParentTapContainer = (props) => {
   const { tapInfo, liveBadgeInfo } = props

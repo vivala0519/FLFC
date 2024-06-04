@@ -1,9 +1,9 @@
 import {useEffect, useState} from "react"
 import { doc, collection, setDoc, getDocs } from "firebase/firestore"
-import {db} from "../../firebase.js"
+import {db} from "../../../firebase.js"
 import JSConfetti from "js-confetti"
 import styled from 'styled-components'
-import './templates/ParentTap/LetsRecord.css'
+import '../templates/ParentTap/LetsRecord.css'
 import laurel from '@/assets/laurel.png'
 
 const DailyMVP = (props) => {
@@ -21,12 +21,12 @@ const DailyMVP = (props) => {
       emojis: ["🍗"],
       emojiSize: 100,
       confettiNumber: 1,
-    });
+    })
   }
 
   useEffect(() => {
     firework()
-    const intervalId = setInterval(firework, 1000);
+    const intervalId = setInterval(firework, 1000)
 
     setTimeout(() => {
       clearInterval(intervalId)
@@ -34,8 +34,8 @@ const DailyMVP = (props) => {
       while (canvasElements.length > 0) {
         canvasElements[0].parentNode.removeChild(canvasElements[0])
       }
-    }, 3000);
-  }, []);
+    }, 3000)
+  }, [])
 
 
   useEffect(() => {
@@ -61,7 +61,7 @@ const DailyMVP = (props) => {
     }
     setBestPlayers(maxPlayers)
 
-  }, [recordData]);
+  }, [recordData])
 
   // MVP 등록
   const registerDailyMVP = async () => {

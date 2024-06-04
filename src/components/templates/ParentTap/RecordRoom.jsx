@@ -153,36 +153,8 @@ const RecordRoom = (props) => {
 
     }, [tableData, analyzedData])
 
-    // 슬라이드 시 탭 이동
-    const [startX, setStartX] = useState(null);
-    const [moveX, setMoveX] = useState(null);
-
-    const handleTouchStart = (e) => {
-        setStartX(e.touches[0].clientX);
-        setMoveX(e.touches[0].clientX);
-    };
-
-    const handleTouchMove = (e) => {
-        setMoveX(e.touches[0].clientX);
-    };
-
-    const handleTouchEnd = () => {
-        const diff = startX - moveX;
-        if (diff > 75) {
-            propsSetTap(3)
-        } else if (diff < -75) {
-            propsSetTap(1)
-        }
-        setStartX(null);
-        setMoveX(null);
-    };
-
-
     return (
-      <div className='w-full relative' style={{top: '-10px'}}
-           onTouchStart={handleTouchStart}
-           onTouchMove={handleTouchMove}
-           onTouchEnd={handleTouchEnd}>
+      <div className='w-full relative' style={{top: '-10px'}}>
           <div className='flex flex-row w-full mb-2 p-1' style={{fontFamily: 'DNFForgedBlade'}}>
               {/*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*/}
               {/*     onClick={() => setTap(tapName[0])}>현황판*/}

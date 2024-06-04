@@ -4,14 +4,16 @@ import { uid } from "uid"
 import {doc, setDoc, collection, addDoc} from "firebase/firestore"
 import {db} from "../../../../firebase.js"
 import Swal from "sweetalert2"
-import DailyMVP from "../../DailyMVP.jsx"
 import styled from 'styled-components'
 import write from "@/assets/write.png"
 import request from '@/assets/request.png'
 import './LetsRecord.css'
+import TapTitle from "@/components/atoms/TapTitle.jsx";
+import DailyMVP from "@/components/organisms/DailyMVP.jsx"
+import RegisterContainer from "@/components/organisms/RegisterContainer.jsx";
 
 const LetsRecord = (props) => {
-  const {open, setOpen, recordData, weeklyTeamData, headerHeight, setTap} = props
+  const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
   const registerRef = useRef(null)
   const scrollContainerRef = useRef(null)
   const [scorer, setScorer] = useState('')
@@ -261,54 +263,6 @@ const LetsRecord = (props) => {
     }
   }
 
-  const deleteRecord = (index) => {
-    Swal.fire({
-      title: '삭제, Really?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: '삭제',
-      cancelButtonText: '취소'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          const db = getDatabase()
-          const recordRef = ref(db, thisYear + '/' + today + '/' + todayRecord[index].id)
-          remove(ref(db, thisYear + '/' + today + '/' + todayRecord[index].id))
-          remove(recordRef).then(() => {
-              console.log('Document successfully deleted!')
-          })
-          .catch((error) => {
-              console.log(error)
-          });
-        }
-    })
-  }
-
-  // 슬라이드 시 탭 이동
-  const [startX, setStartX] = useState(null);
-  const [moveX, setMoveX] = useState(null);
-
-  const handleTouchStart = (e) => {
-      setStartX(e.touches[0].clientX);
-      setMoveX(e.touches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-      setMoveX(e.touches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-      const diff = startX - moveX;
-      if (diff > 75) {
-          setTap(1)
-      } else if (diff < -75) {
-          setTap(3)
-      }
-      setStartX(null);
-      setMoveX(null);
-  };
-
   // MVP 화면 닫으면 퍼레이드 종료
   useEffect(() => {
     if (!showMVP) {
@@ -358,51 +312,14 @@ const LetsRecord = (props) => {
 
     return (
         <div
-            className={`flex flex-col items-center w-full relative ${!open && 'justify-center'}`}
-            style={{top: open ? '-12px' : '-21px', height: !open && '75vh'}}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}>
-            {/*<span className='text-xs absolute left-0 top-0 mt-5 cursor-pointer' onClick={showLastRecord}>{'< 지난 기록 보기'}</span>*/}
-            <span className='mt-3 mb-1 underline underline-offset-1' style={{fontFamily: 'DNFForgedBlade'}}>{"Today's Record"}</span>
+          className={`flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-[-12px]'}`}>
+          <TapTitle active={open} title={"Today's Record"} />
             <hr className='w-1/2 mb-5 border-green-700'/>
             <div className='flex flex-col items-center w-full'>
                 <>
-                {showMVP && <DailyMVP showMVP={showMVP} setShowMVP={setShowMVP}recordData={recordData} year={thisYear} today={today} />}
+                {showMVP && <DailyMVP showMVP={showMVP} setShowMVP={setShowMVP} recordData={recordData} year={thisYear} today={today} />}
                 <div className={canRegister ? 'default-border' : open ? 'default-border' : 'none-border'}>
-                <div ref={scrollContainerRef} className='w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2'
-                     style={{height: open && dynamicHeight, display: open ? 'flex' : 'none', opacity: showMVP ? '0.1' : '1'}}>
-                    {
-                        todayRecord?.map((record, index) =>
-                            <div className={`relative flex items-center gap-5 pt-1 in-desktop ${record.id === lastRecord ? 'bg-effect' : ''}`} key={index} style={{width: '80%'}}>
-                                <span style={{
-                                    width: '30px',
-                                    fontSize: '12px',
-                                    fontFamily: 'Hahmlet',
-                                    color: 'grey'
-                                }}>{record.time.split(':')[0] + ':' + record.time.split(':')[1]}</span>
-                                <div className='flex items-center pl-2 pr-2 border-b-green-600 border-b-2'>
-                                    <span
-                                        className='flex justify-center relative bottom-2 mr-0.5'
-                                        style={{fontFamily: 'Giants-Inline', fontSize: '13px', color: '#bb2649'}}>GOAL</span>
-                                    <span className='mr-5 font-bold text-black'>{record.goal}</span>
-                                    {record.assist &&
-                                        <>
-                                            <span
-                                                className='flex justify-center relative bottom-2 mr-0.5'
-                                                style={{
-                                                    fontFamily: 'Giants-Inline',
-                                                    fontSize: '13px',
-                                                    color: '#eab308'
-                                                }}>ASSIST</span>
-                                            <span className='font-bold text-black'>{record.assist}</span>
-                                        </>}
-                                </div>
-                                {canRegister && <div className='absolute -right-1 top-1 cursor-pointer text-red-600' onClick={() => deleteRecord(index)}>X</div>}
-                            </div>
-                        )
-                    }
-                </div>
+                  <RegisterContainer scrollContainerRef={scrollContainerRef} open={open} dynamicHeight={dynamicHeight} showMVP={showMVP} todayRecord={todayRecord} lastRecord={lastRecord} canRegister={canRegister} thisYear={thisYear} today={today} />
                 </div>
                 {/*Write Container*/}
                 <div className={!canRegister && 'w-full'}>

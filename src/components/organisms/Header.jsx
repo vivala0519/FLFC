@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import HomeButton from '@/components/molecules/HomeButton'
-import ParentTapContainer from '@/components/molecules/ParentTapContainer.jsx';
+import HomeButton from '@/components/atoms/HomeButton'
+import ParentTapContainer from '@/components/molecules/ParentTapContainer.jsx'
 
 const Header = (props) => {
   const headerRef = useRef(null)
   const headerStyle = 'flex flex-col items-center w-full top-5'
 
-  const {tap, setTap, lastDate, setHeaderHeight} = props;
+  const {tap, setTap, lastDate, setHeaderHeight} = props
   const [isLive, setIsLive] = useState(false)
   const [weeklyTeamIsLive, setWeeklyTeamIsLive] = useState(false)
   const tapInfo = {tap: tap, setTap: setTap}
