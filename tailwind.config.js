@@ -7,11 +7,19 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'dnf-bit': ['DNFBitBitv2', 'serif'], // 폰트 패밀리 정의
+        'dnf-bit': ['DNFBitBitv2', 'serif'],
+        'giants': ['Giants-Inline', 'normal'],
+        'suite': ['SUITE-Regular', 'normal'],
+        'dnf-forged': ['DNFForgedBlade', 'serif'],
+        'kbo': ['KBO-Dia-Gothic_bold', 'serif'],
+        'hahmlet': ['Hahmlet', 'serif'],
       },
       backgroundImage: {
         'sun': "url('@/assets/sun2.png')",
       },
+    },
+    screens: {
+      'mobile': {'max': '821px'},
     },
   },
   plugins: [],

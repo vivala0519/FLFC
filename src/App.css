@@ -21,13 +21,6 @@
   font-style: normal;
 }
 
-@font-face {
-  font-family: 'BMEuljiro10yearslater';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-10-21@1.0/BMEuljiro10yearslater.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-}
-
 @font-face{
   font-family:'DNFBitBitv2';
   font-style:normal;font-weight:400;src:url('//cdn.df.nexon.com/img/common/font/DNFBitBitv2.otf')format('opentype')
@@ -48,20 +41,6 @@
 @font-face {
   font-family: 'MapoPeacefull';
   src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/MapoPeacefullA.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'YEONGJUSeonbiTTF';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2403@1.0/YEONGJUSeonbiTTF.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Ggeuteumuri';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/naverfont_04@1.0/Ggeuteumuri.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
