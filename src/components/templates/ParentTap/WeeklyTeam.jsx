@@ -53,6 +53,7 @@ function WeeklyTeam(props) {
             lastTeamDate.setHours(10, 0, 0, 0)
 
             if (lastTeamDate > today) {
+                setCanCreate(false)
                 setActiveBorder(true)
             }
         }
