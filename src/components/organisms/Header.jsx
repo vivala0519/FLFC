@@ -13,15 +13,15 @@ const Header = (props) => {
   const liveBadgeInfo = {isLive: isLive, weeklyTeamIsLive: weeklyTeamIsLive}
 
   // Let's Record 탭 Live 뱃지 활성 세팅
-  const startTime = new Date()
-  startTime.setHours(7, 50, 0, 0)
+  // const startTime = new Date()
+  // startTime.setHours(7, 50, 0, 0)
   const endTime = new Date()
   endTime.setHours(10, 0, 0, 0)
   const currentTime = new Date()
   const day = currentTime.getDay()
-  if ([0, 7].includes(day) && currentTime >= startTime && currentTime <= endTime) {
-    setIsLive(true)
-  }
+  // if ([0, 7].includes(day) && currentTime >= startTime && currentTime <= endTime) {
+  //   setIsLive(true)
+  // }
 
   // Weekly Team 탭 Live 뱃지 활성 세팅
   useEffect(() => {
