@@ -1,23 +1,17 @@
 import {useEffect, useState, useRef} from 'react'
-import { getDatabase, ref, set, onValue, remove } from 'firebase/database'
-import { uid } from "uid"
-import {doc, setDoc, collection, addDoc} from "firebase/firestore"
-import {db} from "../../../../firebase.js"
-import Swal from "sweetalert2"
-import styled from 'styled-components'
-import write from "@/assets/write.png"
-import request from '@/assets/request.png'
+import { getDatabase, ref, onValue } from 'firebase/database'
+import {doc, setDoc} from "firebase/firestore"
+import {db} from '../../../../firebase.js'
 import './LetsRecord.css'
-import TapTitle from "@/components/atoms/TapTitle.jsx";
-import DailyMVP from "@/components/organisms/DailyMVP.jsx"
-import RegisterContainer from "@/components/organisms/RegisterContainer.jsx";
+import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
+import DailyMVP from '@/components/organisms/DailyMVP.jsx'
+import RecordContainer from '@/components/organisms/RecordContainer.jsx'
+import WriteContainer from '@/components/organisms/WriteContainer.jsx'
 
 const LetsRecord = (props) => {
   const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
   const registerRef = useRef(null)
   const scrollContainerRef = useRef(null)
-  const [scorer, setScorer] = useState('')
-  const [assistant, setAssistant] = useState('')
   const [todayRecordObject, setTodayRecordObject] = useState({})
   const [todayRecord, setTodayRecord] = useState([])
   const [dynamicHeight, setDynamicHeight] = useState(0)
@@ -31,7 +25,6 @@ const LetsRecord = (props) => {
   const [showMVP, setShowMVP] = useState(false)
   const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
-  const [requestText, setRequestText] = useState('')
   const [requestList, setRequestList] = useState([])
 
   // 기록 가능 시간 7:50 ~ 10:05
@@ -102,7 +95,7 @@ const LetsRecord = (props) => {
     }
   }, [recordData])
 
-  const parseTimeString = (record) => {
+  const parseTimeFromString = (record) => {
     const [hours, minutes, seconds] = record.split(':')
     return new Date(0, 0, 0, hours, minutes, seconds)
   }
@@ -114,8 +107,8 @@ const LetsRecord = (props) => {
     if (isData) {
       const recordArray = Object.values(isData)
       const sortedRecordArray = recordArray.sort((a, b) => {
-        const timeA = parseTimeString(a.time)
-        const timeB = parseTimeString(b.time)
+        const timeA = parseTimeFromString(a.time)
+        const timeB = parseTimeFromString(b.time)
 
         return timeA - timeB
       })
@@ -126,8 +119,8 @@ const LetsRecord = (props) => {
     if (isRequestList) {
       const requestList = Object.values(isRequestList)
       const sortedRequestArray = requestList.sort((a, b) => {
-        const timeA = parseTimeString(a.time)
-        const timeB = parseTimeString(b.time)
+        const timeA = parseTimeFromString(a.time)
+        const timeB = parseTimeFromString(b.time)
 
         return timeA - timeB
       })
@@ -135,133 +128,81 @@ const LetsRecord = (props) => {
     }
   }, [todayRecordObject])
 
-    const formatRecordByName = (record) => {
-      const stats = {}
-      if (weeklyTeamData?.data && weeklyTeamData?.id === today) {
-        const data = weeklyTeamData.data
-        const thisWeekMembers = data[1].concat(data[2], data[3])
-        thisWeekMembers.forEach(member => {
+  const formatRecordByName = (record) => {
+    const stats = {}
+    if (weeklyTeamData?.data && weeklyTeamData?.id === today) {
+      const data = weeklyTeamData.data
+      const thisWeekMembers = data[1].concat(data[2], data[3])
+      thisWeekMembers.forEach(member => {
+        players.forEach(player => {
+          if (member && player.includes(member)) {
+            stats[player] = {'출석': true, '골': 0, '어시': 0}
+          }
+        })
+      })
+
+      record.forEach(item => {
+        const { assist, goal } = item
+
+        if (goal !== "") {
           players.forEach(player => {
-            if (member && player.includes(member)) {
-              stats[player] = {'출석': true, '골': 0, '어시': 0}
+            if (player.includes(goal) && stats[player]) {
+              stats[player]['골']++
             }
           })
-        })
-
-        record.forEach(item => {
-          const { assist, goal } = item
-
-          if (goal !== "") {
-            players.forEach(player => {
-              if (player.includes(goal) && stats[player]) {
-                stats[player]['골']++
-              }
-            })
-          }
-
-          if (assist !== "") {
-            players.forEach(player => {
-              if (player.includes(assist) && stats[player]) {
-                stats[player]['어시']++
-              }
-            })
-          }
-        });
-        return stats
-      }
-    }
-
-    function compareObjects(objA, objB) {
-        const keysA = Object.keys(objA)
-        const keysB = Object.keys(objB)
-
-        if (keysA.length !== keysB.length) {
-            return false
         }
-        for (let key of keysA) {
-            if (objA[key]['출석'] !== objB[key]['출석'] ||
-                objA[key]['골'] !== objB[key]['골'] ||
-                objA[key]['어시'] !== objB[key]['어시']) {
-                return false
+
+        if (assist !== "") {
+          players.forEach(player => {
+            if (player.includes(assist) && stats[player]) {
+              stats[player]['어시']++
             }
+          })
         }
-        return true
-    }
-    // Firestore 데이터 등록
-    useEffect(() => {
-      const stats = formatRecordByName(todayRecord)
-      if (stats) {
-        const registerRecord = async () => {
-          const docRef = doc(db, thisYear, today)
-          await setDoc(docRef, stats)
-          console.log("Document written with ID: ", docRef.id);
-        }
-        if (!compareObjects(stats, writtenData) && canRegister) {
-          registerRecord()
-        }
-      }
-      // 스크롤 맨 밑으로
-      const scrollContainer = scrollContainerRef.current;
-      if (scrollContainer) {
-        const scrollHeight = scrollContainer.scrollHeight;
-        scrollContainer.scrollTo({
-          top: scrollHeight,
-          behavior: 'smooth',
-        });
-      }
-    }, [todayRecord])
-
-  const scorerHandler = (e) => {
-    setScorer(e.target.value)
-  }
-
-  const assistantHandler = (e) => {
-    setAssistant(e.target.value)
-  }
-
-  // RealTime Database 등록
-  const registerHandler = () => {
-    const day = currentTime.getDay()
-    if (!([0, 7].includes(day) && currentTime >= startTime && currentTime <= endTime)) {
-      Swal.fire({
-        icon: 'error',
-        text: '기록 가능 시간이 아닙니다.'
-        })
-    } else {
-      const db = getDatabase()
-      const time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0') + ':' + currentTime.getSeconds().toString().padStart(2, '0')
-      const id = uid()
-
-      if (scorer.trim()) {
-        const record = {
-          id: id,
-          time: time,
-          goal: scorer.trim(),
-          assist: assistant.trim()
-        }
-        set(ref(db, thisYear + '/' + today + '/' + id), record);
-        set(ref(db, thisYear +'/' + today + '_backup' + '/' + id), record);
-        setLastRecord(id)
-        setScorer('')
-        setAssistant('')
-      }
-
-      // 스크롤 내려주기
-      const scrollToElement = () => {
-        const scrollContainer = scrollContainerRef.current;
-
-        if (scrollContainer) {
-          scrollContainer.scrollTo({
-            top: scrollContainer.scrollTop + scrollContainer.clientHeight,
-            behavior: 'smooth',
-          });
-        }
-      }
-      setTimeout(() => {
-        scrollToElement()
-      }, 300)
+      });
+      return stats
     }
   }
+
+  function compareObjects(objA, objB) {
+      const keysA = Object.keys(objA)
+      const keysB = Object.keys(objB)
+
+      if (keysA.length !== keysB.length) {
+          return false
+      }
+      for (let key of keysA) {
+          if (objA[key]['출석'] !== objB[key]['출석'] ||
+              objA[key]['골'] !== objB[key]['골'] ||
+              objA[key]['어시'] !== objB[key]['어시']) {
+              return false
+          }
+      }
+      return true
+  }
+  // Firestore 데이터 등록
+  useEffect(() => {
+    const stats = formatRecordByName(todayRecord)
+    if (stats) {
+      const registerRecord = async () => {
+        const docRef = doc(db, thisYear, today)
+        await setDoc(docRef, stats)
+        console.log("Document written with ID: ", docRef.id);
+      }
+      if (!compareObjects(stats, writtenData) && canRegister) {
+        registerRecord()
+      }
+    }
+    // 스크롤 맨 밑으로
+    const scrollContainer = scrollContainerRef.current;
+    if (scrollContainer) {
+      const scrollHeight = scrollContainer.scrollHeight;
+      scrollContainer.scrollTo({
+        top: scrollHeight,
+        behavior: 'smooth',
+      });
+    }
+  }, [todayRecord])
 
   // MVP 화면 닫으면 퍼레이드 종료
   useEffect(() => {
@@ -282,148 +223,41 @@ const LetsRecord = (props) => {
     setHeight()
   }, [requestUpdateMode])
 
-  const sendRequest = async () => {
-    if (requestText.trim()) {
-      const rtDb = getDatabase()
-      const time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0') + ':' + currentTime.getSeconds().toString().padStart(2, '0')
-      const id = uid()
-
-      const request = {
-        id: id,
-        time: time,
-        text: requestText,
-        status: 'processing'
-      }
-      set(ref(rtDb, '2024/' + today + '_request' + '/' + id), request);
-
-      // 메일 보내기
-      const docRef = await addDoc(collection(db, 'mail'), {
-        to: ['vivala0519@gmail.com', 'leekun0801@gmail.com'],
-        message: {
-          subject: 'FLFC : 기록 추가/수정 요청이 있습니다~!',
-          html: `<span>요청 내용 : </span><span style="font-size: 17px; color: darkblue;">${requestText}</span><div><p>flfc.live/admin 접속 후 비번 : 0413</p><p>수정 후 '완료' 버튼 눌러주세요~</p></div>`,
-        }
-      });
-      console.log('mail object written with ID: ', docRef.id);
-
-      setRequestText('')
-    }
-  }
-
     return (
-        <div
-          className={`flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-[-12px]'}`}>
-          <TapTitle active={open} title={"Today's Record"} />
-            <hr className='w-1/2 mb-5 border-green-700'/>
-            <div className='flex flex-col items-center w-full'>
-                <>
-                {showMVP && <DailyMVP showMVP={showMVP} setShowMVP={setShowMVP} recordData={recordData} year={thisYear} today={today} />}
-                <div className={canRegister ? 'default-border' : open ? 'default-border' : 'none-border'}>
-                  <RegisterContainer scrollContainerRef={scrollContainerRef} open={open} dynamicHeight={dynamicHeight} showMVP={showMVP} todayRecord={todayRecord} lastRecord={lastRecord} canRegister={canRegister} thisYear={thisYear} today={today} />
-                </div>
-                {/*Write Container*/}
-                <div className={!canRegister && 'w-full'}>
-                  <hr className={canRegister ? 'border-1 border-green-600 w-full mb-4' : 'hidden'}/>
-                  {canRegister ?
-                      <div ref={registerRef} className='flex items-center gap-5 mb-1'>
-                        <div>
-                          <div className='flex mb-2 gap-0.5 items-center'>
-                              <span className='flex justify-center'
-                                    style={{width: '70px', fontFamily: 'Giants-Inline', color: '#bb2649'}}>GOAL</span>
-                            <input
-                                className='w-24 border-solid border-0 border-b-2 border-green-600 text-center outline-none'
-                                value={scorer} onChange={scorerHandler} maxLength={2} />
-                          </div>
-                          <div className='flex gap-0.5 items-center'>
-                              <span className='flex justify-center'
-                                    style={{width: '70px', fontFamily: 'Giants-Inline',  color: '#eab308'}}>ASSIST</span>
-                            <input
-                                className='w-24 border-solid border-0 border-b-2 border-green-600 text-center outline-none'
-                                value={assistant} onChange={assistantHandler} maxLength={2} />
-                          </div>
-                        </div>
-                        <button className='flex relative bottom-2 mt-5 underline-border bg-gray-50' onClick={registerHandler}>
-                          <span className='text-black'>등록</span><Write/></button>
-                      </div>
-                    :
-                      <div className='relative flex justify-center'>
-                        {!requestUpdateMode ?
-                            <div>
-                        <div className={open ? 'relative top-6' : 'relative bottom-4'}>
-                          <p className='mb-1' style={{fontFamily: 'DNFForgedBlade'}}>기록 가능 시간이 아닙니다.</p>
-                          <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>Open : 07:50 ~ 10:05 Sun.</p>
-                            {open && <p className='text-xs text-gray-400' style={{fontFamily: 'DNFForgedBlade'}}>기록은 오늘 하루 동안
-                              유지됩니다.</p>}
-                        </div>
-                        {showRequestUpdateButton &&
-                          <Request className='absolute right-0 top-6 cursor-pointer' onClick={() => setRequestUpdateMode(true)}>
-                            <div className='flex flex-col relative top-4'>
-                              <span className='text-white' style={{fontSize: '12px'}}>수정</span>
-                              <span className='text-white' style={{fontSize: '12px'}}>요청</span>
-                            </div>
-                          </Request>
-                        }
-                        </div>
-                        :
-                        <div className='absolute -bottom-44 w-11/12 h-40 bg-white flex justify-center'>
-                          <div className='relative border-t-2 w-full border-b-2 border-t-green-700 border-b-green-700'>
-                            <CloseRequest className='absolute top-0 -right-4 text-xl text-black bg-white cursor-pointer' onClick={() => setRequestUpdateMode(false)}>X</CloseRequest>
-                            <RequestList className='w-full'>
-                              {requestList.map((request, index) => (
-                                <div key={index} className='flex border-b-2 border-b-yellow-500 p-1 pr-3 pl-2 justify-between'>
-                                  <span className='text-xs text-black' style={{textAlign: 'left'}}>{request.text}</span>
-                                  {request.status === 'processing' && <span className='text-xs text-rose-700' style={{width: '42px', textAlign: 'right'}}>{'처리중'}</span>}
-                                  {request.status === 'resolved' && <span className='text-xs text-blue-700'>{'완료'}</span>}
-                                </div>
-                              ))}
-                            </RequestList>
-                            <div className='absolute bottom-0 w-full h-8 flex flex-row'>
-                              <RequestInput className='w-10/12 border-2 border-b-0 pl-1' placeholder='ex) O시 O분 골 OO -> OO 로 수정 요청합니다~' value={requestText} onChange={(event) => setRequestText(event.target.value)}/>
-                              <div className='w-2/12 flex items-center content-center justify-center border-2 border-b-0 border-l-0 text-black bg-white' onClick={sendRequest}>요청</div>
-                            </div>
-                          </div>
-                        </div>
-                        }
-                      </div>
-                  }
-                </div>
-                </>
-            </div>
-        </div>
+      <div
+        className={`flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-[-12px]'}`}>
+        <TapTitleText active={open} title={"Today's Record"} />
+          <hr className='border-1 border-green-600 w-1/2 mb-4'/>
+          <div className='flex flex-col items-center w-full'>
+            <>
+              {showMVP && <DailyMVP showMVP={showMVP} setShowMVP={setShowMVP} recordData={recordData} year={thisYear}
+                                    today={today}/>}
+              <div className={canRegister ? 'default-border' : open ? 'default-border' : 'none-border'}>
+                <RecordContainer scrollContainerRef={scrollContainerRef} open={open} dynamicHeight={dynamicHeight}
+                                 showMVP={showMVP} todayRecord={todayRecord} lastRecord={lastRecord}
+                                 canRegister={canRegister} thisYear={thisYear} today={today}/>
+              </div>
+              {/*Write Container*/}
+              <WriteContainer
+                  open={open}
+                  scrollContainerRef={scrollContainerRef}
+                  registerRef={registerRef}
+                  canRegister={canRegister}
+                  thisYear={thisYear}
+                  today={today}
+                  currentTime={currentTime}
+                  startTime={startTime}
+                  endTime={endTime}
+                  setLastRecord={setLastRecord}
+                  requestUpdateMode={requestUpdateMode}
+                  setRequestUpdateMode={setRequestUpdateMode}
+                  requestList={requestList}
+                  showRequestUpdateButton={showRequestUpdateButton}
+              />
+            </>
+          </div>
+      </div>
     )
 }
 
 export default LetsRecord
-
-const Write = styled.div`
-  background: url(${write}) no-repeat center center;
-  background-size: 100% 100%;
-  width: 20px;
-  height: 20px;
-  position: relative;
-  top: 3px;
-  left: 7px;
-`
-
-const Request = styled.div`
-  background: url(${request}) no-repeat center center;
-  background-size: 100% 100%;
-  width: 60px;
-  height: 60px;
-`
-
-const RequestList = styled.div`
-  height: calc(100% - 32px);
-  overflow-y: auto;
-`
-
-const RequestInput = styled.input`
-  font-size: 12px;
-`
-
-const CloseRequest = styled.div`
-    @media (prefers-color-scheme: dark) {
-        background-color: black;
-        color: white;
-    };
-`

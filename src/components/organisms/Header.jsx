@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import HomeButton from '@/components/atoms/HomeButton'
+import HomeButton from '@/components/atoms/Button/HomeButton'
 import ParentTapContainer from '@/components/molecules/ParentTapContainer.jsx'
 
 const Header = (props) => {

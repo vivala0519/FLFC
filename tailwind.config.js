@@ -17,6 +17,10 @@ export default {
       backgroundImage: {
         'sun': "url('@/assets/sun2.png')",
       },
+      textColor: {
+        goal: '#bb2649',
+        assist: '#eab308',
+      },
     },
     screens: {
       'mobile': {'max': '821px'},

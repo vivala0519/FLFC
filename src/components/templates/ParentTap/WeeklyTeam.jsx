@@ -8,7 +8,7 @@ import check from "@/assets/check.png"
 import './WeeklyTeam.css'
 import {collection, getDocs} from "firebase/firestore"
 import {db} from "../../../../firebase.js"
-import TapTitle from "@/components/atoms/TapTitle.jsx";
+import TapTitleText from "@/components/atoms/Text/TapTitleText.jsx";
 
 function WeeklyTeam(props) {
     const {setRegisteredTeam, setTap, setShowFooter} = props
@@ -121,6 +121,13 @@ function WeeklyTeam(props) {
         setCanCreate(false)
     }
 
+    const formatPlayerName = (name) => {
+        if (name.length > 2) {
+            return name.slice(0, 2) + '\n' + name.slice(2);
+        }
+        return name;
+    }
+
     const votedPlayerMonthPlan = []
     const votedPlayerWeekPlan = []
 
@@ -128,7 +135,7 @@ function WeeklyTeam(props) {
         <div className='w-full relative' style={{height: '80vh'}}>
             <div className='flex gap-5 justify-center items-center'>
                 {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page !== 0}/>}
-                <TapTitle active={page === weeklyTeamData.length - 1 && activeBorder} title={weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 Weekly Team'} />
+                <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder} title={weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 Weekly Team'} />
                 {!editMode &&
                     <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1}/>}
             </div>
@@ -144,11 +151,10 @@ function WeeklyTeam(props) {
                             {!editMode ?
                                 [1, 2, 3].map((team, index) => (
                                     <div key={index} className='flex gap-5'>
-                                        <span style={{width: '25px'}}
-                                              className='text-black relative left-1'>{team}팀</span>
-                                        <div className='flex gap-1'>
+                                        <span style={{width: '25px'}} className='text-black relative left-1 flex items-center'>{team}팀</span>
+                                        <div className='flex gap-[10px]'>
                                             {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
-                                                <span key={idx} className='text-black'>{player}</span>
+                                                <span key={idx} className='text-black whitespace-pre flex items-center'>{formatPlayerName(player)}</span>
                                             ))}
                                         </div>
                                     </div>

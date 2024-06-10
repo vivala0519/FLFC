@@ -1,6 +1,6 @@
 import React from 'react'
 import ParentTap from "@/components/atoms/ParentTap.jsx"
-import SpinningSun from "@/components/atoms/SpinningSun.jsx"
+import SpinningSun from "@/components/atoms/Image/SpinningSun.jsx"
 
 const ParentTapContainer = (props) => {
   const { tapInfo, liveBadgeInfo } = props
@@ -19,7 +19,7 @@ const ParentTapContainer = (props) => {
             isActive={tap === index}
             isLiveBadge={(isLive && index === 0) || (index === 1) || (weeklyTeamIsLive && index === 3)}
             tapName={name} />
-          <SpinningSun />
+          {index < 3 && <SpinningSun />}
         </React.Fragment>
       ))}
     </div>

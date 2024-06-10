@@ -34,7 +34,6 @@ const MainPage = () => {
 
       const data = await dataAnalysis()
       setAnalyzedData(data)
-
       setLastWeeklyTeamId(fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id)
     })()
   }, [])
