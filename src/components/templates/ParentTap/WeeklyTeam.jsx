@@ -121,12 +121,6 @@ function WeeklyTeam(props) {
         setCanCreate(false)
     }
 
-    const formatPlayerName = (name) => {
-        if (name.length > 2) {
-            return name.slice(0, 2) + '\n' + name.slice(2);
-        }
-        return name;
-    }
 
     const votedPlayerMonthPlan = []
     const votedPlayerWeekPlan = []
@@ -154,7 +148,7 @@ function WeeklyTeam(props) {
                                         <span style={{width: '25px'}} className='text-black relative left-1 flex items-center'>{team}팀</span>
                                         <div className='flex gap-[10px]'>
                                             {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
-                                                <span key={idx} className='text-black whitespace-pre flex items-center'>{formatPlayerName(player)}</span>
+                                                <span key={idx} className='text-black whitespace-pre flex items-center'>{player}</span>
                                             ))}
                                         </div>
                                     </div>
