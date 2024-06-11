@@ -16,37 +16,6 @@
     inherits: true;
 }
 
-.custom-record-border {
-    --borderWidth: 2px;
-    position: relative;
-    border-radius: var(--borderWidth);
-    z-index: revert;
-    margin-bottom: 15px;
-    width: 50%;
-
-    @media (max-width: 821px) {
-        width: 100%;
-    }
-
-    &::after {
-        content: '';
-        position: absolute;
-        top: calc(-1 * var(--borderWidth));
-        left: calc(-1 * var(--borderWidth));
-        height: 100.2%;
-        width: 100.3%;
-        background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
-        border-radius: calc(2 * var(--borderWidth));
-        z-index: -1;
-        animation: animatedgradient 3s ease alternate infinite;
-        background-size: 300% 300%;
-        filter: blur(6px);
-        @media (max-width: 821px) {
-            width: 101%;
-            height: 101%;
-        };
-    }
-}
 .default-border {
     width: 96%;
     border: 1px solid transparent;
@@ -54,24 +23,6 @@
 }
 .none-border {
     width: 96%;
-}
-.in-desktop {
-    justify-content: center;
-    @media (max-width: 821px) {
-        justify-content: normal;
-    }
-}
-
-@keyframes animatedgradient {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
 }
 
 .underline-border {

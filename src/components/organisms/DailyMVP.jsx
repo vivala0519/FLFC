@@ -2,31 +2,45 @@ import {useEffect, useState} from "react"
 import { doc, collection, setDoc, getDocs } from "firebase/firestore"
 import {db} from "../../../firebase.js"
 import JSConfetti from "js-confetti"
-import styled from 'styled-components'
+import Laurel from '@/components/atoms/Image/Laurel.jsx'
+import MvpPlayer from '@/components/molecules/MvpPlayer.jsx'
 import '../templates/ParentTap/LetsRecord.css'
-import laurel from '@/assets/laurel.png'
 
 const DailyMVP = (props) => {
   const { setShowMVP, recordData, year, today } = props
   const [bestPlayers, setBestPlayers] = useState([])
   const confetti = new JSConfetti()
+  // style class
+  const popupContainerStyle = 'absolute z-10 text-assist top-[30%] w-[90%] h-[200px] bg-white box cursor-pointer flex flex-col desktop:w-[30%]'
+  const chickenTextStyle = 'absolute -top-6 right-1 text-assist desktop:text-[15px]'
+  const mvpTextStyle = 'relative top-[1px] font-kbo text-[25px]'
+  const dayTextStyle = 'text-[10px] font-dnf text-vivaMagenta relative top-[1px] underline decoration-2 decoration-solid decoration-yellow-400'
+  const closeMessageStyle = 'mt-3 relative text-sm text-gray-300 -bottom-[12%]'
+  const playerListStyle = `flex flex-row mt-3 gap-3 justify-center z-10 h-[35%] ${bestPlayers.length > 2 ? 'text-[25px]' : 'text-[27px]'}`
+  // confetti 상수
+  const CONFETTI_NUMBER = 100;
+  const CONFETTI_RADIUS = 4;
+  const CONFETTI_COLORS = ['#EAB308', '#F59E0B', '#FBBF24', '#FCD34D', '#FDE68A'];
+  const EMOJI_SIZE = 100;
+  const FIREWORK_INTERVAL = 1000;
+  const FIREWORK_DURATION = 3000;
 
-  const firework = () => {
+  const firework = (confetti) => {
     confetti.addConfetti({
-      confettiNumber: 100,
-      confettiRadius: 4,
-      confettiColors: ['#EAB308', '#F59E0B', '#FBBF24', '#FCD34D', '#FDE68A']
-    })
+      confettiNumber: CONFETTI_NUMBER,
+      confettiRadius: CONFETTI_RADIUS,
+      confettiColors: CONFETTI_COLORS
+    });
     confetti.addConfetti({
       emojis: ["🍗"],
-      emojiSize: 100,
+      emojiSize: EMOJI_SIZE,
       confettiNumber: 1,
-    })
+    });
   }
 
   useEffect(() => {
-    firework()
-    const intervalId = setInterval(firework, 1000)
+    firework(confetti);
+    const intervalId = setInterval(() => firework(confetti), FIREWORK_INTERVAL);
 
     setTimeout(() => {
       clearInterval(intervalId)
@@ -34,7 +48,7 @@ const DailyMVP = (props) => {
       while (canvasElements.length > 0) {
         canvasElements[0].parentNode.removeChild(canvasElements[0])
       }
-    }, 3000)
+    }, FIREWORK_DURATION)
   }, [])
 
 
@@ -47,7 +61,7 @@ const DailyMVP = (props) => {
       })
     }
 
-    // // 최다 공포 찾기
+    // 최다 공포 찾기
     let maxPlayers = []
     let maxValue = 0
 
@@ -88,89 +102,20 @@ const DailyMVP = (props) => {
     }
   }, [bestPlayers])
 
-  const closeHandler = () => {
-    setShowMVP(false)
-  }
-
   return (
-    <MVP className='box cursor-pointer flex flex-col' onClick={closeHandler}>
-      <Chicken className='absolute -top-6 right-1 text-yellow-600'>오늘 저녁은 치킨이닭!</Chicken>
-      <MVPText>Daily MVP</MVPText>
-      <DayText className='underline decoration-2 decoration-solid decoration-yellow-400'>{year.slice(2, 4) + today}</DayText>
+    <div className={popupContainerStyle} onClick={() => setShowMVP(false)}>
+      <span className={chickenTextStyle}>오늘 저녁은 치킨이닭!</span>
+      <span className={mvpTextStyle}>Daily MVP</span>
+      <span className={dayTextStyle}>{year.slice(2, 4) + today}</span>
       <Laurel />
-      <div className='flex flex-row mt-3 gap-3 justify-center' style={{zIndex: '1', height: '35%', fontSize: bestPlayers.length > 2 ? '25px' : '27px'}}>
+      <div className={playerListStyle}>
         {bestPlayers.map((player, index) => (
-            <div key={index} className='flex flex-col'>
-              <BestPlayer className='underline decoration-2 decoration-double decoration-yellow-400'>{player.name}</BestPlayer>
-              <span className='text-rose-800 text-xs'>{Number(player.goal) > 0 && player.goal + '골'} {Number(player.assist) > 0 && player.assist + '어시'}</span>
-            </div>
+          <MvpPlayer key={index} player={player} />
         ))}
       </div>
-      <Close className='mt-3 relative text-sm text-gray-300'>터치하면 사라집니다</Close>
-    </MVP>
+      <span className={closeMessageStyle}>터치하면 사라집니다</span>
+    </div>
   )
 }
 
 export default DailyMVP
-
-const MVP = styled.div`
-  position: absolute;
-  z-index: 1;
-  color: #EAB308;
-  top: 30%;
-  width: 90%;
-  height: 200px;
-  background-color: white;
-  @media (min-width: 812px) {
-    width: 30%;
-  }
-`
-
-const MVPText = styled.span`
-  font-size: 25px;
-  font-family: 'KBO-Dia-Gothic_bold', serif;
-  position: relative;
-  top: 1px;
-`
-
-const DayText = styled.span`
-    font-size: 10px;
-    font-family: 'DNFForgedBlade', serif;
-    color: #BB2649;
-    position: relative;
-    top: 1px;
-`
-
-const BestPlayer = styled.span`
-  font-family: 'DNFForgedBlade', serif;
-  color: #166534;
-`
-
-const Laurel = styled.div`
-    //width: 20px;
-    //height: 20px;
-    &::after {
-        position: absolute;
-        content: '';
-        background-image: url(${laurel});
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: 100% 100%;
-        width: 50%;
-        height: 62%;
-        left: 25%;
-        top: 21%;
-        opacity: 45%;
-        z-index: 0;
-    }
-`
-
-const Close = styled.span`
-  bottom: -12%;
-`
-
-const Chicken = styled.span`
-  @media (min-width: 812px) {
-    font-size: 15px;
-  }
-`

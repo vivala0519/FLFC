@@ -1,22 +1,24 @@
 import {useEffect, useState, useRef} from 'react'
 import { getDatabase, ref, onValue } from 'firebase/database'
-import {doc, setDoc} from "firebase/firestore"
+import {doc, setDoc} from 'firebase/firestore'
 import {db} from '../../../../firebase.js'
-import './LetsRecord.css'
+import { useAtom } from "jotai"
+import getTimes from '@/hooks/getTimes.js'
 import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
+import Separator from '@/components/atoms/Separator.jsx'
 import DailyMVP from '@/components/organisms/DailyMVP.jsx'
 import RecordContainer from '@/components/organisms/RecordContainer.jsx'
 import WriteContainer from '@/components/organisms/WriteContainer.jsx'
+import './LetsRecord.css'
 
 const LetsRecord = (props) => {
+  const { today, thisYear } = getTimes()
   const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
   const registerRef = useRef(null)
   const scrollContainerRef = useRef(null)
   const [todayRecordObject, setTodayRecordObject] = useState({})
   const [todayRecord, setTodayRecord] = useState([])
   const [dynamicHeight, setDynamicHeight] = useState(0)
-  const [today, setToday] = useState('')
-  const [thisYear, setThisYear] = useState('2024')
   const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '윤준석', '이재진', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은집']
   const [writtenData, setWrittenData] = useState([])
   const [registerHeight, setRegisterHeight] = useState(0)
@@ -26,6 +28,9 @@ const LetsRecord = (props) => {
   const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
   const [requestList, setRequestList] = useState([])
+  // style class
+  const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-[-12px]'}`
+  const templateContainerStyle = 'flex flex-col items-center w-full'
 
   // 기록 가능 시간 7:50 ~ 10:05
   const startTime = new Date()
@@ -56,13 +61,6 @@ const LetsRecord = (props) => {
       setShowMVP(true)
       setShowRequestUpdateButton(true)
     }
-
-    // 오늘 날짜 형식 포맷 (MMDD)
-    const month = (currentTime.getMonth() + 1).toString().padStart(2, '0')
-    const date = currentTime.getDate().toString().padStart(2, '0')
-    const formattedDate = month + date
-    setToday(formattedDate)
-    setThisYear(currentTime.getFullYear().toString())
 
     // 실시간 데이터 가져오기
     const db = getDatabase()
@@ -223,41 +221,45 @@ const LetsRecord = (props) => {
     setHeight()
   }, [requestUpdateMode])
 
-    return (
-      <div
-        className={`flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-[-12px]'}`}>
-        <TapTitleText active={open} title={"Today's Record"} />
-          <hr className='border-1 border-green-600 w-1/2 mb-4'/>
-          <div className='flex flex-col items-center w-full'>
-            <>
-              {showMVP && <DailyMVP showMVP={showMVP} setShowMVP={setShowMVP} recordData={recordData} year={thisYear}
-                                    today={today}/>}
-              <div className={canRegister ? 'default-border' : open ? 'default-border' : 'none-border'}>
-                <RecordContainer scrollContainerRef={scrollContainerRef} open={open} dynamicHeight={dynamicHeight}
-                                 showMVP={showMVP} todayRecord={todayRecord} lastRecord={lastRecord}
-                                 canRegister={canRegister} thisYear={thisYear} today={today}/>
-              </div>
-              {/*Write Container*/}
-              <WriteContainer
-                  open={open}
-                  scrollContainerRef={scrollContainerRef}
-                  registerRef={registerRef}
-                  canRegister={canRegister}
-                  thisYear={thisYear}
-                  today={today}
-                  currentTime={currentTime}
-                  startTime={startTime}
-                  endTime={endTime}
-                  setLastRecord={setLastRecord}
-                  requestUpdateMode={requestUpdateMode}
-                  setRequestUpdateMode={setRequestUpdateMode}
-                  requestList={requestList}
-                  showRequestUpdateButton={showRequestUpdateButton}
-              />
-            </>
-          </div>
-      </div>
-    )
+  return (
+    <div
+      className={tapContainerStyle}>
+      <TapTitleText active={open} title={"Today's Record"} />
+        <Separator fullWidth={false} />
+        <div className={templateContainerStyle}>
+          <>
+            {showMVP && <DailyMVP setShowMVP={setShowMVP} recordData={recordData} year={thisYear} today={today} />}
+            <RecordContainer
+              scrollContainerRef={scrollContainerRef}
+              open={open}
+              dynamicHeight={dynamicHeight}
+              showMVP={showMVP}
+              todayRecord={todayRecord}
+              lastRecord={lastRecord}
+              canRegister={canRegister}
+              thisYear={thisYear}
+              today={today}
+            />
+            <WriteContainer
+              open={open}
+              scrollContainerRef={scrollContainerRef}
+              registerRef={registerRef}
+              canRegister={canRegister}
+              thisYear={thisYear}
+              today={today}
+              currentTime={currentTime}
+              startTime={startTime}
+              endTime={endTime}
+              setLastRecord={setLastRecord}
+              requestUpdateMode={requestUpdateMode}
+              setRequestUpdateMode={setRequestUpdateMode}
+              requestList={requestList}
+              showRequestUpdateButton={showRequestUpdateButton}
+            />
+          </>
+        </div>
+    </div>
+  )
 }
 
 export default LetsRecord

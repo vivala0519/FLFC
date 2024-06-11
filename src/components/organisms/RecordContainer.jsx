@@ -1,10 +1,10 @@
 import Swal from 'sweetalert2'
 import {getDatabase, ref, remove} from 'firebase/database'
-import RecordRaw from '@/components/molecules/RecordRaw.jsx'
+import RecordRow from '@/components/molecules/RecordRow.jsx'
 
 const RecordContainer = (props) => {
   const { scrollContainerRef, open, dynamicHeight, showMVP, todayRecord, lastRecord, canRegister, thisYear, today } = props
-  const containerStyle = `w-full overflow-auto flex flex-col gap-10 items-center bg-white p-2 `
+  const containerStyle = `w-[96%] overflow-auto flex flex-col gap-10 items-center bg-white p-2 border border-transparent shadow-custom `
   const dynamicStyle = `${open ? 'flex' : 'hidden'} ${showMVP ? 'opacity-10' : 'opacity-100'}`
 
   const deleteRecord = (index) => {
@@ -34,7 +34,7 @@ const RecordContainer = (props) => {
   return (
     <div ref={scrollContainerRef} className={containerStyle + dynamicStyle} style={{height: open ? dynamicHeight : ''}}>
       {todayRecord?.map((record, index) =>
-        <RecordRaw
+        <RecordRow
           key={index}
           index={index}
           effect={record.id === lastRecord}
