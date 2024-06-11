@@ -12,15 +12,16 @@
   "dependencies": {
     "@vercel/analytics": "^1.2.2",
     "firebase": "^10.9.0",
+    "jotai": "^2.8.3",
     "js-confetti": "^0.12.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.3",
     "styled-components": "^6.1.8",
     "sweetalert2": "^11.10.7",
+    "tailwindcss-pseudo-elements": "^2.0.0",
     "uid": "^2.0.2",
-    "vite-plugin-svgr": "^4.2.0",
-    "zustand": "^4.5.2"
+    "vite-plugin-svgr": "^4.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.56",
