@@ -11,7 +11,7 @@ const month = (getCurrentDate().getMonth() + 1).toString().padStart(2, '0')
 const date = getCurrentDate().getDate().toString().padStart(2, '0')
 const getToday = () => month + date
 
-const getGameStartTime = getCurrentDate().setHours(7, 50, 0, 0) // 경기 시작 시간
+const getGameStartTime = getCurrentDate().setHours(7, 45, 0, 0) // 경기 시작 시간
 const getGameEndTime = getCurrentDate().setHours(10, 5, 0, 0) // 경기 끝 시간
 const getRecordTapCloseTime = getCurrentDate().setHours(23, 59, 0, 0) // 기록하기탭 클로즈 시간
 
