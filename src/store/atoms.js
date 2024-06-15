@@ -11,9 +11,9 @@ const month = (getCurrentDate().getMonth() + 1).toString().padStart(2, '0')
 const date = getCurrentDate().getDate().toString().padStart(2, '0')
 const getToday = () => month + date
 
-const getRecordWritableOpenTime = getCurrentDate().setHours(7, 50, 0, 0) // 기록하기 오픈 시간
-const getRecordWritableCloseTime = getCurrentDate().setHours(10, 5, 0, 0) // 기록하기 클로즈 시간
-const getCloseTime = getCurrentDate().setHours(23, 59, 0, 0) // 기록하기탭 클로즈 시간
+const getGameStartTime = getCurrentDate().setHours(7, 50, 0, 0) // 경기 시작 시간
+const getGameEndTime = getCurrentDate().setHours(10, 5, 0, 0) // 경기 끝 시간
+const getRecordTapCloseTime = getCurrentDate().setHours(23, 59, 0, 0) // 기록하기탭 클로즈 시간
 
 // members
 const totalMembers = [
@@ -74,17 +74,19 @@ const realtimeRecord = {}
 const todaysRealtimeRecord = {}
 const requestList = []
 
-export const currentTimeAtom = atom(getCurrentDate())
-export const thisYearAtom = atom(getCurrentYear())
-export const thisMonthAtom = atom(getCurrentMonth())
-export const thisDateAtom = atom(getCurrentDateOfMonth())
-export const todayAtom = atom(getToday())
-export const thisDayAtom = atom(getCurrentDay())
+export const timeAtom = atom({
+  currentTime: getCurrentDate(),
+  thisYear: getCurrentYear(),
+  thisMonth: getCurrentMonth(),
+  thisDate: getCurrentDateOfMonth(),
+  today: getToday(),
+  thisDay: getCurrentDay(),
+  gameStartTimeAtom: getGameStartTime,
+  gameEndTimeAtom: getGameEndTime,
+  recordTapCloseTimeAtom: getRecordTapCloseTime
+})
 export const totalMembersAtom = atom(totalMembers)
 export const existingMembersAtom = atom(existingMembers)
 export const realtimeRecordAtom = atom(realtimeRecord)
 export const todaysRealtimeRecordAtom = atom(todaysRealtimeRecord)
 export const requestListAtom = atom(requestList)
-export const recordWritableOpenTimeAtom = atom(getRecordWritableOpenTime)
-export const recordWritableCloseTimeAtom = atom(getRecordWritableCloseTime)
-export const closeTimeAtom = atom(getCloseTime)

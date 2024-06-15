@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
 import { useAtom } from 'jotai'
-import { currentTimeAtom } from '../store/atoms.js'
+import { timeAtom } from '@/store/atoms.js'
 
 const updateCurrentTime = () => {
-  const [, setCurrentTime] = useAtom(currentTimeAtom)
+  const [, setTime] = useAtom(timeAtom)
 
-
+  const setCurrentTime = (newTime) => {
+    setTime(oldTime => ({ ...oldTime, currentTime: newTime }))
+  }
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date())

@@ -1,9 +1,10 @@
-import {useEffect, useState, useRef} from 'react'
-import { getDatabase, ref, onValue } from 'firebase/database'
-import {doc, setDoc} from 'firebase/firestore'
-import {db} from '../../../../firebase.js'
-import { useAtom } from "jotai"
+import { useEffect, useState, useRef, useMemo } from 'react'
+import { doc, setDoc } from 'firebase/firestore'
+import { db } from '../../../../firebase.js'
 import getTimes from '@/hooks/getTimes.js'
+import getMembers from '@/hooks/getMembers.js'
+import getRecords from '@/hooks/getRecords.js'
+
 import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
 import Separator from '@/components/atoms/Separator.jsx'
 import DailyMVP from '@/components/organisms/DailyMVP.jsx'
@@ -12,14 +13,14 @@ import WriteContainer from '@/components/organisms/WriteContainer.jsx'
 import './LetsRecord.css'
 
 const LetsRecord = (props) => {
-  const { today, thisYear } = getTimes()
+  const { time: { currentTime, thisYear, today, thisDay, gameStartTimeAtom, gameEndTimeAtom, recordTapCloseTimeAtom } } = getTimes()
+  const { existingMembers } = getMembers()
+  const { todaysRealtimeRecord, todaysRequestList } = getRecords()
   const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
   const registerRef = useRef(null)
   const scrollContainerRef = useRef(null)
-  const [todayRecordObject, setTodayRecordObject] = useState({})
   const [todayRecord, setTodayRecord] = useState([])
   const [dynamicHeight, setDynamicHeight] = useState(0)
-  const players = ['이승호', '임준휘', '우장식', '이원효', '김동휘', '임희재', '김규진', '임건휘', '한상태', '노태훈', '박근한', '윤희철', '정우진', '홍원진', '김남구', '김민관', '양대열', '윤영진', '임종우', '황정민', '손지원', '방승진', '전희종', '황철민', '선민조', '최봉호', '최수혁', '김대건', '김동주', '김병일', '김성록', '박남호', '선우용', '윤준석', '이재진', '이진헌', '장성민', '전의준', '진장용', '하민수', '황은집']
   const [writtenData, setWrittenData] = useState([])
   const [registerHeight, setRegisterHeight] = useState(0)
   const [canRegister, setCanRegister] = useState(false)
@@ -32,45 +33,52 @@ const LetsRecord = (props) => {
   const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-[-12px]'}`
   const templateContainerStyle = 'flex flex-col items-center w-full'
 
-  // 기록 가능 시간 7:50 ~ 10:05
-  const startTime = new Date()
-  startTime.setHours(7, 50, 0, 0)
-  const endTime = new Date()
-  endTime.setHours(23, 59, 0, 0)
-  const currentTime = new Date()
-
-  const registerEndTime = new Date()
-  registerEndTime.setHours(10, 5, 0, 0)
-
-  const showMVPStartTime = new Date()
-  showMVPStartTime.setHours(10, 5, 0, 0)
-
   useEffect(() => {
     if (registerRef.current) {
       setRegisterHeight(registerRef.current.clientHeight)
     }
     // 일요일 8~10시 open
-    const day = currentTime.getDay()
-    if ([0, 7].includes(day) && currentTime >= startTime && currentTime <= endTime) {
+    if ([0, 7].includes(thisDay) && currentTime >= gameStartTimeAtom && currentTime <= recordTapCloseTimeAtom) {
       setOpen(true)
     }
-    if ([0, 7].includes(day) && currentTime >= startTime && currentTime <= registerEndTime) {
+    if ([0, 7].includes(thisDay) && currentTime >= gameStartTimeAtom && currentTime <= gameEndTimeAtom) {
       setCanRegister(true)
     }
-    if ([0, 7].includes(day) && currentTime >= showMVPStartTime && currentTime <= endTime) {
+    if ([0, 7].includes(thisDay) && currentTime >= gameEndTimeAtom && currentTime <= recordTapCloseTimeAtom) {
       setShowMVP(true)
       setShowRequestUpdateButton(true)
     }
-
-    // 실시간 데이터 가져오기
-    const db = getDatabase()
-    const todayRef = ref(db, thisYear + '/')
-    onValue(todayRef, (snapshot) => {
-      const data = snapshot.val()
-      setTodayRecordObject(data)
-    })
-
   }, [])
+
+  // daily 실시간 record
+  useEffect(() => {
+    const isData = todaysRealtimeRecord
+    console.log(todaysRealtimeRecord)
+    if (isData) {
+      const recordArray = Object.values(isData)
+      const sortedRecordArray = recordArray.sort((a, b) => {
+        const timeA = parseTimeFromString(a.time)
+        const timeB = parseTimeFromString(b.time)
+
+        return timeA - timeB
+      })
+      setTodayRecord(sortedRecordArray)
+    }
+  }, [todaysRealtimeRecord])
+
+  // request list
+  useEffect(() => {
+    if (requestList) {
+      const requestList = Object.values(todaysRequestList)
+      const sortedRequestArray = requestList.sort((a, b) => {
+        const timeA = parseTimeFromString(a.time)
+        const timeB = parseTimeFromString(b.time)
+
+        return timeA - timeB
+      })
+      setRequestList(sortedRequestArray)
+    }
+  }, [todaysRequestList]);
 
   useEffect(() => {
     function setHeight() {
@@ -98,41 +106,13 @@ const LetsRecord = (props) => {
     return new Date(0, 0, 0, hours, minutes, seconds)
   }
 
-  // 실시간 데이터 연동
-  useEffect(() => {
-    // today's record
-    const isData = todayRecordObject[today]
-    if (isData) {
-      const recordArray = Object.values(isData)
-      const sortedRecordArray = recordArray.sort((a, b) => {
-        const timeA = parseTimeFromString(a.time)
-        const timeB = parseTimeFromString(b.time)
-
-        return timeA - timeB
-      })
-      setTodayRecord(sortedRecordArray)
-    }
-    // request update list
-    const isRequestList = todayRecordObject[today + '_request']
-    if (isRequestList) {
-      const requestList = Object.values(isRequestList)
-      const sortedRequestArray = requestList.sort((a, b) => {
-        const timeA = parseTimeFromString(a.time)
-        const timeB = parseTimeFromString(b.time)
-
-        return timeA - timeB
-      })
-      setRequestList(sortedRequestArray)
-    }
-  }, [todayRecordObject])
-
   const formatRecordByName = (record) => {
     const stats = {}
     if (weeklyTeamData?.data && weeklyTeamData?.id === today) {
       const data = weeklyTeamData.data
       const thisWeekMembers = data[1].concat(data[2], data[3])
       thisWeekMembers.forEach(member => {
-        players.forEach(player => {
+        existingMembers.forEach(player => {
           if (member && player.includes(member)) {
             stats[player] = {'출석': true, '골': 0, '어시': 0}
           }
@@ -143,7 +123,7 @@ const LetsRecord = (props) => {
         const { assist, goal } = item
 
         if (goal !== "") {
-          players.forEach(player => {
+          existingMembers.forEach(player => {
             if (player.includes(goal) && stats[player]) {
               stats[player]['골']++
             }
@@ -151,7 +131,7 @@ const LetsRecord = (props) => {
         }
 
         if (assist !== "") {
-          players.forEach(player => {
+          existingMembers.forEach(player => {
             if (player.includes(assist) && stats[player]) {
               stats[player]['어시']++
             }
@@ -178,9 +158,10 @@ const LetsRecord = (props) => {
       }
       return true
   }
+
   // Firestore 데이터 등록
+  const stats = useMemo(() => formatRecordByName(todayRecord), [todayRecord])
   useEffect(() => {
-    const stats = formatRecordByName(todayRecord)
     if (stats) {
       const registerRecord = async () => {
         const docRef = doc(db, thisYear, today)
@@ -200,9 +181,9 @@ const LetsRecord = (props) => {
         behavior: 'smooth',
       });
     }
-  }, [todayRecord])
+  }, [todayRecord, stats])
 
-  // MVP 화면 닫으면 퍼레이드 종료
+  // MVP 화면 닫으면 컨페티 종료
   useEffect(() => {
     if (!showMVP) {
       const canvasElements = document.getElementsByTagName('canvas')
@@ -237,19 +218,12 @@ const LetsRecord = (props) => {
               todayRecord={todayRecord}
               lastRecord={lastRecord}
               canRegister={canRegister}
-              thisYear={thisYear}
-              today={today}
             />
             <WriteContainer
               open={open}
               scrollContainerRef={scrollContainerRef}
               registerRef={registerRef}
               canRegister={canRegister}
-              thisYear={thisYear}
-              today={today}
-              currentTime={currentTime}
-              startTime={startTime}
-              endTime={endTime}
               setLastRecord={setLastRecord}
               requestUpdateMode={requestUpdateMode}
               setRequestUpdateMode={setRequestUpdateMode}

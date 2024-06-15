@@ -1,9 +1,11 @@
 import Swal from 'sweetalert2'
 import {getDatabase, ref, remove} from 'firebase/database'
+import getTimes from '@/hooks/getTimes.js'
 import RecordRow from '@/components/molecules/RecordRow.jsx'
 
 const RecordContainer = (props) => {
-  const { scrollContainerRef, open, dynamicHeight, showMVP, todayRecord, lastRecord, canRegister, thisYear, today } = props
+  const { scrollContainerRef, open, dynamicHeight, showMVP, todayRecord, lastRecord, canRegister } = props
+  const { time: { today, thisYear } } = getTimes()
   const containerStyle = `w-[96%] overflow-auto flex flex-col gap-10 items-center bg-white p-2 border border-transparent shadow-custom `
   const dynamicStyle = `${open ? 'flex' : 'hidden'} ${showMVP ? 'opacity-10' : 'opacity-100'}`
 

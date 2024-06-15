@@ -2,6 +2,7 @@ import React, {useState} from 'react'
 import Swal from 'sweetalert2';
 import {getDatabase, ref, set} from 'firebase/database'
 import {uid} from 'uid';
+import getTimes from '@/hooks/getTimes.js'
 import WriteBox from '@/components/organisms/WriteBox.jsx'
 import InfoMessageBox from '@/components/molecules/InfoMessageBox.jsx'
 import ShowRequestButton from '@/components/atoms/Button/ShowRequestButton.jsx'
@@ -9,7 +10,8 @@ import RequestBox from '@/components/organisms/RequestBox.jsx'
 import Separator from '@/components/atoms/Separator.jsx'
 
 const WriteContainer = (props) => {
-  const { scrollContainerRef, registerRef, open, canRegister, today, currentTime, thisYear, startTime, endTime, setLastRecord, requestUpdateMode, setRequestUpdateMode, showRequestUpdateButton, requestList } = props
+  const { scrollContainerRef, registerRef, open, canRegister, setLastRecord, requestUpdateMode, setRequestUpdateMode, showRequestUpdateButton, requestList } = props
+  const { time: { today, thisYear, currentTime, recordWritableOpenTime, recordWritableCloseTime } } = getTimes()
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
   // const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
@@ -19,7 +21,7 @@ const WriteContainer = (props) => {
   // RealTime Database 등록
   const registerHandler = () => {
     const day = currentTime.getDay()
-    if (!([0, 7].includes(day) && currentTime >= startTime && currentTime <= endTime)) {
+    if (!([0, 7].includes(day) && currentTime >= recordWritableOpenTime && currentTime <= recordWritableCloseTime)) {
       Swal.fire({
         icon: 'error',
         text: '기록 가능 시간이 아닙니다.'

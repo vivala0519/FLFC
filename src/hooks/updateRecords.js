@@ -1,14 +1,14 @@
 import {useEffect} from 'react'
 import { useAtom } from 'jotai'
 import {getDatabase, onValue, ref} from 'firebase/database'
-import { realtimeRecordAtom, todaysRealtimeRecordAtom, requestListAtom, thisYearAtom, todayAtom } from '@/store/atoms'
+import { realtimeRecordAtom, todaysRealtimeRecordAtom, requestListAtom, timeAtom } from '@/store/atoms'
 
 const updateRecords = () => {
   const [, setRealtimeRecord] = useAtom(realtimeRecordAtom)
   const [, setTodaysRealtimeRecord] = useAtom(todaysRealtimeRecordAtom)
   const [, setRequestList] = useAtom(requestListAtom)
-  const [thisYear] = useAtom(thisYearAtom)
-  const [today] = useAtom(todayAtom)
+  const [time] = useAtom(timeAtom)
+  const { thisYear, today } = time
 
   useEffect(() => {
     const db = getDatabase()
