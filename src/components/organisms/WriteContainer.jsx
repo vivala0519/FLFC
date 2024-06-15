@@ -11,7 +11,7 @@ import Separator from '@/components/atoms/Separator.jsx'
 
 const WriteContainer = (props) => {
   const { scrollContainerRef, registerRef, open, canRegister, setLastRecord, requestUpdateMode, setRequestUpdateMode, showRequestUpdateButton, requestList } = props
-  const { time: { today, thisYear, currentTime, recordWritableOpenTime, recordWritableCloseTime } } = getTimes()
+  const { time: { today, thisYear, currentTime, getGameStartTime, getGameEndTime } } = getTimes()
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
   // const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
@@ -21,7 +21,7 @@ const WriteContainer = (props) => {
   // RealTime Database 등록
   const registerHandler = () => {
     const day = currentTime.getDay()
-    if (!([0, 7].includes(day) && currentTime >= recordWritableOpenTime && currentTime <= recordWritableCloseTime)) {
+    if (!([0, 7].includes(day) && currentTime >= getGameStartTime && currentTime <= getGameEndTime)) {
       Swal.fire({
         icon: 'error',
         text: '기록 가능 시간이 아닙니다.'
