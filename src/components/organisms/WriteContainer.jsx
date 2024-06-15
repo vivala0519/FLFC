@@ -21,12 +21,12 @@ const WriteContainer = (props) => {
   // RealTime Database 등록
   const registerHandler = () => {
     const day = currentTime.getDay()
-    if (!([0, 7].includes(day) && currentTime >= getGameStartTime && currentTime <= getGameEndTime)) {
-      Swal.fire({
-        icon: 'error',
-        text: '기록 가능 시간이 아닙니다.'
-      })
-    } else {
+    // if (!([0, 7].includes(day) && currentTime >= getGameStartTime && currentTime <= getGameEndTime)) {
+    //   Swal.fire({
+    //     icon: 'error',
+    //     text: '기록 가능 시간이 아닙니다.'
+    //   })
+    // } else {
       const db = getDatabase()
       const time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0') + ':' + currentTime.getSeconds().toString().padStart(2, '0')
       const id = uid()
@@ -60,7 +60,7 @@ const WriteContainer = (props) => {
         scrollToElement()
       }, 300)
     }
-  }
+  // }
 
   return (
       <div className={!canRegister ? 'w-full' : 'flex flex-col items-center mt-4'}>
