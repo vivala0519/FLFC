@@ -89,7 +89,7 @@ const DailyMVP = (props) => {
     })
 
     const todayMVP = mvpSnapshot.docs.find(doc => doc.id === today)
-    if (!todayMVP && bestPlayers.length > 0) {
+    if (todayMVP?.id !== today && bestPlayers.length > 0) {
       await setDoc(docRef, data)
     }
   }

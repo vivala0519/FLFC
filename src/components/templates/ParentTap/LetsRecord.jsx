@@ -13,7 +13,7 @@ import WriteContainer from '@/components/organisms/WriteContainer.jsx'
 import './LetsRecord.css'
 
 const LetsRecord = (props) => {
-  const { time: { currentTime, thisYear, today, thisDay, gameStartTimeAtom, gameEndTimeAtom, recordTapCloseTimeAtom } } = getTimes()
+  const { time: { currentTime, thisYear, today, thisDay, gameStartTime, gameEndTime, recordTapCloseTime } } = getTimes()
   const { existingMembers } = getMembers()
   const { todaysRealtimeRecord, todaysRequestList } = getRecords()
   const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
@@ -37,14 +37,13 @@ const LetsRecord = (props) => {
     if (registerRef.current) {
       setRegisterHeight(registerRef.current.clientHeight)
     }
-    // 일요일 8~10시 open
-    if ([0, 7].includes(thisDay) && currentTime >= gameStartTimeAtom && currentTime <= recordTapCloseTimeAtom) {
+    if ([0, 7].includes(thisDay) && currentTime >= gameStartTime && currentTime <= recordTapCloseTime) {
       setOpen(true)
     }
-    if ([0, 7].includes(thisDay) && currentTime >= gameStartTimeAtom && currentTime <= gameEndTimeAtom) {
+    if ([0, 7].includes(thisDay) && currentTime >= gameStartTime && currentTime <= gameEndTime) {
       setCanRegister(true)
     }
-    if ([0, 7].includes(thisDay) && currentTime >= gameEndTimeAtom && currentTime <= recordTapCloseTimeAtom) {
+    if ([0, 7].includes(thisDay) && currentTime >= gameEndTime && currentTime <= recordTapCloseTime) {
       setShowMVP(true)
       setShowRequestUpdateButton(true)
     }
@@ -53,7 +52,6 @@ const LetsRecord = (props) => {
   // daily 실시간 record
   useEffect(() => {
     const isData = todaysRealtimeRecord
-    console.log(todaysRealtimeRecord)
     if (isData) {
       const recordArray = Object.values(isData)
       const sortedRecordArray = recordArray.sort((a, b) => {
@@ -162,13 +160,13 @@ const LetsRecord = (props) => {
   // Firestore 데이터 등록
   const stats = useMemo(() => formatRecordByName(todayRecord), [todayRecord])
   useEffect(() => {
-    if (stats) {
+    if (stats && canRegister) {
       const registerRecord = async () => {
         const docRef = doc(db, thisYear, today)
         await setDoc(docRef, stats)
         console.log("Document written with ID: ", docRef.id);
       }
-      if (!compareObjects(stats, writtenData) && canRegister) {
+      if (!compareObjects(stats, writtenData)) {
         registerRecord()
       }
     }
