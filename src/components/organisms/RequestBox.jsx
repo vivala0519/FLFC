@@ -46,7 +46,7 @@ const RequestBox = (props) => {
   return (
     <div className={containerStyle}>
       <div className={innerContainerStyle}>
-        <CloseButton clickHandler={() => setRequestUpdateMode(false)} />
+        <CloseButton clickHandler={() => setRequestUpdateMode(false)} customLocation='absolute top-0 -right-4' />
         <div className={listContainerStyle}>
           {requestList.map((request, index) => (
             <RequestRow key={index} request={request} />
