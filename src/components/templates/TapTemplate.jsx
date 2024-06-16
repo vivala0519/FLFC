@@ -58,7 +58,7 @@ const TapTemplate = (props) => {
   };
 
   return (
-    <div className='w-full' onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+    <div className='w-full h-full' onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
       {tap === 0 &&
         <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={recordData} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]} setTap={setTap}/>}
       {tap === 1 && <StatusBoard propsData={recordData} analyzedData={analyzedData} setTap={setTap}/>}

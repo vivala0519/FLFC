@@ -154,7 +154,7 @@ const RecordRoom = (props) => {
     }, [tableData, analyzedData])
 
     return (
-      <div className='w-full relative' style={{top: '-10px'}}>
+      <div className='w-full relative h-full' style={{top: '-10px'}}>
           <div className='flex flex-row w-full mb-2 p-1' style={{fontFamily: 'DNFForgedBlade'}}>
               {/*<div className={`border-solid border-0 border-b-2 cursor-pointer text-sm border-green-600 ${tap === '현황판' && 'text-rose-600'}`} style={{width: '40px'}}*/}
               {/*     onClick={() => setTap(tapName[0])}>현황판*/}

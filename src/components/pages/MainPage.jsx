@@ -50,7 +50,7 @@ const MainPage = () => {
   }, [registeredTeam])
 
   return (
-    <div className='flex flex-col items-center h-screen'>
+    <div className='flex flex-col items-center h-[95vh]'>
       <Analytics />
       <Header tap={tap} setTap={setTap} setHeaderHeight={setHeaderHeight} lastDate={lastWeeklyTeamId} />
       <TapTemplate
