@@ -2,7 +2,7 @@ import { atom } from 'jotai'
 
 // time
 const getCurrentDate = () => new Date()
-const getCurrentYear = () => getCurrentDate().getFullYear()
+const getCurrentYear = () => String(getCurrentDate().getFullYear())
 const getCurrentMonth = () => getCurrentDate().getMonth() + 1
 const getCurrentDateOfMonth = () => getCurrentDate().getDate()
 const getCurrentDay = () => getCurrentDate().getDay()
