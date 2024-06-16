@@ -4,7 +4,7 @@ import DeleteButton from '@/components/atoms/Button/DeleteButton.jsx'
 
 const RecordRow = (props) => {
   const { record, index, deleteRecord, useDelete, effect } = props
-  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[80%] gap-5 pt-1 ${effect ? 'bg-effect' : ''}`
+  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] gap-5 pt-1 ${effect ? 'bg-effect' : ''}`
   const recordAreaStyle = 'flex items-center pl-2 pr-2 border-b-green-600 border-b-2'
 
   return (
