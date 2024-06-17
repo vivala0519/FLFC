@@ -708,8 +708,8 @@ const AnalysisTap = () => {
           tap === 1 &&
             <div className='flex flex-col gap-1'>
               <Title className='text-xl'>10-10 클럽</Title>
-              <SubTitle className=''>골, 어시 각각 10개 이상 달성한 플레이어</SubTitle>
-              <div className='flex flex-col w-[250px] h-[200px] overflow-y-scroll'>
+              <SubTitle style={{marginBottom: '0px'}}>골, 어시 각각 10개 이상 달성한 플레이어</SubTitle>
+              <div className='flex flex-col gap-[4px] w-[250px] h-[225px] overflow-y-scroll'>
                 {tenTenClub?.map(player => <PlayerName key={player} className='text-xl text-green-800' style={{top: '20px'}}>{player}</PlayerName>)}
                 {tenTenClub.length === 0 && <PlayerName style={{top: '120px'}}>아직 달성한 플레이어가 없습니다</PlayerName>}
               </div>
