@@ -4,9 +4,10 @@ import {db} from '../../../firebase.js'
 import { Analytics } from '@vercel/analytics/react'
 import {dataAnalysis} from '@/apis/analyzeData.js'
 
-import Header from "@/components/organisms/Header.jsx"
-import Footer from "@/components/organisms/Footer.jsx"
-import TapTemplate from "@/components/templates/TapTemplate.jsx"
+import Header from '@/components/organisms/Header.jsx'
+import Footer from '@/components/organisms/Footer.jsx'
+import TapTemplate from '@/components/templates/TapTemplate.jsx'
+import updateMembers from '@/hooks/updateMembers.js'
 
 const MainPage = () => {
   const [tap, setTap] = useState(0)
@@ -18,6 +19,8 @@ const MainPage = () => {
   const [open, setOpen] = useState(false)
   const [showFooter, setShowFooter] = useState(true)
   const [lastWeeklyTeamId, setLastWeeklyTeamId] = useState(null)
+
+  updateMembers()
 
   // Data Generation
   useEffect(() => {

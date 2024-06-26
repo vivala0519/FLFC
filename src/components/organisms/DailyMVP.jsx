@@ -18,28 +18,28 @@ const DailyMVP = (props) => {
   const closeMessageStyle = 'mt-3 relative text-sm text-gray-300 -bottom-[12%]'
   const playerListStyle = `flex flex-row mt-3 gap-3 justify-center z-10 h-[35%] ${bestPlayers.length > 2 ? 'text-[25px]' : 'text-[27px]'}`
   // confetti 상수
-  const CONFETTI_NUMBER = 100;
-  const CONFETTI_RADIUS = 4;
-  const CONFETTI_COLORS = ['#EAB308', '#F59E0B', '#FBBF24', '#FCD34D', '#FDE68A'];
-  const EMOJI_SIZE = 100;
-  const FIREWORK_INTERVAL = 1000;
-  const FIREWORK_DURATION = 3000;
+  const CONFETTI_NUMBER = 100
+  const CONFETTI_RADIUS = 4
+  const CONFETTI_COLORS = ['#EAB308', '#F59E0B', '#FBBF24', '#FCD34D', '#FDE68A']
+  const EMOJI_SIZE = 100
+  const FIREWORK_INTERVAL = 1000
+  const FIREWORK_DURATION = 3000
 
   const firework = (confetti) => {
     confetti.addConfetti({
       confettiNumber: CONFETTI_NUMBER,
       confettiRadius: CONFETTI_RADIUS,
       confettiColors: CONFETTI_COLORS
-    });
+    })
     confetti.addConfetti({
       emojis: ["🍗"],
       emojiSize: EMOJI_SIZE,
       confettiNumber: 1,
-    });
+    })
   }
 
   useEffect(() => {
-    firework(confetti);
+    firework(confetti)
     const intervalId = setInterval(() => firework(confetti), FIREWORK_INTERVAL);
 
     setTimeout(() => {
