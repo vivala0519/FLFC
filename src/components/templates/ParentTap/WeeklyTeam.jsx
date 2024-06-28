@@ -11,7 +11,7 @@ import {db} from "../../../../firebase.js"
 import TapTitleText from "@/components/atoms/Text/TapTitleText.jsx";
 
 function WeeklyTeam(props) {
-    const {setRegisteredTeam, setTap, setShowFooter} = props
+    const {setRegisteredTeam, setShowFooter} = props
     const [weeklyTeamData, setWeeklyTeamData] = useState([])
     const [lastDate, setLastDate] = useState('')
     const [page, setPage] = useState(0)
@@ -19,6 +19,9 @@ function WeeklyTeam(props) {
     const [canCreate, setCanCreate] = useState(true)
     const [activeBorder, setActiveBorder] = useState(false)
     const [inputTeamData, setInputTeamData] = useState([['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', '']])
+
+    const tapContainerStyle = 'relative w-full h-[80vh]'
+    const dayTitleContainerStyle = 'flex gap-5 justify-center items-center'
 
     const today = new Date();
     const currentDay = today.getDay()
@@ -121,14 +124,10 @@ function WeeklyTeam(props) {
         setCanCreate(false)
     }
 
-
-    const votedPlayerMonthPlan = []
-    const votedPlayerWeekPlan = []
-
     return (
-        <div className='w-full relative' style={{height: '80vh'}}>
-            <div className='flex gap-5 justify-center items-center'>
-                {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page !== 0}/>}
+        <div className={tapContainerStyle}>
+            <div className={dayTitleContainerStyle}>
+                {!editMode && <LeftButton clickHandler={() => pageMoveHandler(true)} show={page !== 0}/>}
                 <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder} title={weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 Weekly Team'} />
                 {!editMode &&
                     <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1}/>}
@@ -136,7 +135,6 @@ function WeeklyTeam(props) {
             <div className='flex flex-col'>
                 <div className='flex flex-col items-end mb-5'>
                     <hr className='w-full border-green-700'/>
-                    {/*<RelationButton>관계도</RelationButton>*/}
                 </div>
                 <div className='w-full flex justify-center mb-5'>
                     <div
@@ -156,21 +154,6 @@ function WeeklyTeam(props) {
                                 : // 팀 생성 모드
                                 <div className='flex flex-col gap-4'>
                                     <div className='flex flex-col mb-6'>
-                                        {/*<span className='mb-4 text-black'>금주 참여 투표 인원 (투표 시간 순)</span>*/}
-                                        {/*<div className='mr-2 mb-4'>*/}
-                                        {/*    <span className='text-sm text-yellow-600'>월회비 : </span>*/}
-                                        {/*    <div className='flex flex-wrap justify-center gap-1'>*/}
-                                        {/*        {votedPlayerMonthPlan.map((player, index) => (*/}
-                                        {/*              <span className=' text-black' key={index}>{player + ' '}</span>))}*/}
-                                        {/*    </div>*/}
-                                        {/*</div>*/}
-                                        {/*<div className='mr-2'>*/}
-                                        {/*    <span className='text-sm text-yellow-600'>주회비 : </span>*/}
-                                        {/*    <div className='flex flex-wrap justify-center gap-1'>*/}
-                                        {/*        {votedPlayerWeekPlan.map((player, index) => (*/}
-                                        {/*            <span className=' text-black' key={index}>{player}</span>))}*/}
-                                        {/*    </div>*/}
-                                        {/*</div>*/}
                                     </div>
                                     <div className='flex flex-col gap-2 items-center'>
                                         {inputTeamData?.map((team, index) => (
@@ -300,12 +283,4 @@ const Register = styled.div`
     height: 20px;
     position: relative;
     left: 7px;
-`
-
-const RelationButton = styled.button`
-    position: relative;
-    top: 10px;
-    width: 60px;
-    height: 30px;
-    font-size: 10px;
 `

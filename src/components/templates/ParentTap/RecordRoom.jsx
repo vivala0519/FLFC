@@ -11,7 +11,6 @@ import HistoryTap from '../ChildTap/HistoryTap.jsx'
 import AnalysisTap from "../ChildTap/AnalysisTap.jsx"
 
 const RecordRoom = (props) => {
-    const {propsSetTap} = props
     const [fetchData, setFetchData] = useState([])
     const [analyzedData, setAnalyzedData] = useState({})
     const tapName = ['출석', '골', '어시', '히스토리', '분석']
