@@ -16,6 +16,7 @@ import altruistic from '@/assets/altruistic2.png'
 import duo from '@/assets/duo.png'
 import friend from '@/assets/friend2.png'
 import mining from '@/assets/minning.gif'
+import CloseButton from '@/components/atoms/Button/CloseButton.jsx'
 
 const AnalysisTap = () => {
   const players = ['홍원진', '우장식', '임희재', '윤희철', '김동휘', '이승호', '임건휘', '방승진', '김민관', '김규진', '임준휘', '전희종', '한상태', '임종우', '노태훈', '윤영진', '이원효', '황정민', '양대열', '정우진', '김남구', '박근한', '손지원', '황철민', '최봉호', '선민조', '최수혁', '김병일', '김대건', '전의준', '황은집', '진장용', '이진헌', '윤준석', '김동주', '선우용', '이재진', '김성록', '박남호', '장성민', '하민수']
@@ -40,6 +41,7 @@ const AnalysisTap = () => {
   const [greedyPlayer, setGreedyPlayer] = useState([])
   const [altruisticPlayer, setAltruisticPlayer] = useState([])
   const [tap, setTap] = useState(0)
+  const [showIndividual, setShowIndividual] = useState(false)
   // 개인별 데이터
   const [thisQuarterMVP, setThisQuarterMVP] = useState([])
   const [thisQuarterPointData, setThisQuarterPointData] = useState(null)
@@ -705,8 +707,8 @@ const AnalysisTap = () => {
           tap === 1 &&
             <div className='flex flex-col gap-1'>
               <Title className='text-xl'>10-10 클럽</Title>
-              <SubTitle className=''>골, 어시 각각 10개 이상 달성한 플레이어</SubTitle>
-              <div className='flex flex-col w-[250px] h-[200px] overflow-y-auto'>
+              <SubTitle style={{marginBottom: '0px'}}>골, 어시 각각 10개 이상 달성한 플레이어</SubTitle>
+              <div className='flex flex-col gap-[4px] w-[250px] h-[225px] overflow-y-scroll'>
                 {tenTenClub?.map(player => <PlayerName key={player} className='text-xl text-green-800' style={{top: '20px'}}>{player}</PlayerName>)}
                 {tenTenClub.length === 0 && <PlayerName style={{top: '120px'}}>아직 달성한 플레이어가 없습니다</PlayerName>}
               </div>
@@ -788,30 +790,39 @@ const AnalysisTap = () => {
         <BackgroundImage $propsImage={tapImage[tap]} $propsSize={tapImageSize[tap]} $propsTap={tap} />
         {[1, 2].includes(tap) && <BackgroundImage $propsImage={tapImage[tap]} $propsSize={tapImageSize[tap]} $propsTap={tap} />}
       </div>
-      <PlayersBox className='flex gap-5 flex-wrap fixed bottom-5 justify-center overflow-y-auto border-t-2 border-t-gray-200 border-b-2 border-b-gray-200' $showDetail={showDetail}>
-        {!showDetail && thisQuarterPlayers.map(player => <ActivePlayer key={player} className='text-green-900 cursor-pointer' onClick={() => playerDetailHandler(player)}>{player}</ActivePlayer>)}
-        {showDetail &&
-          <div>
-            <div className='flex flex-col'>
-              <ActivePlayer className='underline decoration-2 decoration-solid decoration-yellow-400 text-green-800 mb-2'>{playerDetail['name']}</ActivePlayer>
-              {playerDetail['description']
-                ?
-                <span>{playerDetail['description']}</span>
-                :
-                <div>
-                  <ListBody><ListTitle>MVP</ListTitle><span> {playerDetail['mvp'] + '회'}</span></ListBody>
-                  <ListBody><ListTitle>최다 골 합작</ListTitle><span> {playerDetail['combi'].map(name => <span key={name} style={{marginRight: '3px'}}>{name}</span>)}, {playerDetail['combiCount']}골</span></ListBody>
-                  <ListBody><ListTitle>최다 같은 팀</ListTitle><span> {playerDetail['mostPartner'].map(name => <span key={name} style={{marginRight: '3px'}}>{name}</span>)}, {playerDetail['mostPartnerCount']}회</span></ListBody>
-                  <ListBody><ListTitle>용병 호출</ListTitle><span> {playerDetail['mercenary']}회</span></ListBody>
-                  <ListBody><ListTitle>스타일</ListTitle><span> {playerDetail['style'].map(style => <span key={style} style={{marginRight: '5px'}}>#{style}</span>)}</span></ListBody>
-                </div>
-              }
+      {showIndividual ?
+        <div className='absolute bottom-0 flex flex-col items-end z-[2]'>
+        <CloseButton clickHandler={() => setShowIndividual(false)} customLocation='relative w-[30px] right-0' />
+        <PlayersBox className='flex gap-5 flex-wrap relative bottom-0 justify-center overflow-y-auto bg-white border-t-2 border-t-gray-200 border-b-2 border-b-gray-200' $showDetail={showDetail}>
+          {!showDetail && thisQuarterPlayers.map(player => <ActivePlayer key={player} className='text-green-900 cursor-pointer' onClick={() => playerDetailHandler(player)}>{player}</ActivePlayer>)}
+          {showDetail &&
+            <div>
+              <div className='flex flex-col'>
+                <ActivePlayer className='underline decoration-2 decoration-solid decoration-yellow-400 text-green-800 mb-2'>{playerDetail['name']}</ActivePlayer>
+                {playerDetail['description']
+                  ?
+                  <span>{playerDetail['description']}</span>
+                  :
+                  <div>
+                    <ListBody><ListTitle>MVP</ListTitle><span> {playerDetail['mvp'] + '회'}</span></ListBody>
+                    <ListBody><ListTitle>최다 골 합작</ListTitle><span> {playerDetail['combi'].map(name => <span key={name} style={{marginRight: '3px'}}>{name}</span>)}, {playerDetail['combiCount']}골</span></ListBody>
+                    <ListBody><ListTitle>최다 같은 팀</ListTitle><span> {playerDetail['mostPartner'].map(name => <span key={name} style={{marginRight: '3px'}}>{name}</span>)}, {playerDetail['mostPartnerCount']}회</span></ListBody>
+                    <ListBody><ListTitle>용병 호출</ListTitle><span> {playerDetail['mercenary']}회</span></ListBody>
+                    <ListBody><ListTitle>스타일</ListTitle><span> {playerDetail['style'].map(style => <span key={style} style={{marginRight: '5px'}}>#{style}</span>)}</span></ListBody>
+                  </div>
+                }
+              </div>
+              <Close className='cursor-pointer text-sm' onClick={() => setShowDetail(false)}>back</Close>
             </div>
-            <Close className='cursor-pointer' onClick={() => setShowDetail(false)}>X</Close>
-          </div>
-        }
-      </PlayersBox>
-        </>
+          }
+        </PlayersBox>
+        </div>
+        :
+        <div className='absolute bottom-[50px] border-double border-0 border-b-2 border-t-2 border-green-600' onClick={() => setShowIndividual(true)}>
+          <span className='text-[20px]'>개인별</span>
+        </div>
+      }
+      </>
       }
 
     </div>
@@ -935,7 +946,7 @@ const BackgroundImage = styled.div`
 
 const PlayersBox = styled.div`
   filter: ${props => !props.$showDetail && 'drop-shadow(2px 0px 6px gray)'};
-  padding: ${props => !props.$showDetail ? '10px 30px 5px 30px' : '10xp 10px 5px 10px'};
+  padding: ${props => !props.$showDetail ? '10px 20px 5px 20px' : '10xp 10px 5px 10px'};
   height: 160px;
 `
 

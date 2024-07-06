@@ -179,7 +179,7 @@ const LetsRecord = (props) => {
         behavior: 'smooth',
       });
     }
-  }, [todayRecord, stats])
+  }, [todayRecord, stats, existingMembers])
 
   // MVP 화면 닫으면 컨페티 종료
   useEffect(() => {
@@ -209,8 +209,8 @@ const LetsRecord = (props) => {
           <>
             {showMVP && <DailyMVP setShowMVP={setShowMVP} recordData={recordData} year={thisYear} today={today} />}
             <RecordContainer
-              scrollContainerRef={scrollContainerRef}
               open={open}
+              scrollContainerRef={scrollContainerRef}
               dynamicHeight={dynamicHeight}
               showMVP={showMVP}
               todayRecord={todayRecord}
