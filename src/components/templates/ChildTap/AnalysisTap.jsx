@@ -581,7 +581,7 @@ const AnalysisTap = () => {
   }, [weeklyTeamData]);
 
   useEffect(() => {
-    if (thisQuarterPlayers.length > 0 && thisQuarterPointData.size > 0 && thisQuarterDataByTime.size > 0 && Object.keys(thisQuarterMostPartners).length > 0 && thisQuarterMVP.length > 0 && thisQuarterPlayersCombination.size > 0) {
+    if (thisQuarterPlayers.length > 0 && thisQuarterPointData?.size > 0 && thisQuarterDataByTime?.size > 0 && Object.keys(thisQuarterMostPartners).length > 0 && thisQuarterMVP.length > 0 && thisQuarterPlayersCombination?.size > 0) {
       const integratedMap = new Map()
       thisQuarterPointData.forEach((value, key) => {
         integratedMap.set(key, { ...value, ...thisQuarterDataByTime.get(key), ...thisQuarterMostPartners[key], ...mercenaryBring.get(key)})
@@ -594,7 +594,6 @@ const AnalysisTap = () => {
 
   const playerDetailHandler = (name) => {
     const detailMap = integratedData.get(name.slice(1, 3))
-    console.log(detailMap)
     if (detailMap) {
       const detail = {
         name: name,
