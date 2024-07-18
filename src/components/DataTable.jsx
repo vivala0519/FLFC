@@ -290,7 +290,10 @@ const DataTable = (props) => {
                             sortedNames?.map((name, index) =>
                                 (<div key={'sorted-' + index}><TableRowStat key={index} $tap={tap}>
                                     {tap === '현황판' ?
-                                        <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)}>{kingList.includes(name) && <Trophy className='trophy' $king={findTrophy(name)}/>}<StatusBoardName style={{width: '72px', borderRight: '1px solid #ccc'}}>{name}</StatusBoardName></FirstColumn>
+                                        <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)}>
+                                            {kingList.includes(name) && <Trophy className='trophy' $king={findTrophy(name)}/>}
+                                            <StatusBoardName style={{width: '72px', borderRight: '1px solid #ccc'}}>{name}</StatusBoardName>
+                                        </FirstColumn>
                                         :
                                         <div className='flex items-center justify-center' style={{minWidth: '20%', flex: '1', borderRight: '1px solid #ccc'}}>
                                             {winnerList.includes(name) && <Medal />}
@@ -323,7 +326,7 @@ const DataTable = (props) => {
                         {/*장기 미출석 인원*/}
                         {sortedAbsenteeNames?.map((name, index) =>
                             (<div key={'sorted-ab-' + index}><TableRowOther key={index}>
-                                {tap === '현황판' ? <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)}><div style={{width: '75px'}}>{name}</div></FirstColumn> : <div style={{minWidth: '20%', flex: '1'}}>{name}</div>}
+                                {tap === '현황판' ? <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)}>{kingList.includes(name) && <Trophy className='trophy' $king={findTrophy(name)}/>}<div style={{width: '75px'}}>{name}</div></FirstColumn> : <div style={{minWidth: '20%', flex: '1'}}>{name}</div>}
                                 {
                                     tap === '출석' ? tableData?.data?.map((data, index) => (
                                             <span key={name + index}>{data.data[name] ? 'O' : ''}</span>))
