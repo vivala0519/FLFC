@@ -22,7 +22,7 @@ function WeeklyTeam(props) {
 
     const tapContainerStyle = 'relative w-full h-[80vh]'
     const dayTitleContainerStyle = 'flex gap-5 justify-center items-center'
-    const kakaoButtonDivStyle = 'flex gap-[5px] items-center justify-center mt-[20px]'
+    const kakaoButtonDivStyle = 'flex gap-[5px] items-center justify-center mt-[20px] cursor-pointer'
     const kakaoButtonStyle = 'bg-kakao bg-[length:100%_100%] w-[40px] h-[40px]'
 
     const today = new Date();
