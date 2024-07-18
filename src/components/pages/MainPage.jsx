@@ -20,6 +20,8 @@ const MainPage = () => {
   const [showFooter, setShowFooter] = useState(true)
   const [lastWeeklyTeamId, setLastWeeklyTeamId] = useState(null)
 
+  const pageStyle = 'flex flex-col items-center h-[95vh]'
+
   updateMembers()
 
   // Data Generation
@@ -53,7 +55,7 @@ const MainPage = () => {
   }, [registeredTeam])
 
   return (
-    <div className='flex flex-col items-center h-[95vh]'>
+    <div className={pageStyle}>
       <Analytics />
       <Header tap={tap} setTap={setTap} setHeaderHeight={setHeaderHeight} lastDate={lastWeeklyTeamId} />
       <TapTemplate

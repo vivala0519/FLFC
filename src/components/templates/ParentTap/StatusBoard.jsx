@@ -6,7 +6,7 @@ import help from '@/assets/help2.png'
 import {dataAnalysis} from "../../../apis/analyzeData.js";
 
 const StatusBoard = (props) => {
-    const {propsData, setTap} = props
+    const {propsData} = props
 
     const [analyzedData, setAnalyzedData] = useState({})
     const [lastSeasonKings, setLastSeasonKings] = useState({goal_king: '', assist_king: '', attendance_king: []})

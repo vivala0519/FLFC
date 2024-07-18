@@ -21,6 +21,9 @@ export default {
         'sun': "url('@/assets/sun2.png')",
         'request': "url('@/assets/request.png')",
         'laurel': "url('@/assets/laurel.png')",
+        'left': "url('@/assets/left.png')",
+        'right': "url('@/assets/right.png')",
+        'kakao': "url('@/assets/kakao.png')",
       },
       textColor: {
         goal: '#bb2649',
