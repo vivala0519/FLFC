@@ -60,7 +60,7 @@ function WeeklyTeam(props) {
             kakao.Share.sendCustom({
                 templateId: 110111,
                 templateArgs: {
-                    date: Number(thisWeekTeam.id.slice(0, 2)) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일',
+                    date: Number(thisWeekTeam.id.slice(0, 2)) + '월 ' + weeklyTeamData[page]?.id.slice(2, 4) + '일',
                     firstTeam: firstTeam,
                     secondTeam: secondTeam,
                     thirdTeam: thirdTeam,
@@ -214,12 +214,10 @@ function WeeklyTeam(props) {
                                     borderRadius: '3px'
                                 }}><span className='text-black'>이번 주 팀 생성하기</span><Write/>
                                 </div>
-                                <div onClick={shareKakao} className={kakaoButtonDivStyle}>
+                                {/*<div onClick={shareKakao} className={kakaoButtonDivStyle}>*/}
                                     {/*<p>카톡에 공유하기</p>*/}
                                     {/*<button className={kakaoButtonStyle}/>*/}
-                                    <p>Test</p>
-                                    <button />
-                                </div>
+                                {/*</div>*/}
                             </div>
                                 :
                                 <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center' onClick={registerTeamHandler} style={{
@@ -249,15 +247,23 @@ function WeeklyTeam(props) {
                                     }} onClick={registerTeamHandler}><span
                                     className='text-black'>등록하기</span><Register/></div>
                                 :
-                                [0, 4, 5, 6, 7].includes(currentDay) && <div
-                                    className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                    style={{
-                                        fontFamily: 'DNFForgedBlade',
-                                        width: '188px',
-                                        height: '45px',
-                                        borderRadius: '3px'
-                                    }} onClick={() => createWeeklyTeamHandler(false)}><span
-                                    className='text-black'>수정</span></div>
+                                [0, 4, 5, 6, 7].includes(currentDay) &&
+                                <div>
+                                    <div
+                                        className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
+                                        style={{
+                                            fontFamily: 'DNFForgedBlade',
+                                            width: '188px',
+                                            height: '45px',
+                                            borderRadius: '3px'
+                                        }} onClick={() => createWeeklyTeamHandler(false)}><span
+                                        className='text-black'>수정</span>
+                                    </div>
+                                    <div className={kakaoButtonDivStyle} onClick={shareKakao}>
+                                        <p>카톡에 공유하기</p>
+                                        <button className={kakaoButtonStyle} />
+                                    </div>
+                                </div>
                         )
                     }
                 </div>
