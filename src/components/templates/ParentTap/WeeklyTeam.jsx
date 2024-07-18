@@ -8,7 +8,7 @@ import check from "@/assets/check.png"
 import './WeeklyTeam.css'
 import {collection, getDocs} from "firebase/firestore"
 import {db} from "../../../../firebase.js"
-import TapTitleText from "@/components/atoms/Text/TapTitleText.jsx";
+import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
 
 function WeeklyTeam(props) {
     const {setRegisteredTeam, setShowFooter} = props
@@ -22,6 +22,8 @@ function WeeklyTeam(props) {
 
     const tapContainerStyle = 'relative w-full h-[80vh]'
     const dayTitleContainerStyle = 'flex gap-5 justify-center items-center'
+    const kakaoButtonDivStyle = 'flex gap-[5px] items-center justify-center mt-[20px]'
+    const kakaoButtonStyle = 'bg-kakao bg-[length:100%_100%] w-[40px] h-[40px]'
 
     const today = new Date();
     const currentDay = today.getDay()
@@ -39,6 +41,32 @@ function WeeklyTeam(props) {
         setWeeklyTeamData(fetchedWeeklyTeamData)
         setPage(fetchedWeeklyTeamData.length -1)
         setLastDate(fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id)
+    }
+
+    useEffect(() => {
+        if (!window.Kakao.isInitialized()) {
+            window.Kakao.init(import.meta.env.VITE_KAKAO_API_KEY)
+        }
+    }, []);
+
+    const shareKakao = () => {
+        if (window.Kakao) {
+            const thisWeekTeam = weeklyTeamData[weeklyTeamData.length - 1]
+            const firstTeam = thisWeekTeam.data[1].join(' ')
+            const secondTeam = thisWeekTeam.data[2].join(' ')
+            const thirdTeam = thisWeekTeam.data[3].join(' ')
+            const kakao = window.Kakao
+
+            kakao.Share.sendCustom({
+                templateId: 110111,
+                templateArgs: {
+                    date: Number(thisWeekTeam.id.slice(0, 2)) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일',
+                    firstTeam: firstTeam,
+                    secondTeam: secondTeam,
+                    thirdTeam: thirdTeam,
+                },
+            });
+        }
     }
 
     useEffect(() => {
@@ -127,7 +155,7 @@ function WeeklyTeam(props) {
     return (
         <div className={tapContainerStyle}>
             <div className={dayTitleContainerStyle}>
-                {!editMode && <LeftButton clickHandler={() => pageMoveHandler(true)} show={page !== 0}/>}
+                {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page !== 0}/>}
                 <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder} title={weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 Weekly Team'} />
                 {!editMode &&
                     <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1}/>}
@@ -137,8 +165,7 @@ function WeeklyTeam(props) {
                     <hr className='w-full border-green-700'/>
                 </div>
                 <div className='w-full flex justify-center mb-5'>
-                    <div
-                        className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'custom-border'}`}>
+                    <div className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-yellow-500'}`}>
                         <div className='flex flex-col gap-5 items-start bg-white p-3 rounded-md'>
                             {!editMode ?
                                 [1, 2, 3].map((team, index) => (
@@ -162,9 +189,9 @@ function WeeklyTeam(props) {
                                                       className='text-black relative left-1'>{index + 1}팀</span>
                                                 <div className='flex gap-1'>
                                                     {team.map((player, idx) => <input key={idx} value={player}
-                                                                                      onChange={(event) => teamMakerInputHandler(event, index, idx)}
-                                                                                      type='text'
-                                                                                      className='w-12 border-green-600 border-2 outline-none text-center'/>)}
+                                                      onChange={(event) => teamMakerInputHandler(event, index, idx)}
+                                                      type='text'
+                                                      className='w-12 border-green-600 border-2 outline-none text-center'/>)}
                                                 </div>
                                             </div>
                                         ))}
@@ -177,29 +204,37 @@ function WeeklyTeam(props) {
                 <div className='w-full flex justify-center'>
                     {canCreate ?
                         (!editMode ?
-                            <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                 onClick={() => createWeeklyTeamHandler(true)} style={{
+                            <div>
+                                <div
+                                    className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
+                                    onClick={() => createWeeklyTeamHandler(true)} style={{
+                                    fontFamily: 'DNFForgedBlade',
+                                    width: '188px',
+                                    height: '45px',
+                                    borderRadius: '3px'
+                                }}><span className='text-black'>이번 주 팀 생성하기</span><Write/>
+                                </div>
+                                <div onClick={shareKakao} className={kakaoButtonDivStyle}>
+                                    {/*<p>카톡에 공유하기</p>*/}
+                                    {/*<button className={kakaoButtonStyle}/>*/}
+                                    <p>Test</p>
+                                    <button />
+                                </div>
+                            </div>
+                                :
+                                <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center' onClick={registerTeamHandler} style={{
                                 fontFamily: 'DNFForgedBlade',
                                 width: '188px',
                                 height: '45px',
                                 borderRadius: '3px'
-                            }}><span className='text-black'>이번 주 팀 생성하기</span><Write/></div>
-                            :
-                            <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                 onClick={registerTeamHandler} style={{
-                                fontFamily: 'DNFForgedBlade',
-                                width: '188px',
-                                height: '45px',
-                                borderRadius: '3px'
-                            }}><span className='text-black'>등록하기</span><Register/></div>
+                        }}><span className='text-black'>등록하기</span><Register/></div>
                         )
                         :
                         (!activeBorder ?
                             currentDay !== 0 &&
                             <div className='flex flex-col mt-3'>
                                 <p className='mb-1 text-gray-400'
-                                   style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀
-                                    생성하기</p>
+                                   style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀 생성하기</p>
                                 <p className='text-xs' style={{fontFamily: 'DNFForgedBlade'}}>Open : 참여투표 종료 후</p>
                             </div>
                             :
