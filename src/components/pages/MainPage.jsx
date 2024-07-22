@@ -9,7 +9,8 @@ import Footer from '@/components/organisms/Footer.jsx'
 import TapTemplate from '@/components/templates/TapTemplate.jsx'
 import updateMembers from '@/hooks/updateMembers.js'
 
-const MainPage = () => {
+const MainPage = (props) => {
+  const { test } = props
   const [tap, setTap] = useState(0)
   const [data, setData] = useState([])
   const [analyzedData, setAnalyzedData] = useState({})
@@ -69,6 +70,7 @@ const MainPage = () => {
         analyedData={analyzedData}
         weeklyTeamData={weeklyTeamData}
         setRegisteredTeam={setRegisteredTeam}
+        test={test}
       />
       {[0, 3].includes(tap) && !open && showFooter &&
         <Footer />

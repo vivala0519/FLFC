@@ -1,275 +1,327 @@
 import {useEffect, useState} from 'react'
-import styled from "styled-components"
-import Swal from "sweetalert2"
+import styled from 'styled-components'
+import Swal from 'sweetalert2'
 import left from "@/assets/left.png"
 import right from "@/assets/right.png"
 import write from "@/assets/write.png"
-import check from "@/assets/check.png"
+import check from '@/assets/check.png'
 import './WeeklyTeam.css'
-import {collection, getDocs} from "firebase/firestore"
-import {db} from "../../../../firebase.js"
+import { app, db } from '../../../../firebase.js'
+import {collection, getDocs} from 'firebase/firestore'
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
 
 function WeeklyTeam(props) {
-    const {setRegisteredTeam, setShowFooter} = props
-    const [weeklyTeamData, setWeeklyTeamData] = useState([])
-    const [lastDate, setLastDate] = useState('')
-    const [page, setPage] = useState(0)
-    const [editMode, setEditMode] = useState(false)
-    const [canCreate, setCanCreate] = useState(true)
-    const [activeBorder, setActiveBorder] = useState(false)
-    const [inputTeamData, setInputTeamData] = useState([['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', '']])
+  const { test, setRegisteredTeam, setShowFooter} = props
+  const [weeklyTeamData, setWeeklyTeamData] = useState([])
+  const [lastDate, setLastDate] = useState('')
+  const [page, setPage] = useState(0)
+  const [editMode, setEditMode] = useState(false)
+  const [canCreate, setCanCreate] = useState(true)
+  const [activeBorder, setActiveBorder] = useState(false)
+  const [inputTeamData, setInputTeamData] = useState([['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', '']])
 
-    const tapContainerStyle = 'relative w-full h-[80vh]'
-    const dayTitleContainerStyle = 'flex gap-5 justify-center items-center'
-    const kakaoButtonDivStyle = 'flex gap-[5px] items-center justify-center mt-[20px] cursor-pointer'
-    const kakaoButtonStyle = 'bg-kakao bg-[length:100%_100%] w-[40px] h-[40px]'
+  const tapContainerStyle = 'relative w-full h-[80vh]'
+  const dayTitleContainerStyle = 'flex gap-5 justify-center items-center'
+  const kakaoButtonDivStyle = 'flex gap-[5px] items-center justify-center mt-[20px] cursor-pointer'
+  const kakaoButtonStyle = 'bg-kakao bg-[length:100%_100%] w-[40px] h-[40px]'
 
-    const today = new Date();
-    const currentDay = today.getDay()
-    const daysUntilSunday = 7 - currentDay
-    const nextSunday = new Date(today)
-    nextSunday.setDate(today.getDate() + daysUntilSunday)
+  const today = new Date()
+  const currentDay = today.getDay()
+  const daysUntilSunday = 7 - currentDay
+  const nextSunday = new Date(today)
+  nextSunday.setDate(today.getDate() + daysUntilSunday)
 
-    const sundayDate = nextSunday.getDate()
-    const sundayMonth = nextSunday.getMonth() + 1
+  const sundayDate = nextSunday.getDate()
+  const sundayMonth = nextSunday.getMonth() + 1
 
-    const fetchWeeklyTeamData = async () => {
-        const weeklyTeamRef = collection(db, 'weeklyTeam')
-        const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
-        const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }))
-        setWeeklyTeamData(fetchedWeeklyTeamData)
-        setPage(fetchedWeeklyTeamData.length -1)
-        setLastDate(fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id)
+  const fetchWeeklyTeamData = async () => {
+    const weeklyTeamRef = collection(db, 'weeklyTeam')
+    const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
+    const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map(doc => ({id: doc.id, data: doc.data()}))
+    setWeeklyTeamData(fetchedWeeklyTeamData)
+    setPage(fetchedWeeklyTeamData.length - 1)
+    setLastDate(fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id)
+  }
+
+  useEffect(() => {
+    if (!window.Kakao.isInitialized()) {
+      window.Kakao.init(import.meta.env.VITE_KAKAO_API_KEY)
     }
+  }, []);
 
-    useEffect(() => {
-        if (!window.Kakao.isInitialized()) {
-            window.Kakao.init(import.meta.env.VITE_KAKAO_API_KEY)
-        }
-    }, []);
+  const shareKakao = () => {
+    if (window.Kakao) {
+      const thisWeekTeam = weeklyTeamData[weeklyTeamData.length - 1]
+      const firstTeam = thisWeekTeam.data[1].join(' ')
+      const secondTeam = thisWeekTeam.data[2].join(' ')
+      const thirdTeam = thisWeekTeam.data[3].join(' ')
+      const kakao = window.Kakao
 
-    const shareKakao = () => {
-        if (window.Kakao) {
-            const thisWeekTeam = weeklyTeamData[weeklyTeamData.length - 1]
-            const firstTeam = thisWeekTeam.data[1].join(' ')
-            const secondTeam = thisWeekTeam.data[2].join(' ')
-            const thirdTeam = thisWeekTeam.data[3].join(' ')
-            const kakao = window.Kakao
-
-            kakao.Share.sendCustom({
-                templateId: 110111,
-                templateArgs: {
-                    date: Number(thisWeekTeam.id.slice(0, 2)) + '월 ' + weeklyTeamData[page]?.id.slice(2, 4) + '일',
-                    firstTeam: firstTeam,
-                    secondTeam: secondTeam,
-                    thirdTeam: thirdTeam,
-                },
-            });
-        }
+      kakao.Share.sendCustom({
+        templateId: 110111,
+        templateArgs: {
+          date: Number(thisWeekTeam.id.slice(0, 2)) + '월 ' + weeklyTeamData[page]?.id.slice(2, 4) + '일',
+          firstTeam: firstTeam,
+          secondTeam: secondTeam,
+          thirdTeam: thirdTeam,
+        },
+      })
     }
+  }
 
-    useEffect(() => {
-        fetchWeeklyTeamData()
+  const storage = getStorage(app);
+  const functions = getFunctions(app);
 
-        if (lastDate) {
-            if ([0, 1, 2].includes(currentDay)) {
-                setCanCreate(false)
-            }
+  const [file, setFile] = useState(null);
 
-            const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
-            const lastDateDay = parseInt(lastDate.slice(2, 4), 10)
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
 
-            const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
-            lastTeamDate.setHours(10, 0, 0, 0)
+  const handleUpload = async () => {
+    if (file) {
+      console.log(file);
+      const storageRef = ref(storage, `uploads/${file.name}`);
+      console.log(storageRef)
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log(downloadURL)
 
-            if (lastTeamDate > today) {
-                setCanCreate(false)
-                setActiveBorder(true)
-            }
+      try {
+        const response = await fetch('https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/extractTextFromImage', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: downloadURL }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
         }
-    }, [lastDate])
 
-    useEffect(() => {
-        if (!editMode) {
-            fetchWeeklyTeamData()
-        } else {
-            setShowFooter(false)
-        }
-    }, [editMode])
-
-    const pageMoveHandler = (left) => {
-        if (left && page > 0) {
-            setPage(page - 1)
-            return
-        }
-        if (!left && page < weeklyTeamData.length - 1) {
-            setPage(page + 1)
-        }
+        const data = await response.json();
+        console.log(data)
+        console.log(data.text)
+      } catch (error) {
+        console.error('Error calling extractText function', error);
+      }
+      // const extractText = httpsCallable(functions, 'extractTextFromImage');
+      // extractText({ url: downloadURL }).then((result) => {
+      //   console.log(result)
+      //   console.log(result.data)
+      //   console.log(result.data.text)
+      // }).catch((error) => {
+      //   console.error('Error calling extractText function', error);
+      // });
     }
+  };
 
-    const teamMakerInputHandler = (event, teamIndex, playerIndex) => {
-        const newTeamData = [...inputTeamData]
-        newTeamData[teamIndex][playerIndex] = event.target.value
-        setInputTeamData(newTeamData)
-    }
+  useEffect(() => {
+    fetchWeeklyTeamData()
 
-    const createWeeklyTeamHandler = (isNew) => {
-        // 첫 생성
-        if (isNew) {
-            const newWeeklyTeam = {
-                id: `${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`,
-                data: {
-                    1: [],
-                    2: [],
-                    3: []
-                }
-            }
-            if (newWeeklyTeam.id !== weeklyTeamData[weeklyTeamData.length - 1].id) {
-                setWeeklyTeamData([...weeklyTeamData, newWeeklyTeam])
-                setPage(weeklyTeamData.length)
-                setEditMode(true)
-            } else {
-                Swal.fire({
-                    icon: "error",
-                    title: "이미 생성된 주차입니다.",
-                })
-            }
-        } else {// 수정
-            setInputTeamData([weeklyTeamData[weeklyTeamData.length - 1].data[1], weeklyTeamData[weeklyTeamData.length - 1].data[2], weeklyTeamData[weeklyTeamData.length - 1].data[3]])
-            setEditMode(true)
-        }
-    }
-
-    const registerTeamHandler = () => {
-        const newWeeklyTeamData = [...weeklyTeamData]
-        const newData = {1: inputTeamData[0], 2: inputTeamData[1], 3: inputTeamData[2]}
-
-        newWeeklyTeamData[weeklyTeamData.length - 1].data = newData
-        setRegisteredTeam(weeklyTeamData[weeklyTeamData.length - 1])
-        setWeeklyTeamData(newWeeklyTeamData)
-        setEditMode(false)
+    if (lastDate) {
+      if ([0, 1, 2].includes(currentDay)) {
         setCanCreate(false)
-    }
+      }
 
-    return (
-        <div className={tapContainerStyle}>
-            <div className={dayTitleContainerStyle}>
-                {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page !== 0}/>}
-                <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder} title={weeklyTeamData[page]?.id.slice(0, 2) + '월' + weeklyTeamData[page]?.id.slice(2, 4) + '일 Weekly Team'} />
-                {!editMode &&
-                    <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1}/>}
-            </div>
-            <div className='flex flex-col'>
-                <div className='flex flex-col items-end mb-5'>
-                    <hr className='w-full border-green-700'/>
-                </div>
-                <div className='w-full flex justify-center mb-5'>
-                    <div className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-yellow-500'}`}>
-                        <div className='flex flex-col gap-5 items-start bg-white p-3 rounded-md'>
-                            {!editMode ?
-                                [1, 2, 3].map((team, index) => (
-                                    <div key={index} className='flex gap-5'>
-                                        <span style={{width: '25px'}} className='text-black relative left-1 flex items-center'>{team}팀</span>
-                                        <div className='flex gap-[10px]'>
-                                            {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
-                                                <span key={idx} className='text-black whitespace-pre flex items-center'>{player}</span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))
-                                : // 팀 생성 모드
-                                <div className='flex flex-col gap-4'>
-                                    <div className='flex flex-col mb-6'>
-                                    </div>
-                                    <div className='flex flex-col gap-2 items-center'>
-                                        {inputTeamData?.map((team, index) => (
-                                            <div key={index} className='flex gap-5'>
-                                                <span style={{width: '25px'}}
-                                                      className='text-black relative left-1'>{index + 1}팀</span>
-                                                <div className='flex gap-1'>
-                                                    {team.map((player, idx) => <input key={idx} value={player}
-                                                      onChange={(event) => teamMakerInputHandler(event, index, idx)}
-                                                      type='text'
-                                                      className='w-12 border-green-600 border-2 outline-none text-center'/>)}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            }
+      const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
+      const lastDateDay = parseInt(lastDate.slice(2, 4), 10)
+
+      const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
+      lastTeamDate.setHours(10, 0, 0, 0)
+
+      if (lastTeamDate > today) {
+        setCanCreate(false)
+        setActiveBorder(true)
+      }
+    }
+  }, [lastDate])
+
+  useEffect(() => {
+    if (!editMode) {
+      fetchWeeklyTeamData()
+    } else {
+      setShowFooter(false)
+    }
+  }, [editMode])
+
+  const pageMoveHandler = (left) => {
+    if (left && page > 0) {
+      setPage(page - 1)
+      return
+    }
+    if (!left && page < weeklyTeamData.length - 1) {
+      setPage(page + 1)
+    }
+  }
+
+  const teamMakerInputHandler = (event, teamIndex, playerIndex) => {
+    const newTeamData = [...inputTeamData]
+    newTeamData[teamIndex][playerIndex] = event.target.value
+    setInputTeamData(newTeamData)
+  }
+
+  const createWeeklyTeamHandler = (isNew) => {
+    // 첫 생성
+    if (isNew) {
+      const newWeeklyTeam = {
+        id: `${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`,
+        data: {
+          1: [],
+          2: [],
+          3: []
+        }
+      }
+      if (newWeeklyTeam.id !== weeklyTeamData[weeklyTeamData.length - 1].id) {
+        setWeeklyTeamData([...weeklyTeamData, newWeeklyTeam])
+        setPage(weeklyTeamData.length)
+        setEditMode(true)
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "이미 생성된 주차입니다.",
+        })
+      }
+    } else {// 수정
+      setInputTeamData([weeklyTeamData[weeklyTeamData.length - 1].data[1], weeklyTeamData[weeklyTeamData.length - 1].data[2], weeklyTeamData[weeklyTeamData.length - 1].data[3]])
+      setEditMode(true)
+    }
+  }
+
+  const registerTeamHandler = () => {
+    const newWeeklyTeamData = [...weeklyTeamData]
+    const newData = {1: inputTeamData[0], 2: inputTeamData[1], 3: inputTeamData[2]}
+
+    newWeeklyTeamData[weeklyTeamData.length - 1].data = newData
+    setRegisteredTeam(weeklyTeamData[weeklyTeamData.length - 1])
+    setWeeklyTeamData(newWeeklyTeamData)
+    setEditMode(false)
+    setCanCreate(false)
+  }
+
+  return (
+      <div className={tapContainerStyle}>
+        <div className={dayTitleContainerStyle}>
+          {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page !== 0}/>}
+          <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder}
+                        title={Number(weeklyTeamData[page]?.id.slice(0, 2)) + '월 ' + weeklyTeamData[page]?.id.slice(2, 4) + '일 Weekly Team'}/>
+          {!editMode &&
+              <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1}/>}
+        </div>
+        <div className='flex flex-col'>
+          <div className='flex flex-col items-end mb-5'>
+            <hr className='w-full border-green-700'/>
+          </div>
+          <div className='w-full flex justify-center mb-5'>
+            <div
+                className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-yellow-500'}`}>
+              <div className='flex flex-col gap-5 items-start bg-white p-3 rounded-md'>
+                {!test && !editMode ?
+                    [1, 2, 3].map((team, index) => (
+                        <div key={index} className='flex gap-5'>
+                      <span style={{width: '25px'}}
+                            className='text-black relative left-1 flex items-center'>{team}팀</span>
+                          <div className='flex gap-[10px]'>
+                            {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
+                                <span key={idx} className='text-black whitespace-pre flex items-center'>{player}</span>
+                            ))}
+                          </div>
                         </div>
+                    ))
+                    : // 팀 생성 모드
+                    <div className='flex flex-col gap-4'>
+                      <input type="file" onChange={handleFileChange}/>
+                      <button onClick={handleUpload}>파일 업로드</button>
+                      <div className='flex flex-col mb-6'>
+                      </div>
+                      <div className='flex flex-col gap-2 items-center'>
+                        {inputTeamData?.map((team, index) => (
+                            <div key={index} className='flex gap-5'>
+                                            <span style={{width: '25px'}}
+                                                  className='text-black relative left-1'>{index + 1}팀</span>
+                              <div className='flex gap-1'>
+                                {team.map((player, idx) => <input key={idx} value={player}
+                                                                  onChange={(event) => teamMakerInputHandler(event, index, idx)}
+                                                                  type='text'
+                                                                  className='w-12 border-green-600 border-2 outline-none text-center'/>)}
+                              </div>
+                            </div>
+                        ))}
+                      </div>
                     </div>
-                </div>
-                <div className='w-full flex justify-center'>
-                    {canCreate ?
-                        (!editMode ?
+                }
+              </div>
+            </div>
+          </div>
+          <div className='w-full flex justify-center'>
+            {canCreate ?
+                (!editMode ?
+                        <div>
+                          <div
+                              className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
+                              onClick={() => createWeeklyTeamHandler(true)} style={{
+                            fontFamily: 'DNFForgedBlade',
+                            width: '188px',
+                            height: '45px',
+                            borderRadius: '3px'
+                          }}><span className='text-black'>이번 주 팀 생성하기</span><Write/>
+                          </div>
+                        </div>
+                        :
+                        <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
+                             onClick={registerTeamHandler} style={{
+                          fontFamily: 'DNFForgedBlade',
+                          width: '188px',
+                          height: '45px',
+                          borderRadius: '3px'
+                        }}><span className='text-black'>등록하기</span><Register/></div>
+                )
+                :
+                (!activeBorder ?
+                        currentDay !== 0 &&
+                        <div className='flex flex-col mt-3'>
+                          <p className='mb-1 text-gray-400'
+                             style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀 생성하기</p>
+                          <p className='text-xs' style={{fontFamily: 'DNFForgedBlade'}}>Open : 참여투표 종료 후</p>
+                        </div>
+                        :
+                        editMode ?
+                            <div
+                                className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
+                                style={{
+                                  fontFamily: 'DNFForgedBlade',
+                                  width: '188px',
+                                  height: '45px',
+                                  borderRadius: '3px'
+                                }} onClick={registerTeamHandler}><span
+                                className='text-black'>등록하기</span><Register/></div>
+                            :
+                            [0, 4, 5, 6, 7].includes(currentDay) &&
                             <div>
-                                <div
-                                    className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                    onClick={() => createWeeklyTeamHandler(true)} style={{
+                              <div
+                                  className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
+                                  style={{
                                     fontFamily: 'DNFForgedBlade',
                                     width: '188px',
                                     height: '45px',
                                     borderRadius: '3px'
-                                }}><span className='text-black'>이번 주 팀 생성하기</span><Write/>
-                                </div>
-                                {/*<div onClick={shareKakao} className={kakaoButtonDivStyle}>*/}
-                                    {/*<p>카톡에 공유하기</p>*/}
-                                    {/*<button className={kakaoButtonStyle}/>*/}
-                                {/*</div>*/}
+                                  }} onClick={() => createWeeklyTeamHandler(false)}><span
+                                  className='text-black'>수정</span>
+                              </div>
+                              <div className={kakaoButtonDivStyle} onClick={shareKakao}>
+                                <p>카톡에 공유하기</p>
+                                <button className={kakaoButtonStyle}/>
+                              </div>
                             </div>
-                                :
-                                <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center' onClick={registerTeamHandler} style={{
-                                fontFamily: 'DNFForgedBlade',
-                                width: '188px',
-                                height: '45px',
-                                borderRadius: '3px'
-                        }}><span className='text-black'>등록하기</span><Register/></div>
-                        )
-                        :
-                        (!activeBorder ?
-                            currentDay !== 0 &&
-                            <div className='flex flex-col mt-3'>
-                                <p className='mb-1 text-gray-400'
-                                   style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀 생성하기</p>
-                                <p className='text-xs' style={{fontFamily: 'DNFForgedBlade'}}>Open : 참여투표 종료 후</p>
-                            </div>
-                            :
-                            editMode ?
-                                <div
-                                    className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                    style={{
-                                        fontFamily: 'DNFForgedBlade',
-                                        width: '188px',
-                                        height: '45px',
-                                        borderRadius: '3px'
-                                    }} onClick={registerTeamHandler}><span
-                                    className='text-black'>등록하기</span><Register/></div>
-                                :
-                                [0, 4, 5, 6, 7].includes(currentDay) &&
-                                <div>
-                                    <div
-                                        className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                        style={{
-                                            fontFamily: 'DNFForgedBlade',
-                                            width: '188px',
-                                            height: '45px',
-                                            borderRadius: '3px'
-                                        }} onClick={() => createWeeklyTeamHandler(false)}><span
-                                        className='text-black'>수정</span>
-                                    </div>
-                                    <div className={kakaoButtonDivStyle} onClick={shareKakao}>
-                                        <p>카톡에 공유하기</p>
-                                        <button className={kakaoButtonStyle} />
-                                    </div>
-                                </div>
-                        )
-                    }
-                </div>
-            </div>
+                )
+            }
+          </div>
         </div>
-    )
+      </div>
+  )
 }
 
 export default WeeklyTeam
