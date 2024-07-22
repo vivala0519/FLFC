@@ -5,7 +5,7 @@ import RecordRoom from "./ParentTap/RecordRoom.jsx";
 import WeeklyTeam from "./ParentTap/WeeklyTeam.jsx";
 
 const TapTemplate = (props) => {
-  const { open, setOpen, tap, setTap, setShowFooter, recordData, analyzedData, weeklyTeamData, setRegisteredTeam, headerHeight } = props
+  const { test, open, setOpen, tap, setTap, setShowFooter, recordData, analyzedData, weeklyTeamData, setRegisteredTeam, headerHeight } = props
   const [startX, setStartX] = useState(null)
   const [moveX, setMoveX] = useState(null)
   const [isLastElementInViewport, setIsLastElementInViewport] = useState(false)
@@ -63,7 +63,7 @@ const TapTemplate = (props) => {
         <LetsRecord headerHeight={headerHeight} setOpen={setOpen} open={open} recordData={recordData} weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]} setTap={setTap}/>}
       {tap === 1 && <StatusBoard propsData={recordData} analyzedData={analyzedData} />}
       {tap === 2 && <RecordRoom propsData={recordData} analyzedData={analyzedData} />}
-      {tap === 3 && <WeeklyTeam propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setShowFooter={setShowFooter}/>}
+      {tap === 3 && <WeeklyTeam test={test} propsData={weeklyTeamData} setRegisteredTeam={setRegisteredTeam} setShowFooter={setShowFooter}/>}
     </div>
   )
 }
