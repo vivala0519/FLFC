@@ -24,6 +24,9 @@ const realtimeRecord = {}
 const todaysRealtimeRecord = {}
 const requestList = []
 
+// votes
+const voteList = []
+
 export const timeAtom = atom({
   currentTime: getCurrentDate(),
   thisYear: getCurrentYear(),
@@ -38,3 +41,4 @@ export const timeAtom = atom({
 export const realtimeRecordAtom = atom(realtimeRecord)
 export const todaysRealtimeRecordAtom = atom(todaysRealtimeRecord)
 export const requestListAtom = atom(requestList)
+export const voteListAtom = atom(voteList)
