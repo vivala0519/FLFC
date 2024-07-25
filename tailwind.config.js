@@ -24,6 +24,10 @@ export default {
         'left': "url('@/assets/left.png')",
         'right': "url('@/assets/right.png')",
         'kakao': "url('@/assets/kakao.png')",
+        'kakao-login': "url('@/assets/kakao_login_medium.png')",
+        'attend': "url('@/assets/keep_ball.png')",
+        'absent': "url('@/assets/uncheck_ball.png')",
+        'keeping': "url('@/assets/check_ball.png')",
       },
       textColor: {
         goal: '#bb2649',
