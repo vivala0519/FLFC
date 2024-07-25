@@ -13,7 +13,7 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
 
 function WeeklyTeam(props) {
-  const { test, setRegisteredTeam, setShowFooter} = props
+  const { setRegisteredTeam, setShowFooter} = props
   const [weeklyTeamData, setWeeklyTeamData] = useState([])
   const [lastDate, setLastDate] = useState('')
   const [page, setPage] = useState(0)
@@ -219,7 +219,7 @@ function WeeklyTeam(props) {
             <div
                 className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-yellow-500'}`}>
               <div className='flex flex-col gap-5 items-start bg-white p-3 rounded-md'>
-                {!test && !editMode ?
+                {!editMode ?
                     [1, 2, 3].map((team, index) => (
                         <div key={index} className='flex gap-5'>
                       <span style={{width: '25px'}}
@@ -235,6 +235,8 @@ function WeeklyTeam(props) {
                     <div className='flex flex-col gap-4'>
                       <input type="file" onChange={handleFileChange}/>
                       <button onClick={handleUpload}>파일 업로드</button>
+                      {/*<input type="file" multiple onChange={handleFileChange}/>*/}
+                      {/*<button onClick={handleUpload}>파일 업로드</button>*/}
                       <div className='flex flex-col mb-6'>
                       </div>
                       <div className='flex flex-col gap-2 items-center'>
