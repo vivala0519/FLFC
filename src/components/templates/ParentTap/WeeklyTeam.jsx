@@ -233,8 +233,6 @@ function WeeklyTeam(props) {
                     ))
                     : // 팀 생성 모드
                     <div className='flex flex-col gap-4'>
-                      <input type="file" onChange={handleFileChange}/>
-                      <button onClick={handleUpload}>파일 업로드</button>
                       {/*<input type="file" multiple onChange={handleFileChange}/>*/}
                       {/*<button onClick={handleUpload}>파일 업로드</button>*/}
                       <div className='flex flex-col mb-6'>
