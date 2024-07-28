@@ -7,7 +7,6 @@ import {dataAnalysis} from '@/apis/analyzeData.js'
 import Header from '@/components/organisms/Header.jsx'
 import Footer from '@/components/organisms/Footer.jsx'
 import TapTemplate from '@/components/templates/TapTemplate.jsx'
-import updateMembers from '@/hooks/updateMembers.js'
 
 const MainPage = (props) => {
   const { test } = props
@@ -22,8 +21,6 @@ const MainPage = (props) => {
   const [lastWeeklyTeamId, setLastWeeklyTeamId] = useState(null)
 
   const pageStyle = 'flex flex-col items-center h-[95vh]'
-
-  updateMembers()
 
   // Data Generation
   useEffect(() => {

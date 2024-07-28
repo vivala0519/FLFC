@@ -6,10 +6,8 @@ import right from "@/assets/right.png"
 import write from "@/assets/write.png"
 import check from '@/assets/check.png'
 import './WeeklyTeam.css'
-import { app, db } from '../../../../firebase.js'
+import { db } from '../../../../firebase.js'
 import {collection, getDocs} from 'firebase/firestore'
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { getFunctions, httpsCallable } from "firebase/functions";
 import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
 
 function WeeklyTeam(props) {
@@ -70,54 +68,6 @@ function WeeklyTeam(props) {
       })
     }
   }
-
-  const storage = getStorage(app);
-  const functions = getFunctions(app);
-
-  const [file, setFile] = useState(null);
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  const handleUpload = async () => {
-    if (file) {
-      console.log(file);
-      const storageRef = ref(storage, `uploads/${file.name}`);
-      console.log(storageRef)
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-      console.log(downloadURL)
-
-      try {
-        const response = await fetch('https://us-central1-YOUR_PROJECT_ID.cloudfunctions.net/extractTextFromImage', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ url: downloadURL }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        console.log(data)
-        console.log(data.text)
-      } catch (error) {
-        console.error('Error calling extractText function', error);
-      }
-      // const extractText = httpsCallable(functions, 'extractTextFromImage');
-      // extractText({ url: downloadURL }).then((result) => {
-      //   console.log(result)
-      //   console.log(result.data)
-      //   console.log(result.data.text)
-      // }).catch((error) => {
-      //   console.error('Error calling extractText function', error);
-      // });
-    }
-  };
 
   useEffect(() => {
     fetchWeeklyTeamData()
@@ -233,8 +183,6 @@ function WeeklyTeam(props) {
                     ))
                     : // 팀 생성 모드
                     <div className='flex flex-col gap-4'>
-                      {/*<input type="file" multiple onChange={handleFileChange}/>*/}
-                      {/*<button onClick={handleUpload}>파일 업로드</button>*/}
                       <div className='flex flex-col mb-6'>
                       </div>
                       <div className='flex flex-col gap-2 items-center'>
@@ -244,9 +192,9 @@ function WeeklyTeam(props) {
                                                   className='text-black relative left-1'>{index + 1}팀</span>
                               <div className='flex gap-1'>
                                 {team.map((player, idx) => <input key={idx} value={player}
-                                                                  onChange={(event) => teamMakerInputHandler(event, index, idx)}
-                                                                  type='text'
-                                                                  className='w-12 border-green-600 border-2 outline-none text-center'/>)}
+                                  onChange={(event) => teamMakerInputHandler(event, index, idx)}
+                                  type='text'
+                                  className='w-12 border-green-600 border-2 outline-none text-center'/>)}
                               </div>
                             </div>
                         ))}
