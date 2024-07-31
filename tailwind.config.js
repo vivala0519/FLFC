@@ -28,6 +28,7 @@ export default {
         'attend': "url('@/assets/keep_ball.png')",
         'absent': "url('@/assets/uncheck_ball.png')",
         'keeping': "url('@/assets/check_ball.png')",
+        'loading': "url('@/assets/minning.gif')",
       },
       textColor: {
         goal: '#bb2649',
