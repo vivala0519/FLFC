@@ -1,7 +1,7 @@
 import {useEffect, useState} from 'react'
 import { db } from '../../../../firebase.js'
 import {collection, getDocs} from 'firebase/firestore'
-import ThisWeekVoteStatisticsBox from '@/components/organisms/ThisWeekVoteStatisticsBox.jsx'
+// import ThisWeekVoteStatisticsBox from '@/components/organisms/ThisWeekVoteStatisticsBox.jsx'
 import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
 import Swal from 'sweetalert2'
 import styled from 'styled-components'
