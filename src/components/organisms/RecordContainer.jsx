@@ -6,7 +6,7 @@ import RecordRow from '@/components/molecules/RecordRow.jsx'
 const RecordContainer = (props) => {
   const { scrollContainerRef, open, dynamicHeight, showMVP, todayRecord, lastRecord, canRegister } = props
   const { time: { today, thisYear } } = getTimes()
-  const containerStyle = `w-[96%] overflow-auto flex flex-col gap-10 items-center bg-white p-2 border border-transparent shadow-custom `
+  const containerStyle = `w-[96%] overflow-auto flex flex-col gap-10 items-center bg-white p-2 border border-transparent `
   const dynamicStyle = `${open ? 'flex' : 'hidden'} ${showMVP ? 'opacity-10' : 'opacity-100'}`
 
   const deleteRecord = (index) => {
@@ -22,7 +22,7 @@ const RecordContainer = (props) => {
       if (result.isConfirmed) {
         const db = getDatabase()
         const recordRef = ref(db, thisYear + '/' + today + '/' + todayRecord[index].id)
-        remove(ref(db, thisYear + '/' + today + '/' + todayRecord[index].id))
+        // remove(ref(db, thisYear + '/' + today + '/' + todayRecord[index].id))
         remove(recordRef).then(() => {
           console.log('Document successfully deleted!')
         })

@@ -141,20 +141,20 @@ const LetsRecord = (props) => {
   }
 
   function compareObjects(objA, objB) {
-      const keysA = Object.keys(objA)
-      const keysB = Object.keys(objB)
+    const keysA = Object.keys(objA)
+    const keysB = Object.keys(objB)
 
-      if (keysA.length !== keysB.length) {
-          return false
+    if (keysA.length !== keysB.length) {
+      return false
+    }
+    for (let key of keysA) {
+      if (objA[key]['출석'] !== objB[key]['출석'] ||
+          objA[key]['골'] !== objB[key]['골'] ||
+          objA[key]['어시'] !== objB[key]['어시']) {
+        return false
       }
-      for (let key of keysA) {
-          if (objA[key]['출석'] !== objB[key]['출석'] ||
-              objA[key]['골'] !== objB[key]['골'] ||
-              objA[key]['어시'] !== objB[key]['어시']) {
-              return false
-          }
-      }
-      return true
+    }
+    return true
   }
 
   // Firestore 데이터 등록
@@ -201,35 +201,34 @@ const LetsRecord = (props) => {
   }, [requestUpdateMode])
 
   return (
-    <div
-      className={tapContainerStyle}>
-      <TapTitleText active={open} title={"Today's Record"} />
-        <Separator fullWidth={false} />
-        <div className={templateContainerStyle}>
-          <>
-            {showMVP && <DailyMVP setShowMVP={setShowMVP} recordData={recordData} year={thisYear} today={today} />}
-            <RecordContainer
-              open={open}
-              scrollContainerRef={scrollContainerRef}
-              dynamicHeight={dynamicHeight}
-              showMVP={showMVP}
-              todayRecord={todayRecord}
-              lastRecord={lastRecord}
-              canRegister={canRegister}
-            />
-            <WriteContainer
-              open={open}
-              scrollContainerRef={scrollContainerRef}
-              registerRef={registerRef}
-              canRegister={canRegister}
-              setLastRecord={setLastRecord}
-              requestUpdateMode={requestUpdateMode}
-              setRequestUpdateMode={setRequestUpdateMode}
-              requestList={requestList}
-              showRequestUpdateButton={showRequestUpdateButton}
-            />
-          </>
-        </div>
+    <div className={tapContainerStyle}>
+      <TapTitleText active={open} title={"Today's Record"}/>
+      <Separator fullWidth={false}/>
+      <div className={templateContainerStyle}>
+        <>
+          {showMVP && <DailyMVP setShowMVP={setShowMVP} recordData={recordData} year={thisYear} today={today}/>}
+          <RecordContainer
+            open={open}
+            scrollContainerRef={scrollContainerRef}
+            dynamicHeight={dynamicHeight}
+            showMVP={showMVP}
+            todayRecord={todayRecord}
+            lastRecord={lastRecord}
+            canRegister={canRegister}
+          />
+          <WriteContainer
+            open={open}
+            scrollContainerRef={scrollContainerRef}
+            registerRef={registerRef}
+            canRegister={canRegister}
+            setLastRecord={setLastRecord}
+            requestUpdateMode={requestUpdateMode}
+            setRequestUpdateMode={setRequestUpdateMode}
+            requestList={requestList}
+            showRequestUpdateButton={showRequestUpdateButton}
+          />
+        </>
+      </div>
     </div>
   )
 }
