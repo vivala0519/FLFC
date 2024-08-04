@@ -6,7 +6,7 @@ const RecordEl = (props) => {
 
   return (
     <>
-      <RecordTypeText type={type} fontSize={'13px'} />
+      <RecordTypeText type={type} fontSize={'13px'} customStyle={''} />
       <span className={textStyle}>{text}</span>
     </>
   )

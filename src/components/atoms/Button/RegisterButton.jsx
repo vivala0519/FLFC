@@ -2,11 +2,13 @@ import styled from 'styled-components'
 import write from '@/assets/write.png'
 
 const RegisterButton = (props) => {
-  const { text, clickHandler } = props
-  const buttonStyle = 'flex relative bottom-2 mt-5 underline-border bg-gray-50'
+  const { text, clickHandler, active, customStyle } = props
+  const buttonStyle = `flex relative bottom-2 mt-5 focus:outline-none focus:ring-0 focus:border-transparent active:outline-none active:ring-0 active:border-transparent ${active ? 'underline-border bg-gray-50 rounded-sm' : 'bg-gray-200 rounded-md'}`
+  const buttonTextStyle = `${active ? 'text-black' : 'text-gray-500'}`
+
   return (
-    <button className={buttonStyle} onClick={clickHandler}>
-      <span className='text-black'>
+    <button className={ customStyle + buttonStyle} onClick={clickHandler}>
+      <span className={buttonTextStyle}>
         {text}
       </span>
       <Write />

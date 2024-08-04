@@ -7,16 +7,16 @@ const WriteBox = (props) => {
   const { scorer, setScorer, assistant, setAssistant } = data
 
   return (
-    <div ref={registerRef} className='flex items-center gap-5 mb-1'>
+    <div ref={registerRef} className='flex items-center gap-5 mb-1 relative -left-[17px]'>
       <div className='flex flex-col gap-2'>
         {[0, 1].map((index) => (
           <div key={index} className='flex gap-0.5 items-center'>
-            <RecordTypeText type={index === 0 ? 'GOAL' : 'ASSIST'} width={'70px'}/>
+            <RecordTypeText type={index === 0 ? 'GOAL' : 'ASSIST'} width={'70px'} customStyle={'z-2 left-[30px]'} />
             <RecordInput type={index === 0 ? scorer : assistant} setData={index === 0 ? setScorer : setAssistant} />
           </div>
         ))}
       </div>
-      <RegisterButton text={'등록'} clickHandler={registerHandler} />
+      <RegisterButton text={'등록'} clickHandler={registerHandler} active={true} customStyle={'bottom-[11px] '} />
     </div>
   )
 }

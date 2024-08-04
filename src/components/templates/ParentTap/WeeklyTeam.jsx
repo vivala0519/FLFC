@@ -1,14 +1,15 @@
 import {useEffect, useState} from 'react'
-import styled from 'styled-components'
-import Swal from 'sweetalert2'
-import left from "@/assets/left.png"
-import right from "@/assets/right.png"
-import write from "@/assets/write.png"
-import check from '@/assets/check.png'
-import './WeeklyTeam.css'
 import { db } from '../../../../firebase.js'
 import {collection, getDocs} from 'firebase/firestore'
+import ThisWeekVoteStatisticsBox from '@/components/organisms/ThisWeekVoteStatisticsBox.jsx'
 import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
+import Swal from 'sweetalert2'
+import styled from 'styled-components'
+import left from '@/assets/left.png'
+import right from '@/assets/right.png'
+import write from '@/assets/write.png'
+import check from '@/assets/check.png'
+import './WeeklyTeam.css'
 
 function WeeklyTeam(props) {
   const { setRegisteredTeam, setShowFooter} = props
@@ -60,7 +61,7 @@ function WeeklyTeam(props) {
       kakao.Share.sendCustom({
         templateId: 110111,
         templateArgs: {
-          date: Number(thisWeekTeam.id.slice(0, 2)) + '월 ' + weeklyTeamData[page]?.id.slice(2, 4) + '일',
+          date: Number(thisWeekTeam.id.slice(0, 2)) + '월 ' + Number(weeklyTeamData[page]?.id.slice(2, 4)) + '일',
           firstTeam: firstTeam,
           secondTeam: secondTeam,
           thirdTeam: thirdTeam,
@@ -157,7 +158,7 @@ function WeeklyTeam(props) {
         <div className={dayTitleContainerStyle}>
           {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page !== 0}/>}
           <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder}
-                        title={Number(weeklyTeamData[page]?.id.slice(0, 2)) + '월 ' + weeklyTeamData[page]?.id.slice(2, 4) + '일 Weekly Team'}/>
+                        title={Number(weeklyTeamData[page]?.id.slice(0, 2)) + '월 ' + Number(weeklyTeamData[page]?.id.slice(2, 4)) + '일 Weekly Team'}/>
           {!editMode &&
               <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1}/>}
         </div>
@@ -171,25 +172,20 @@ function WeeklyTeam(props) {
               <div className='flex flex-col gap-5 items-start bg-white p-3 rounded-md'>
                 {!editMode ?
                     [1, 2, 3].map((team, index) => (
-                        <div key={index} className='flex gap-5'>
-                      <span style={{width: '25px'}}
-                            className='text-black relative left-1 flex items-center'>{team}팀</span>
-                          <div className='flex gap-[10px]'>
-                            {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
-                                <span key={idx} className='text-black whitespace-pre flex items-center'>{player}</span>
-                            ))}
-                          </div>
+                      <div key={index} className='flex gap-5'>
+                        <span style={{width: '25px'}} className='text-black relative left-1 flex items-center'>{team}팀</span>
+                        <div className='flex gap-[10px]'>
+                          {weeklyTeamData[page]?.data[team]?.map((player, idx) => (<span key={idx} className='text-black whitespace-pre flex items-center'>{player}</span>
+                          ))}
                         </div>
+                      </div>
                     ))
                     : // 팀 생성 모드
                     <div className='flex flex-col gap-4'>
-                      <div className='flex flex-col mb-6'>
-                      </div>
-                      <div className='flex flex-col gap-2 items-center'>
+                      <div className='flex flex-col gap-3 items-center'>
                         {inputTeamData?.map((team, index) => (
-                            <div key={index} className='flex gap-5'>
-                                            <span style={{width: '25px'}}
-                                                  className='text-black relative left-1'>{index + 1}팀</span>
+                            <div key={index} className='flex flex-col gap-2'>
+                              <span style={{width: '25px'}} className='w-full text-left text-black relative left-1'>{index + 1}팀</span>
                               <div className='flex gap-1'>
                                 {team.map((player, idx) => <input key={idx} value={player}
                                   onChange={(event) => teamMakerInputHandler(event, index, idx)}
