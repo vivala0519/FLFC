@@ -9,7 +9,7 @@ import Footer from '@/components/organisms/Footer.jsx'
 import TapTemplate from '@/components/templates/TapTemplate.jsx'
 
 const MainPage = (props) => {
-  const { test } = props
+  const { test, weeklyTeamUrl } = props
   const [tap, setTap] = useState(0)
   const [data, setData] = useState([])
   const [analyzedData, setAnalyzedData] = useState({})
@@ -51,6 +51,12 @@ const MainPage = (props) => {
       })()
     }
   }, [registeredTeam])
+
+  useEffect(() => {
+    if (weeklyTeamUrl) {
+      setTap(3)
+    }
+  }, [weeklyTeamUrl]);
 
   return (
     <div className={pageStyle}>
