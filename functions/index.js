@@ -25,30 +25,35 @@ const cors = require('cors');
 admin.initializeApp();
 
 
-exports.scheduledFunction = functions.pubsub.schedule('every day 07:35').timeZone('Asia/Seoul').onRun(async (context) => {
-  console.log("it's time to automate something1111")
-  const db = admin.firestore()
+exports.logEveryMinute = functions.pubsub.schedule('every 1 minutes').onRun((context) => {
+  console.log('This log appears every minute!');
+  return null;
+});
 
-  // Firestore에 추가할 데이터 예시
-  const newData = {
-    timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    content: "자동으로 생성된 데이터"
-  }
-
-  try {
-    // Firestore 컬렉션에 데이터 추가
-    await db.collection('yourCollectionName').add(newData)
-    console.log('문서가 성공적으로 작성되었습니다!')
-  } catch (error) {
-    console.error('문서 작성 중 오류 발생: ', error)
-  }
-
-  return null
-})
-
-exports.scheduledFunction = functions.pubsub.schedule('every day 16:35').timeZone('Asia/Seoul').onRun(async (context) => {
-  console.log("it's time to automate something2222")
-})
+// exports.scheduledFunction = functions.pubsub.schedule('every day 07:35').timeZone('Asia/Seoul').onRun(async (context) => {
+//   console.log("it's time to automate something1111")
+//   const db = admin.firestore()
+//
+//   // Firestore에 추가할 데이터 예시
+//   const newData = {
+//     timestamp: admin.firestore.FieldValue.serverTimestamp(),
+//     content: "자동으로 생성된 데이터"
+//   }
+//
+//   try {
+//     // Firestore 컬렉션에 데이터 추가
+//     await db.collection('yourCollectionName').add(newData)
+//     console.log('문서가 성공적으로 작성되었습니다!')
+//   } catch (error) {
+//     console.error('문서 작성 중 오류 발생: ', error)
+//   }
+//
+//   return null
+// })
+//
+// exports.scheduledFunction = functions.pubsub.schedule('every day 16:35').timeZone('Asia/Seoul').onRun(async (context) => {
+//   console.log("it's time to automate something2222")
+// })
 
 // chat GPT function
 const OPENAI_API_KEY = functions.config().openai.key;
