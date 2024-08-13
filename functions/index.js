@@ -25,7 +25,7 @@ const cors = require('cors');
 admin.initializeApp();
 
 
-exports.scheduledFunction = functions.pubsub.schedule('every day 07:20').timeZone('Asia/Seoul').onRun(async (context) => {
+exports.scheduledFunction = functions.pubsub.schedule('every day 07:35').timeZone('Asia/Seoul').onRun(async (context) => {
   console.log("it's time to automate something1111")
   const db = admin.firestore()
 
@@ -46,7 +46,7 @@ exports.scheduledFunction = functions.pubsub.schedule('every day 07:20').timeZon
   return null
 })
 
-exports.scheduledFunction = functions.pubsub.schedule('every day 16:20').timeZone('Asia/Seoul').onRun(async (context) => {
+exports.scheduledFunction = functions.pubsub.schedule('every day 16:35').timeZone('Asia/Seoul').onRun(async (context) => {
   console.log("it's time to automate something2222")
 })
 
