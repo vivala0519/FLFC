@@ -20,7 +20,7 @@ const App = () => {
         <Route path='/' element={<MainPage />} />
         <Route path='/test' element={<MainPage test={true} />} />
         <Route path='/weeklyTeam' element={<MainPage weeklyTeamUrl={true} />} />
-        <Route path='/vote' element={<VotingPage />} />
+        {/*<Route path='/vote' element={<VotingPage />} />*/}
         <Route path='/admin' element={<AdminPage />} />
       </Routes>
     </BrowserRouter>
