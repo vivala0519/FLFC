@@ -237,25 +237,49 @@ const AnalysisTap = () => {
     if (thisMonth < 4) {
       fetchedData.forEach(data => {
         if (data.id.slice(0, 2) <= 3) {
-          filteredData.push(data.data.name)
+          if (Object.keys(data.data)[0] === 'bestPlayers') {
+            data.data['bestPlayers'].forEach(item => {
+              filteredData.push(item.name)
+            })
+          } else {
+            filteredData.push(data.data.name)
+          }
         }
       })
     } else if (thisMonth < 7) {
       fetchedData.forEach(data => {
         if (data.id.slice(0, 2) > 3 && data.id.slice(0, 2) <= 6) {
-          filteredData.push(data.data.name)
+          if (Object.keys(data.data)[0] === 'bestPlayers') {
+            data.data['bestPlayers'].forEach(item => {
+              filteredData.push(item.name)
+            })
+          } else {
+            filteredData.push(data.data.name)
+          }
         }
       })
     } else if (thisMonth < 10) {
       fetchedData.forEach(data => {
         if (data.id.slice(0, 2) > 6 && data.id.slice(0, 2) <= 9) {
-          filteredData.push(data.data.name)
+          if (Object.keys(data.data)[0] === 'bestPlayers') {
+            data.data['bestPlayers'].forEach(item => {
+              filteredData.push(item.name)
+            })
+          } else {
+            filteredData.push(data.data.name)
+          }
         }
       })
     } else {
       fetchedData.filter(data => {
         if (data.id.slice(0, 2) > 9) {
-          filteredData.push(data.data.name)
+          if (Object.keys(data.data)[0] === 'bestPlayers') {
+            data.data['bestPlayers'].forEach(item => {
+              filteredData.push(item.name)
+            })
+          } else {
+            filteredData.push(data.data.name)
+          }
         }
       })
     }
@@ -804,15 +828,15 @@ const AnalysisTap = () => {
                   <span>{playerDetail['description']}</span>
                   :
                   <div>
-                    <ListBody><ListTitle>MVP</ListTitle><span> {playerDetail['mvp'] + '회'}</span></ListBody>
-                    <ListBody><ListTitle>최다 골 합작</ListTitle><span> {playerDetail['combi'].map(name => <span key={name} style={{marginRight: '3px'}}>{name}</span>)}, {playerDetail['combiCount']}골</span></ListBody>
-                    <ListBody><ListTitle>최다 같은 팀</ListTitle><span> {playerDetail['mostPartner'].map(name => <span key={name} style={{marginRight: '3px'}}>{name}</span>)}, {playerDetail['mostPartnerCount']}회</span></ListBody>
-                    <ListBody><ListTitle>용병 호출</ListTitle><span> {playerDetail['mercenary']}회</span></ListBody>
-                    <ListBody><ListTitle>스타일</ListTitle><span> {playerDetail['style'].map(style => <span key={style} style={{marginRight: '5px'}}>#{style}</span>)}</span></ListBody>
+                    <ListBody><ListTitle>MVP</ListTitle><span className='text-black'> {playerDetail['mvp'] + '회'}</span></ListBody>
+                    <ListBody><ListTitle>최다 골 합작</ListTitle><span className='text-black'> {playerDetail['combi'].map(name => <span key={name} style={{marginRight: '3px'}}>{name}</span>)}, {playerDetail['combiCount']}골</span></ListBody>
+                    <ListBody><ListTitle>최다 같은 팀</ListTitle><span className='text-black'> {playerDetail['mostPartner'].map(name => <span key={name} style={{marginRight: '3px'}}>{name}</span>)}, {playerDetail['mostPartnerCount']}회</span></ListBody>
+                    <ListBody><ListTitle>용병 호출</ListTitle><span className='text-black'> {playerDetail['mercenary']}회</span></ListBody>
+                    <ListBody><ListTitle>스타일</ListTitle><span className='text-black'> {playerDetail['style'].map(style => <span key={style} style={{marginRight: '5px'}}>#{style}</span>)}</span></ListBody>
                   </div>
                 }
               </div>
-              <Close className='cursor-pointer text-sm' onClick={() => setShowDetail(false)}>back</Close>
+              <Close className='cursor-pointer text-sm text-black' onClick={() => setShowDetail(false)}>back</Close>
             </div>
           }
         </PlayersBox>
@@ -962,6 +986,7 @@ const ListTitle = styled.div`
   font-size: 14px;
   margin-right: 12px;
   text-align: right;
+  color: black;
 `
 
 const ListBody = styled.div`
