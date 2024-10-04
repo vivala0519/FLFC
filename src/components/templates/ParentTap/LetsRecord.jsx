@@ -203,7 +203,7 @@ const LetsRecord = (props) => {
   return (
     <div className={tapContainerStyle}>
       <TapTitleText active={open} title={"Today's Record"}/>
-      <Separator fullWidth={false}/>
+      {!showRequestUpdateButton && <Separator fullWidth={false}/>}
       <div className={templateContainerStyle}>
         <>
           {showMVP && <DailyMVP setShowMVP={setShowMVP} recordData={recordData} year={thisYear} today={today}/>}
