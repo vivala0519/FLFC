@@ -1,5 +1,5 @@
 import {useEffect, useState} from "react"
-import { doc, collection, setDoc, getDocs } from "firebase/firestore"
+import {doc, collection, setDoc, getDocs} from "firebase/firestore"
 import {db} from "../../../firebase.js"
 import JSConfetti from "js-confetti"
 import Laurel from '@/components/atoms/Image/Laurel.jsx'
@@ -16,7 +16,7 @@ const DailyMVP = (props) => {
   const mvpTextStyle = 'relative top-[1px] font-kbo text-[25px]'
   const dayTextStyle = 'text-[10px] font-dnf text-vivaMagenta relative top-[1px] underline decoration-2 decoration-solid decoration-yellow-400'
   const closeMessageStyle = 'mt-3 relative text-sm text-gray-300 -bottom-[12%]'
-  const playerListStyle = `flex flex-row mt-3 gap-3 justify-center z-10 h-[35%] ${bestPlayers.length > 2 ? 'text-[25px]' : 'text-[27px]'}`
+  const playerListStyle = `flex flex-row mt-3 gap-3 justify-center z-10 h-[35%] ${bestPlayers.length > 2 ? 'text-[20px]' : 'text-[27px]'}`
   // confetti 상수
   const CONFETTI_NUMBER = 100
   const CONFETTI_RADIUS = 4
@@ -81,21 +81,18 @@ const DailyMVP = (props) => {
   const registerDailyMVP = async () => {
     const mvpRef = collection(db, 'daily_mvp')
     const mvpSnapshot = await getDocs(mvpRef)
-    const docRef = doc(db, 'daily_mvp', today)
-
-    let data = {}
-    bestPlayers.forEach(player => {
-      data = {goal: player.goal, assist: player.assist, name: player.name}
-    })
+    const dailyMVPDocRef = doc(db, `daily_mvp`, today)
 
     const todayMVP = mvpSnapshot.docs.find(doc => doc.id === today)
+    console.log(bestPlayers)
+
     if (todayMVP?.id !== today && bestPlayers.length > 0) {
-      await setDoc(docRef, data)
+      await setDoc(dailyMVPDocRef, {bestPlayers})
     }
   }
 
   useEffect(() => {
-    if (bestPlayers.length > 3) {
+    if (bestPlayers.length > 5) {
       setShowMVP(false)
     } else {
       registerDailyMVP()
