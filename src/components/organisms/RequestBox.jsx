@@ -26,7 +26,7 @@ const RequestBox = (props) => {
         text: requestText,
         status: 'processing'
       }
-      set(ref(rtDb, '2024/' + today + '_request' + '/' + id), request);
+      set(ref(rtDb, '2024/' + today + '_request' + '/' + id), request)
 
       // 메일 보내기
       const docRef = await addDoc(collection(db, 'mail'), {
@@ -36,8 +36,8 @@ const RequestBox = (props) => {
           subject: 'FLFC : 기록 추가/수정 요청이 있습니다~!',
           html: `<span>요청 내용 : </span><span style="font-size: 17px; color: darkblue;">${requestText}</span><div><p>flfc.live/admin 접속 후 비번 : 0413</p><p>수정 후 '완료' 버튼 눌러주세요~</p></div>`,
         }
-      });
-      console.log('mail object written with ID: ', docRef.id);
+      })
+      console.log('mail object written with ID: ', docRef.id)
 
       setRequestText('')
     }
@@ -46,7 +46,7 @@ const RequestBox = (props) => {
   return (
     <div className={containerStyle}>
       <div className={innerContainerStyle}>
-        <CloseButton clickHandler={() => setRequestUpdateMode(false)} customLocation='absolute top-0 -right-4' />
+        <CloseButton clickHandler={() => setRequestUpdateMode(false)} customStyle='absolute top-0 -right-4' />
         <div className={listContainerStyle}>
           {requestList.map((request, index) => (
             <RequestRow key={index} request={request} />

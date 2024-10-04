@@ -27,7 +27,7 @@
 
 .underline-border {
     position: relative;
-    margin: 30px auto 0;
+    /*margin: 30px auto 0;*/
     border-radius: 1px;
 }
 

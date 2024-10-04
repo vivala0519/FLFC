@@ -816,7 +816,7 @@ const AnalysisTap = () => {
       </div>
       {showIndividual ?
         <div className='absolute bottom-0 flex flex-col items-end z-[2]'>
-        <CloseButton clickHandler={() => setShowIndividual(false)} customLocation='relative w-[30px] right-0' />
+        <CloseButton clickHandler={() => setShowIndividual(false)} customStyle='relative w-[30px] right-0' />
         <PlayersBox className='flex gap-5 flex-wrap relative bottom-0 justify-center overflow-y-auto bg-white border-t-2 border-t-gray-200 border-b-2 border-b-gray-200' $showDetail={showDetail}>
           {!showDetail && thisQuarterPlayers.map(player => <ActivePlayer key={player} className='text-green-900 cursor-pointer' onClick={() => playerDetailHandler(player)}>{player}</ActivePlayer>)}
           {showDetail &&
