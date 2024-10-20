@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import Swal from 'sweetalert2';
 import {getDatabase, ref, set} from 'firebase/database'
-import {uid} from 'uid';
+import {uid} from 'uid'
 import getTimes from '@/hooks/getTimes.js'
 import WriteBox from '@/components/organisms/WriteBox.jsx'
 import InfoMessageBox from '@/components/molecules/InfoMessageBox.jsx'
@@ -63,7 +63,7 @@ const WriteContainer = (props) => {
   }
 
   return (
-      <div className={!canRegister ? 'w-full' : 'flex flex-col items-center mt-4'}>
+      <div className={!canRegister ? 'w-full' : 'flex flex-col items-center mt-4 w-[80%]'}>
         {canRegister && <Separator fullWidth={true} />}
         {canRegister ?
             <WriteBox registerRef={registerRef} registerHandler={registerHandler} data={writeBoxPropsData}/>
