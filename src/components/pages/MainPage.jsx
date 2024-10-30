@@ -58,6 +58,12 @@ const MainPage = (props) => {
     }
   }, [weeklyTeamUrl]);
 
+  useEffect(() => {
+    if (!open) {
+      setTap(1)
+    }
+  }, [open]);
+
   return (
     <div className={pageStyle}>
       <Analytics />
