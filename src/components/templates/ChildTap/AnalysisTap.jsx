@@ -942,7 +942,7 @@ const AnalysisTap = () => {
                 <SubTitle style={{ marginBottom: '0px' }}>
                   골, 어시 각각 10개 이상 달성한 플레이어
                 </SubTitle>
-                <div className="flex flex-col gap-[4px] w-[250px] h-[225px] overflow-y-auto">
+                <div className="flex flex-col gap-[4px] w-[250px] h-[25vh] overflow-y-auto">
                   {tenTenClub?.map((player) => (
                     <PlayerName
                       key={player}
