@@ -1276,7 +1276,7 @@ const AnalysisTap = () => {
             </div>
           ) : (
             <div
-              className="absolute bottom-[30px] right-[30px] border-double border-0 border-b-2 border-t-2 border-green-600"
+              className="absolute bottom-[50px] border-double border-0 border-b-2 border-t-2 border-green-600"
               onClick={() => setShowIndividual(true)}
             >
               <span className="text-[20px]">개인별</span>
