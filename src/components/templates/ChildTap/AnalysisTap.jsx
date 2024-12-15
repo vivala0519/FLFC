@@ -937,7 +937,7 @@ const AnalysisTap = () => {
           {
             // 10-10 클럽
             tap === 1 && (
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 relative z-1">
                 <Title className="text-xl">10-10 클럽</Title>
                 <SubTitle style={{ marginBottom: '0px' }}>
                   골, 어시 각각 10개 이상 달성한 플레이어
@@ -972,7 +972,7 @@ const AnalysisTap = () => {
           {
             // 20-20 클럽
             tap === 2 && (
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 relative z-1">
                 <Title className="text-xl">20-20 클럽</Title>
                 <SubTitle className="">
                   골, 어시 각각 20개 이상 달성한 플레이어
@@ -1276,7 +1276,7 @@ const AnalysisTap = () => {
             </div>
           ) : (
             <div
-              className="absolute z-1 bottom-[45px] right-[30px] border-double border-0 border-b-2 border-t-2 border-green-600"
+              className="absolute z-10 bottom-[45px] right-[30px] border-double border-0 border-b-2 border-t-2 border-green-600"
               onClick={() => setShowIndividual(true)}
             >
               <span className="text-[20px]">개인별</span>
