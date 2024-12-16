@@ -1168,6 +1168,7 @@ const AnalysisTap = () => {
               marginTop: tap === 7 && '30px',
               position: [1, 2].includes(tap) && 'fixed',
               top: [1, 2].includes(tap) && '356px',
+              opacity: ![0].includes(tap) && '0.3',
             }}
           >
             <BackgroundImage
