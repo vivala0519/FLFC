@@ -1,34 +1,31 @@
-const plugin = require('tailwindcss/plugin');
+const plugin = require('tailwindcss/plugin')
 
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
       fontFamily: {
         'dnf-bit': ['DNFBitBitv2', 'serif'],
-        'giants': ['Giants-Inline', 'normal'],
-        'suite': ['SUITE-Regular', 'normal'],
+        giants: ['Giants-Inline', 'normal'],
+        suite: ['SUITE-Regular', 'normal'],
         'dnf-forged': ['DNFForgedBlade', 'serif'],
-        'kbo': ['KBO-Dia-Gothic_bold', 'serif'],
-        'hahmlet': ['Hahmlet', 'serif'],
+        kbo: ['KBO-Dia-Gothic_bold', 'serif'],
+        hahmlet: ['Hahmlet', 'serif'],
       },
       backgroundImage: {
-        'sun': "url('@/assets/sun2.png')",
-        'request': "url('@/assets/request.png')",
-        'laurel': "url('@/assets/laurel.png')",
-        'left': "url('@/assets/left.png')",
-        'right': "url('@/assets/right.png')",
-        'kakao': "url('@/assets/kakao.png')",
+        sun: "url('@/assets/sun2.png')",
+        request: "url('@/assets/request.png')",
+        laurel: "url('@/assets/laurel.png')",
+        left: "url('@/assets/left.png')",
+        right: "url('@/assets/right.png')",
+        kakao: "url('@/assets/kakao.png')",
         'kakao-login': "url('@/assets/kakao_login_medium.png')",
-        'attend': "url('@/assets/keep_ball.png')",
-        'absent': "url('@/assets/uncheck_ball.png')",
-        'keeping': "url('@/assets/check_ball.png')",
-        'loading': "url('@/assets/minning.gif')",
+        attend: "url('@/assets/keep_ball.png')",
+        absent: "url('@/assets/uncheck_ball.png')",
+        keeping: "url('@/assets/check_ball.png')",
+        loading: "url('@/assets/minning.gif')",
       },
       textColor: {
         goal: '#bb2649',
@@ -37,17 +34,26 @@ export default {
         vivaMagenta: '#BB2649',
       },
       boxShadow: {
-        'custom': '0 0 10px rgba(0, 0, 0, 0.5)',
-      }
+        custom: '0 0 10px rgba(0, 0, 0, 0.5)',
+      },
+      keyframes: {
+        bounceUpDown: {
+          '0%, 100%': { transform: 'translateY(0)' }, // 시작과 끝 위치
+          '50%': { transform: 'translateY(-5px)' },
+        },
+      },
+      animation: {
+        bounceUpDown: 'bounceUpDown 0.7s ease-in-out infinite',
+      },
     },
     screens: {
-      'mobile': {'max': '821px'},
-      'desktop': {'min': '822px'},
+      mobile: { max: '821px' },
+      desktop: { min: '822px' },
     },
   },
   plugins: [
     require('tailwindcss-pseudo-elements'),
-    plugin(function({ addUtilities }) {
+    plugin(function ({ addUtilities }) {
       const newUtilities = {
         '.content-empty': {
           content: "''",
@@ -61,8 +67,8 @@ export default {
         '.after-absolute::after': {
           position: 'absolute',
         },
-      };
-      addUtilities(newUtilities, ['before', 'after']);
+      }
+      addUtilities(newUtilities, ['before', 'after'])
     }),
   ],
 }

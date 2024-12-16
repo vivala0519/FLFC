@@ -959,7 +959,9 @@ const AnalysisTap = () => {
                   )}
                 </div>
                 {almostTenTenClub.length > 0 && (
-                  <span className={'text-red-600'}>달성 임박!</span>
+                  <span className={'animate-bounceUpDown text-red-600'}>
+                    달성 임박
+                  </span>
                 )}
                 {almostTenTenClub?.map((player) => (
                   <PlayerName key={player} className={'text-lg text-gray-400'}>
@@ -994,7 +996,9 @@ const AnalysisTap = () => {
                   </PlayerName>
                 )}
                 {almostTwentyTwentyClub.length > 0 && (
-                  <span className={'text-red-600'}>달성 임박!</span>
+                  <span className={'animate-bounceUpDown text-red-600'}>
+                    달성 임박
+                  </span>
                 )}
                 {almostTwentyTwentyClub?.map((player) => (
                   <PlayerName key={player} className={'text-lg text-gray-500'}>
