@@ -953,18 +953,23 @@ const AnalysisTap = () => {
                     </PlayerName>
                   ))}
                   {tenTenClub.length === 0 && (
-                    <PlayerName style={{ top: '120px' }}>
+                    <PlayerName style={{ top: '50px' }}>
                       아직 달성한 플레이어가 없습니다
                     </PlayerName>
                   )}
                 </div>
                 {almostTenTenClub.length > 0 && (
-                  <span className={'animate-bounceUpDown text-red-600'}>
+                  <span
+                    className={`animate-bounceUpDown text-red-600 ${tenTenClub.length === 0 && 'relative top-[140px]'}`}
+                  >
                     달성 임박
                   </span>
                 )}
                 {almostTenTenClub?.map((player) => (
-                  <PlayerName key={player} className={'text-lg text-gray-400'}>
+                  <PlayerName
+                    key={player}
+                    className={`text-lg text-gray-400 ${tenTenClub.length === 0 && 'relative top-[150px]'}`}
+                  >
                     {player}
                   </PlayerName>
                 ))}
@@ -991,17 +996,22 @@ const AnalysisTap = () => {
                 {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
                 {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
                 {twentyTwentyClub.length === 0 && (
-                  <PlayerName style={{ top: '120px' }}>
+                  <PlayerName style={{ top: '50px' }}>
                     아직 달성한 플레이어가 없습니다
                   </PlayerName>
                 )}
                 {almostTwentyTwentyClub.length > 0 && (
-                  <span className={'animate-bounceUpDown text-red-600'}>
+                  <span
+                    className={`animate-bounceUpDown text-red-600 ${twentyTwentyClub.length === 0 && 'relative top-[140px]'}`}
+                  >
                     달성 임박
                   </span>
                 )}
                 {almostTwentyTwentyClub?.map((player) => (
-                  <PlayerName key={player} className={'text-lg text-gray-500'}>
+                  <PlayerName
+                    key={player}
+                    className={`text-lg text-gray-400 ${twentyTwentyClub.length === 0 && 'relative top-[150px]'}`}
+                  >
                     {player}
                   </PlayerName>
                 ))}
