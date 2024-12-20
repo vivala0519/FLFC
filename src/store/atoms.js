@@ -18,6 +18,7 @@ const getRecordTapCloseTime = new Date().setHours(23, 59, 0, 0) // 기록하기�
 // members
 export const totalMembersAtom = atom([])
 export const existingMembersAtom = atom([])
+export const membersIdAtom = atom([])
 
 // records
 const realtimeRecord = {}
