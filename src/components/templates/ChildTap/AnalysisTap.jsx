@@ -966,12 +966,12 @@ const AnalysisTap = () => {
                   </span>
                 )}
                 {almostTenTenClub?.map((player) => (
-                  <PlayerName
+                  <span
                     key={player}
-                    className={`text-lg text-gray-400 ${tenTenClub.length === 0 && 'relative top-[150px]'}`}
+                    className={`relative z-1 text-lg text-gray-400 ${tenTenClub.length === 0 && 'top-[150px]'}`}
                   >
                     {player}
-                  </PlayerName>
+                  </span>
                 ))}
               </div>
             )
@@ -1008,12 +1008,12 @@ const AnalysisTap = () => {
                   </span>
                 )}
                 {almostTwentyTwentyClub?.map((player) => (
-                  <PlayerName
+                  <span
                     key={player}
-                    className={`text-lg text-gray-400 ${twentyTwentyClub.length === 0 && 'relative top-[150px]'}`}
+                    className={`relative z-1 text-lg text-gray-400 ${twentyTwentyClub.length === 0 && 'top-[150px]'}`}
                   >
                     {player}
-                  </PlayerName>
+                  </span>
                 ))}
               </div>
             )
@@ -1291,10 +1291,13 @@ const AnalysisTap = () => {
             </div>
           ) : (
             <div
-              className="absolute z-10 bottom-[7vh] right-[30px] border-double border-0 border-b-2 border-t-2 border-green-600"
+              className="absolute z-10 bottom-[7vh] right-[30px]"
               onClick={() => setShowIndividual(true)}
             >
-              <span className="text-[20px]">개인별</span>
+              <div className="relative z-20 border-double border-0 border-b-2 border-t-2 border-green-600">
+                <span className="text-[17px] text-yellow-500">개인별</span>
+              </div>
+              <div className="absolute z-10 -top-[1.60rem] -right-4 bg-football w-20 h-20 bg-[length:100%_100%] bg-no-repeat bg-center animate-spinSlow" />
             </div>
           )}
         </>
