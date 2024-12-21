@@ -13,7 +13,17 @@ import WriteContainer from '@/components/organisms/WriteContainer.jsx'
 import './LetsRecord.css'
 
 const LetsRecord = (props) => {
-  const { time: { currentTime, thisYear, today, thisDay, gameStartTime, gameEndTime, recordTapCloseTime } } = getTimes()
+  const {
+    time: {
+      today,
+      thisDay,
+      thisYear,
+      currentTime,
+      gameEndTime,
+      gameStartTime,
+      recordTapCloseTime,
+    },
+  } = getTimes()
   const { existingMembers } = getMembers()
   const { todaysRealtimeRecord, todaysRequestList } = getRecords()
   const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
@@ -37,13 +47,25 @@ const LetsRecord = (props) => {
     if (registerRef.current) {
       setRegisterHeight(registerRef.current.clientHeight)
     }
-    if ([0, 7].includes(thisDay) && currentTime >= gameStartTime && currentTime <= recordTapCloseTime) {
+    if (
+      [0, 7].includes(thisDay) &&
+      currentTime >= gameStartTime &&
+      currentTime <= recordTapCloseTime
+    ) {
       setOpen(true)
     }
-    if ([0, 7].includes(thisDay) && currentTime >= gameStartTime && currentTime <= gameEndTime) {
+    if (
+      [0, 7].includes(thisDay) &&
+      currentTime >= gameStartTime &&
+      currentTime <= gameEndTime
+    ) {
       setCanRegister(true)
     }
-    if ([0, 7].includes(thisDay) && currentTime >= gameEndTime && currentTime <= recordTapCloseTime) {
+    if (
+      [0, 7].includes(thisDay) &&
+      currentTime >= gameEndTime &&
+      currentTime <= recordTapCloseTime
+    ) {
       setShowMVP(true)
       setShowRequestUpdateButton(true)
     }
@@ -76,7 +98,7 @@ const LetsRecord = (props) => {
       })
       setRequestList(sortedRequestArray)
     }
-  }, [todaysRequestList]);
+  }, [todaysRequestList])
 
   useEffect(() => {
     function setHeight() {
@@ -93,7 +115,7 @@ const LetsRecord = (props) => {
 
   // 오늘의 기록된 데이터 가져오기
   useEffect(() => {
-    const data = recordData?.find(obj => obj.id === today)
+    const data = recordData?.find((obj) => obj.id === today)
     if (data?.data) {
       setWrittenData(data.data)
     }
@@ -106,36 +128,36 @@ const LetsRecord = (props) => {
 
   const formatRecordByName = (record) => {
     const stats = {}
-    if (weeklyTeamData?.data && weeklyTeamData?.id === today) {
+    if (weeklyTeamData?.data && weeklyTeamData?.id === '1208') {
       const data = weeklyTeamData.data
       const thisWeekMembers = data[1].concat(data[2], data[3])
-      thisWeekMembers.forEach(member => {
-        existingMembers.forEach(player => {
+      thisWeekMembers.forEach((member) => {
+        existingMembers.forEach((player) => {
           if (member && player.includes(member)) {
-            stats[player] = {'출석': true, '골': 0, '어시': 0}
+            stats[player] = { 출석: 1, 골: 0, 어시: 0 }
           }
         })
       })
 
-      record.forEach(item => {
+      record.forEach((item) => {
         const { assist, goal } = item
 
-        if (goal !== "") {
-          existingMembers.forEach(player => {
+        if (goal !== '') {
+          existingMembers.forEach((player) => {
             if (player.includes(goal) && stats[player]) {
               stats[player]['골']++
             }
           })
         }
 
-        if (assist !== "") {
-          existingMembers.forEach(player => {
+        if (assist !== '') {
+          existingMembers.forEach((player) => {
             if (player.includes(assist) && stats[player]) {
               stats[player]['어시']++
             }
           })
         }
-      });
+      })
       return stats
     }
   }
@@ -148,9 +170,11 @@ const LetsRecord = (props) => {
       return false
     }
     for (let key of keysA) {
-      if (objA[key]['출석'] !== objB[key]['출석'] ||
-          objA[key]['골'] !== objB[key]['골'] ||
-          objA[key]['어시'] !== objB[key]['어시']) {
+      if (
+        objA[key]['출석'] !== objB[key]['출석'] ||
+        objA[key]['골'] !== objB[key]['골'] ||
+        objA[key]['어시'] !== objB[key]['어시']
+      ) {
         return false
       }
     }
@@ -164,20 +188,20 @@ const LetsRecord = (props) => {
       const registerRecord = async () => {
         const docRef = doc(db, thisYear, today)
         await setDoc(docRef, stats)
-        console.log("Document written with ID: ", docRef.id);
+        console.log('Document written with ID: ', docRef.id)
       }
       if (!compareObjects(stats, writtenData)) {
         registerRecord()
       }
     }
     // 스크롤 맨 밑으로
-    const scrollContainer = scrollContainerRef.current;
+    const scrollContainer = scrollContainerRef.current
     if (scrollContainer) {
-      const scrollHeight = scrollContainer.scrollHeight;
+      const scrollHeight = scrollContainer.scrollHeight
       scrollContainer.scrollTo({
         top: scrollHeight,
         behavior: 'smooth',
-      });
+      })
     }
   }, [todayRecord, stats, existingMembers])
 
@@ -189,12 +213,13 @@ const LetsRecord = (props) => {
         canvasElements[0].parentNode.removeChild(canvasElements[0])
       }
     }
-  }, [showMVP]);
+  }, [showMVP])
 
   useEffect(() => {
     function setHeight() {
       const additionalHeight = requestUpdateMode ? 300 : 200
-      const height = window.innerHeight - (headerHeight + registerHeight + additionalHeight)
+      const height =
+        window.innerHeight - (headerHeight + registerHeight + additionalHeight)
       setDynamicHeight(height)
     }
     setHeight()
@@ -202,11 +227,18 @@ const LetsRecord = (props) => {
 
   return (
     <div className={tapContainerStyle}>
-      <TapTitleText active={open} title={"Today's Record"}/>
-      {!showRequestUpdateButton && <Separator fullWidth={false}/>}
+      <TapTitleText active={open} title={"Today's Record"} />
+      {!showRequestUpdateButton && <Separator fullWidth={false} />}
       <div className={templateContainerStyle}>
         <>
-          {showMVP && <DailyMVP setShowMVP={setShowMVP} recordData={recordData} year={thisYear} today={today}/>}
+          {showMVP && (
+            <DailyMVP
+              setShowMVP={setShowMVP}
+              recordData={recordData}
+              year={thisYear}
+              today={today}
+            />
+          )}
           <RecordContainer
             open={open}
             scrollContainerRef={scrollContainerRef}

@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
 import HomeButton from '@/components/atoms/Button/HomeButton'
+import GoToVoteButton from '@/components/atoms/Button/GoToVoteButton.jsx'
 import ParentTapContainer from '@/components/molecules/ParentTapContainer.jsx'
 
 const Header = (props) => {
   const headerRef = useRef(null)
   const headerStyle = 'flex flex-col items-center w-full top-5'
 
-  const {tap, setTap, lastDate, setHeaderHeight} = props
+  const { tap, setTap, lastDate, setHeaderHeight } = props
   const [isLive, setIsLive] = useState(false)
   const [weeklyTeamIsLive, setWeeklyTeamIsLive] = useState(false)
-  const tapInfo = {tap: tap, setTap: setTap}
-  const liveBadgeInfo = {isLive: isLive, weeklyTeamIsLive: weeklyTeamIsLive}
+  const tapInfo = { tap: tap, setTap: setTap }
+  const liveBadgeInfo = { isLive: isLive, weeklyTeamIsLive: weeklyTeamIsLive }
 
   // Let's Record 탭 Live 뱃지 활성 세팅
   const startTime = new Date()
@@ -26,11 +27,15 @@ const Header = (props) => {
       const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
       const lastDateDay = parseInt(lastDate.slice(2, 4), 10) + 1
       const today = new Date()
-      const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
+      const lastTeamDate = new Date(
+        today.getFullYear(),
+        lastDateMonth,
+        lastDateDay,
+      )
       // 이번주 팀 등록이 이루어진 경우
       if (lastTeamDate > today) {
         setWeeklyTeamIsLive(true)
-        if ([0, 7].includes(today.getDay()) &&  currentTime > endTime) {
+        if ([0, 7].includes(today.getDay()) && currentTime > endTime) {
           setWeeklyTeamIsLive(false)
         }
       }
@@ -39,7 +44,11 @@ const Header = (props) => {
 
   // set header height
   useEffect(() => {
-    if ([0, 7].includes(day) && currentTime >= startTime && currentTime <= endTime) {
+    if (
+      [0, 7].includes(day) &&
+      currentTime >= startTime &&
+      currentTime <= endTime
+    ) {
       setIsLive(true)
     }
     if (headerRef.current) {
@@ -50,10 +59,10 @@ const Header = (props) => {
   return (
     <header ref={headerRef} className={headerStyle}>
       <HomeButton />
+      <GoToVoteButton />
       <ParentTapContainer tapInfo={tapInfo} liveBadgeInfo={liveBadgeInfo} />
     </header>
   )
 }
-
 
 export default Header
