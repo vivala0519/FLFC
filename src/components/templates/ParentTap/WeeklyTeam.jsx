@@ -1,10 +1,14 @@
-import {useEffect, useState} from 'react'
-import { db } from '../../../../firebase.js'
-import {collection, getDocs} from 'firebase/firestore'
-// import ThisWeekVoteStatisticsBox from '@/components/organisms/ThisWeekVoteStatisticsBox.jsx'
-import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
 import Swal from 'sweetalert2'
 import styled from 'styled-components'
+import { useEffect, useState } from 'react'
+import { db } from '../../../../firebase.js'
+import { collection, getDocs } from 'firebase/firestore'
+
+import Separator from '../../atoms/Separator.jsx'
+import TestingMark from '../../atoms/Text/TestingMark.jsx'
+import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
+import ThisWeekVoteStatisticsBox from '@/components/organisms/ThisWeekVoteStatisticsBox.jsx'
+
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
 import write from '@/assets/write.png'
@@ -12,18 +16,23 @@ import check from '@/assets/check.png'
 import './WeeklyTeam.css'
 
 function WeeklyTeam(props) {
-  const { setRegisteredTeam, setShowFooter} = props
+  const { setRegisteredTeam, setShowFooter } = props
   const [weeklyTeamData, setWeeklyTeamData] = useState([])
   const [lastDate, setLastDate] = useState('')
   const [page, setPage] = useState(0)
   const [editMode, setEditMode] = useState(false)
   const [canCreate, setCanCreate] = useState(true)
   const [activeBorder, setActiveBorder] = useState(false)
-  const [inputTeamData, setInputTeamData] = useState([['', '', '', '', '', ''], ['', '', '', '', '', ''], ['', '', '', '', '', '']])
+  const [inputTeamData, setInputTeamData] = useState([
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+    ['', '', '', '', '', ''],
+  ])
 
   const tapContainerStyle = 'relative w-full h-[80vh]'
   const dayTitleContainerStyle = 'flex gap-5 justify-center items-center'
-  const kakaoButtonDivStyle = 'flex gap-[5px] items-center justify-center mt-[20px] cursor-pointer'
+  const kakaoButtonDivStyle =
+    'flex gap-[5px] items-center justify-center mt-[20px] cursor-pointer'
   const kakaoButtonStyle = 'bg-kakao bg-[length:100%_100%] w-[40px] h-[40px]'
 
   const today = new Date()
@@ -38,7 +47,10 @@ function WeeklyTeam(props) {
   const fetchWeeklyTeamData = async () => {
     const weeklyTeamRef = collection(db, 'weeklyTeam')
     const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
-    const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map(doc => ({id: doc.id, data: doc.data()}))
+    const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      data: doc.data(),
+    }))
     setWeeklyTeamData(fetchedWeeklyTeamData)
     setPage(fetchedWeeklyTeamData.length - 1)
     setLastDate(fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id)
@@ -48,7 +60,7 @@ function WeeklyTeam(props) {
     if (!window.Kakao.isInitialized()) {
       window.Kakao.init(import.meta.env.VITE_KAKAO_API_KEY)
     }
-  }, []);
+  }, [])
 
   const shareKakao = () => {
     if (window.Kakao) {
@@ -61,7 +73,11 @@ function WeeklyTeam(props) {
       kakao.Share.sendCustom({
         templateId: 110111,
         templateArgs: {
-          date: Number(thisWeekTeam.id.slice(0, 2)) + '월 ' + Number(weeklyTeamData[page]?.id.slice(2, 4)) + '일',
+          date:
+            Number(thisWeekTeam.id.slice(0, 2)) +
+            '월 ' +
+            Number(weeklyTeamData[page]?.id.slice(2, 4)) +
+            '일',
           firstTeam: firstTeam,
           secondTeam: secondTeam,
           thirdTeam: thirdTeam,
@@ -81,7 +97,11 @@ function WeeklyTeam(props) {
       const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
       const lastDateDay = parseInt(lastDate.slice(2, 4), 10)
 
-      const lastTeamDate = new Date(today.getFullYear(), lastDateMonth, lastDateDay)
+      const lastTeamDate = new Date(
+        today.getFullYear(),
+        lastDateMonth,
+        lastDateDay,
+      )
       lastTeamDate.setHours(10, 0, 0, 0)
 
       if (lastTeamDate > today) {
@@ -110,8 +130,9 @@ function WeeklyTeam(props) {
   }
 
   const teamMakerInputHandler = (event, teamIndex, playerIndex) => {
+    const value = event.target.value
     const newTeamData = [...inputTeamData]
-    newTeamData[teamIndex][playerIndex] = event.target.value
+    newTeamData[teamIndex][playerIndex] = value
     setInputTeamData(newTeamData)
   }
 
@@ -123,8 +144,8 @@ function WeeklyTeam(props) {
         data: {
           1: [],
           2: [],
-          3: []
-        }
+          3: [],
+        },
       }
       if (newWeeklyTeam.id !== weeklyTeamData[weeklyTeamData.length - 1].id) {
         setWeeklyTeamData([...weeklyTeamData, newWeeklyTeam])
@@ -132,19 +153,28 @@ function WeeklyTeam(props) {
         setEditMode(true)
       } else {
         Swal.fire({
-          icon: "error",
-          title: "이미 생성된 주차입니다.",
+          icon: 'error',
+          title: '이미 생성된 주차입니다.',
         })
       }
-    } else {// 수정
-      setInputTeamData([weeklyTeamData[weeklyTeamData.length - 1].data[1], weeklyTeamData[weeklyTeamData.length - 1].data[2], weeklyTeamData[weeklyTeamData.length - 1].data[3]])
+    } else {
+      // 수정
+      setInputTeamData([
+        weeklyTeamData[weeklyTeamData.length - 1].data[1],
+        weeklyTeamData[weeklyTeamData.length - 1].data[2],
+        weeklyTeamData[weeklyTeamData.length - 1].data[3],
+      ])
       setEditMode(true)
     }
   }
 
   const registerTeamHandler = () => {
     const newWeeklyTeamData = [...weeklyTeamData]
-    const newData = {1: inputTeamData[0], 2: inputTeamData[1], 3: inputTeamData[2]}
+    const newData = {
+      1: inputTeamData[0],
+      2: inputTeamData[1],
+      3: inputTeamData[2],
+    }
 
     newWeeklyTeamData[weeklyTeamData.length - 1].data = newData
     setRegisteredTeam(weeklyTeamData[weeklyTeamData.length - 1])
@@ -154,170 +184,264 @@ function WeeklyTeam(props) {
   }
 
   return (
-      <div className={tapContainerStyle}>
-        <div className={dayTitleContainerStyle}>
-          {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page !== 0}/>}
-          <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder}
-                        title={Number(weeklyTeamData[page]?.id.slice(0, 2)) + '월 ' + Number(weeklyTeamData[page]?.id.slice(2, 4)) + '일 Weekly Team'}/>
-          {!editMode &&
-              <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1}/>}
+    <div className={tapContainerStyle}>
+      {editMode && (
+        <div className="relative">
+          <TestingMark locationStyle="top-2 right-0" />
+          <ThisWeekVoteStatisticsBox
+            nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}
+          />
         </div>
-        <div className='flex flex-col'>
-          <div className='flex flex-col items-end mb-5'>
-            <hr className='w-full border-green-700'/>
+      )}
+      <div className={dayTitleContainerStyle}>
+        {!editMode && (
+          <LeftButton
+            onClick={() => pageMoveHandler(true)}
+            $show={page !== 0}
+          />
+        )}
+        <TapTitleText
+          active={page === weeklyTeamData.length - 1 && activeBorder}
+          title={
+            Number(weeklyTeamData[page]?.id.slice(0, 2)) +
+            '월 ' +
+            Number(weeklyTeamData[page]?.id.slice(2, 4)) +
+            '일 Weekly Team'
+          }
+        />
+        {!editMode && (
+          <RightButton
+            onClick={() => pageMoveHandler(false)}
+            $show={page !== weeklyTeamData.length - 1}
+          />
+        )}
+      </div>
+      <div className="flex flex-col">
+        {!editMode && (
+          <div className="flex flex-col items-end mb-5">
+            <hr className="w-full border-green-700" />
           </div>
-          <div className='w-full flex justify-center mb-5'>
-            <div
-                className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-yellow-500'}`}>
-              <div className='flex flex-col gap-5 items-start bg-white p-3 rounded-md'>
-                {!editMode ?
-                    [1, 2, 3].map((team, index) => (
-                      <div key={index} className='flex gap-5'>
-                        <span style={{width: '25px'}} className='text-black relative left-1 flex items-center'>{team}팀</span>
-                        <div className='flex gap-[10px]'>
-                          {weeklyTeamData[page]?.data[team]?.map((player, idx) => (<span key={idx} className='text-black whitespace-pre flex items-center'>{player}</span>
+        )}
+        <div className="w-full flex justify-center mb-5">
+          <div
+            className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-yellow-500'}`}
+          >
+            <div className="flex flex-col gap-5 items-start bg-white p-1 rounded-md">
+              {!editMode ? (
+                [1, 2, 3].map((team, index) => (
+                  <div key={index} className="flex gap-5">
+                    <span
+                      style={{ width: '25px' }}
+                      className="text-black relative left-1 flex items-center"
+                    >
+                      {team}팀
+                    </span>
+                    <div className="flex gap-[10px]">
+                      {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
+                        <span
+                          key={idx}
+                          className="text-black whitespace-pre flex items-center"
+                        >
+                          {player}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                // 팀 생성 모드
+                <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-3 items-center">
+                    {inputTeamData?.map((team, index) => (
+                      <div key={index} className="flex flex-col gap-2">
+                        <span
+                          style={{ width: '25px' }}
+                          className="w-full text-left text-black relative left-1"
+                        >
+                          {index + 1}팀
+                        </span>
+                        <div className="flex gap-1">
+                          {team.map((player, idx) => (
+                            <input
+                              key={idx}
+                              type="text"
+                              value={player}
+                              className="w-12 border-green-600 border-2 outline-none text-center"
+                              onChange={(event) =>
+                                teamMakerInputHandler(event, index, idx)
+                              }
+                            />
                           ))}
                         </div>
                       </div>
-                    ))
-                    : // 팀 생성 모드
-                    <div className='flex flex-col gap-4'>
-                      <div className='flex flex-col gap-3 items-center'>
-                        {inputTeamData?.map((team, index) => (
-                            <div key={index} className='flex flex-col gap-2'>
-                              <span style={{width: '25px'}} className='w-full text-left text-black relative left-1'>{index + 1}팀</span>
-                              <div className='flex gap-1'>
-                                {team.map((player, idx) => <input key={idx} value={player}
-                                  onChange={(event) => teamMakerInputHandler(event, index, idx)}
-                                  type='text'
-                                  className='w-12 border-green-600 border-2 outline-none text-center'/>)}
-                              </div>
-                            </div>
-                        ))}
-                      </div>
-                    </div>
-                }
-              </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-          <div className='w-full flex justify-center'>
-            {canCreate ?
-                (!editMode ?
-                        <div>
-                          <div
-                              className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                              onClick={() => createWeeklyTeamHandler(true)} style={{
-                            fontFamily: 'DNFForgedBlade',
-                            width: '188px',
-                            height: '45px',
-                            borderRadius: '3px'
-                          }}><span className='text-black'>이번 주 팀 생성하기</span><Write/>
-                          </div>
-                        </div>
-                        :
-                        <div className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                             onClick={registerTeamHandler} style={{
-                          fontFamily: 'DNFForgedBlade',
-                          width: '188px',
-                          height: '45px',
-                          borderRadius: '3px'
-                        }}><span className='text-black'>등록하기</span><Register/></div>
-                )
-                :
-                (!activeBorder ?
-                        currentDay !== 0 &&
-                        <div className='flex flex-col mt-3'>
-                          <p className='mb-1 text-gray-400'
-                             style={{filter: 'drop-shadow(2px 4px 7px grey)', fontFamily: 'DNFForgedBlade'}}>팀 생성하기</p>
-                          <p className='text-xs' style={{fontFamily: 'DNFForgedBlade'}}>Open : 참여투표 종료 후</p>
-                        </div>
-                        :
-                        editMode ?
-                            <div
-                                className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                style={{
-                                  fontFamily: 'DNFForgedBlade',
-                                  width: '188px',
-                                  height: '45px',
-                                  borderRadius: '3px'
-                                }} onClick={registerTeamHandler}><span
-                                className='text-black'>등록하기</span><Register/></div>
-                            :
-                            [0, 4, 5, 6, 7].includes(currentDay) &&
-                            <div>
-                              <div
-                                  className='flex block-border bg-gray-50 cursor-pointer justify-center items-center'
-                                  style={{
-                                    fontFamily: 'DNFForgedBlade',
-                                    width: '188px',
-                                    height: '45px',
-                                    borderRadius: '3px'
-                                  }} onClick={() => createWeeklyTeamHandler(false)}><span
-                                  className='text-black'>수정</span>
-                              </div>
-                              <div className={kakaoButtonDivStyle} onClick={shareKakao}>
-                                <p>카톡에 공유하기</p>
-                                <button className={kakaoButtonStyle}/>
-                              </div>
-                            </div>
-                )
-            }
-          </div>
         </div>
+        <div className="w-full flex justify-center">
+          {canCreate ? (
+            !editMode ? (
+              page === weeklyTeamData.length - 1 && (
+                <div>
+                  <div
+                    className="flex block-border bg-gray-50 cursor-pointer justify-center items-center"
+                    onClick={() => createWeeklyTeamHandler(true)}
+                    style={{
+                      fontFamily: 'DNFForgedBlade',
+                      width: '188px',
+                      height: '45px',
+                      borderRadius: '3px',
+                    }}
+                  >
+                    <span className="animate-bounceUpDown text-black">
+                      이번 주 팀 생성하기
+                    </span>
+                    <Write />
+                  </div>
+                </div>
+              )
+            ) : (
+              <div
+                className="flex block-border bg-gray-50 cursor-pointer justify-center items-center"
+                onClick={registerTeamHandler}
+                style={{
+                  fontFamily: 'DNFForgedBlade',
+                  width: '188px',
+                  height: '45px',
+                  borderRadius: '3px',
+                }}
+              >
+                <span className="text-black">등록하기</span>
+                <Register />
+              </div>
+            )
+          ) : !activeBorder ? (
+            currentDay !== 0 && (
+              <div className="flex flex-col mt-3">
+                <p
+                  className="mb-1 text-gray-400"
+                  style={{
+                    filter: 'drop-shadow(2px 4px 7px grey)',
+                    fontFamily: 'DNFForgedBlade',
+                  }}
+                >
+                  팀 생성하기
+                </p>
+                <p className="text-xs" style={{ fontFamily: 'DNFForgedBlade' }}>
+                  Open : 참여투표 종료 후
+                </p>
+              </div>
+            )
+          ) : editMode ? (
+            <div
+              className="flex block-border bg-gray-50 cursor-pointer justify-center items-center"
+              style={{
+                fontFamily: 'DNFForgedBlade',
+                width: '188px',
+                height: '45px',
+                borderRadius: '3px',
+              }}
+              onClick={registerTeamHandler}
+            >
+              <span className="text-black">등록하기</span>
+              <Register />
+            </div>
+          ) : (
+            [0, 4, 5, 6, 7].includes(currentDay) && (
+              <div>
+                <div
+                  className="flex block-border bg-gray-50 cursor-pointer justify-center items-center"
+                  style={{
+                    fontFamily: 'DNFForgedBlade',
+                    width: '188px',
+                    height: '45px',
+                    borderRadius: '3px',
+                  }}
+                  onClick={() => createWeeklyTeamHandler(false)}
+                >
+                  <span className="text-black">수정</span>
+                </div>
+                <div className={kakaoButtonDivStyle} onClick={shareKakao}>
+                  <p>카톡에 공유하기</p>
+                  <button className={kakaoButtonStyle} />
+                </div>
+              </div>
+            )
+          )}
+        </div>
+        {!editMode && (
+          <div className="relative">
+            <div className="mb-10" />
+            {page === weeklyTeamData.length - 1 && (
+              <Separator fullWidth={true} />
+            )}
+            <TestingMark locationStyle="top-14 right-0" />
+            <div className="mt-4">
+              {!editMode && page === weeklyTeamData.length - 1 && (
+                <ThisWeekVoteStatisticsBox
+                  nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
+    </div>
   )
 }
 
 export default WeeklyTeam
 
-
 const LeftButton = styled.div`
-    visibility: ${props => props.$show ? 'visible' : 'hidden'};
-    background: url(${left}) no-repeat center center;
-    background-size: 100% 100%;
-    width: 25px;
-    height: 25px;
-    cursor: pointer;
-    @media (max-width: 812px) {
-        width: 15px;
-        height: 15px;
-    }
+  visibility: ${(props) => (props.$show ? 'visible' : 'hidden')};
+  background: url(${left}) no-repeat center center;
+  background-size: 100% 100%;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  @media (max-width: 812px) {
+    width: 15px;
+    height: 15px;
+  }
 `
 
 const Week = styled.span`
-    ${props => props.$thisWeek && 'color: #EAB308;'}
+  ${(props) => props.$thisWeek && 'color: #EAB308;'}
 `
 
 const RightButton = styled.div`
-    visibility: ${props => props.$show ? 'visible' : 'hidden'};
-    background: url(${right}) no-repeat center center;
-    background-size: 100% 100%;
-    width: 25px;
-    height: 25px;
-    cursor: pointer;
-    @media (max-width: 812px) {
-        width: 15px;
-        height: 15px;
-    };
-    @media (prefers-color-scheme: dark) {
-        filter: invert(1);
-    };
+  visibility: ${(props) => (props.$show ? 'visible' : 'hidden')};
+  background: url(${right}) no-repeat center center;
+  background-size: 100% 100%;
+  width: 25px;
+  height: 25px;
+  cursor: pointer;
+  @media (max-width: 812px) {
+    width: 15px;
+    height: 15px;
+  }
+  @media (prefers-color-scheme: dark) {
+    filter: invert(1);
+  }
 `
 
 const Write = styled.div`
-    background: url(${write}) no-repeat center center;
-    background-size: 100% 100%;
-    width: 20px;
-    height: 20px;
-    position: relative;
-    left: 7px;
+  background: url(${write}) no-repeat center center;
+  background-size: 100% 100%;
+  width: 20px;
+  height: 20px;
+  position: relative;
+  left: 7px;
 `
 
 const Register = styled.div`
-    background: url(${check}) no-repeat center center;
-    background-size: 100% 100%;
-    width: 20px;
-    height: 20px;
-    position: relative;
-    left: 7px;
+  background: url(${check}) no-repeat center center;
+  background-size: 100% 100%;
+  width: 20px;
+  height: 20px;
+  position: relative;
+  left: 7px;
 `

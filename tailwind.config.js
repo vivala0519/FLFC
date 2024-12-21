@@ -26,6 +26,9 @@ export default {
         absent: "url('@/assets/uncheck_ball.png')",
         keeping: "url('@/assets/check_ball.png')",
         loading: "url('@/assets/minning.gif')",
+        homeLight: "url('@/assets/home-light.png')",
+        homeDark: "url('@/assets/home-dark.png')",
+        football: "url('@/assets/circle-ball.png')",
       },
       textColor: {
         goal: '#bb2649',
@@ -37,13 +40,29 @@ export default {
         custom: '0 0 10px rgba(0, 0, 0, 0.5)',
       },
       keyframes: {
+        flipX: {
+          '0%': { transform: 'rotateX(0deg)' },
+          '100%': { transform: 'rotateX(180deg)' },
+        },
+        flipY: {
+          '0%': { transform: 'rotateY(0deg)' },
+          '100%': { transform: 'rotateY(180deg)' },
+        },
         bounceUpDown: {
-          '0%, 100%': { transform: 'translateY(0)' }, // 시작과 끝 위치
-          '50%': { transform: 'translateY(-5px)' },
+          '0%, 50%, 100%': { transform: 'translateY(0)' },
+          '25%': { transform: 'translateY(-2px)' },
+          '75%': { transform: 'translateY(2px)' },
+        },
+        spinSlow: {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
         },
       },
       animation: {
-        bounceUpDown: 'bounceUpDown 0.7s ease-in-out infinite',
+        flipX: 'flipX 0.9s ease-in-out infinite',
+        flipY: 'flipY 0.9s ease-in-out infinite',
+        bounceUpDown: 'bounceUpDown 1s ease-in-out infinite',
+        spinSlow: 'spinSlow 7s linear infinite',
       },
     },
     screens: {
