@@ -16,7 +16,7 @@ import check from '@/assets/check.png'
 import './WeeklyTeam.css'
 
 function WeeklyTeam(props) {
-  const { setRegisteredTeam, setShowFooter } = props
+  const { setRegisteredTeam } = props
   const [weeklyTeamData, setWeeklyTeamData] = useState([])
   const [lastDate, setLastDate] = useState('')
   const [page, setPage] = useState(0)
@@ -114,9 +114,8 @@ function WeeklyTeam(props) {
   useEffect(() => {
     if (!editMode) {
       fetchWeeklyTeamData()
-    } else {
-      setShowFooter(false)
     }
+    console.log(editMode)
   }, [editMode])
 
   const pageMoveHandler = (left) => {

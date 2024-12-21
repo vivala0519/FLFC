@@ -93,7 +93,7 @@ const MainPage = (props) => {
         setRegisteredTeam={setRegisteredTeam}
         test={test}
       />
-      {[0, 3].includes(tap) && !open && showFooter && <Footer />}
+      {[0].includes(tap) && !open && showFooter && <Footer />}
     </div>
   )
 }
