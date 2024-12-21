@@ -184,14 +184,14 @@ function WeeklyTeam(props) {
 
   return (
     <div className={tapContainerStyle}>
-      {/*{editMode && (*/}
-      {/*  <div className="relative">*/}
-      {/*    <TestingMark locationStyle="top-2 right-0" />*/}
-      {/*    <ThisWeekVoteStatisticsBox*/}
-      {/*      nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}*/}
-      {/*    />*/}
-      {/*  </div>*/}
-      {/*)}*/}
+      {editMode && (
+        <div className="relative">
+          <TestingMark locationStyle="top-2 right-0" />
+          <ThisWeekVoteStatisticsBox
+            nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}
+          />
+        </div>
+      )}
       <div className={dayTitleContainerStyle}>
         {!editMode && (
           <LeftButton
@@ -371,22 +371,22 @@ function WeeklyTeam(props) {
             )
           )}
         </div>
-        {/*{!editMode && (*/}
-        {/*  <div className="relative">*/}
-        {/*    <div className="mb-10" />*/}
-        {/*    {page === weeklyTeamData.length - 1 && (*/}
-        {/*      <Separator fullWidth={true} />*/}
-        {/*    )}*/}
-        {/*    <TestingMark locationStyle="top-14 right-0" />*/}
-        {/*    <div className="mt-4">*/}
-        {/*      {!editMode && page === weeklyTeamData.length - 1 && (*/}
-        {/*        <ThisWeekVoteStatisticsBox*/}
-        {/*          nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}*/}
-        {/*        />*/}
-        {/*      )}*/}
-        {/*    </div>*/}
-        {/*  </div>*/}
-        {/*)}*/}
+        {!editMode && (
+          <div className="relative">
+            <div className="mb-10" />
+            {page === weeklyTeamData.length - 1 && (
+              <Separator fullWidth={true} />
+            )}
+            <TestingMark locationStyle="top-14 right-0" />
+            <div className="mt-4">
+              {!editMode && page === weeklyTeamData.length - 1 && (
+                <ThisWeekVoteStatisticsBox
+                  nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}
+                />
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
