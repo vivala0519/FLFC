@@ -59,7 +59,7 @@ const Header = (props) => {
   return (
     <header ref={headerRef} className={headerStyle}>
       <HomeButton />
-      <GoToVoteButton />
+      {/*<GoToVoteButton />*/}
       <ParentTapContainer tapInfo={tapInfo} liveBadgeInfo={liveBadgeInfo} />
     </header>
   )
