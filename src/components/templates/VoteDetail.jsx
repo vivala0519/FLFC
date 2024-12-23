@@ -12,9 +12,9 @@ const VoteDetail = (props) => {
   const tapDivStyle =
     'w-full h-10 flex items-center justify-evenly absolute top-16'
   const tapSpanStyle = 'w-1/2 h-full flex items-center justify-center '
-  const activeTapStyle = 'border-b-2 border-black'
-  const inactiveTapStyle = 'border-b-2 border-gray-200'
-  const infoMessageStyle = 'absolute top-32 text-gray-500'
+  const activeTapStyle = 'border-b-2 border-black dark:border-white'
+  const inactiveTapStyle = 'border-b-2 border-gray-200 dark:border-black'
+  const infoMessageStyle = 'absolute top-32 text-gray-500 dark:text-gray-100'
   const contentDivStyle = 'absolute top-36 w-full h-[80%]'
 
   useEffect(() => {

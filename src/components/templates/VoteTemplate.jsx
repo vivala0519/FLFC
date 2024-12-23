@@ -6,12 +6,12 @@ import ReplyBox from '../organisms/voting/ReplyBox.jsx'
 
 const VoteTemplate = (props) => {
   const {
-    userInfo,
-    thisWeekVote,
-    thisWeekVoteReply,
-    nextSunday,
     endVote,
+    userInfo,
+    nextSunday,
+    thisWeekVote,
     setShowDetailTap,
+    thisWeekVoteReply,
   } = props
   const { existingMembers } = getMembers()
   const [detailTap, setDetailTap] = useState(false)
