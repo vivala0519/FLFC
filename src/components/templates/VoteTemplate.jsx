@@ -5,8 +5,14 @@ import VoteBox from '../organisms/voting/VoteBox.jsx'
 import ReplyBox from '../organisms/voting/ReplyBox.jsx'
 
 const VoteTemplate = (props) => {
-  const { userInfo, thisWeekVote, thisWeekVoteReply, nextSunday, endVote } =
-    props
+  const {
+    userInfo,
+    thisWeekVote,
+    thisWeekVoteReply,
+    nextSunday,
+    endVote,
+    setShowDetailTap,
+  } = props
   const { existingMembers } = getMembers()
   const [detailTap, setDetailTap] = useState(false)
   const [statistics, setStatistics] = useState({
@@ -72,6 +78,10 @@ const VoteTemplate = (props) => {
       calculateStatistics(thisWeekVote)
     }
   }, [userInfo, thisWeekVote])
+
+  useEffect(() => {
+    setShowDetailTap(detailTap)
+  }, [detailTap])
 
   return (
     <div className={templateStyle}>

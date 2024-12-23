@@ -21,6 +21,7 @@ const VotingPage = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loadingFlag, setLoadingFlag] = useState(false)
   const [thisWeekVoteReply, setThisWeekVoteReply] = useState(null)
+  const [showDetailTap, setShowDetailTap] = useState(false)
 
   // style
   const votingPageStyle = `flex flex-col h-full items-center justify-center ${isDarkMode ? 'dark' : ''}`
@@ -195,21 +196,22 @@ const VotingPage = () => {
           <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
         </div>
       )}
-      <GoToHomeButton />
+      {!showDetailTap && <GoToHomeButton />}
       <TestingMark locationStyle="top-4 right-1" />
       {/*<div className="absolute top-10" onClick={logoutFunction}>*/}
       {/*  Test 로그아웃*/}
       {/*</div>*/}
-      <RemainTime setEndVote={setEndVote} />
+      {!showDetailTap && <RemainTime setEndVote={setEndVote} />}
       {!isLoggedIn ? (
         <button className={kakaoLoginButtonStyle} onClick={loginWithKakao} />
       ) : (
         <VoteTemplate
-          userInfo={userInfo}
-          thisWeekVote={thisWeekVote}
-          thisWeekVoteReply={thisWeekVoteReply}
-          nextSunday={nextSunday}
           endVote={endVote}
+          userInfo={userInfo}
+          nextSunday={nextSunday}
+          thisWeekVote={thisWeekVote}
+          setShowDetailTap={setShowDetailTap}
+          thisWeekVoteReply={thisWeekVoteReply}
         />
       )}
     </div>
