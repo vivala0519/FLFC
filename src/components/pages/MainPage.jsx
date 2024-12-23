@@ -11,7 +11,7 @@ import Footer from '@/components/organisms/Footer.jsx'
 import TapTemplate from '@/components/templates/TapTemplate.jsx'
 
 const MainPage = (props) => {
-  const { test, weeklyTeamUrl } = props
+  const { isDarkMode, test, weeklyTeamUrl } = props
   const {
     time: { thisYear },
   } = getTimes()
@@ -25,7 +25,7 @@ const MainPage = (props) => {
   const [showFooter, setShowFooter] = useState(true)
   const [lastWeeklyTeamId, setLastWeeklyTeamId] = useState(null)
 
-  const pageStyle = 'flex flex-col items-center h-[95vh]'
+  const pageStyle = `flex flex-col items-center h-[95vh] ${isDarkMode ? 'dark' : ''}`
 
   // Data Generation
   useEffect(() => {
