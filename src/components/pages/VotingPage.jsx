@@ -176,7 +176,7 @@ const VotingPage = () => {
     <div className={votingPageStyle}>
       {loadingFlag && (
         <div className="absolute z-20 bg-white w-full h-full flex items-center justify-center">
-          <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]"></div>
+          <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
         </div>
       )}
       <GoToHomeButton />
