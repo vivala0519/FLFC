@@ -8,7 +8,7 @@ const VoteDetail = (props) => {
 
   // style
   const templateStyle =
-    'absolute w-[90%] h-[95%] bg-white border-2 border-gray-300 rounded-md flex flex-col items-center justify-center z-10'
+    'absolute w-[90%] h-[95%] border-2 border-gray-300 rounded-md flex flex-col items-center justify-center z-10'
   const tapDivStyle =
     'w-full h-10 flex items-center justify-evenly absolute top-16'
   const tapSpanStyle = 'w-1/2 h-full flex items-center justify-center '

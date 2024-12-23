@@ -2,7 +2,7 @@ const SelectElement = (props) => {
   const { text, clickHandler, inputMode } = props
 
   const elementStyle =
-    'border-2 flex justify-center items-center rounded-md bg-white ' +
+    'border-2 flex justify-center items-center rounded-md ' +
     (text !== '취소'
       ? text === '등록'
         ? 'h-12 w-full border-yellow-400'
