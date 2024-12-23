@@ -42,8 +42,8 @@ const ReplyBox = (props) => {
   // style
   const boxStyle =
     'absolute w-10/12 ' +
-    `${!endVote ? 'top-[31.5rem] ' : 'top-[26.5rem] '}` +
-    `${thisWeekVoteReply?.length > 0 ? 'h-[40%]' : showMenu ? 'h-[36%]' : 'h-0'}`
+    `${!endVote ? 'top-[30rem] ' : 'top-[26.5rem] '}` +
+    `${thisWeekVoteReply?.length > 0 ? 'h-[40%]' : showMenu ? 'h-[45%]' : 'h-0'}`
   const showMenuButtonStyle =
     'w-full h-[40px] flex flex-col justify-center border-2 border-gray-200 rounded-sm mt-3'
   const inputBoxStyle = 'flex flex-col items-center justify-center w-full mt-2'

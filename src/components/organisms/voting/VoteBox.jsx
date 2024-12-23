@@ -25,7 +25,7 @@ const VoteBox = (props) => {
   const [editMode, setEditMode] = useState(true)
 
   const boxStyle =
-    'absolute top-24 flex flex-col gap-5 items-center justify-center w-10/12 border-2 border-gray-300 rounded-md pt-5 pb-7'
+    'absolute top-20 flex flex-col gap-5 items-center justify-center w-10/12 border-2 border-gray-300 rounded-md pt-5 pb-7'
   const goDetailStyle = 'text-sm text-gray-600'
 
   useEffect(() => {

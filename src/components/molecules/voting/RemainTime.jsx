@@ -40,7 +40,7 @@ const RemainTime = (props) => {
     }
   }, [])
 
-  const elementStyle = 'animate-bounceUpDown absolute top-12'
+  const elementStyle = 'animate-bounceUpDown absolute top-8'
 
   return (
     <div className={elementStyle}>
