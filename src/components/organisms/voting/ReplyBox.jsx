@@ -49,7 +49,7 @@ const ReplyBox = (props) => {
   const inputBoxStyle = 'flex flex-col items-center justify-center w-full mt-2'
   const listStyle =
     `${inputMode ? 'h-[70%]' : showMenu ? 'h-[90%]' : 'max-h-[90%] h-fit'}` +
-    ' bg-gray-50 rounded-lg shadow-md overflow-y-auto '
+    ' rounded-lg shadow-md overflow-y-auto '
   const directReplyInput =
     'w-full h-[40px] border-2 border-gray-200 rounded-sm mt-2 mb-2'
 

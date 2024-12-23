@@ -19,6 +19,7 @@ export default {
         request: "url('@/assets/request.png')",
         laurel: "url('@/assets/laurel.png')",
         left: "url('@/assets/left.png')",
+        leftDark: "url('@/assets/white-left.png')",
         right: "url('@/assets/right.png')",
         kakao: "url('@/assets/kakao.png')",
         'kakao-login': "url('@/assets/kakao_login_medium.png')",
