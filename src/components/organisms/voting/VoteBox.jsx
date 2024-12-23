@@ -80,7 +80,7 @@ const VoteBox = (props) => {
 
   return (
     <div className={boxStyle}>
-      <TapTitleText title={titleText} />
+      <TapTitleText title={titleText} active={true} />
       <VoteItem
         key={selectType[0]}
         index={0}
