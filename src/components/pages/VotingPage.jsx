@@ -13,16 +13,17 @@ import { db } from '../../../firebase.js'
 const VotingPage = () => {
   const { voteList } = getVotes()
   const { existingMembers, membersId } = getMembers()
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userInfo, setUserInfo] = useState(null)
-  const [thisWeekVote, setThisWeekVote] = useState(null)
-  const [thisWeekVoteReply, setThisWeekVoteReply] = useState(null)
   const [nextSunday, setNextSunday] = useState(null)
   const [endVote, setEndVote] = useState(false)
+  const [thisWeekVote, setThisWeekVote] = useState(null)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loadingFlag, setLoadingFlag] = useState(false)
+  const [thisWeekVoteReply, setThisWeekVoteReply] = useState(null)
 
   // style
-  const votingPageStyle = 'flex flex-col h-full items-center justify-center'
+  const votingPageStyle = `flex flex-col h-full items-center justify-center ${isDarkMode ? 'dark' : ''}`
   const kakaoLoginButtonStyle =
     'bg-kakao-login bg-[length:100%_100%] w-[80px] h-[40px]'
 
@@ -171,6 +172,21 @@ const VotingPage = () => {
     window.Kakao.Auth.logout()
     window.location.reload()
   }
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    setIsDarkMode(mediaQuery.matches)
+
+    const handleChange = (e) => {
+      setIsDarkMode(e.matches)
+    }
+
+    mediaQuery.addEventListener('change', handleChange)
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange)
+    }
+  }, [])
 
   return (
     <div className={votingPageStyle}>
