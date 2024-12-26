@@ -55,6 +55,13 @@ const ThisWeekVoteStatisticsBox = (props) => {
             type: 2,
             content: '키퍼로 참여',
           },
+          {
+            id: '111',
+            name: '홍원진',
+            time: '2024-08-10T05:44:37.476Z',
+            type: 2,
+            content: '키퍼로 참여',
+          },
           // {
           //   id: '112',
           //   name: '원진',
@@ -194,6 +201,13 @@ const ThisWeekVoteStatisticsBox = (props) => {
           name: '손지원',
           vote: 'weekAttend',
           time: '2024-08-15T12:21:00.000Z',
+        },
+        {
+          id: '210',
+          nickName: '의준',
+          name: '전의준',
+          vote: 'weekAttend',
+          time: '2024-08-16T12:21:00.000Z',
         },
       ])
 
