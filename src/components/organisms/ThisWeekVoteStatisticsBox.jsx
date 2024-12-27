@@ -107,13 +107,6 @@ const ThisWeekVoteStatisticsBox = (props) => {
           vote: 'monthAttend',
           time: '2024-08-01T17:14:00.000Z',
         },
-        {
-          id: '210',
-          nickName: '우진',
-          name: '정우진',
-          vote: 'monthAttend',
-          time: '2024-08-02T12:20:00.000Z',
-        },
         // {id: '210', nickName: '장용', vote: 'monthAttend', time: '2024-07-30T12:21:00.000Z'},
         // {id: '210', nickName: '성민', vote: 'monthAttend', time: '2024-07-30T12:22:00.000Z'},
         {
