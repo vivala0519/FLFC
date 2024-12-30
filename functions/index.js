@@ -17,11 +17,12 @@ exports.createVoteData = functions.pubsub
     const nextSunday = new Date(now)
     nextSunday.setDate(now.getDate() + (7 - now.getDay()))
 
+    const yy = String(nextSunday.getFullYear())
     const mm = String(nextSunday.getMonth() + 1).padStart(2, '0')
     const dd = String(nextSunday.getDate()).padStart(2, '0')
     const customId = `${mm}${dd}`
 
-    const ref = db.ref(`vote/2024/${customId}`)
+    const ref = db.ref(`vote/${yy}/${customId}`)
 
     const newData = {
       message: 'created',
@@ -29,10 +30,10 @@ exports.createVoteData = functions.pubsub
 
     try {
       await ref.set(newData)
-      console.log(`Data successfully added to vote/2024 with ID ${customId}`)
+      console.log(`Data successfully added to vote/${yy} with ID ${customId}`)
     } catch (error) {
       console.error(
-        `Error adding data to vote/2024 with ID ${customId}:`,
+        `Error adding data to vote/${yy} with ID ${customId}:`,
         error,
       )
     }

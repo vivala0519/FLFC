@@ -984,15 +984,17 @@ const AnalysisTap = () => {
                 <SubTitle className="">
                   골, 어시 각각 20개 이상 달성한 플레이어
                 </SubTitle>
-                {twentyTwentyClub?.map((player) => (
-                  <PlayerName
-                    key={player}
-                    className="text-xl text-green-800"
-                    style={{ top: '20px' }}
-                  >
-                    {player}
-                  </PlayerName>
-                ))}
+                <div className="flex flex-col gap-[4px] w-[250px] h-[25vh] overflow-y-auto">
+                  {twentyTwentyClub?.map((player) => (
+                    <PlayerName
+                      key={player}
+                      className="text-xl text-green-800"
+                      style={{ top: '20px' }}
+                    >
+                      {player}
+                    </PlayerName>
+                  ))}
+                </div>
                 {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
                 {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
                 {twentyTwentyClub.length === 0 && (
