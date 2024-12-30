@@ -5,17 +5,20 @@ import { voteListAtom, timeAtom } from '@/store/atoms'
 
 const updateVotes = () => {
   const [, setVoteList] = useAtom(voteListAtom)
-  const [time] = useAtom(timeAtom)
-  const { thisYear } = time
+  const now = new Date()
+
+  const nextSunday = new Date(now)
+  nextSunday.setDate(now.getDate() + (7 - now.getDay()))
+
+  const yy = String(nextSunday.getFullYear())
 
   useEffect(() => {
     const db = getDatabase()
-    const voteListRef = ref(db, 'vote' + '/' + thisYear)
+    const voteListRef = ref(db, 'vote' + '/' + yy)
     onValue(voteListRef, (snapshot) => {
       const voteList = snapshot.val()
       setVoteList(voteList)
     })
-
-  }, [setVoteList, thisYear])
-};
+  }, [setVoteList])
+}
 export default updateVotes
