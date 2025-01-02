@@ -94,6 +94,12 @@ export default {
       desktop: { min: '822px' },
     },
   },
+  safelist: [
+    {
+      pattern:
+        /bg-(salah|myTeam|palmer|ronaldo|rodrigo|DeBruyne|CJamChul|sonKaeDuo|slowStarter|earlyStarter|laurel)/,
+    },
+  ],
   plugins: [
     require('tailwindcss-pseudo-elements'),
     plugin(function ({ addUtilities }) {
