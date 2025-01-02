@@ -21,6 +21,7 @@ import altruistic from '@/assets/altruistic2.png'
 import duo from '@/assets/duo.png'
 import friend from '@/assets/friend2.png'
 import mining from '@/assets/minning.gif'
+import TitleHolderCard from '../../organisms/TitleHolderCard.jsx'
 
 const AnalysisTap = (props) => {
   const { test } = props
