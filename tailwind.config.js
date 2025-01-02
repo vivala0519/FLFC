@@ -30,6 +30,16 @@ export default {
         homeLight: "url('@/assets/home-light.png')",
         homeDark: "url('@/assets/home-dark.png')",
         football: "url('@/assets/circle-ball.png')",
+        salah: "url('@/assets/salah.webp')",
+        myTeam: "url('@/assets/friendship.webp')",
+        palmer: "url('@/assets/palmer.webp')",
+        ronaldo: "url('@/assets/ronaldo.webp')",
+        rodrigo: "url('@/assets/rodrigo.webp')",
+        DeBruyne: "url('@/assets/DeBruyne.webp')",
+        CJamChul: "url('@/assets/CJamChul.webp')",
+        sonKaeDuo: "url('@/assets/sonKaeDuo.webp')",
+        slowStarter: "url('@/assets/slowStarter.webp')",
+        earlyStarter: "url('@/assets/earlyStarter.webp')",
       },
       textColor: {
         goal: '#bb2649',
@@ -50,20 +60,33 @@ export default {
           '100%': { transform: 'rotateY(180deg)' },
         },
         bounceUpDown: {
-          '0%, 50%, 100%': { transform: 'translateY(0)' },
           '25%': { transform: 'translateY(-2px)' },
           '75%': { transform: 'translateY(2px)' },
+          '0%, 50%, 100%': { transform: 'translateY(0)' },
         },
         spinSlow: {
           '0%': { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(360deg)' },
         },
+        shineEffect: {
+          '0%': { transform: 'rotate(45deg) translateX(-150%)' },
+          '100%': { transform: 'rotate(45deg) translateX(150%)' },
+        },
+        spinVertical: {
+          '0%': { transform: 'rotateY(0deg) rotate(45deg)' },
+          '100%': { transform: 'rotateY(360deg) rotate(45deg)' },
+        },
       },
       animation: {
+        shineEffect: 'shineEffect 2s infinite',
+        spinSlow: 'spinSlow 7s linear infinite',
         flipX: 'flipX 0.9s ease-in-out infinite',
         flipY: 'flipY 0.9s ease-in-out infinite',
+        spinVertical: 'spinVertical 0.3s linear infinite',
         bounceUpDown: 'bounceUpDown 1s ease-in-out infinite',
-        spinSlow: 'spinSlow 7s linear infinite',
+      },
+      transform: {
+        'rotate-y-180': 'rotateY(180deg)',
       },
     },
     screens: {

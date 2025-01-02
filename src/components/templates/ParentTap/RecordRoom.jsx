@@ -15,6 +15,7 @@ import AnalysisTap from '../ChildTap/AnalysisTap.jsx'
 import help from '@/assets/help.png'
 
 const RecordRoom = (props) => {
+  const { test } = props
   const {
     time: { thisYear },
   } = getTimes()
@@ -235,7 +236,7 @@ const RecordRoom = (props) => {
         ) : tap === '히스토리' ? (
           <HistoryTap />
         ) : (
-          <AnalysisTap />
+          <AnalysisTap test={test} />
         )}
       </div>
       {/*{showHelp &&*/}

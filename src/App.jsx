@@ -37,7 +37,10 @@ const App = () => {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<MainPage isDarkMode={isDarkMode} />} />
+        <Route
+          path="/"
+          element={<MainPage isDarkMode={isDarkMode} test={false} />}
+        />
         <Route path="/test" element={<MainPage test={true} />} />
         <Route
           path="/weeklyTeam"

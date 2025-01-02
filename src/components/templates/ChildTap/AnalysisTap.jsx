@@ -22,7 +22,8 @@ import duo from '@/assets/duo.png'
 import friend from '@/assets/friend2.png'
 import mining from '@/assets/minning.gif'
 
-const AnalysisTap = () => {
+const AnalysisTap = (props) => {
+  const { test } = props
   const players = [
     '홍원진',
     '우장식',
@@ -93,26 +94,40 @@ const AnalysisTap = () => {
     [100, 100],
     [170, 170],
   ]
-  const thisMonth = new Date().getMonth() + 1
+  const thisMonth = test ? 12 : new Date().getMonth() + 1
   const [quarter, setQuarter] = useState(0)
   const [needMoreData, setNeedMoreData] = useState(false)
   const [thisQuarterData, setThisQuarterData] = useState([])
   const [thisQuarterPlayers, setThisQuarterPlayers] = useState([])
-  const [sonKaeDuo, setSonKaeDuo] = useState([])
-  const [mostMvpPlayer, setMostMvpPlayer] = useState([])
+  const [sonKaeDuo, setSonKaeDuo] = useState({})
+  const [mostMvpPlayer, setMostMvpPlayer] = useState({})
   const [weeklyTeamData, setWeeklyTeamData] = useState(null)
-  const [mostPartnerPlayers, setMostPartnerPlayers] = useState('')
-  const [mostMercenaryPlayer, setMostMercenaryPlayer] = useState('')
-  const [bestEarlyStarter, setBestEarlyStarter] = useState('')
-  const [bestSlowStarter, setBestSlowStarter] = useState('')
-  const [tenTenClub, setTenTenClub] = useState([])
+  const [mostPartnerPlayers, setMostPartnerPlayers] = useState({})
+  const [mostMercenaryPlayer, setMostMercenaryPlayer] = useState({})
+  const [bestEarlyStarter, setBestEarlyStarter] = useState({})
+  const [bestSlowStarter, setBestSlowStarter] = useState({})
+  const [tenTenClub, setTenTenClub] = useState({})
   const [almostTenTenClub, setAlmostTenTenClub] = useState([])
-  const [twentyTwentyClub, setTwentyTwentyClub] = useState([])
+  const [twentyTwentyClub, setTwentyTwentyClub] = useState({})
   const [almostTwentyTwentyClub, setAlmostTwentyTwentyClub] = useState([])
-  const [greedyPlayer, setGreedyPlayer] = useState([])
-  const [altruisticPlayer, setAltruisticPlayer] = useState([])
+  const [greedyPlayer, setGreedyPlayer] = useState({})
+  const [altruisticPlayer, setAltruisticPlayer] = useState({})
   const [tap, setTap] = useState(0)
   const [showIndividual, setShowIndividual] = useState(false)
+
+  const tapDataList = [
+    mostMvpPlayer,
+    tenTenClub,
+    twentyTwentyClub,
+    bestEarlyStarter,
+    bestSlowStarter,
+    sonKaeDuo,
+    greedyPlayer,
+    altruisticPlayer,
+    mostPartnerPlayers,
+    mostMercenaryPlayer,
+  ]
+
   // 개인별 데이터
   const [thisQuarterMVP, setThisQuarterMVP] = useState([])
   const [thisQuarterPointData, setThisQuarterPointData] = useState(null)
@@ -163,10 +178,13 @@ const AnalysisTap = () => {
             }
           }
         })
-        tempObject = { key: temp[0] + '_' + temp[1], count: item.count }
+        tempObject = { key: temp[0] + ' - ' + temp[1], count: item.count }
         fullNameDuo.push(tempObject)
       })
-      setSonKaeDuo(fullNameDuo)
+      setSonKaeDuo({
+        name: [fullNameDuo[0]['key']],
+        count: fullNameDuo[0]['count'] + '골',
+      })
 
       // 시간에 따른 포인트 분석 데이터
       const analyzedDataByTime = {}
@@ -304,7 +322,7 @@ const AnalysisTap = () => {
   // 지난 분기 데이터 or 현재 분기 4주 이상 데이터
   const getRealTimeDatabaseData = async () => {
     const db = getDatabase()
-    const todayRef = ref(db, thisYear + '/')
+    const todayRef = ref(db, test ? '2024' : thisYear + '/')
     onValue(todayRef, (snapshot) => {
       const data = snapshot.val()
       let filteredData = []
@@ -419,12 +437,11 @@ const AnalysisTap = () => {
     let mostMVP = []
     Object.values(mvpCount).forEach((name) => {
       if (name.count >= count) {
-        mostMVP.push(name)
-        count = name.count
+        mostMVP.push(name['name'])
+        count = name['count']
       }
     })
-    mostMVP = mostMVP.filter((combination) => combination.count === count)
-    setMostMvpPlayer(mostMVP)
+    setMostMvpPlayer({ name: mostMVP, count: count + '회' })
   }
 
   const getWeeklyTeamData = async () => {
@@ -541,8 +558,10 @@ const AnalysisTap = () => {
     let resultPlayer = ''
     if (temp.length === 1) {
       const fullName = getFullName(temp[0])
-      resultPlayer = fullName + '_' + maxMercenaryCount
-      setMostMercenaryPlayer(resultPlayer)
+      setMostMercenaryPlayer({
+        name: [fullName],
+        count: maxMercenaryCount + '회',
+      })
     }
   }
 
@@ -600,7 +619,7 @@ const AnalysisTap = () => {
       }
     })
     if (bestEarlyStarterArray.length === 1) {
-      setBestEarlyStarter(getFullName(bestEarlyStarterArray[0]))
+      setBestEarlyStarter({ name: [getFullName(bestEarlyStarterArray[0])] })
     }
   }
 
@@ -620,11 +639,13 @@ const AnalysisTap = () => {
       }
     })
     if (bestSlowStarterArray.length === 1) {
-      setBestSlowStarter(getFullName(bestSlowStarterArray[0]))
+      setBestSlowStarter({ name: [getFullName(bestSlowStarterArray[0])] })
     }
   }
 
   const getPointClub = (pointData) => {
+    const tenObject = {}
+    const twentyObject = {}
     const almostTenTen = Object.entries(pointData).filter(
       ([_, { goal, assist }]) =>
         (goal >= 10 || assist >= 10) &&
@@ -653,7 +674,7 @@ const AnalysisTap = () => {
         const fullName = getFullName(name[0])
         temp.push(fullName)
       })
-      setTenTenClub(temp)
+      tenObject['name'] = temp
     }
 
     // setAlmostTenTenClub
@@ -663,7 +684,7 @@ const AnalysisTap = () => {
         const fullName = getFullName(name[0])
         temp.push(fullName)
       })
-      setAlmostTenTenClub(temp)
+      tenObject['additional'] = temp
     }
 
     // setTwentyTwentyClub
@@ -673,7 +694,7 @@ const AnalysisTap = () => {
         const fullName = getFullName(name[0])
         temp.push(fullName)
       })
-      setTwentyTwentyClub(temp)
+      twentyObject['name'] = temp
     }
 
     // setAlmostTwentyTwentyClub
@@ -683,8 +704,11 @@ const AnalysisTap = () => {
         const fullName = getFullName(name[0])
         temp.push(fullName)
       })
-      setAlmostTwentyTwentyClub(temp)
+      twentyObject['additional'] = temp
     }
+
+    setTenTenClub(tenObject)
+    setTwentyTwentyClub(twentyObject)
   }
 
   const getGreedyPlayer = (pointData) => {
@@ -704,7 +728,7 @@ const AnalysisTap = () => {
         }
       }
     })
-    setGreedyPlayer(greedy)
+    setGreedyPlayer({ name: greedy, count: Math.round(maxGreedyRate) + '%' })
   }
 
   const getAltruisticPlayer = (pointData) => {
@@ -724,7 +748,10 @@ const AnalysisTap = () => {
         }
       }
     })
-    setAltruisticPlayer(altruistic)
+    setAltruisticPlayer({
+      name: altruistic,
+      count: Math.round(maxAltruisticRate) + '%',
+    })
   }
 
   const getMostPartner = (data) => {
@@ -766,7 +793,10 @@ const AnalysisTap = () => {
           }
         })
       })
-      setMostPartnerPlayers(fullName[0] + '_' + fullName[1] + '_' + maxCount)
+      setMostPartnerPlayers({
+        name: [fullName[0] + ' - ' + fullName[1]],
+        count: maxCount + '회',
+      })
     }
   }
 
@@ -896,7 +926,7 @@ const AnalysisTap = () => {
       <h2 className="mt-5 mb-5 text-sm">
         {thisYear} - 제 {quarter} 시즌
       </h2>
-      {needMoreData && (
+      {needMoreData && !test && (
         <div className="flex flex-col gap-3 items-center">
           <span className="text-xl">데이터를 모으는 중 입니다</span>
           <Mining />
@@ -906,12 +936,27 @@ const AnalysisTap = () => {
         </div>
       )}
       {!needMoreData && (
-        <div className="relative top-1" style={{ width: '300px', top: '-1px' }}>
+        <div
+          className="relative top-1"
+          style={{ width: '100%', top: '22vh', left: '5px' }}
+        >
           <Arrow $direction={'left'} onClick={() => tapHandler('left')} />
           <Arrow $direction={'right'} onClick={() => tapHandler('right')} />
         </div>
       )}
-      {!needMoreData && (
+      {test && (
+        <div
+          className="relative top-1"
+          style={{ width: '100%', top: '22vh', left: '5px' }}
+        >
+          <Arrow $direction={'left'} onClick={() => tapHandler('left')} />
+          <Arrow $direction={'right'} onClick={() => tapHandler('right')} />
+        </div>
+      )}
+      {test && (
+        <TitleHolderCard key={tap} tapNumber={tap} data={tapDataList[tap]} />
+      )}
+      {!needMoreData && !test && (
         <>
           {
             // 최다 MVP
@@ -919,7 +964,7 @@ const AnalysisTap = () => {
               <div className="flex flex-col gap-1">
                 <Title className="text-xl">최다 MVP</Title>
                 <SubTitle className="">데일리 MVP 최다 플레이어</SubTitle>
-                {mostMvpPlayer.map((player) => (
+                {mostMvpPlayer.name?.map((player) => (
                   <PlayerName
                     key={player.name}
                     className="text-xl text-green-800 relative"
@@ -995,8 +1040,6 @@ const AnalysisTap = () => {
                     </PlayerName>
                   ))}
                 </div>
-                {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
-                {/*<PlayerName className='text-xl text-green-800' style={{top: '50px'}}>{'이승호'}</PlayerName>*/}
                 {twentyTwentyClub.length === 0 && (
                   <PlayerName style={{ top: '50px' }}>
                     아직 달성한 플레이어가 없습니다
@@ -1318,6 +1361,7 @@ const Mining = styled.div`
 `
 
 const Arrow = styled.div`
+  z-index: 10;
   position: absolute;
   right: ${(props) => props.$direction === 'right' && '-15px'};
   background: ${(props) =>
@@ -1325,12 +1369,12 @@ const Arrow = styled.div`
       ? `url(${right}) no-repeat center center`
       : `url(${left}) no-repeat center center`};
   background-size: 100% 100%;
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   cursor: pointer;
   @media (max-width: 812px) {
-    width: 30px;
-    height: 30px;
+    width: 50px;
+    height: 50px;
   }
   @media (prefers-color-scheme: dark) {
     filter: invert(1);

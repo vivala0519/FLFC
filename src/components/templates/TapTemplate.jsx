@@ -92,7 +92,11 @@ const TapTemplate = (props) => {
         <StatusBoard propsData={recordData} analyzedData={analyzedData} />
       )}
       {tap === 2 && (
-        <RecordRoom propsData={recordData} analyzedData={analyzedData} />
+        <RecordRoom
+          propsData={recordData}
+          analyzedData={analyzedData}
+          test={test}
+        />
       )}
       {tap === 3 && (
         <WeeklyTeam
