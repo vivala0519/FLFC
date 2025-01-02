@@ -1,12 +1,11 @@
 import { useEffect } from 'react'
 import { useAtom } from 'jotai'
 import { getDatabase, onValue, ref } from 'firebase/database'
-import { voteListAtom, timeAtom } from '@/store/atoms'
+import { voteListAtom } from '@/store/atoms'
 
 const updateVotes = () => {
   const [, setVoteList] = useAtom(voteListAtom)
   const now = new Date()
-
   const nextSunday = new Date(now)
   nextSunday.setDate(now.getDate() + (7 - now.getDay()))
 

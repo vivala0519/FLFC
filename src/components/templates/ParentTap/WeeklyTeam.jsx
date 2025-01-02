@@ -115,7 +115,6 @@ function WeeklyTeam(props) {
     if (!editMode) {
       fetchWeeklyTeamData()
     }
-    console.log(editMode)
   }, [editMode])
 
   const pageMoveHandler = (left) => {

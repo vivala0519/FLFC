@@ -77,21 +77,21 @@ const MainPage = (props) => {
       <Header
         tap={tap}
         setTap={setTap}
-        setHeaderHeight={setHeaderHeight}
         lastDate={lastWeeklyTeamId}
+        setHeaderHeight={setHeaderHeight}
       />
       <TapTemplate
-        open={open}
-        setOpen={setOpen}
         tap={tap}
+        open={open}
+        test={test}
         setTap={setTap}
-        setShowFooter={setShowFooter}
-        headerHeight={headerHeight}
+        setOpen={setOpen}
         recordData={data}
         analyedData={analyzedData}
+        headerHeight={headerHeight}
+        setShowFooter={setShowFooter}
         weeklyTeamData={weeklyTeamData}
         setRegisteredTeam={setRegisteredTeam}
-        test={test}
       />
       {[0].includes(tap) && !open && showFooter && <Footer />}
     </div>
