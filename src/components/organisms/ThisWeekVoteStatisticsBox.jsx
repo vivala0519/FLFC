@@ -86,13 +86,13 @@ const ThisWeekVoteStatisticsBox = (props) => {
       }
 
       voteArray = voteArray.concat([
-        {
-          id: '210',
-          nickName: '건휘',
-          name: '임건휘',
-          vote: 'monthAttend',
-          time: '2024-07-30T12:00:00.000Z',
-        },
+        // {
+        //   id: '210',
+        //   nickName: '건휘',
+        //   name: '임건휘',
+        //   vote: 'monthAttend',
+        //   time: '2024-07-30T12:00:00.000Z',
+        // },
         {
           id: '210',
           nickName: '장식',
