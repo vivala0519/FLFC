@@ -100,13 +100,13 @@ const ThisWeekVoteStatisticsBox = (props) => {
           vote: 'monthAttend',
           time: '2024-07-31T12:13:00.000Z',
         },
-        {
-          id: '210',
-          nickName: '승진',
-          name: '방승진',
-          vote: 'monthAttend',
-          time: '2024-08-01T17:14:00.000Z',
-        },
+        // {
+        //   id: '210',
+        //   nickName: '승진',
+        //   name: '방승진',
+        //   vote: 'monthAttend',
+        //   time: '2024-08-01T17:14:00.000Z',
+        // },
         {
           id: '210',
           nickName: '규진',
@@ -116,13 +116,13 @@ const ThisWeekVoteStatisticsBox = (props) => {
         },
         // {id: '210', nickName: '장용', vote: 'monthAttend', time: '2024-07-30T12:21:00.000Z'},
         // {id: '210', nickName: '성민', vote: 'monthAttend', time: '2024-07-30T12:22:00.000Z'},
-        {
-          id: '210',
-          nickName: '성민',
-          name: '장성민',
-          vote: 'monthAttend',
-          time: '2024-08-03T15:32:00.000Z',
-        },
+        // {
+        //   id: '210',
+        //   nickName: '성민',
+        //   name: '장성민',
+        //   vote: 'monthAttend',
+        //   time: '2024-08-03T15:32:00.000Z',
+        // },
         {
           id: '210',
           nickName: '원진',
@@ -174,20 +174,6 @@ const ThisWeekVoteStatisticsBox = (props) => {
         //   vote: 'monthAttend',
         //   time: '2024-08-11T12:26:00.000Z',
         // },
-        // {
-        //   id: '210',
-        //   nickName: '원진',
-        //   name: '홍원진',
-        //   vote: 'monthAttend',
-        //   time: '2024-08-12T12:27:00.000Z',
-        // },
-        // {
-        //   id: '210',
-        //   nickName: '승호',
-        //   name: '이승호',
-        //   vote: 'monthAttend',
-        //   time: '2024-08-13T18:27:00.000Z',
-        // },
         {
           id: '210',
           nickName: '대열',
@@ -216,6 +202,34 @@ const ThisWeekVoteStatisticsBox = (props) => {
           vote: 'weekAttend',
           time: '2024-08-16T12:21:00.000Z',
         },
+        {
+          id: '210',
+          nickName: '종우',
+          name: '임종우',
+          vote: 'monthAttend',
+          time: '2024-08-17T12:27:00.000Z',
+        },
+        {
+          id: '210',
+          nickName: '건휘',
+          name: '임건휘',
+          vote: 'monthAttend',
+          time: '2024-08-18T18:27:00.000Z',
+        },
+        {
+          id: '210',
+          nickName: '승진',
+          name: '방승진',
+          vote: 'monthAttend',
+          time: '2024-08-19T12:27:00.000Z',
+        },
+        // {
+        //   id: '210',
+        //   nickName: '승호',
+        //   name: '이승호',
+        //   vote: 'monthAttend',
+        //   time: '2024-08-20T18:27:00.000Z',
+        // },
       ])
 
       // existingMembers.forEach(member => {

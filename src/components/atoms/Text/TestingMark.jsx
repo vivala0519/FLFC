@@ -1,7 +1,7 @@
 const TestingMark = (props) => {
   const { locationStyle } = props
   const badgeStyle =
-    'absolute text-[30px] transform rotate-[17deg] text-red-600 border-t-2 border-b-2 border-red-600 ' +
+    'transform rotate-[17deg] text-red-600 border-t-2 border-b-2 border-red-600 ' +
     locationStyle
 
   return <span className={badgeStyle}>테스트 중</span>
