@@ -41,9 +41,11 @@ export const dataAnalysis = async (quarter, yearParameter) => {
 
   lastFourSundays.forEach((sunday) => {
     const dayData = fetchedData.find((data) => data.id === sunday)
-    Object.keys(dayData.data).forEach((key) => {
-      keyCounts.set(key, (keyCounts.get(key) || 0) + 1)
-    })
+    if (dayData) {
+      Object.keys(dayData.data).forEach((key) => {
+        keyCounts.set(key, (keyCounts.get(key) || 0) + 1)
+      })
+    }
   })
 
   let lastFourWeeksAttendance = new Set()

@@ -38,7 +38,7 @@ const MainPage = (props) => {
       }))
       setData(fetchedData)
 
-      const weeklyTeamRef = collection(db, 'weeklyTeam')
+      const weeklyTeamRef = collection(db, 'weeklyTeam2025')
       const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
       const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map((doc) => ({
         id: doc.id,
