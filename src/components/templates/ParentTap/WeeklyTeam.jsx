@@ -2,6 +2,7 @@ import Swal from 'sweetalert2'
 import styled from 'styled-components'
 import { useEffect, useState } from 'react'
 import { db } from '../../../../firebase.js'
+// import getTimes from '../../../hooks/getTimes.js'
 import { collection, getDocs } from 'firebase/firestore'
 
 import Separator from '../../atoms/Separator.jsx'
@@ -16,6 +17,7 @@ import check from '@/assets/check.png'
 import './WeeklyTeam.css'
 
 function WeeklyTeam(props) {
+  // const { thisYear } = getTimes
   const { setRegisteredTeam } = props
   const [weeklyTeamData, setWeeklyTeamData] = useState([])
   const [lastDate, setLastDate] = useState('')
@@ -45,7 +47,7 @@ function WeeklyTeam(props) {
   const sundayMonth = nextSunday.getMonth() + 1
 
   const fetchWeeklyTeamData = async () => {
-    const weeklyTeamRef = collection(db, 'weeklyTeam')
+    const weeklyTeamRef = collection(db, 'weeklyTeam2025')
     const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
     const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -185,7 +187,7 @@ function WeeklyTeam(props) {
     <div className={tapContainerStyle}>
       {editMode && (
         <div className="relative">
-          <TestingMark locationStyle="top-2 right-0" />
+          <TestingMark locationStyle="absolute top-2 right-0 text-[30px]" />
           <ThisWeekVoteStatisticsBox
             nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}
           />
@@ -376,7 +378,7 @@ function WeeklyTeam(props) {
             {page === weeklyTeamData.length - 1 && (
               <Separator fullWidth={true} />
             )}
-            <TestingMark locationStyle="top-14 right-0" />
+            <TestingMark locationStyle="absolute top-14 right-0 text-[30px]" />
             <div className="mt-4">
               {!editMode && page === weeklyTeamData.length - 1 && (
                 <ThisWeekVoteStatisticsBox
