@@ -17,13 +17,13 @@ const MainPage = (props) => {
   } = getTimes()
   const [tap, setTap] = useState(0)
   const [data, setData] = useState([])
-  const [analyzedData, setAnalyzedData] = useState({})
-  const [weeklyTeamData, setWeeklyTeamData] = useState([])
-  const [registeredTeam, setRegisteredTeam] = useState(null)
-  const [headerHeight, setHeaderHeight] = useState(0)
   const [open, setOpen] = useState(false)
+  const [analyzedData, setAnalyzedData] = useState({})
+  const [registeredTeam, setRegisteredTeam] = useState(null)
   const [showFooter, setShowFooter] = useState(true)
+  const [headerHeight, setHeaderHeight] = useState(0)
   const [lastWeeklyTeamId, setLastWeeklyTeamId] = useState(null)
+  const [weeklyTeamData, setWeeklyTeamData] = useState([])
 
   const pageStyle = `flex flex-col items-center h-[95vh] ${isDarkMode ? 'dark' : ''}`
 
@@ -58,7 +58,7 @@ const MainPage = (props) => {
   useEffect(() => {
     if (registeredTeam) {
       ;(async () => {
-        const docRef = doc(db, 'weeklyTeam', registeredTeam.id)
+        const docRef = doc(db, 'weeklyTeam2025', registeredTeam.id)
         await setDoc(docRef, registeredTeam.data)
         console.log('Document written with ID: ', registeredTeam.id)
       })()
