@@ -5,10 +5,10 @@ import { db } from '../../../../firebase.js'
 // import getTimes from '../../../hooks/getTimes.js'
 import { collection, getDocs } from 'firebase/firestore'
 
-import Separator from '../../atoms/Separator.jsx'
-import TestingMark from '../../atoms/Text/TestingMark.jsx'
+// import Separator from '../../atoms/Separator.jsx'
+// import TestingMark from '../../atoms/Text/TestingMark.jsx'
 import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
-import ThisWeekVoteStatisticsBox from '@/components/organisms/ThisWeekVoteStatisticsBox.jsx'
+// import ThisWeekVoteStatisticsBox from '@/components/organisms/ThisWeekVoteStatisticsBox.jsx'
 
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
@@ -43,11 +43,12 @@ function WeeklyTeam(props) {
   const nextSunday = new Date(today)
   nextSunday.setDate(today.getDate() + daysUntilSunday)
 
+  const sundayYear = String(nextSunday.getFullYear()).slice(2, 4)
   const sundayDate = nextSunday.getDate()
   const sundayMonth = nextSunday.getMonth() + 1
 
   const fetchWeeklyTeamData = async () => {
-    const weeklyTeamRef = collection(db, 'weeklyTeam2025')
+    const weeklyTeamRef = collection(db, 'weeklyTeam')
     const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
     const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -96,14 +97,11 @@ function WeeklyTeam(props) {
         setCanCreate(false)
       }
 
-      const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
-      const lastDateDay = parseInt(lastDate.slice(2, 4), 10)
+      const lastDateYear = parseInt('20' + lastDate.slice(0, 2))
+      const lastDateMonth = parseInt(lastDate.slice(2, 4), 10) - 1
+      const lastDateDay = parseInt(lastDate.slice(4, 6), 10)
 
-      const lastTeamDate = new Date(
-        today.getFullYear(),
-        lastDateMonth,
-        lastDateDay,
-      )
+      const lastTeamDate = new Date(lastDateYear, lastDateMonth, lastDateDay)
       lastTeamDate.setHours(10, 0, 0, 0)
 
       if (lastTeamDate > today) {
@@ -140,7 +138,7 @@ function WeeklyTeam(props) {
     // 첫 생성
     if (isNew) {
       const newWeeklyTeam = {
-        id: `${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`,
+        id: `${sundayYear}${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`,
         data: {
           1: [],
           2: [],
@@ -183,16 +181,24 @@ function WeeklyTeam(props) {
     setCanCreate(false)
   }
 
+  const displayDateText = (value) => {
+    if (value) {
+      return value.length === 4
+        ? value.slice(0, 2) + '월 ' + value.slice(2, 4) + '일 Weekly Team'
+        : value.slice(2, 4) + '월 ' + value.slice(4, 6) + '일 Weekly Team'
+    }
+  }
+
   return (
     <div className={tapContainerStyle}>
-      {editMode && (
-        <div className="relative">
-          <TestingMark locationStyle="absolute top-2 right-0 text-[30px]" />
-          <ThisWeekVoteStatisticsBox
-            nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}
-          />
-        </div>
-      )}
+      {/*{editMode && (*/}
+      {/*  <div className="relative">*/}
+      {/*<TestingMark locationStyle="absolute top-2 right-0 text-[30px]" />*/}
+      {/*<ThisWeekVoteStatisticsBox*/}
+      {/*  nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}*/}
+      {/*/>*/}
+      {/*</div>*/}
+      {/*)}*/}
       <div className={dayTitleContainerStyle}>
         {!editMode && (
           <LeftButton
@@ -202,12 +208,7 @@ function WeeklyTeam(props) {
         )}
         <TapTitleText
           active={page === weeklyTeamData.length - 1 && activeBorder}
-          title={
-            Number(weeklyTeamData[page]?.id.slice(0, 2)) +
-            '월 ' +
-            Number(weeklyTeamData[page]?.id.slice(2, 4)) +
-            '일 Weekly Team'
-          }
+          title={displayDateText(weeklyTeamData[page]?.id)}
         />
         {!editMode && (
           <RightButton
@@ -372,22 +373,22 @@ function WeeklyTeam(props) {
             )
           )}
         </div>
-        {!editMode && (
-          <div className="relative">
-            <div className="mb-10" />
-            {page === weeklyTeamData.length - 1 && (
-              <Separator fullWidth={true} />
-            )}
-            <TestingMark locationStyle="absolute top-14 right-0 text-[30px]" />
-            <div className="mt-4">
-              {!editMode && page === weeklyTeamData.length - 1 && (
-                <ThisWeekVoteStatisticsBox
-                  nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}
-                />
-              )}
-            </div>
-          </div>
-        )}
+        {/*{!editMode && (*/}
+        {/*  <div className="relative">*/}
+        {/*    <div className="mb-10" />*/}
+        {/*    {page === weeklyTeamData.length - 1 && (*/}
+        {/*      <Separator fullWidth={true} />*/}
+        {/*    )}*/}
+        {/*<TestingMark locationStyle="absolute top-14 right-0 text-[30px]" />*/}
+        {/*<div className="mt-4">*/}
+        {/*  {!editMode && page === weeklyTeamData.length - 1 && (*/}
+        {/*    <ThisWeekVoteStatisticsBox*/}
+        {/*      nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}*/}
+        {/*    />*/}
+        {/*  )}*/}
+        {/*</div>*/}
+        {/*</div>*/}
+        {/*)}*/}
       </div>
     </div>
   )
