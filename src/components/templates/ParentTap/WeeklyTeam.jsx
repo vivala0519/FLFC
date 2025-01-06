@@ -77,9 +77,9 @@ function WeeklyTeam(props) {
         templateId: 110111,
         templateArgs: {
           date:
-            Number(thisWeekTeam.id.slice(0, 2)) +
+            Number(thisWeekTeam.id.slice(2, 4)) +
             '월 ' +
-            Number(weeklyTeamData[page]?.id.slice(2, 4)) +
+            Number(weeklyTeamData[page]?.id.slice(4, 6)) +
             '일',
           firstTeam: firstTeam,
           secondTeam: secondTeam,
