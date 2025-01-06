@@ -28,6 +28,7 @@ function getLastFourSundays() {
 
 export const dataAnalysis = async (quarter, yearParameter) => {
   const thisYear = new Date().getFullYear()
+  const thisMonth = new Date().getMonth()
   const year = yearParameter ? yearParameter : String(thisYear)
   const collectionRef = collection(db, year)
   const snapshot = await getDocs(collectionRef)
@@ -36,11 +37,24 @@ export const dataAnalysis = async (quarter, yearParameter) => {
     data: doc.data(),
   }))
 
+  let fetchedDays = [...fetchedData]
+  // 1월이면 작년 12월꺼도 가져와야 함
+  if (thisMonth === 0) {
+    const lastYear = String(thisYear - 1)
+    const collectionRef = collection(db, lastYear)
+    const snapshot = await getDocs(collectionRef)
+    const secondFetchedData = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      data: doc.data(),
+    }))
+    fetchedDays = fetchedDays.concat(secondFetchedData)
+  }
+
   const lastFourSundays = getLastFourSundays()
   let keyCounts = new Map()
 
   lastFourSundays.forEach((sunday) => {
-    const dayData = fetchedData.find((data) => data.id === sunday)
+    const dayData = fetchedDays.find((data) => data.id === sunday)
     if (dayData) {
       Object.keys(dayData.data).forEach((key) => {
         keyCounts.set(key, (keyCounts.get(key) || 0) + 1)

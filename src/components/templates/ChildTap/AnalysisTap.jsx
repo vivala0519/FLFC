@@ -324,12 +324,12 @@ const AnalysisTap = (props) => {
   // 지난 분기 데이터 or 현재 분기 4주 이상 데이터
   const getRealTimeDatabaseData = async () => {
     const db = getDatabase()
-    const todayRef = ref(db, test ? '2024' : thisYear + '/')
+    const todayRef = ref(db, test ? '2024' : thisYear)
     onValue(todayRef, (snapshot) => {
       const data = snapshot.val()
       let filteredData = []
       if (thisMonth < 4) {
-        filteredData = Object.entries(data).filter((key, item) => {
+        filteredData = Object.entries(data).filter(([key, item]) => {
           if (key.length === 4 && Number(key.slice(0, 2)) <= 3) {
             return item
           }
