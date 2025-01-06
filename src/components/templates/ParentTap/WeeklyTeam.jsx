@@ -183,15 +183,12 @@ function WeeklyTeam(props) {
 
   const displayDateText = (value) => {
     if (value) {
-      return value.length === 4
-        ? Number(value.slice(0, 2)) +
-            '월 ' +
-            Number(value.slice(2, 4)) +
-            '일 Weekly Team'
-        : Number(value.slice(2, 4)) +
-            '월 ' +
-            Number(value.slice(4, 6)) +
-            '일 Weekly Team'
+      return (
+        Number(value.slice(2, 4)) +
+        '월 ' +
+        Number(value.slice(4, 6)) +
+        '일 Weekly Team'
+      )
     }
   }
 
