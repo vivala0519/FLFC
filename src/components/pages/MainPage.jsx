@@ -38,7 +38,7 @@ const MainPage = (props) => {
       }))
       setData(fetchedData)
 
-      const weeklyTeamRef = collection(db, 'weeklyTeam2025')
+      const weeklyTeamRef = collection(db, 'weeklyTeam')
       const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
       const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -58,7 +58,7 @@ const MainPage = (props) => {
   useEffect(() => {
     if (registeredTeam) {
       ;(async () => {
-        const docRef = doc(db, 'weeklyTeam2025', registeredTeam.id)
+        const docRef = doc(db, 'weeklyTeam', registeredTeam.id)
         await setDoc(docRef, registeredTeam.data)
         console.log('Document written with ID: ', registeredTeam.id)
       })()
