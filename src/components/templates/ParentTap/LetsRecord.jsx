@@ -128,7 +128,7 @@ const LetsRecord = (props) => {
 
   const formatRecordByName = (record) => {
     const stats = {}
-    if (weeklyTeamData?.data && weeklyTeamData?.id === today) {
+    if (weeklyTeamData?.data && weeklyTeamData?.id === thisYear.slice(2, 4) + today) {
       const data = weeklyTeamData.data
       const thisWeekMembers = data[1].concat(data[2], data[3])
       thisWeekMembers.forEach((member) => {
