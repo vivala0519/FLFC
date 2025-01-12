@@ -489,7 +489,7 @@ const DataTable = (props) => {
                         style={{ minWidth: '13% !important' }}
                         key={name + index}
                       >
-                        {data.data[name] ? 1 : '-'}
+                        {data.data[name] ? data.data[name][tap] : '-'}
                       </span>
                     ))}
                   {tap === '골' &&
