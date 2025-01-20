@@ -24,14 +24,12 @@ const Header = (props) => {
   // Weekly Team 탭 Live 뱃지 활성 세팅
   useEffect(() => {
     if (lastDate) {
-      const lastDateMonth = parseInt(lastDate.slice(0, 2), 10) - 1
-      const lastDateDay = parseInt(lastDate.slice(2, 4), 10) + 1
+      const lastDateYear = parseInt('20' + lastDate.slice(0, 2))
+      const lastDateMonth = parseInt(lastDate.slice(2, 4)) - 1
+      const lastDateDay = parseInt(lastDate.slice(4, 6))
       const today = new Date()
-      const lastTeamDate = new Date(
-        today.getFullYear(),
-        lastDateMonth,
-        lastDateDay,
-      )
+
+      const lastTeamDate = new Date(lastDateYear, lastDateMonth, lastDateDay)
       // 이번주 팀 등록이 이루어진 경우
       if (lastTeamDate > today) {
         setWeeklyTeamIsLive(true)
