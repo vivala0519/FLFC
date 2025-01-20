@@ -85,7 +85,7 @@ export const dataAnalysis = async (quarter, yearParameter) => {
           const existingStats = quarterStats.get(name)
           existingStats['골'] += parseInt(stats['골'] || 0)
           existingStats['어시'] += parseInt(stats['어시'] || 0)
-          existingStats['출석'] += stats['출석'] ? 1 : 0
+          existingStats['출석'] += stats['출석'] ? stats['출석'] : 0
         }
       }
     })
