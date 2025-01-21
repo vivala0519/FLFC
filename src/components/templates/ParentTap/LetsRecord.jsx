@@ -24,7 +24,7 @@ const LetsRecord = (props) => {
       recordTapCloseTime,
     },
   } = getTimes()
-  const { existingMembers } = getMembers()
+  const { existingMembers, oneCharacterMembers } = getMembers()
   const { todaysRealtimeRecord, todaysRequestList } = getRecords()
   const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
   const registerRef = useRef(null)
@@ -128,34 +128,76 @@ const LetsRecord = (props) => {
 
   const formatRecordByName = (record) => {
     const stats = {}
-    if (weeklyTeamData?.data && weeklyTeamData?.id === thisYear.slice(2, 4) + today) {
+    if (
+      weeklyTeamData?.data &&
+      weeklyTeamData?.id === thisYear.slice(2, 4) + today
+    ) {
       const data = weeklyTeamData.data
       const thisWeekMembers = data[1].concat(data[2], data[3])
       thisWeekMembers.forEach((member) => {
-        existingMembers.forEach((player) => {
-          if (member && player.includes(member)) {
-            stats[player] = { 출석: 1, 골: 0, 어시: 0 }
-          }
-        })
+        // 외자 출석처리
+        if (member.length === 1) {
+          oneCharacterMembers.forEach((player) => {
+            if (player.includes(member)) {
+              stats[player] = { 출석: 1, 골: 0, 어시: 0 }
+            }
+          })
+        } else {
+          // 나머지 출석처리
+          const others = existingMembers.filter(
+            (existing) => !oneCharacterMembers.includes(existing),
+          )
+          others.forEach((player) => {
+            if (member && player.includes(member)) {
+              stats[player] = { 출석: 1, 골: 0, 어시: 0 }
+            }
+          })
+        }
       })
 
       record.forEach((item) => {
         const { assist, goal } = item
 
         if (goal !== '') {
-          existingMembers.forEach((player) => {
-            if (player.includes(goal) && stats[player]) {
-              stats[player]['골']++
-            }
-          })
+          // 외자 골 처리
+          if (goal.length === 1) {
+            oneCharacterMembers.forEach((player) => {
+              if (player.includes(goal) && stats[player]) {
+                stats[player]['골']++
+              }
+            })
+          } else {
+            // 나머지 골 처리
+            const others = existingMembers.filter(
+              (existing) => !oneCharacterMembers.includes(existing),
+            )
+            others.forEach((player) => {
+              if (player.includes(goal) && stats[player]) {
+                stats[player]['골']++
+              }
+            })
+          }
         }
 
         if (assist !== '') {
-          existingMembers.forEach((player) => {
-            if (player.includes(assist) && stats[player]) {
-              stats[player]['어시']++
-            }
-          })
+          // 외자 어시 처리
+          if (assist.length === 1) {
+            oneCharacterMembers.forEach((player) => {
+              if (player.includes(assist) && stats[player]) {
+                stats[player]['어시']++
+              }
+            })
+          } else {
+            // 나머지 어시 처리
+            const others = existingMembers.filter(
+              (existing) => !oneCharacterMembers.includes(existing),
+            )
+            others.forEach((player) => {
+              if (player.includes(assist) && stats[player]) {
+                stats[player]['어시']++
+              }
+            })
+          }
         }
       })
       return stats
