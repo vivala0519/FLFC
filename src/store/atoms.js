@@ -18,6 +18,7 @@ const getRecordTapCloseTime = new Date().setHours(23, 59, 0, 0) // 기록하기�
 // members
 export const totalMembersAtom = atom([])
 export const existingMembersAtom = atom([])
+export const oneCharacterMembersAtom = atom([])
 export const membersIdAtom = atom([])
 
 // records
@@ -37,7 +38,7 @@ export const timeAtom = atom({
   thisDay: getCurrentDay(),
   gameStartTime: getGameStartTime,
   gameEndTime: getGameEndTime,
-  recordTapCloseTime: getRecordTapCloseTime
+  recordTapCloseTime: getRecordTapCloseTime,
 })
 export const realtimeRecordAtom = atom(realtimeRecord)
 export const todaysRealtimeRecordAtom = atom(todaysRealtimeRecord)
