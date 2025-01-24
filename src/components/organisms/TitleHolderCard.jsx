@@ -39,7 +39,7 @@ const TitleHolderCard = (props) => {
     '합작 골이 가장 많은 듀오',
     '골 비율이 가장 높은 플레이어',
     '어시 비율이 가장 높은 플레이어',
-    '같은 팀 최다 듀오',
+    '최다 같은 팀 듀오',
     '용병 최다 호출 플레이어',
   ]
 
@@ -56,11 +56,11 @@ const TitleHolderCard = (props) => {
   }
 
   useEffect(() => {
-    setGridStyle(tapNumber > 0 && tapNumber < 3 && data.name.length > 1)
+    setGridStyle(tapNumber > 0 && tapNumber < 3 && data?.name?.length > 1)
   }, [data, tapNumber])
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col items-center">
       <div className="flex flex-col gap-1">
         <span className="text-xl font-kbo text-yellow-500">
           {tapTitleList[tapNumber]}
@@ -110,11 +110,15 @@ const TitleHolderCard = (props) => {
           달성 임박
         </span>
       )}
-      {data.additional?.map((player) => (
-        <span key={player} className="relative z-1 text-lg text-gray-400">
-          {player}
-        </span>
-      ))}
+      <div
+        className={`${data.additional?.length > 1 && 'grid grid-cols-3 items-center justify-center w-[80%]'}`}
+      >
+        {data.additional?.map((player) => (
+          <span key={player} className="relative z-1 text-lg text-gray-400">
+            {player}
+          </span>
+        ))}
+      </div>
     </div>
   )
 }
