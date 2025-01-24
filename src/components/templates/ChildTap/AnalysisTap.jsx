@@ -449,33 +449,35 @@ const AnalysisTap = (props) => {
   const getWeeklyTeamData = async () => {
     const weeklyTeamRef = collection(db, 'weeklyTeam')
     const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
-    const fetchedData = weeklyTeamSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      data: doc.data(),
-    }))
+    const fetchedData = weeklyTeamSnapshot.docs
+      .map((doc) => ({
+        id: doc.id,
+        data: doc.data(),
+      }))
+      .filter((data) => data['id'].slice(0, 2) === thisYear.slice(2, 4))
 
     const filteredData = []
     if (thisMonth < 4) {
       fetchedData.forEach((data) => {
-        if (data.id.slice(0, 2) <= 3) {
+        if (data.id.slice(2, 4) <= 3) {
           filteredData.push(data.data)
         }
       })
     } else if (thisMonth < 7) {
       fetchedData.forEach((data) => {
-        if (data.id.slice(0, 2) > 3 && data.id.slice(0, 2) <= 6) {
+        if (data.id.slice(2, 4) > 3 && data.id.slice(0, 2) <= 6) {
           filteredData.push(data.data)
         }
       })
     } else if (thisMonth < 10) {
       fetchedData.forEach((data) => {
-        if (data.id.slice(0, 2) > 6 && data.id.slice(0, 2) <= 9) {
+        if (data.id.slice(2, 4) > 6 && data.id.slice(0, 2) <= 9) {
           filteredData.push(data.data)
         }
       })
     } else {
       fetchedData.filter((data) => {
-        if (data.id.slice(0, 2) > 9) {
+        if (data.id.slice(2, 4) > 9) {
           filteredData.push(data.data)
         }
       })
@@ -500,17 +502,19 @@ const AnalysisTap = (props) => {
       row.forEach((player) => {
         if (player.includes('용병') && player.length > 2) {
           const bring = player.slice(0, 2)
-          if (!mercenary[bring]) {
-            mercenary[bring] = 1
-            mercenaryMap.set(bring, { mercenary: 1 })
-            if (maxMercenaryCount < 1) {
-              maxMercenaryCount = 1
-            }
-          } else {
-            mercenary[bring]++
-            mercenaryMap.set(bring, { mercenary: mercenary[bring] })
-            if (maxMercenaryCount < mercenary[bring]) {
-              maxMercenaryCount = mercenary[bring]
+          if (bring !== '용병') {
+            if (!mercenary[bring]) {
+              mercenary[bring] = 1
+              mercenaryMap.set(bring, { mercenary: 1 })
+              if (maxMercenaryCount < 1) {
+                maxMercenaryCount = 1
+              }
+            } else {
+              mercenary[bring]++
+              mercenaryMap.set(bring, { mercenary: mercenary[bring] })
+              if (maxMercenaryCount < mercenary[bring]) {
+                maxMercenaryCount = mercenary[bring]
+              }
             }
           }
         }
@@ -650,10 +654,11 @@ const AnalysisTap = (props) => {
     const twentyObject = {}
     const almostTenTen = Object.entries(pointData).filter(
       ([_, { goal, assist }]) =>
-        (goal >= 10 || assist >= 10) &&
-        goal >= 7 &&
-        assist >= 7 &&
-        (goal < 10 || assist < 10),
+        ((goal >= 10 || assist >= 10) &&
+          goal >= 7 &&
+          assist >= 7 &&
+          (goal < 10 || assist < 10)) ||
+        (goal < 10 && assist < 10 && goal + assist > 16),
     )
     const almostTwentyTwenty = Object.entries(pointData).filter(
       ([_, { goal, assist }]) =>
@@ -955,292 +960,292 @@ const AnalysisTap = (props) => {
           <Arrow $direction={'right'} onClick={() => tapHandler('right')} />
         </div>
       )}
-      {test && (
+      {!needMoreData && (
         <TitleHolderCard key={tap} tapNumber={tap} data={tapDataList[tap]} />
       )}
-      {!needMoreData && !test && (
+      {!needMoreData && (
         <>
-          {
-            // 최다 MVP
-            tap === 0 && (
-              <div className="flex flex-col gap-1">
-                <Title className="text-xl">최다 MVP</Title>
-                <SubTitle className="">데일리 MVP 최다 플레이어</SubTitle>
-                {mostMvpPlayer.name?.map((player) => (
-                  <PlayerName
-                    key={player.name}
-                    className="text-xl text-green-800 relative"
-                    style={{ top: '35px' }}
-                  >
-                    {player.name}
-                  </PlayerName>
-                ))}
-                <PlayerName style={{ top: '100px' }}>
-                  {mostMvpPlayer.length > 0 && mostMvpPlayer[0].count}회
-                </PlayerName>
-              </div>
-            )
-          }
-          {
-            // 10-10 클럽
-            tap === 1 && (
-              <div className="flex flex-col gap-1 relative z-1">
-                <Title className="text-xl">10-10 클럽</Title>
-                <SubTitle style={{ marginBottom: '0px' }}>
-                  골, 어시 각각 10개 이상 달성한 플레이어
-                </SubTitle>
-                <div className="flex flex-col gap-[4px] w-[250px] h-[25vh] overflow-y-auto">
-                  {tenTenClub?.map((player) => (
-                    <PlayerName
-                      key={player}
-                      className="text-xl text-green-800"
-                      style={{ top: '20px' }}
-                    >
-                      {player}
-                    </PlayerName>
-                  ))}
-                  {tenTenClub.length === 0 && (
-                    <PlayerName style={{ top: '50px' }}>
-                      아직 달성한 플레이어가 없습니다
-                    </PlayerName>
-                  )}
-                </div>
-                {almostTenTenClub.length > 0 && (
-                  <span
-                    className={`animate-bounceUpDown text-red-600 ${tenTenClub.length === 0 && 'relative top-[140px]'}`}
-                  >
-                    달성 임박
-                  </span>
-                )}
-                {almostTenTenClub?.map((player) => (
-                  <span
-                    key={player}
-                    className={`relative z-1 text-lg text-gray-400 ${tenTenClub.length === 0 && 'top-[150px]'}`}
-                  >
-                    {player}
-                  </span>
-                ))}
-              </div>
-            )
-          }
-          {
-            // 20-20 클럽
-            tap === 2 && (
-              <div className="flex flex-col gap-1 relative z-1">
-                <Title className="text-xl">20-20 클럽</Title>
-                <SubTitle className="">
-                  골, 어시 각각 20개 이상 달성한 플레이어
-                </SubTitle>
-                <div className="flex flex-col gap-[4px] w-[250px] h-[25vh] overflow-y-auto">
-                  {twentyTwentyClub?.map((player) => (
-                    <PlayerName
-                      key={player}
-                      className="text-xl text-green-800"
-                      style={{ top: '20px' }}
-                    >
-                      {player}
-                    </PlayerName>
-                  ))}
-                </div>
-                {twentyTwentyClub.length === 0 && (
-                  <PlayerName style={{ top: '50px' }}>
-                    아직 달성한 플레이어가 없습니다
-                  </PlayerName>
-                )}
-                {almostTwentyTwentyClub.length > 0 && (
-                  <span
-                    className={`animate-bounceUpDown text-red-600 ${twentyTwentyClub.length === 0 && 'relative top-[140px]'}`}
-                  >
-                    달성 임박
-                  </span>
-                )}
-                {almostTwentyTwentyClub?.map((player) => (
-                  <span
-                    key={player}
-                    className={`relative z-1 text-lg text-gray-400 ${twentyTwentyClub.length === 0 && 'top-[150px]'}`}
-                  >
-                    {player}
-                  </span>
-                ))}
-              </div>
-            )
-          }
-          {
-            // Best 얼리 스타터
-            tap === 3 && (
-              <div className="flex flex-col gap-1">
-                <Title className="text-xl">Best 얼리 스타터</Title>
-                <SubTitle className="">
-                  전반에 포인트 기록한 비율이 가장 높은 플레이어
-                </SubTitle>
-                {bestEarlyStarter && (
-                  <PlayerName
-                    className="text-xl text-green-800"
-                    style={{ top: '55px' }}
-                  >
-                    {bestEarlyStarter}
-                  </PlayerName>
-                )}
-              </div>
-            )
-          }
-          {
-            // Best 슬로우 스타터
-            tap === 4 && (
-              <div className="flex flex-col gap-1">
-                <Title className="text-xl">Best 슬로우 스타터</Title>
-                <SubTitle className="">
-                  후반에 포인트 기록한 비율이 가장 높은 플레이어
-                </SubTitle>
-                {bestSlowStarter && (
-                  <PlayerName
-                    className="text-xl text-green-800"
-                    style={{ top: '55px' }}
-                  >
-                    {bestSlowStarter}
-                  </PlayerName>
-                )}
-              </div>
-            )
-          }
-          {
-            // 손케듀오
-            tap === 5 && (
-              <div className="flex flex-col gap-1">
-                <Title className="text-xl ">손케 듀오</Title>
-                <SubTitle className="">
-                  합작한 골이 제일 많은 플레이어 듀오
-                </SubTitle>
-                {sonKaeDuo?.map((player) => (
-                  <PlayerName
-                    key={player.key}
-                    className="text-xl text-green-800 relative"
-                    style={{ top: '62px' }}
-                  >
-                    {player.key.split('_')[0]} - {player.key.split('_')[1]}
-                  </PlayerName>
-                ))}
-                <span className="relative" style={{ top: '145px' }}>
-                  {sonKaeDuo.length > 0 && sonKaeDuo[0].count}골
-                </span>
-              </div>
-            )
-          }
-          {
-            // 탐욕왕
-            tap === 6 && (
-              <div className="flex flex-col gap-1">
-                <Title className="text-xl ">내가 할게!</Title>
-                <SubTitle className="">
-                  골,어시 중 골 비율이 가장 높은 플레이어
-                </SubTitle>
-                {greedyPlayer?.map((player) => (
-                  <PlayerName
-                    key={player.key}
-                    className="text-xl text-green-800"
-                    style={{ top: '30px' }}
-                  >
-                    {player}
-                  </PlayerName>
-                ))}
-              </div>
-            )
-          }
-          {
-            // 양보왕
-            tap === 7 && (
-              <div className="flex flex-col gap-1">
-                <Title className="text-xl">너가 해!</Title>
-                <SubTitle className="">
-                  골,어시 중 어시 비율이 가장 높은 플레이어
-                </SubTitle>
-                {altruisticPlayer?.map((player) => (
-                  <PlayerName
-                    key={player.key}
-                    className="text-xl text-green-800"
-                    style={{ top: '30px' }}
-                  >
-                    {player}
-                  </PlayerName>
-                ))}
-              </div>
-            )
-          }
-          {
-            // 최다 같은 팀
-            tap === 8 && (
-              <div className="flex flex-col gap-1">
-                <Title className="text-xl">짝궁</Title>
-                <SubTitle className="">
-                  같은 팀을 가장 많이 한 플레이어 듀오
-                </SubTitle>
-                <PlayerName
-                  className={`${mostPartnerPlayers && 'text-xl text-green-800'}`}
-                  style={{ top: '40px' }}
-                >
-                  {mostPartnerPlayers
-                    ? mostPartnerPlayers.split('_')[0] +
-                      ' - ' +
-                      mostPartnerPlayers.split('_')[1]
-                    : '선정되지 않았습니다'}
-                </PlayerName>
-                {mostPartnerPlayers && (
-                  <span className="text-sm relative" style={{ top: '75px' }}>
-                    {mostPartnerPlayers.split('_')[2]}회
-                  </span>
-                )}
-              </div>
-            )
-          }
-          {
-            // 용병 최다 횟수 인원
-            tap === 9 && (
-              <div className="flex flex-col gap-1">
-                <Title className="text-xl">인맥킹</Title>
-                <SubTitle className="">
-                  용병을 가장 많이 데려온 플레이어
-                </SubTitle>
-                <PlayerName
-                  className={`${mostMercenaryPlayer && 'text-xl text-green-800 relative'}`}
-                  style={{ top: '70px' }}
-                >
-                  {mostMercenaryPlayer
-                    ? mostMercenaryPlayer.split('_')[0]
-                    : '선정되지 않았습니다'}
-                </PlayerName>
-                {mostMercenaryPlayer && (
-                  <PlayerName
-                    className="text-sm relative"
-                    style={{ top: '125px' }}
-                  >
-                    {mostMercenaryPlayer.split('_')[1]}회
-                  </PlayerName>
-                )}
-              </div>
-            )
-          }
-          <div
-            className="flex flex-row w-full justify-center gap-14"
-            style={{
-              marginTop: tap === 7 && '30px',
-              position: [1, 2].includes(tap) && 'fixed',
-              top: [1, 2].includes(tap) && '356px',
-              opacity: ![0].includes(tap) && '0.3',
-            }}
-          >
-            <BackgroundImage
-              $propsImage={tapImage[tap]}
-              $propsSize={tapImageSize[tap]}
-              $propsTap={tap}
-            />
-            {[1, 2].includes(tap) && (
-              <BackgroundImage
-                $propsImage={tapImage[tap]}
-                $propsSize={tapImageSize[tap]}
-                $propsTap={tap}
-              />
-            )}
-          </div>
+          {/*{*/}
+          {/*  // 최다 MVP*/}
+          {/*  tap === 0 && (*/}
+          {/*    <div className="flex flex-col gap-1">*/}
+          {/*      <Title className="text-xl">최다 MVP</Title>*/}
+          {/*      <SubTitle className="">데일리 MVP 최다 플레이어</SubTitle>*/}
+          {/*      {mostMvpPlayer.name?.map((player) => (*/}
+          {/*        <PlayerName*/}
+          {/*          key={player.name}*/}
+          {/*          className="text-xl text-green-800 relative"*/}
+          {/*          style={{ top: '35px' }}*/}
+          {/*        >*/}
+          {/*          {player.name}*/}
+          {/*        </PlayerName>*/}
+          {/*      ))}*/}
+          {/*      <PlayerName style={{ top: '100px' }}>*/}
+          {/*        {mostMvpPlayer.length > 0 && mostMvpPlayer[0].count}회*/}
+          {/*      </PlayerName>*/}
+          {/*    </div>*/}
+          {/*  )*/}
+          {/*}*/}
+          {/*{*/}
+          {/*  // 10-10 클럽*/}
+          {/*  tap === 1 && (*/}
+          {/*    <div className="flex flex-col gap-1 relative z-1">*/}
+          {/*      <Title className="text-xl">10-10 클럽</Title>*/}
+          {/*      <SubTitle style={{ marginBottom: '0px' }}>*/}
+          {/*        골, 어시 각각 10개 이상 달성한 플레이어*/}
+          {/*      </SubTitle>*/}
+          {/*      <div className="flex flex-col gap-[4px] w-[250px] h-[25vh] overflow-y-auto">*/}
+          {/*        {tenTenClub?.map((player) => (*/}
+          {/*          <PlayerName*/}
+          {/*            key={player}*/}
+          {/*            className="text-xl text-green-800"*/}
+          {/*            style={{ top: '20px' }}*/}
+          {/*          >*/}
+          {/*            {player}*/}
+          {/*          </PlayerName>*/}
+          {/*        ))}*/}
+          {/*        {tenTenClub.length === 0 && (*/}
+          {/*          <PlayerName style={{ top: '50px' }}>*/}
+          {/*            아직 달성한 플레이어가 없습니다*/}
+          {/*          </PlayerName>*/}
+          {/*        )}*/}
+          {/*      </div>*/}
+          {/*      {almostTenTenClub.length > 0 && (*/}
+          {/*        <span*/}
+          {/*          className={`animate-bounceUpDown text-red-600 ${tenTenClub.length === 0 && 'relative top-[140px]'}`}*/}
+          {/*        >*/}
+          {/*          달성 임박*/}
+          {/*        </span>*/}
+          {/*      )}*/}
+          {/*      {almostTenTenClub?.map((player) => (*/}
+          {/*        <span*/}
+          {/*          key={player}*/}
+          {/*          className={`relative z-1 text-lg text-gray-400 ${tenTenClub.length === 0 && 'top-[150px]'}`}*/}
+          {/*        >*/}
+          {/*          {player}*/}
+          {/*        </span>*/}
+          {/*      ))}*/}
+          {/*    </div>*/}
+          {/*  )*/}
+          {/*}*/}
+          {/*{*/}
+          {/*  // 20-20 클럽*/}
+          {/*  tap === 2 && (*/}
+          {/*    <div className="flex flex-col gap-1 relative z-1">*/}
+          {/*      <Title className="text-xl">20-20 클럽</Title>*/}
+          {/*      <SubTitle className="">*/}
+          {/*        골, 어시 각각 20개 이상 달성한 플레이어*/}
+          {/*      </SubTitle>*/}
+          {/*      <div className="flex flex-col gap-[4px] w-[250px] h-[25vh] overflow-y-auto">*/}
+          {/*        {twentyTwentyClub?.map((player) => (*/}
+          {/*          <PlayerName*/}
+          {/*            key={player}*/}
+          {/*            className="text-xl text-green-800"*/}
+          {/*            style={{ top: '20px' }}*/}
+          {/*          >*/}
+          {/*            {player}*/}
+          {/*          </PlayerName>*/}
+          {/*        ))}*/}
+          {/*      </div>*/}
+          {/*      {twentyTwentyClub.length === 0 && (*/}
+          {/*        <PlayerName style={{ top: '50px' }}>*/}
+          {/*          아직 달성한 플레이어가 없습니다*/}
+          {/*        </PlayerName>*/}
+          {/*      )}*/}
+          {/*      {almostTwentyTwentyClub.length > 0 && (*/}
+          {/*        <span*/}
+          {/*          className={`animate-bounceUpDown text-red-600 ${twentyTwentyClub.length === 0 && 'relative top-[140px]'}`}*/}
+          {/*        >*/}
+          {/*          달성 임박*/}
+          {/*        </span>*/}
+          {/*      )}*/}
+          {/*      {almostTwentyTwentyClub?.map((player) => (*/}
+          {/*        <span*/}
+          {/*          key={player}*/}
+          {/*          className={`relative z-1 text-lg text-gray-400 ${twentyTwentyClub.length === 0 && 'top-[150px]'}`}*/}
+          {/*        >*/}
+          {/*          {player}*/}
+          {/*        </span>*/}
+          {/*      ))}*/}
+          {/*    </div>*/}
+          {/*  )*/}
+          {/*}*/}
+          {/*{*/}
+          {/*  // Best 얼리 스타터*/}
+          {/*  tap === 3 && (*/}
+          {/*    <div className="flex flex-col gap-1">*/}
+          {/*      <Title className="text-xl">Best 얼리 스타터</Title>*/}
+          {/*      <SubTitle className="">*/}
+          {/*        전반에 포인트 기록한 비율이 가장 높은 플레이어*/}
+          {/*      </SubTitle>*/}
+          {/*      {bestEarlyStarter && (*/}
+          {/*        <PlayerName*/}
+          {/*          className="text-xl text-green-800"*/}
+          {/*          style={{ top: '55px' }}*/}
+          {/*        >*/}
+          {/*          {bestEarlyStarter}*/}
+          {/*        </PlayerName>*/}
+          {/*      )}*/}
+          {/*    </div>*/}
+          {/*  )*/}
+          {/*}*/}
+          {/*{*/}
+          {/*  // Best 슬로우 스타터*/}
+          {/*  tap === 4 && (*/}
+          {/*    <div className="flex flex-col gap-1">*/}
+          {/*      <Title className="text-xl">Best 슬로우 스타터</Title>*/}
+          {/*      <SubTitle className="">*/}
+          {/*        후반에 포인트 기록한 비율이 가장 높은 플레이어*/}
+          {/*      </SubTitle>*/}
+          {/*      {bestSlowStarter && (*/}
+          {/*        <PlayerName*/}
+          {/*          className="text-xl text-green-800"*/}
+          {/*          style={{ top: '55px' }}*/}
+          {/*        >*/}
+          {/*          {bestSlowStarter}*/}
+          {/*        </PlayerName>*/}
+          {/*      )}*/}
+          {/*    </div>*/}
+          {/*  )*/}
+          {/*}*/}
+          {/*{*/}
+          {/*  // 손케듀오*/}
+          {/*  tap === 5 && (*/}
+          {/*    <div className="flex flex-col gap-1">*/}
+          {/*      <Title className="text-xl ">손케 듀오</Title>*/}
+          {/*      <SubTitle className="">*/}
+          {/*        합작한 골이 제일 많은 플레이어 듀오*/}
+          {/*      </SubTitle>*/}
+          {/*      {sonKaeDuo?.map((player) => (*/}
+          {/*        <PlayerName*/}
+          {/*          key={player.key}*/}
+          {/*          className="text-xl text-green-800 relative"*/}
+          {/*          style={{ top: '62px' }}*/}
+          {/*        >*/}
+          {/*          {player.key.split('_')[0]} - {player.key.split('_')[1]}*/}
+          {/*        </PlayerName>*/}
+          {/*      ))}*/}
+          {/*      <span className="relative" style={{ top: '145px' }}>*/}
+          {/*        {sonKaeDuo.length > 0 && sonKaeDuo[0].count}골*/}
+          {/*      </span>*/}
+          {/*    </div>*/}
+          {/*  )*/}
+          {/*}*/}
+          {/*{*/}
+          {/*  // 탐욕왕*/}
+          {/*  tap === 6 && (*/}
+          {/*    <div className="flex flex-col gap-1">*/}
+          {/*      <Title className="text-xl ">내가 할게!</Title>*/}
+          {/*      <SubTitle className="">*/}
+          {/*        골,어시 중 골 비율이 가장 높은 플레이어*/}
+          {/*      </SubTitle>*/}
+          {/*      {greedyPlayer?.map((player) => (*/}
+          {/*        <PlayerName*/}
+          {/*          key={player.key}*/}
+          {/*          className="text-xl text-green-800"*/}
+          {/*          style={{ top: '30px' }}*/}
+          {/*        >*/}
+          {/*          {player}*/}
+          {/*        </PlayerName>*/}
+          {/*      ))}*/}
+          {/*    </div>*/}
+          {/*  )*/}
+          {/*}*/}
+          {/*{*/}
+          {/*  // 양보왕*/}
+          {/*  tap === 7 && (*/}
+          {/*    <div className="flex flex-col gap-1">*/}
+          {/*      <Title className="text-xl">너가 해!</Title>*/}
+          {/*      <SubTitle className="">*/}
+          {/*        골,어시 중 어시 비율이 가장 높은 플레이어*/}
+          {/*      </SubTitle>*/}
+          {/*      {altruisticPlayer?.map((player) => (*/}
+          {/*        <PlayerName*/}
+          {/*          key={player.key}*/}
+          {/*          className="text-xl text-green-800"*/}
+          {/*          style={{ top: '30px' }}*/}
+          {/*        >*/}
+          {/*          {player}*/}
+          {/*        </PlayerName>*/}
+          {/*      ))}*/}
+          {/*    </div>*/}
+          {/*  )*/}
+          {/*}*/}
+          {/*{*/}
+          {/*  // 최다 같은 팀*/}
+          {/*  tap === 8 && (*/}
+          {/*    <div className="flex flex-col gap-1">*/}
+          {/*      <Title className="text-xl">짝궁</Title>*/}
+          {/*      <SubTitle className="">*/}
+          {/*        같은 팀을 가장 많이 한 플레이어 듀오*/}
+          {/*      </SubTitle>*/}
+          {/*      <PlayerName*/}
+          {/*        className={`${mostPartnerPlayers && 'text-xl text-green-800'}`}*/}
+          {/*        style={{ top: '40px' }}*/}
+          {/*      >*/}
+          {/*        {mostPartnerPlayers*/}
+          {/*          ? mostPartnerPlayers.split('_')[0] +*/}
+          {/*            ' - ' +*/}
+          {/*            mostPartnerPlayers.split('_')[1]*/}
+          {/*          : '선정되지 않았습니다'}*/}
+          {/*      </PlayerName>*/}
+          {/*      {mostPartnerPlayers && (*/}
+          {/*        <span className="text-sm relative" style={{ top: '75px' }}>*/}
+          {/*          {mostPartnerPlayers.split('_')[2]}회*/}
+          {/*        </span>*/}
+          {/*      )}*/}
+          {/*    </div>*/}
+          {/*  )*/}
+          {/*}*/}
+          {/*{*/}
+          {/*  // 용병 최다 횟수 인원*/}
+          {/*  tap === 9 && (*/}
+          {/*    <div className="flex flex-col gap-1">*/}
+          {/*      <Title className="text-xl">인맥킹</Title>*/}
+          {/*      <SubTitle className="">*/}
+          {/*        용병을 가장 많이 데려온 플레이어*/}
+          {/*      </SubTitle>*/}
+          {/*      <PlayerName*/}
+          {/*        className={`${mostMercenaryPlayer && 'text-xl text-green-800 relative'}`}*/}
+          {/*        style={{ top: '70px' }}*/}
+          {/*      >*/}
+          {/*        {mostMercenaryPlayer*/}
+          {/*          ? mostMercenaryPlayer.split('_')[0]*/}
+          {/*          : '선정되지 않았습니다'}*/}
+          {/*      </PlayerName>*/}
+          {/*      {mostMercenaryPlayer && (*/}
+          {/*        <PlayerName*/}
+          {/*          className="text-sm relative"*/}
+          {/*          style={{ top: '125px' }}*/}
+          {/*        >*/}
+          {/*          {mostMercenaryPlayer.split('_')[1]}회*/}
+          {/*        </PlayerName>*/}
+          {/*      )}*/}
+          {/*    </div>*/}
+          {/*  )*/}
+          {/*}*/}
+          {/*<div*/}
+          {/*  className="flex flex-row w-full justify-center gap-14"*/}
+          {/*  style={{*/}
+          {/*    marginTop: tap === 7 && '30px',*/}
+          {/*    position: [1, 2].includes(tap) && 'fixed',*/}
+          {/*    top: [1, 2].includes(tap) && '356px',*/}
+          {/*    opacity: ![0].includes(tap) && '0.3',*/}
+          {/*  }}*/}
+          {/*>*/}
+          {/*  <BackgroundImage*/}
+          {/*    $propsImage={tapImage[tap]}*/}
+          {/*    $propsSize={tapImageSize[tap]}*/}
+          {/*    $propsTap={tap}*/}
+          {/*  />*/}
+          {/*  {[1, 2].includes(tap) && (*/}
+          {/*    <BackgroundImage*/}
+          {/*      $propsImage={tapImage[tap]}*/}
+          {/*      $propsSize={tapImageSize[tap]}*/}
+          {/*      $propsTap={tap}*/}
+          {/*    />*/}
+          {/*  )}*/}
+          {/*</div>*/}
           {showIndividual ? (
             <div className="absolute bottom-0 flex flex-col items-end z-[2]">
               <CloseButton
