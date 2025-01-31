@@ -57,6 +57,15 @@ const TitleHolderCard = (props) => {
 
   useEffect(() => {
     setGridStyle(tapNumber > 0 && tapNumber < 3 && data?.name?.length > 1)
+    if (data?.name?.length > 0) {
+      setTimeout(() => {
+        setFlipping(true)
+        setTimeout(() => {
+          setFlipping(false)
+          setIsFlipped(!isFlipped)
+        }, 500)
+      }, 200)
+    }
   }, [data, tapNumber])
 
   return (
