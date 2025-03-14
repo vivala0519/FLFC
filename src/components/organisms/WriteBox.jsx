@@ -32,6 +32,11 @@ const WriteBox = (props) => {
     }
   }
 
+  const handleBlur = () => {
+    setIsTyping(false)
+    updateTypingStatus(false)
+  }
+
   const handleKeyDown = () => {
     if (!isTyping) {
       setIsTyping(true)
@@ -97,6 +102,7 @@ const WriteBox = (props) => {
                 type={index === 0 ? scorer : assistant}
                 setData={index === 0 ? setScorer : setAssistant}
                 handleKeyDown={handleKeyDown}
+                handleBlur={handleBlur}
               />
             </div>
           ))}
