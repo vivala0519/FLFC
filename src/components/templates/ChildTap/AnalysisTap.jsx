@@ -318,7 +318,7 @@ const AnalysisTap = (props) => {
         if (
           thisYear.slice(2, 4) === data.id.slice(0, 2) &&
           data.id.slice(2, 4) > 3 &&
-          data.id.slice(0, 2) <= 6
+          data.id.slice(2, 4) <= 6
         ) {
           if (Object.keys(data.data)[0] === 'bestPlayers') {
             data.data['bestPlayers'].forEach((item) => {
@@ -334,7 +334,7 @@ const AnalysisTap = (props) => {
         if (
           thisYear.slice(2, 4) === data.id.slice(0, 2) &&
           data.id.slice(2, 4) > 6 &&
-          data.id.slice(0, 2) <= 9
+          data.id.slice(2, 4) <= 9
         ) {
           if (Object.keys(data.data)[0] === 'bestPlayers') {
             data.data['bestPlayers'].forEach((item) => {
