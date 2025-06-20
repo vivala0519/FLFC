@@ -226,6 +226,7 @@ function WeeklyTeam(props) {
             <hr className="w-full border-green-700" />
           </div>
         )}
+        <div className="mb-4">이번 달 황밸 요정🧚 : 임종우</div>
         <div className="w-full flex justify-center mb-5">
           <div
             className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-yellow-500'}`}
