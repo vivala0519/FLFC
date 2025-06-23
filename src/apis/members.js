@@ -87,7 +87,6 @@ export const extractActiveMembers = (totalStats, isTotal) => {
     '진장용',
     '이진헌',
     '윤준석',
-    '이재진',
     '박남호',
     '장성민',
     '선우용',
