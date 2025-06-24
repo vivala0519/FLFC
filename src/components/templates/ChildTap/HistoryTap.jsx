@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import { db } from '../../../../firebase.js'
 import { collection, getDocs } from 'firebase/firestore'
+import getMembers from '@/hooks/getMembers.js'
 import styled from 'styled-components'
 import trophy from '@/assets/trophy.png'
 
 const HistoryTap = () => {
   const [historyData, setHistoryData] = useState([])
+  const [blurMode, setBlurMode] = useState(true)
+  const { retiredMembers } = getMembers()
 
   const getHistoryData = async () => {
     const historyRef = collection(db, 'history')
@@ -16,6 +19,10 @@ const HistoryTap = () => {
         (data) => !['changed_last_season', 'last_season'].includes(data.id),
       )
     setHistoryData(fetchedData)
+  }
+
+  const blurModeHandler = () => {
+    setBlurMode(false)
   }
 
   useEffect(() => {
@@ -40,11 +47,27 @@ const HistoryTap = () => {
           </span>
           <span className="flex flex-col">
             {data.data['attendance_king'].map((name, idx) => (
-              <span key={idx}>{name}</span>
+              <span
+                key={idx}
+                className={`${blurMode && retiredMembers.includes(name) ? 'blur-sm' : ''}`}
+                onClick={blurModeHandler}
+              >
+                {name}
+              </span>
             ))}
           </span>
-          <span>{data.data['goal_king']}</span>
-          <span>{data.data['assist_king']}</span>
+          <span
+            className={`${blurMode && retiredMembers.includes(data.data['goal_king']) ? 'blur-sm' : ''}`}
+            onClick={blurModeHandler}
+          >
+            {data.data['goal_king']}
+          </span>
+          <span
+            className={`${blurMode && retiredMembers.includes(data.data['assist_king']) ? 'blur-sm' : ''}`}
+            onClick={blurModeHandler}
+          >
+            {data.data['assist_king']}
+          </span>
         </div>
       ))}
     </>

@@ -5,6 +5,7 @@ import { useAtom } from 'jotai'
 import {
   totalMembersAtom,
   existingMembersAtom,
+  retiredMembersAtom,
   membersIdAtom,
   oneCharacterMembersAtom,
 } from '@/store/atoms'
@@ -12,6 +13,7 @@ import {
 const updateMembers = () => {
   const [, setTotalMembers] = useAtom(totalMembersAtom)
   const [, setExistingMembers] = useAtom(existingMembersAtom)
+  const [, setRetiredMembers] = useAtom(retiredMembersAtom)
   const [, setOneCharacterMembers] = useAtom(oneCharacterMembersAtom)
   const [, setMembersId] = useAtom(membersIdAtom)
 
@@ -29,6 +31,7 @@ const updateMembers = () => {
       setExistingMembers(
         totalMembers.filter((member) => !retiredMembers.includes(member)),
       )
+      setRetiredMembers(retiredMembers)
       setOneCharacterMembers(oneCharacterMembers)
 
       const fetchedMembersIdData = membersSnapshot.docs
