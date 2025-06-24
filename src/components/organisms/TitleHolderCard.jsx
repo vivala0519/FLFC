@@ -16,7 +16,6 @@ const TitleHolderCard = (props) => {
     'ronaldo',
     'DeBruyne',
     'myTeam',
-    'CJamChul',
   ]
   const tapTitleList = [
     '최다 MVP',
@@ -28,7 +27,6 @@ const TitleHolderCard = (props) => {
     '내가!',
     '너가!',
     '친해지길 바라',
-    '인맥왕',
   ]
   const tapDescriptionList = [
     '데일리 MVP 최다 플레이어',
@@ -40,7 +38,6 @@ const TitleHolderCard = (props) => {
     '골 비율이 가장 높은 플레이어',
     '어시 비율이 가장 높은 플레이어',
     '최다 같은 팀 듀오',
-    '용병 최다 호출 플레이어',
   ]
 
   const cardStyle = 'flex justify-center items-center bg-gray-100 '

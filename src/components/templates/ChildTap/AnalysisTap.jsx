@@ -21,7 +21,7 @@ const AnalysisTap = (props) => {
   const {
     time: { thisYear },
   } = getTimes()
-  const tapList = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  const tapList = [0, 1, 2, 3, 4, 5, 6, 7, 8]
   const thisMonth = test ? 12 : new Date().getMonth() + 1
   const [quarter, setQuarter] = useState(0)
   const [needMoreData, setNeedMoreData] = useState(false)
@@ -403,13 +403,13 @@ const AnalysisTap = (props) => {
       })
     } else if (thisMonth < 7) {
       fetchedData.forEach((data) => {
-        if (data.id.slice(2, 4) > 3 && data.id.slice(0, 2) <= 6) {
+        if (data.id.slice(2, 4) > 3 && data.id.slice(2, 4) <= 6) {
           filteredData.push(data.data)
         }
       })
     } else if (thisMonth < 10) {
       fetchedData.forEach((data) => {
-        if (data.id.slice(2, 4) > 6 && data.id.slice(0, 2) <= 9) {
+        if (data.id.slice(2, 4) > 6 && data.id.slice(2, 4) <= 9) {
           filteredData.push(data.data)
         }
       })
