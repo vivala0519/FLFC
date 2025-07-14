@@ -52,6 +52,7 @@ export const extractActiveMembers = (totalStats, isTotal) => {
     '최봉호',
     '남종수',
     '유시현',
+    '유근원',
     '권승민',
   ]
   // 현 인원
@@ -93,6 +94,7 @@ export const extractActiveMembers = (totalStats, isTotal) => {
     '선우용',
     '남종수',
     '유시현',
+    '유근원',
     '권승민',
   ]
   const members = isTotal ? totalNames : names
