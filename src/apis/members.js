@@ -54,6 +54,7 @@ export const extractActiveMembers = (totalStats, isTotal) => {
     '유시현',
     '유근원',
     '권승민',
+    '김성현',
   ]
   // 현 인원
   const names = [
@@ -96,6 +97,7 @@ export const extractActiveMembers = (totalStats, isTotal) => {
     '유시현',
     '유근원',
     '권승민',
+    '김성현',
   ]
   const members = isTotal ? totalNames : names
   const includedNames = members.filter((name) => totalStats.has(name))
