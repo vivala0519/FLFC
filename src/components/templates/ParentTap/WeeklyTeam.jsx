@@ -30,6 +30,7 @@ function WeeklyTeam(props) {
     ['', '', '', '', '', ''],
     ['', '', '', '', '', ''],
   ])
+  const [balancer, setBalancer] = useState('')
 
   const tapContainerStyle = 'relative w-full h-[80vh]'
   const dayTitleContainerStyle = 'flex gap-5 justify-center items-center'
@@ -57,6 +58,15 @@ function WeeklyTeam(props) {
     setWeeklyTeamData(fetchedWeeklyTeamData)
     setPage(fetchedWeeklyTeamData.length - 1)
     setLastDate(fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id)
+
+    const balancerRef = collection(db, 'balancer')
+    const balancerSnapshot = await getDocs(balancerRef)
+    const balancerData = balancerSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      data: doc.data(),
+    }))[0]['data']
+    setBalancer(balancerData['name'])
+    console.log(balancerData['name'])
   }
 
   useEffect(() => {
@@ -226,7 +236,9 @@ function WeeklyTeam(props) {
             <hr className="w-full border-green-700" />
           </div>
         )}
-        <div className="mb-4">이번 달 황밸 요정🧚 : 임준휘</div>
+        {page === weeklyTeamData.length - 1 && (
+          <div className="mb-4">이번 달 황밸 요정🧚 : {balancer}</div>
+        )}
         <div className="w-full flex justify-center mb-5">
           <div
             className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-yellow-500'}`}
