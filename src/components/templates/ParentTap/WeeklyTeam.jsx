@@ -138,7 +138,7 @@ function WeeklyTeam(props) {
   }
 
   const teamMakerInputHandler = (event, teamIndex, playerIndex) => {
-    const value = event.target.value
+    const value = event.target.value.trim()
     const newTeamData = [...inputTeamData]
     newTeamData[teamIndex][playerIndex] = value
     setInputTeamData(newTeamData)
