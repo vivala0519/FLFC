@@ -375,10 +375,12 @@ const AnalysisTap = (props) => {
 
     let count = -1
     let mostMVP = []
-    Object.values(mvpCount).forEach((name) => {
-      if (name.count >= count) {
-        mostMVP.push(name['name'])
-        count = name['count']
+    Object.values(mvpCount).forEach((entry) => {
+      if (entry.count > count) {
+        mostMVP = [entry.name]
+        count = entry.count
+      } else if (entry.count === count) {
+        mostMVP.push(entry.name)
       }
     })
     setMostMvpPlayer({ name: mostMVP, count: count + '회' })
