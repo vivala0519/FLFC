@@ -1,9 +1,12 @@
 const RecordTypeText = (props) => {
-  const {type, fontSize, width, customStyle} = props
-  const textStyle = ` flex justify-center relative bottom-2 mr-0.5 font-giants ${fontSize ? `text-[${fontSize}]`: ''} ${type === 'GOAL' ? 'text-goal' : 'text-assist'} ${width ? 'w-[70px]' : ''}`
+  const {type, fontSize, width, customStyle, sliceText} = props
+  const divStyle = 'flex'
+  const textStyle = ` flex justify-center relative bottom-2 mr-0.5 font-giants ${fontSize ? `text-[${fontSize}]`: ''} text-goal ${width ? 'w-[70px]' : ''}`
 
   return (
-    <span className={customStyle + textStyle}>{type}</span>
+    <div className={divStyle}>
+      <span className={customStyle + textStyle}>{sliceText ? type.slice(0, sliceText) : type}</span>
+    </div>
   )
 }
 

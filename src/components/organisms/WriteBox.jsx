@@ -95,6 +95,7 @@ const WriteBox = (props) => {
             <div key={index} className="flex gap-0.5 items-center">
               <RecordTypeText
                 type={index === 0 ? 'GOAL' : 'ASSIST'}
+                fontSize={'12px'}
                 width={'70px'}
                 customStyle={'z-2 left-[30px]'}
               />

@@ -46,6 +46,7 @@ export default {
         assist: '#eab308',
         signature: '#166534',
         vivaMagenta: '#BB2649',
+        teamWin: '#21009A',
       },
       boxShadow: {
         custom: '0 0 10px rgba(0, 0, 0, 0.5)',
@@ -76,6 +77,10 @@ export default {
           '0%': { transform: 'rotateY(0deg) rotate(45deg)' },
           '100%': { transform: 'rotateY(360deg) rotate(45deg)' },
         },
+        'goal-roll': {
+          '0%': { transform: 'translateX(100vw) rotate(0deg)' },
+          '100%': { transform: 'translateX(0) rotate(-2160deg)' },
+        },
       },
       animation: {
         shineEffect: 'shineEffect 2s infinite',
@@ -84,6 +89,7 @@ export default {
         flipY: 'flipY 0.9s ease-in-out infinite',
         spinVertical: 'spinVertical 0.3s linear infinite',
         bounceUpDown: 'bounceUpDown 1s ease-in-out infinite',
+        'goal-roll': 'goal-roll 0.8s ease-out forwards',
       },
       transform: {
         'rotate-y-180': 'rotateY(180deg)',
