@@ -25,6 +25,7 @@ export const membersIdAtom = atom([])
 // records
 const realtimeRecord = {}
 const todaysRealtimeRecord = {}
+const todaysRealtimeRound = {}
 const requestList = []
 
 // votes
@@ -43,5 +44,6 @@ export const timeAtom = atom({
 })
 export const realtimeRecordAtom = atom(realtimeRecord)
 export const todaysRealtimeRecordAtom = atom(todaysRealtimeRecord)
+export const todaysRealtimeRoundAtom = atom(todaysRealtimeRound)
 export const requestListAtom = atom(requestList)
 export const voteListAtom = atom(voteList)
