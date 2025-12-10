@@ -77,8 +77,20 @@ export default {
           '0%': { transform: 'rotateY(0deg) rotate(45deg)' },
           '100%': { transform: 'rotateY(360deg) rotate(45deg)' },
         },
-        'goal-roll': {
+        'goal-roll-1': {
           '0%': { transform: 'translateX(100vw) rotate(0deg)' },
+          '100%': { transform: 'translateX(0) rotate(-2160deg)' },
+        },
+        'goal-roll-2': {
+          '0%': { transform: 'translateX(-100vw) rotate(0deg)' },
+          '100%': { transform: 'translateX(0) rotate(-2160deg)' },
+        },
+        'goal-roll-3': {
+          '0%': { transform: 'translateY(100vw) rotate(0deg)' },
+          '100%': { transform: 'translateX(0) rotate(-2160deg)' },
+        },
+        'goal-roll-4': {
+          '0%': { transform: 'translateY(-100vw) rotate(0deg)' },
           '100%': { transform: 'translateX(0) rotate(-2160deg)' },
         },
       },
@@ -89,7 +101,10 @@ export default {
         flipY: 'flipY 0.9s ease-in-out infinite',
         spinVertical: 'spinVertical 0.3s linear infinite',
         bounceUpDown: 'bounceUpDown 1s ease-in-out infinite',
-        'goal-roll': 'goal-roll 0.8s ease-out forwards',
+        'goal-roll-1': 'goal-roll-1 0.8s ease-out forwards',
+        'goal-roll-2': 'goal-roll-2 0.8s ease-out forwards',
+        'goal-roll-3': 'goal-roll-3 0.8s ease-out forwards',
+        'goal-roll-4': 'goal-roll-4 0.8s ease-out forwards',
       },
       transform: {
         'rotate-y-180': 'rotateY(180deg)',

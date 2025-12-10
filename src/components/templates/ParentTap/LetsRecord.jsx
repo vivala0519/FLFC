@@ -11,6 +11,7 @@ import DailyMVP from '@/components/organisms/DailyMVP.jsx'
 import RecordContainer from '@/components/organisms/RecordContainer.jsx'
 import WriteContainer from '@/components/organisms/WriteContainer.jsx'
 import SelectTeamPopup from '@/components/organisms/SelectTeamPopup.jsx'
+import SelectScorerTeamPopup from '@/components/organisms/SelectScorerTeamPopup.jsx'
 import './LetsRecord.css'
 
 const LetsRecord = (props) => {
@@ -26,21 +27,23 @@ const LetsRecord = (props) => {
     },
   } = getTimes()
   const { existingMembers, oneCharacterMembers } = getMembers()
-  const { todaysRealtimeRecord, todaysRequestList } = getRecords()
+  const { todaysRealtimeRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
   const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
   const registerRef = useRef(null)
   const scrollContainerRef = useRef(null)
   const [todayRecord, setTodayRecord] = useState([])
+  const [displayRecord, setDisplayRecord] = useState([])
   const [dynamicHeight, setDynamicHeight] = useState(0)
   const [writtenData, setWrittenData] = useState([])
   const [registerHeight, setRegisterHeight] = useState(0)
-  const [canRegister, setCanRegister] = useState(false)
+  const [canRegister, setCanRegister] = useState(true)
   const [lastRecord, setLastRecord] = useState('')
   const [showMVP, setShowMVP] = useState(false)
-  const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
   const [requestList, setRequestList] = useState([])
   const [playingTeams, setPlayingTeams] = useState(new Set())
+  const [scorerTeam, setScorerTeam] = useState(null)
+  const [showSelectScorerTeamPopup, setShowSelectScorerTeamPopup] = useState(false)
   const [showSelectTeamPopup, setShowSelectTeamPopup] = useState(false)
   const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   // style class
@@ -77,18 +80,30 @@ const LetsRecord = (props) => {
 
   // daily 실시간 record
   useEffect(() => {
-    const isData = todaysRealtimeRecord
-    if (isData) {
-      const recordArray = Object.values(isData)
-      const sortedRecordArray = recordArray.sort((a, b) => {
-        const timeA = parseTimeFromString(a.time)
-        const timeB = parseTimeFromString(b.time)
+    const data = todaysRealtimeRound
+    if (data) {
+      // firestore에 등록하기 위한 전체 골 data
+      const totalGoals = Object.values(data || {}).flatMap(round => {
+        if (!round.goal) return []
 
-        return timeA - timeB
+        return Object.values(round.goal).map(goal => ({
+          ...goal,
+        })).sort((a, b) => parseTimeFromString(a.time) - parseTimeFromString(b.time))
       })
-      setTodayRecord(sortedRecordArray)
+      console.log('totalGoals: ', totalGoals)
+      // display 위한 라운드/골 데이터
+      const totalRecord = Object.entries(data || {})
+        .map(([roundId, round]) => ({
+          ...round,
+          roundId,
+          goals: round.goal ? Object.values(round.goal).sort((a, b) => parseTimeFromString(a.time) - parseTimeFromString(b.time)) : []
+        }))
+        .sort((a, b) => a.index - b.index)
+      console.log('totalRecord: ', totalRecord)
+      setTodayRecord(totalGoals)
+      setDisplayRecord(totalRecord)
     }
-  }, [todaysRealtimeRecord])
+  }, [todaysRealtimeRecord, todaysRealtimeRound])
 
   // request list
   useEffect(() => {
@@ -287,23 +302,33 @@ const LetsRecord = (props) => {
           )}
           <RecordContainer
             open={open}
-            scrollContainerRef={scrollContainerRef}
-            dynamicHeight={dynamicHeight}
             showMVP={showMVP}
-            todayRecord={todayRecord}
             lastRecord={lastRecord}
             canRegister={canRegister}
+            playingTeams={playingTeams}
+            dynamicHeight={dynamicHeight}
+            displayRecord={displayRecord}
+            scrollContainerRef={scrollContainerRef}
           />
           <WriteContainer
             open={open}
-            scrollContainerRef={scrollContainerRef}
+            scorerTeam={scorerTeam}
+            requestList={requestList}
             registerRef={registerRef}
             canRegister={canRegister}
-            setLastRecord={setLastRecord}
+            playingTeams={playingTeams}
+            weeklyTeamData={weeklyTeamData}
             requestUpdateMode={requestUpdateMode}
-            setRequestUpdateMode={setRequestUpdateMode}
-            requestList={requestList}
+            scrollContainerRef={scrollContainerRef}
+            showSelectTeamPopup={showSelectTeamPopup}
+            showSelectScorerTeamPopup={showSelectScorerTeamPopup}
             showRequestUpdateButton={showRequestUpdateButton}
+            setLastRecord={setLastRecord}
+            setScorerTeam={setScorerTeam}
+            setPlayingTeams={setPlayingTeams}
+            setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
+            setShowSelectTeamPopup={setShowSelectTeamPopup}
+            setRequestUpdateMode={setRequestUpdateMode}
           />
         </>
       </div>
@@ -313,6 +338,15 @@ const LetsRecord = (props) => {
           weeklyTeamData={weeklyTeamData}
           setPlayingTeams={setPlayingTeams}
           setShowSelectTeamPopup={setShowSelectTeamPopup}
+        />
+      }
+      {showSelectScorerTeamPopup &&
+        <SelectScorerTeamPopup
+          scorerTeam={scorerTeam}
+          playingTeams={playingTeams}
+          weeklyTeamData={weeklyTeamData}
+          setScorerTeam={setScorerTeam}
+          setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
         />
       }
     </div>

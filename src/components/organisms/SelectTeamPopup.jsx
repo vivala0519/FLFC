@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 const SelectTeamPopup = (props) => {
   const {weeklyTeamData, setShowSelectTeamPopup, playingTeams, setPlayingTeams} = props
   const popupContainer = 'fixed inset-0 flex items-center justify-center z-50'
