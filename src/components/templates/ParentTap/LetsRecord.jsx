@@ -10,6 +10,7 @@ import Separator from '@/components/atoms/Separator.jsx'
 import DailyMVP from '@/components/organisms/DailyMVP.jsx'
 import RecordContainer from '@/components/organisms/RecordContainer.jsx'
 import WriteContainer from '@/components/organisms/WriteContainer.jsx'
+import SelectTeamPopup from '@/components/organisms/SelectTeamPopup.jsx'
 import './LetsRecord.css'
 
 const LetsRecord = (props) => {
@@ -39,6 +40,9 @@ const LetsRecord = (props) => {
   const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
   const [requestList, setRequestList] = useState([])
+  const [playingTeams, setPlayingTeams] = useState(new Set())
+  const [showSelectTeamPopup, setShowSelectTeamPopup] = useState(false)
+  const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   // style class
   const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-[-12px]'}`
   const templateContainerStyle = 'flex flex-col items-center w-full'
@@ -303,6 +307,14 @@ const LetsRecord = (props) => {
           />
         </>
       </div>
+      {showSelectTeamPopup &&
+        <SelectTeamPopup
+          playingTeams={playingTeams}
+          weeklyTeamData={weeklyTeamData}
+          setPlayingTeams={setPlayingTeams}
+          setShowSelectTeamPopup={setShowSelectTeamPopup}
+        />
+      }
     </div>
   )
 }
