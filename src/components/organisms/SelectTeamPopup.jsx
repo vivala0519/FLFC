@@ -1,5 +1,5 @@
 const SelectTeamPopup = (props) => {
-  const {weeklyTeamData, setShowSelectTeamPopup, playingTeams, setPlayingTeams} = props
+  const {weeklyTeamData, setShowSelectTeamPopup, playingTeams, setPopupType, setPlayingTeams, selectTeamPopupMessage} = props
   const popupContainer = 'fixed inset-0 flex items-center justify-center z-50'
   const innerContainer = 'bg-white dark:bg-black/90 rounded-xl shadow-lg p-6 w-[90%] h-[80%] flex flex-col justify-center gap-5'
   const teamDiv = 'h-[25%] w-full border-2 border-gray-200 flex flex-col justify-center items-center rounded-md'
@@ -24,13 +24,14 @@ const SelectTeamPopup = (props) => {
   }
 
   const buttonClickHandler = () => {
+    selectTeamPopupMessage === '경기 중인 팀을 선택해주세요' ? setPopupType('playing') : setPopupType('exit')
     if (playingTeams.size >= 2) setShowSelectTeamPopup(false)
   }
 
   return (
     <div className={popupContainer}>
       <div className={innerContainer}>
-        <span>경기 중인 팀을 선택해주세요</span>
+        <span className={'text-lg'}>{selectTeamPopupMessage}</span>
         {Object.values(weeklyTeamData?.data)?.map((data, index) => {
           const isSelected = playingTeams.has(index + 1)
           return (

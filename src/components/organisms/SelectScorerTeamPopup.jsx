@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const SelectScorerTeamPopup = (props) => {
-  const {weeklyTeamData, scorerTeam, setScorerTeam, setShowSelectScorerTeamPopup, playingTeams} = props
+  const {weeklyTeamData, scorerTeam, setScorerTeam, setShowSelectScorerTeamPopup, setHandleRoundWinnerTrigger, selectScorerTeamPopupMessage, playingTeams} = props
   const popupContainer = 'fixed inset-0 flex items-center justify-center z-50'
   const innerContainer = 'bg-white dark:bg-black/90 rounded-xl shadow-lg p-6 w-[90%] h-[80%] flex flex-col justify-center gap-5'
   const teamDiv = 'h-[25%] w-full border-2 border-gray-200 flex flex-col justify-center items-center rounded-md'
@@ -23,12 +23,15 @@ const SelectScorerTeamPopup = (props) => {
 
   const buttonClickHandler = () => {
     setShowSelectScorerTeamPopup(false)
+    if (selectScorerTeamPopupMessage === '가위바위보 어느 팀이 이겼나요?') {
+      setHandleRoundWinnerTrigger(scorerTeam)
+    }
   }
 
   return (
     <div className={popupContainer}>
       <div className={innerContainer}>
-        <span>어느 팀의 득점인가요?</span>
+        <span>{selectScorerTeamPopupMessage}</span>
         {Object.entries(currentTeams)?.map((data, index) => {
           const isSelected = data[0] === scorerTeam
           return (

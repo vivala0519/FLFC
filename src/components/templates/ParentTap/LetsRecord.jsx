@@ -43,8 +43,13 @@ const LetsRecord = (props) => {
   const [requestList, setRequestList] = useState([])
   const [playingTeams, setPlayingTeams] = useState(new Set())
   const [scorerTeam, setScorerTeam] = useState(null)
-  const [showSelectScorerTeamPopup, setShowSelectScorerTeamPopup] = useState(false)
+  const [popupType, setPopupType] = useState('')
+  const [pendingRoundId, setPendingRoundId] = useState(null)
   const [showSelectTeamPopup, setShowSelectTeamPopup] = useState(false)
+  const [selectTeamPopupMessage, setSelectTeamPopupMessage] = useState('')
+  const [handleRoundWinnerTrigger, setHandleRoundWinnerTrigger] = useState(null)
+  const [selectScorerTeamPopupMessage, setSelectScorerTeamPopupMessage] = useState('')
+  const [showSelectScorerTeamPopup, setShowSelectScorerTeamPopup] = useState(false)
   const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   // style class
   const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-[-12px]'}`
@@ -308,27 +313,41 @@ const LetsRecord = (props) => {
             playingTeams={playingTeams}
             dynamicHeight={dynamicHeight}
             displayRecord={displayRecord}
+            weeklyTeamData={weeklyTeamData}
             scrollContainerRef={scrollContainerRef}
+            setPendingRoundId={setPendingRoundId}
+            setShowSelectTeamPopup={setShowSelectTeamPopup}
+            setSelectTeamPopupMessage={setSelectTeamPopupMessage}
+            setSelectScorerTeamPopupMessage={setSelectScorerTeamPopupMessage}
+            setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
           />
           <WriteContainer
             open={open}
+            popupType={popupType}
             scorerTeam={scorerTeam}
             requestList={requestList}
             registerRef={registerRef}
             canRegister={canRegister}
             playingTeams={playingTeams}
             weeklyTeamData={weeklyTeamData}
+            pendingRoundId={pendingRoundId}
             requestUpdateMode={requestUpdateMode}
             scrollContainerRef={scrollContainerRef}
             showSelectTeamPopup={showSelectTeamPopup}
+            handleRoundWinnerTrigger={handleRoundWinnerTrigger}
             showSelectScorerTeamPopup={showSelectScorerTeamPopup}
             showRequestUpdateButton={showRequestUpdateButton}
+            setPopupType={setPopupType}
             setLastRecord={setLastRecord}
             setScorerTeam={setScorerTeam}
             setPlayingTeams={setPlayingTeams}
-            setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
-            setShowSelectTeamPopup={setShowSelectTeamPopup}
+            setPendingRoundId={setPendingRoundId}
             setRequestUpdateMode={setRequestUpdateMode}
+            setShowSelectTeamPopup={setShowSelectTeamPopup}
+            setSelectTeamPopupMessage={setSelectTeamPopupMessage}
+            setHandleRoundWinnerTrigger={setHandleRoundWinnerTrigger}
+            setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
+            setSelectScorerTeamPopupMessage={setSelectScorerTeamPopupMessage}
           />
         </>
       </div>
@@ -336,6 +355,8 @@ const LetsRecord = (props) => {
         <SelectTeamPopup
           playingTeams={playingTeams}
           weeklyTeamData={weeklyTeamData}
+          setPopupType={setPopupType}
+          selectTeamPopupMessage={selectTeamPopupMessage}
           setPlayingTeams={setPlayingTeams}
           setShowSelectTeamPopup={setShowSelectTeamPopup}
         />
@@ -345,6 +366,8 @@ const LetsRecord = (props) => {
           scorerTeam={scorerTeam}
           playingTeams={playingTeams}
           weeklyTeamData={weeklyTeamData}
+          setHandleRoundWinnerTrigger={setHandleRoundWinnerTrigger}
+          selectScorerTeamPopupMessage={selectScorerTeamPopupMessage}
           setScorerTeam={setScorerTeam}
           setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
         />
