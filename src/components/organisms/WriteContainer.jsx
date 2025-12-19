@@ -45,9 +45,6 @@ const ensureRoundTeamList = async (db, thisYear, today, roundId, playingTeams) =
   const snap = await get(roundRef)
   const roundData = snap.val() || {}
 
-  if (Array.isArray(roundData.teamList) && roundData.teamList.length >= 2) {
-    return roundData
-  }
   // if (Array.isArray(roundData.teamList) && roundData.teamList.length >= 2) {
   //   return roundData
   // }
@@ -352,6 +349,12 @@ const WriteContainer = (props) => {
 
       setScorerTeam(null)
       setStoredGoalData(null)
+      setScorer('')
+      setAssistant('')
+      setTimeout(() => {
+        scrollToElement()
+        setIsWriting(false)
+      }, 300)
       // setPendingRoundId(null)
     }
 
@@ -415,6 +418,20 @@ const WriteContainer = (props) => {
       } else {
         const wholeSnap = await get(ref(db, `${thisYear}/${today}_rounds`))
         console.log('wholeSnap: ', wholeSnap.val())
+      }
+    } else {
+      let checkMember = false
+      roundData.teamList.forEach((teamNumber) => {
+        if (weeklyTeamData.data[teamNumber].includes(scorer)) {
+          checkMember = true
+        }
+      })
+      if (!checkMember) {
+        setPlayingTeams(new Set(roundData.teamList))
+        setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
+        setShowSelectScorerTeamPopup(true)
+        setStoredGoalData(record)
+        return
       }
     }
 
