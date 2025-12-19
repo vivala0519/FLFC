@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 const RecordRow = (props) => {
   const { record, index, deleteRecord, useDelete, effect } = props
   const [randomInt, setRandomInt] = useState(1)
-  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] border-b-2 border-green-100 pt-1 pl-3 ${effect ? 'bg-effect' : ''}`
+  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] border-b-2 border-blue-100 pt-1 pl-3 ${effect ? 'bg-effect' : ''}`
   const recordAreaStyle = 'flex items-center pl-5 pr-2 gap-3 relative bottom-[2px]'
   const itemStyle = `w-[20px] h-[20px] bg-[length:100%_100%] transform rotate-[11deg] relative bottom-[2px] right-[2px] `
   const goalIconStyle = 'bg-[url("@/assets/circle-ball.png")]'

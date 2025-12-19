@@ -1,5 +1,5 @@
 const LiveBadge = () => {
-  const badgeStyle = 'absolute bottom-4 text-[9px] text-[#bb2649] font-dnf-bit transform rotate-[-17deg] left-[-13px]'
+  const badgeStyle = 'absolute bottom-4 text-[9px] text-[#bb2649] font-dnf-bit transform rotate-[-17deg] left-[-13px] animate-pulse'
 
   return (
     <span className={badgeStyle}>

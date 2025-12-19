@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import './DataTable.css'
-import up from '@/assets/up.png'
-import down from '@/assets/down.png'
+import up from '@/assets/up2.png'
+import down from '@/assets/down2.png'
 import left from '@/assets/left.png'
 import goal from '@/assets/goal2.png'
 import right from '@/assets/right.png'
@@ -275,7 +275,7 @@ const DataTable = (props) => {
           {tap === '현황판' ? (
             <div>
               <p
-                className="w-full text-green-800"
+                className="w-full text-blue-800"
                 style={{
                   fontSize: '12px',
                   textAlign: 'left',
@@ -784,7 +784,7 @@ const FirstColumn = styled.div`
     right: 0;
     position: absolute;
     border-right: ${(props) =>
-      props.$realActive ? '5px double #166534' : '1px solid #ccc'};
+      props.$realActive ? '5px double #1d4ed8' : '1px solid #ccc'};
   }
 `
 

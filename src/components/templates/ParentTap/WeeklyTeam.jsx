@@ -66,7 +66,6 @@ function WeeklyTeam(props) {
       data: doc.data(),
     }))[0]['data']
     setBalancer(balancerData['name'])
-    console.log(balancerData['name'])
   }
 
   useEffect(() => {
@@ -233,7 +232,7 @@ function WeeklyTeam(props) {
       <div className="flex flex-col">
         {!editMode && (
           <div className="flex flex-col items-end mb-5">
-            <hr className="w-full border-green-700" />
+            <hr className="w-full border-blue-700" />
           </div>
         )}
         {page === weeklyTeamData.length - 1 && (
@@ -241,7 +240,7 @@ function WeeklyTeam(props) {
         )}
         <div className="w-full flex justify-center mb-5">
           <div
-            className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-yellow-500'}`}
+            className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-goal'}`}
           >
             <div className="flex flex-col gap-5 items-start bg-white p-1 rounded-md">
               {!editMode ? (
@@ -426,7 +425,7 @@ const LeftButton = styled.div`
 `
 
 const Week = styled.span`
-  ${(props) => props.$thisWeek && 'color: #EAB308;'}
+  ${(props) => props.$thisWeek && 'color: #bb2649;'}
 `
 
 const RightButton = styled.div`

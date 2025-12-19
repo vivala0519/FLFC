@@ -47,6 +47,7 @@ export default {
         signature: '#166534',
         vivaMagenta: '#BB2649',
         teamWin: '#21009A',
+        blueSignature: '#1d4ed8',
       },
       boxShadow: {
         custom: '0 0 10px rgba(0, 0, 0, 0.5)',
@@ -95,6 +96,7 @@ export default {
         },
       },
       animation: {
+        spinFast: 'spinSlow 0.2s linear infinite',
         shineEffect: 'shineEffect 2s infinite',
         spinSlow: 'spinSlow 7s linear infinite',
         flipX: 'flipX 0.9s ease-in-out infinite',

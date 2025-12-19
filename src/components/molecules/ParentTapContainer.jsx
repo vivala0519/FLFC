@@ -8,7 +8,7 @@ const ParentTapContainer = (props) => {
   const { isLive, weeklyTeamIsLive } = liveBadgeInfo
   const tapName = ['기록하기', '현황판', '기록실' ,'이번주 팀']
 
-  const tapContainerStyle = 'flex flex-row justify-around w-full border-double border-0 border-b-2 border-t-2 border-green-600 mb-5 p-2'
+  const tapContainerStyle = 'flex flex-row justify-around w-full border-double border-0 border-b-2 border-t-2 border-blue-700 mb-5 p-2'
 
   return (
     <div className={tapContainerStyle} style={{fontFamily: 'DNFForgedBlade'}}>

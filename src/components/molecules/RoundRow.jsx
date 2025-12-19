@@ -14,9 +14,9 @@ const RecordRow = (props) => {
   const roundTextStyle = 'text-[13px] dark:text-black'
   const winnerDivStyle = 'flex items-center relative bottom-[2px]'
   const teamStyle = 'font-dnf-forged text-teamWin mr-1'
-  const winStyle = 'font-hahmlet text-assist text-xs'
-  const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${isOpen ? 'rotate-180' : 'rotate-0'} `
-  const arrowIcon = 'bg-[url("@/assets/up.png")] '
+  const winStyle = 'font-hahmlet text-goal text-sm'
+  const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
+  const arrowIcon = 'bg-[url("@/assets/up2.png")] '
   const roundExitButtonStyle = 'text-goal animate-pulse'
   const ALL_TEAMS = ['1', '2', '3']
 

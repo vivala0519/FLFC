@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import DataTable from '../../DataTable.jsx'
-import styled from 'styled-components'
 import './LetsRecord.css'
-import help from '@/assets/help2.png'
 import { dataAnalysis } from '../../../apis/analyzeData.js'
 
 const StatusBoard = (props) => {
@@ -45,27 +43,3 @@ const StatusBoard = (props) => {
 }
 
 export default StatusBoard
-
-const Help = styled.div`
-  position: absolute;
-  right: 0;
-  width: 20px;
-  height: 20px;
-  &::after {
-    position: absolute;
-    content: '';
-    background-image: url(${help});
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    width: 100%;
-    height: 100%;
-    right: 0;
-  }
-`
-
-const Tap = styled.div`
-  @media (min-width: 812px) {
-    font-size: 21px;
-  }
-`

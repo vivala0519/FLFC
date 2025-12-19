@@ -68,7 +68,7 @@ const TitleHolderCard = (props) => {
   return (
     <div className="flex flex-col items-center">
       <div className="flex flex-col gap-1">
-        <span className="text-xl font-kbo text-yellow-500">
+        <span className="text-xl font-kbo text-goal">
           {tapTitleList[tapNumber]}
         </span>
       </div>

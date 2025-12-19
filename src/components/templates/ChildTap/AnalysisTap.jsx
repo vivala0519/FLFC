@@ -928,7 +928,7 @@ const AnalysisTap = (props) => {
                 {showDetail && (
                   <div>
                     <div className="flex flex-col">
-                      <ActivePlayer className="underline decoration-2 decoration-solid decoration-yellow-400 text-green-800 mb-2">
+                      <ActivePlayer className="underline decoration-2 decoration-solid decoration-yellow-400 text-blue-800 mb-2">
                         {playerDetail['name']}
                       </ActivePlayer>
                       {playerDetail['description'] ? (
@@ -1005,10 +1005,10 @@ const AnalysisTap = (props) => {
               className="absolute z-10 bottom-[7vh] right-[30px]"
               onClick={() => setShowIndividual(true)}
             >
-              <div className="relative z-20 border-double border-0 border-b-2 border-t-2 border-green-600">
-                <span className="text-[17px] text-yellow-500">개인별</span>
+              <div className="relative z-20 border-double border-0 border-b-2 border-t-2 border-blue-600">
+                <span className="text-[17px] text-goal">개인별</span>
               </div>
-              <div className="absolute z-10 -top-[1.60rem] -right-4 bg-football w-20 h-20 bg-[length:100%_100%] bg-no-repeat bg-center animate-spinSlow" />
+              <div className="opacity-50 absolute z-10 -top-[1.60rem] -right-4 bg-football w-20 h-20 bg-[length:100%_100%] bg-no-repeat bg-center animate-spinSlow" />
             </div>
           )}
         </>
@@ -1049,7 +1049,7 @@ const Arrow = styled.div`
 
 const ActivePlayer = styled.span`
   @media (prefers-color-scheme: dark) {
-    color: #eab308;
+    color: #1d4ed8;
   }
 `
 

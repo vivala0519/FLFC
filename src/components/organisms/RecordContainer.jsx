@@ -77,6 +77,9 @@ const RecordContainer = (props) => {
       {
         displayRecord.length === 0 && (
           <div className={'w-full flex flex-col items-center'}>
+            <div
+              className={`border-t-2 mb-2 w-[85%] border-blue-300`}
+            ></div>
             <RoundRow
               index={0}
               fakeRow={true}
@@ -93,11 +96,11 @@ const RecordContainer = (props) => {
       }
       {displayRecord?.map((record, index) => (
         <div className={'w-full flex flex-col items-center'} key={index}>
-          {index !== 0 && (
+          {/*{index !== 0 && (*/}
             <div
-              className={`border-t-2 ${!closedRounds.has(index) && 'border-green-300'} mb-2 w-[85%]`}
+              className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mb-2 w-[85%]`}
             ></div>
-          )}
+          {/*)}*/}
           <RoundRow
             key={index}
             index={index}
@@ -110,7 +113,7 @@ const RecordContainer = (props) => {
             setSelectScorerTeamPopupMessage={setSelectScorerTeamPopupMessage}
           />
           <div
-            className={`border-t-2 ${!closedRounds.has(index) && 'border-green-300'} mt-1 w-[85%]`}
+            className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mt-1 w-[85%]`}
           ></div>
           <div
             className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center gap-5 w-full p-4`}
