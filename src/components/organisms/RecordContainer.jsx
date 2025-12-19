@@ -34,11 +34,6 @@ const RecordContainer = (props) => {
     }).then( async (result) => {
       if (result.isConfirmed) {
         const db = getDatabase()
-        const recordRef = ref(db, thisYear + '/' + today + '/' + displayRecord[index].id)
-        // remove(ref(db, thisYear + '/' + today + '/' + todayRecord[index].id))
-        remove(recordRef).then(() => {
-          console.log('Document successfully deleted!')
-        })
         const refPath = thisYear + '/' + today + '_rounds'
         const roundRef = ref(db, refPath)
 
