@@ -52,7 +52,7 @@ const LetsRecord = (props) => {
   const [showSelectScorerTeamPopup, setShowSelectScorerTeamPopup] = useState(false)
   const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   // style class
-  const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-[-12px]'}`
+  const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-2'}`
   const templateContainerStyle = 'flex flex-col items-center w-full'
 
   useEffect(() => {
@@ -124,7 +124,7 @@ const LetsRecord = (props) => {
 
   useEffect(() => {
     function setHeight() {
-      const height = window.innerHeight - (headerHeight + registerHeight + 200)
+      const height = window.innerHeight - (headerHeight + registerHeight + 100)
       setDynamicHeight(height)
     }
     setHeight()
