@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Swal from 'sweetalert2'
-import {getDatabase, ref, remove} from 'firebase/database'
+import { get, getDatabase, ref, remove, set} from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
 import RecordRow from '@/components/molecules/RecordRow.jsx'
 import RoundRow from '@/components/molecules/RoundRow.jsx'
@@ -22,7 +22,7 @@ const RecordContainer = (props) => {
     }
   }, [displayRecord])
 
-  const deleteRecord = (index) => {
+  const deleteRecord = (toDeleteId, index) => {
     Swal.fire({
       title: '삭제, Really?',
       icon: 'warning',
@@ -31,7 +31,7 @@ const RecordContainer = (props) => {
       cancelButtonColor: '#3085d6',
       confirmButtonText: '삭제',
       cancelButtonText: '취소'
-    }).then((result) => {
+    }).then( async (result) => {
       if (result.isConfirmed) {
         const db = getDatabase()
         const recordRef = ref(db, thisYear + '/' + today + '/' + displayRecord[index].id)
@@ -39,9 +39,63 @@ const RecordContainer = (props) => {
         remove(recordRef).then(() => {
           console.log('Document successfully deleted!')
         })
+        const refPath = thisYear + '/' + today + '_rounds'
+        const roundRef = ref(db, refPath)
+
+        const roundsSnapshot =  await get(roundRef)
+        const rounds = roundsSnapshot.val()
+        const roundValues = Object.values(rounds)
+
+        if (roundValues.length > 0) {
+          const lastRound = roundValues.reduce((prev, cur) => {
+            const prevIndex = typeof prev.index === 'number' ? prev.index : -1
+            const curIndex = typeof cur.index === 'number' ? cur.index : -1
+            return curIndex > prevIndex ? cur : prev
+          })
+
+          const recordRef = ref(db, thisYear + '/' + today + '_rounds/' + lastRound.id + '/goal/' + toDeleteId)
+          remove(recordRef).then(() => {
+            console.log('Document successfully deleted!')
+          })
           .catch((error) => {
             console.log(error)
           });
+
+          const getGoalTeamRef = ref(db, thisYear + '/' + today + '_rounds/' + lastRound.id + '/getGoalTeam')
+
+          const snap = await get(getGoalTeamRef)
+
+          // 값이 없으면 그냥 종료
+          if (!snap.exists()) return
+
+          const list = snap.val()
+
+          // 혹시 배열이 아니면 에러 처리
+          if (!Array.isArray(list)) {
+            console.error('getGoalTeam is not an array:', list)
+            return
+          }
+
+          // 인덱스 범위 체크
+          if (index < 0 || index >= list.length) {
+            console.warn('invalid index:', index)
+            return
+          }
+
+          // 해당 index 제거
+          const newList = list.filter((_, i) => i !== index)
+          // 또는: list.splice(index, 1); const newList = list
+
+          // 다시 저장
+          await set(getGoalTeamRef, newList)
+        }
+
+        // remove(recordRef).then(() => {
+        //   console.log('Document successfully deleted!')
+        // })
+        //   .catch((error) => {
+        //     console.log(error)
+        //   });
       }
     })
   }
@@ -108,22 +162,26 @@ const RecordContainer = (props) => {
             isOpen={!closedRounds.has(index)}
             weeklyTeamData={weeklyTeamData}
             roundShowHandler={roundShowHandler}
+            setPendingRoundId={setPendingRoundId}
+            setShowSelectTeamPopup={setShowSelectTeamPopup}
+            setSelectTeamPopupMessage={setSelectTeamPopupMessage}
             setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
             setSelectScorerTeamPopupMessage={setSelectScorerTeamPopupMessage}
           />
-          <div
-            className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mt-1 w-[85%]`}
-          ></div>
+          {/*<div*/}
+          {/*  className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mt-1 w-[85%]`}*/}
+          {/*></div>*/}
           <div
             className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center gap-5 w-full p-4`}
           >
-            {record.goals?.map((goal, index) => (
+            {record.goals?.map((goal, goalIndex) => (
               <RecordRow
-                key={index}
-                index={index}
+                key={'goal-' + goalIndex}
+                index={goalIndex}
                 effect={goal.id === lastRecord}
                 record={goal}
                 useDelete={canRegister}
+                isLastRound={displayRecord.length - 1 === index}
                 deleteRecord={deleteRecord}
               />
             ))}

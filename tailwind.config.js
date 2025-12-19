@@ -94,9 +94,20 @@ export default {
           '0%': { transform: 'translateY(-100vw) rotate(0deg)' },
           '100%': { transform: 'translateX(0) rotate(-2160deg)' },
         },
+        'slide-out-right': {
+          '0%': {
+            transform: 'translateX(0)',
+            opacity: '1',
+          },
+          '100%': {
+            transform: 'translateX(100vw)',
+            opacity: '0',
+          },
+        },
       },
       animation: {
         spinFast: 'spinSlow 0.2s linear infinite',
+        spinNormal: 'spinSlow 0.5s linear infinite',
         shineEffect: 'shineEffect 2s infinite',
         spinSlow: 'spinSlow 7s linear infinite',
         flipX: 'flipX 0.9s ease-in-out infinite',
@@ -107,6 +118,7 @@ export default {
         'goal-roll-2': 'goal-roll-2 0.8s ease-out forwards',
         'goal-roll-3': 'goal-roll-3 0.8s ease-out forwards',
         'goal-roll-4': 'goal-roll-4 0.8s ease-out forwards',
+        'slide-out-right': 'slide-out-right 0.4s ease-in forwards',
       },
       transform: {
         'rotate-y-180': 'rotateY(180deg)',

@@ -32,7 +32,7 @@ const RecordRow = (props) => {
     const diffMs = currentTime - recordDate
     const diffMinutes = diffMs / (1000 * 60)
 
-    return diffMinutes >= 10
+    return diffMinutes >= 9
   }
 
   const getMostFrequentElements = (arr) => {
@@ -129,10 +129,10 @@ const RecordRow = (props) => {
     const mostGetGoalTeam = getMostFrequentElements(roundData.getGoalTeam || [])
     // 한골
     if (mostGetGoalTeam.length === 1) {
-      await update(roundRef, { winnerTeam: {number: mostGetGoalTeam[0], member: weeklyTeamData.data[String(mostGetGoalTeam[0])]} })
+      await update(roundRef, { winnerTeam: {number: [mostGetGoalTeam[0]], member: weeklyTeamData.data[String(mostGetGoalTeam[0])]} })
       const newRoundId = await createRound()
-      const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(team))
-      const nextTeamList = [restTeam, String(roundData.teamList[0])]
+      const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(String(team)))
+      const nextTeamList = [restTeam, String(mostGetGoalTeam[0])]
       const newRoundRef = getRoundRef(db, thisYear, today, newRoundId)
       await update(newRoundRef, {teamList: nextTeamList})
     }
@@ -140,14 +140,14 @@ const RecordRow = (props) => {
     if ([0, 2].includes(mostGetGoalTeam.length)) {
       // 첫 라운드 가위바위보
       if (!roundData.index || roundData.index === 0) {
-        if (!roundData.teamList) {
+        // if (!roundData.teamList) {
           await selectWinnerTeam()
-        }
+        // }
       } else {
         // 나중에 들어온 팀 (index 0)
-        await update(roundRef, { winnerTeam: {number: roundData.teamList[0], member: weeklyTeamData.data[String(roundData.teamList[0])]} })
+        await update(roundRef, { winnerTeam: {number: roundData.teamList, member: weeklyTeamData.data[String(roundData.teamList[0])].concat(weeklyTeamData.data[String(roundData.teamList[1])])} })
         const newRoundId = await createRound()
-        const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(team))
+        const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(String(team)))
         const nextTeamList = [restTeam, String(roundData.teamList[0])]
         const newRoundRef = getRoundRef(db, thisYear, today, newRoundId)
         await update(newRoundRef, {teamList: nextTeamList})
@@ -174,12 +174,12 @@ const RecordRow = (props) => {
   const renderMembers = (members = []) => {
     if (!Array.isArray(members) || members.length === 0) return null
 
-    if (members.length <= 3) {
+    if (members.length <= 6) {
       return members.join(' ')
     }
 
-    const firstLine = members.slice(0, 3).join(' ')
-    const secondLine = members.slice(3).join(' ')
+    const firstLine = members.slice(0, 6).join(' ')
+    const secondLine = members.slice(6).join(' ')
 
     return (
       <>
@@ -190,47 +190,64 @@ const RecordRow = (props) => {
     )
   }
 
-  return (<>
-    {showTeamMembers ?
-      <div className={rawStyle} onClick={() => setShowTeamMembers(false)}>
-        <div className={recordAreaStyle}>
-        <span className={roundTextStyle}>{index + 1} Round</span>
-        <span className={teamStyle + ' text-[14px]'}>{renderMembers(record.winnerTeam?.member)}</span>
-          {/*<span className={teamStyle + ' text-[14px]'}>{record.winnerTeam?.member.join(' ')}</span>*/}
-        <span className={winStyle}>+ 3</span>
-        </div>
-      </div>
-      :
-      <div className={rawStyle} key={index}>
-        <div className={recordAreaStyle}>
-          <div className={'flex gap-2'}>
-            <span className={roundTextStyle}>{index + 1} Round</span>
-            {/*{record.winnerTeam && <div className={'flex gap-1 relative bottom-[3px]'}><span className={'text-blue-800'}>{record.winnerTeam}팀</span><span className={'text-goal'}>Win</span></div>}*/}
+  return (
+    <>
+      {showTeamMembers ? (
+        <div className={rawStyle} onClick={() => setShowTeamMembers(false)}>
+          <div className={recordAreaStyle + ' justify-center'}>
+            {/*<span className={roundTextStyle}>{index + 1} Round</span>*/}
+            <span className={teamStyle + ' text-[14px]'}>
+              {renderMembers(record.winnerTeam?.member)}
+            </span>
+            {/*<span className={teamStyle + ' text-[14px]'}>{record.winnerTeam?.member.join(' ')}</span>*/}
+            <span className={winStyle + ' relative bottom-[2px]'}>{record.winnerTeam.number.length === 1 ? '+ 3' : '+ 1'}</span>
           </div>
-          {record.winnerTeam ? (
-            <div className={winnerDivStyle} onClick={() => setShowTeamMembers(true)}>
-              <span className={teamStyle}>{record.winnerTeam.number}팀 </span>
-              <span className={winStyle}>Win</span>
+        </div>
+      ) : (
+        <div className={rawStyle} key={index}>
+          <div className={recordAreaStyle}>
+            <div className={'flex gap-2'}>
+              <span className={roundTextStyle}>{index + 1} Round</span>
+              {/*{record.winnerTeam && <div className={'flex gap-1 relative bottom-[3px]'}><span className={'text-blue-800'}>{record.winnerTeam}팀</span><span className={'text-goal'}>Win</span></div>}*/}
             </div>
-            )
-            :
-            isOver10Minutes(record.time) &&
-            <div className={roundExitButtonStyle} onClick={() => exitRoundHandler(record.id)}>
-              <div className={''}>
-                <span>종료</span>
+            {record.winnerTeam ? (
+              <div
+                className={winnerDivStyle}
+                onClick={() => setShowTeamMembers(true)}
+              >
+                {record.winnerTeam.number.length === 1 && (
+                  <span className={teamStyle}>
+                    {record.winnerTeam.number}팀{' '}
+                  </span>
+                )}
+                <span className={winStyle}>{record.winnerTeam.number.length === 1 ? 'Win' : 'Draw'}</span>
               </div>
-            </div>
-          }
+            ) : (
+              isOver10Minutes(record.time) ? (
+                <div
+                  className={roundExitButtonStyle}
+                  onClick={() => exitRoundHandler(record.id)}
+                >
+                  <div className={''}>
+                    <span>종료</span>
+                  </div>
+                </div>
+              ) : (
+                record?.teamList?.length === 2 && (<div className={teamStyle}>
+                  {record.teamList[0]}팀 <span className={'text-assist'}>vs</span> {record.teamList[1]}팀
+                </div>)
+              )
+            )}
+          </div>
+          <div className={'flex bottom-[1px] '}>
+            <TimeText text={record.time.slice(0, 5)} />
+          </div>
+          <span
+            className={itemStyle + arrowIcon}
+            onClick={() => !fakeRow && roundShowHandler(index)}
+          ></span>
         </div>
-        <div className={'flex bottom-[1px] '}>
-          <TimeText text={record.time.slice(0, 5)} />
-        </div>
-        <span
-          className={itemStyle + arrowIcon}
-          onClick={() => !fakeRow && roundShowHandler(index)}
-        ></span>
-      </div>
-    }
+      )}
     </>
   )
 }

@@ -52,7 +52,7 @@ const MainPage = (props) => {
         fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id,
       )
     })()
-  }, [])
+  }, [tap])
 
   // 위클리 팀 등록
   useEffect(() => {

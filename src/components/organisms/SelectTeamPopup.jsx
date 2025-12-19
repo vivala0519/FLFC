@@ -6,11 +6,12 @@ const SelectTeamPopup = (props) => {
   const buttonDiv = 'h-[50px] flex justify-center items-center text-black rounded-md'
 
   const toggleTeam = (index) => {
+    const team = String(index)
     setPlayingTeams((prev) => {
       const next = new Set(prev)
 
-      if (next.has(index)) {
-        next.delete(index)
+      if (next.has(team)) {
+        next.delete(team)
         return next
       }
 
@@ -18,7 +19,7 @@ const SelectTeamPopup = (props) => {
         return prev
       }
 
-      next.add(index)
+      next.add(team)
       return next
     })
   }
@@ -33,7 +34,7 @@ const SelectTeamPopup = (props) => {
       <div className={innerContainer}>
         <span className={'text-lg'}>{selectTeamPopupMessage}</span>
         {Object.values(weeklyTeamData?.data)?.map((data, index) => {
-          const isSelected = playingTeams.has(index + 1)
+          const isSelected = playingTeams.has(String(index + 1))
           return (
             <div
               key={index}

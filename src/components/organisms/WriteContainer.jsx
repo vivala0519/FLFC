@@ -39,7 +39,7 @@ const saveGoalRecord = async (db, thisYear, today, roundId, record) => {
   await set(ref(db, `${thisYear}/${today}_backup/${id}`), record)
 }
 
-// 라운드에 teamList 채우기 (없거나 2개 미만일 때만)
+// 라운드에 teamList 채우기
 const ensureRoundTeamList = async (db, thisYear, today, roundId, playingTeams) => {
   const roundRef = getRoundRef(db, thisYear, today, roundId)
   const snap = await get(roundRef)
@@ -48,13 +48,16 @@ const ensureRoundTeamList = async (db, thisYear, today, roundId, playingTeams) =
   if (Array.isArray(roundData.teamList) && roundData.teamList.length >= 2) {
     return roundData
   }
+  // if (Array.isArray(roundData.teamList) && roundData.teamList.length >= 2) {
+  //   return roundData
+  // }
 
-  const newTeamList = Array.isArray(roundData.teamList)
-    ? [...new Set([...roundData.teamList, ...playingTeams])]
-    : [...playingTeams]
+  // const newTeamList = Array.isArray(roundData.teamList)
+  //   ? [...new Set([...roundData.teamList, ...playingTeams])]
+  //   : [...playingTeams]
 
-  await update(roundRef, { teamList: newTeamList })
-  return { ...roundData, teamList: newTeamList }
+  await update(roundRef, { teamList: [...playingTeams] })
+  return { ...roundData, teamList: [...playingTeams] }
 }
 
 // ---------------------- 컴포넌트 ----------------------
@@ -96,7 +99,7 @@ const WriteContainer = (props) => {
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
   const [storedGoalData, setStoredGoalData] = useState(null)
-  // const [pendingRoundId, setPendingRoundId] = useState(null)
+  const [isWriting, setIsWriting] = useState(false)
 
   const writeBoxPropsData = {
     scorer,
@@ -110,7 +113,7 @@ const WriteContainer = (props) => {
   // ---------------------- 라운드/우승 처리 헬퍼들 ----------------------
 
   // 라운드 우승 처리 + 다음 라운드 세팅
-  const handleRoundWinner = async (roundId, winner) => {
+  const handleRoundWinner = async (roundId, winner, fromDraw) => {
     if (!winner) return
 
     const roundRef = getRoundRef(db, thisYear, today, roundId)
@@ -118,7 +121,7 @@ const WriteContainer = (props) => {
     const roundData = roundSnap.val()
 
     // 이긴 팀 해당 라운드에 winnerTeam 업데이트
-    await update(roundRef, { winnerTeam: {number: winner, member: weeklyTeamData.data[winner]} })
+    await update(roundRef, { winnerTeam: {number: fromDraw ? roundData.teamList : [winner], member: fromDraw ? weeklyTeamData.data[roundData.teamList[0]].concat(weeklyTeamData.data[roundData.teamList[1]]) : weeklyTeamData.data[winner]} })
 
     // 다음 라운드 구성
     const roundTeam = (roundData.teamList || []).map(String)
@@ -134,47 +137,68 @@ const WriteContainer = (props) => {
   }
 
   // getGoalTeam 에 팀 추가 + 우승 여부 체크
-  const applyTeamGoal = async (roundId, teamNumber) => {
+  const applyTeamGoal = async (roundId, teamNumber, fromDraw) => {
     const goalTeamRef = ref(
       db,
       `${thisYear}/${today}_rounds/${roundId}/getGoalTeam`,
     )
     const goalTeamSnap = await get(goalTeamRef)
-    console.log('goalTeamSnap.val():', goalTeamSnap.val())
     const currentList =
       goalTeamSnap.exists() && Array.isArray(goalTeamSnap.val())
         ? goalTeamSnap.val()
         : []
 
-    currentList.push(teamNumber)
-    console.log('currnetList: ', currentList)
+    if (fromDraw) {
+      currentList.push(teamNumber)
+      currentList.push(teamNumber)
+    } else {
+      currentList.push(teamNumber)
+    }
 
     const winner = getNumberAtLeastTwo(currentList)
     console.log('winner: ', winner)
     // 2골 이상 득점한 팀 바로 승리 처리
     if (winner) {
-      await handleRoundWinner(roundId, winner)
+      await handleRoundWinner(roundId, winner, fromDraw)
     }
 
     await set(goalTeamRef, currentList)
   }
 
   // scorer가 속한 팀을 찾아서 applyTeamGoal 실행
-  const updateGoalTeam = async (roundId, scorerName) => {
+  const updateGoalTeam = async (roundId, scorerName, record) => {
     let teamNumber = Object.keys(weeklyTeamData.data).find((k) =>
       weeklyTeamData.data[k].includes(scorerName),
     )
     console.log(teamNumber)
 
     // 팀을 못 찾으면 팝업 열어서 선택 받기
-    if (!teamNumber || scorerName === '용병') {
+    if (!teamNumber || ['용병', '자책'].includes(scorerName)) {
       console.log('no teamNumber for scorer', scorerName)
       setShowSelectScorerTeamPopup(true)
-      setSelectTeamPopupMessage('어느 팀의 득점인가요?')
+      setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
+
+
+      const dateRef = ref(db, `${thisYear}/${today}_rounds`)
+      const snapshot = await get(dateRef)
+      const rounds = snapshot.val()
+      const roundValues = Object.values(rounds)
+
+      if (roundValues.length > 0) {
+        const lastRound = roundValues.reduce((prev, cur) => {
+          const prevIndex = typeof prev.index === 'number' ? prev.index : -1
+          const curIndex = typeof cur.index === 'number' ? cur.index : -1
+          return curIndex > prevIndex ? cur : prev
+        })
+        console.log(rounds[lastRound.id]['teamList'])
+        setPlayingTeams(new Set(rounds[lastRound.id]['teamList']))
+      }
       return
     }
 
     await applyTeamGoal(roundId, teamNumber)
+    await saveGoalRecord(db, thisYear, today, roundId, record)
+    setStoredGoalData(null)
   }
 
   // ---------------------- 라운드 생성 ----------------------
@@ -255,10 +279,10 @@ const WriteContainer = (props) => {
       )
       const lastRoundId = lastRoundObj.id
       console.log('scorerTeam: ', scorerTeam)
-      await applyTeamGoal(lastRoundId, scorerTeam)
-      await applyTeamGoal(lastRoundId, scorerTeam)
-      setHandleRoundWinnerTrigger(false)
+      await applyTeamGoal(lastRoundId, scorerTeam, true)
+      setHandleRoundWinnerTrigger(null)
       setScorerTeam(null)
+      setPendingRoundId(null)
       console.log(lastRoundId)
     }
     if (handleRoundWinnerTrigger) {
@@ -268,6 +292,7 @@ const WriteContainer = (props) => {
 
   useEffect(() => {
     if (showSelectTeamPopup) return
+    if (showSelectScorerTeamPopup) return
     if (!pendingRoundId) return
 
     const run = async () => {
@@ -293,6 +318,7 @@ const WriteContainer = (props) => {
 
         setTimeout(() => {
           scrollToElement()
+          setIsWriting(false)
         }, 300)
       } else {
         setSelectScorerTeamPopupMessage('가위바위보 어느 팀이 이겼나요?')
@@ -322,8 +348,11 @@ const WriteContainer = (props) => {
 
       // 선택된 팀을 득점 팀으로 반영
       await applyTeamGoal(lastRoundId, scorerTeam)
+      await saveGoalRecord(db, thisYear, today, lastRoundId, storedGoalData)
 
       setScorerTeam(null)
+      setStoredGoalData(null)
+      // setPendingRoundId(null)
     }
 
     if (showSelectScorerTeamPopup) return
@@ -351,6 +380,8 @@ const WriteContainer = (props) => {
     }
 
     if (!scorer.trim()) return
+
+    setIsWriting(true)
 
     const time =
       currentTime.getHours().toString().padStart(2, '0') +
@@ -387,15 +418,18 @@ const WriteContainer = (props) => {
       }
     }
 
+    setStoredGoalData(record)
+
     // 팀 정보 이미 있으면 → 바로 저장
-    await updateGoalTeam(roundId, record.goal)
-    await saveGoalRecord(db, thisYear, today, roundId, record)
+    await updateGoalTeam(roundId, record.goal, record)
+    // await saveGoalRecord(db, thisYear, today, roundId, record)
 
     setLastRecord(goalId)
     setScorer('')
     setAssistant('')
     setTimeout(() => {
       scrollToElement()
+      setIsWriting(false)
     }, 300)
   }
 
@@ -424,6 +458,7 @@ const WriteContainer = (props) => {
 
       {canRegister ? (
         <WriteBox
+          isWriting={isWriting}
           registerRef={registerRef}
           registerHandler={registerHandler}
           data={writeBoxPropsData}

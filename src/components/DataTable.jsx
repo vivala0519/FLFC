@@ -310,6 +310,10 @@ const DataTable = (props) => {
                       <UpArrow className="arrow" />
                     ))}
                 </StatTd>
+                <StatTd onClick={() => sortBy('승점')}>
+                  <span>승점</span>
+                  {arrowState === '승점' && <DownArrow className="arrow" />}
+                </StatTd>
                 <StatTd onClick={() => sortBy('골')}>
                   <span>골</span>
                   {arrowState === '골' && <DownArrow className="arrow" />}
@@ -434,9 +438,12 @@ const DataTable = (props) => {
                       <span>{name}</span>
                     </div>
                   )}
-                  {/*골	골순위	일평균 득점	어시	어시순위	일평균 어시	공격포인트	순위	출석	출석순위	포인트 총합(출석,어시,골)	포인트 총합순위*/}
+                  {/* 승점 골	골순위	일평균 득점	어시	어시순위	일평균 어시	공격포인트	순위	출석	출석순위	포인트 총합(출석,어시,골)	포인트 총합순위*/}
                   {tap === '현황판' && (
                     <>
+                      <span>
+                        {analyzedData?.active?.totalData?.get(name)?.['승점'] ?? '-'}
+                      </span>
                       <span>
                         {analyzedData.active.totalData.get(name)['골']}
                       </span>

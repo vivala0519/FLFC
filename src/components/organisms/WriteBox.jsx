@@ -3,16 +3,18 @@ import { useEffect, useState, useRef } from 'react'
 import RecordInput from '@/components/atoms/Text/RecordInput.jsx'
 // import TestingMark from '@/components/atoms/Text/TestingMark.jsx'
 import RecordTypeText from '@/components/atoms/Text/RecordTypeText.jsx'
-import RegisterButton from '@/components/atoms/Button/RegisterButton.jsx'
 
 import { uid } from 'uid'
 import { getDatabase, set, onValue, ref } from 'firebase/database'
 
 const WriteBox = (props) => {
-  const { registerRef, registerHandler, data } = props
+  const { registerRef, registerHandler, data, isWriting } = props
   const { scorer, setScorer, assistant, setAssistant } = data
   const [isTyping, setIsTyping] = useState(false)
   const [otherUsersTyping, setOtherUsersTyping] = useState([])
+  const registerStyle = `w-[50px] h-[50px] bg-[length:100%_100%] transform rotate-[11deg] relative bottom-[2px] right-[2px] `
+  const itemStyle = `w-[20px] h-[20px] bg-[length:100%_100%] transform rotate-[11deg] relative bottom-[2px] right-[2px] `
+  const goalIconStyle = 'bg-[url("@/assets/circle-ball.png")]'
 
   const getUserId = () => {
     let userId = localStorage.getItem('userId')
@@ -84,13 +86,35 @@ const WriteBox = (props) => {
     }
   }, [userId])
 
-  return (
+  const [isLeaving, setIsLeaving] = useState(false)
+
+  useEffect(() => {
+    if (scorer.trim()) {
+      setIsLeaving(true)
+    } else {
+      setIsLeaving(false)
+    }
+  }, [scorer])
+
+  const showFastIcon = !scorer.trim() || isLeaving
+
+  return isWriting ? (
+    <div className={'w-full'}>
+      <span className={'animate-pulse'}>등록 중...</span>
+      <div className={'flex gap-10 justify-center mt-2'}>
+        {[0, 1, 2, 3, 4].map((el, index) => (
+          <div key={index} className={`animate-goal-roll-3`}>
+            <div
+              className={`${itemStyle} ${goalIconStyle} animate-spinFast`}
+            ></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : (
     <>
-      <div
-        ref={registerRef}
-        className="flex items-center gap-5 mb-1 relative -left-[17px]"
-      >
-        <div className="flex flex-col gap-2">
+      <div ref={registerRef} className="flex mb-1 relative w-full h-full">
+        <div className="absolute flex flex-col gap-2 left-[9%]">
           {[0, 1].map((index) => (
             <div key={index} className="flex gap-0.5 items-center">
               <RecordTypeText
@@ -108,12 +132,28 @@ const WriteBox = (props) => {
             </div>
           ))}
         </div>
-        <RegisterButton
-          text={'등록'}
-          clickHandler={registerHandler}
-          active={true}
-          customStyle={'bottom-[11px] '}
-        />
+        <div className={`absolute ${scorer.trim() ? 'right-[30%] top-[3px]' : 'right-[12%] top-[20px]'}`}>
+          {scorer.trim() && (
+            <div className={'absolute'} onClick={registerHandler}>
+              <div className="animate-goal-roll-1 flex absolute">
+                <div className={`${registerStyle} ${goalIconStyle} animate-spinNormal`} />
+              </div>
+              <span className={'animate-goal-roll-1 absolute top-[10px] left-[32px] w-[60px] h-[60px]'}>등록</span>
+            </div>
+          )}
+          {showFastIcon && (
+            <div
+              className={`${itemStyle} ${goalIconStyle} ${
+                isLeaving ? 'animate-slide-out-right' : 'animate-spinFast'
+              }`}
+              onAnimationEnd={() => {
+                if (isLeaving) {
+                  setIsLeaving(false)
+                }
+              }}
+            />
+          )}
+        </div>
       </div>
       {/*{otherUsersTyping.length > 0 && (*/}
       {/*  <TestingMark locationStyle="relative top-3 -right-20 text-[16px]" />*/}

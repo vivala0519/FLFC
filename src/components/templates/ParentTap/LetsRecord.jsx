@@ -34,7 +34,7 @@ const LetsRecord = (props) => {
   const [todayRecord, setTodayRecord] = useState([])
   const [displayRecord, setDisplayRecord] = useState([])
   const [dynamicHeight, setDynamicHeight] = useState(0)
-  const [writtenData, setWrittenData] = useState([])
+  const [writtenData, setWrittenData] = useState({})
   const [registerHeight, setRegisterHeight] = useState(0)
   const [canRegister, setCanRegister] = useState(true)
   const [lastRecord, setLastRecord] = useState('')
@@ -88,25 +88,23 @@ const LetsRecord = (props) => {
     const data = todaysRealtimeRound
     if (data) {
       // firestore에 등록하기 위한 전체 골 data
-      const totalGoals = Object.values(data || {}).flatMap(round => {
+      const goalRecord = Object.values(data || {}).flatMap(round => {
         if (!round.goal) return []
 
         return Object.values(round.goal).map(goal => ({
           ...goal,
         })).sort((a, b) => parseTimeFromString(a.time) - parseTimeFromString(b.time))
       })
-      console.log('totalGoals: ', totalGoals)
       // display 위한 라운드/골 데이터
-      const totalRecord = Object.entries(data || {})
+      const roundRecord = Object.entries(data || {})
         .map(([roundId, round]) => ({
           ...round,
           roundId,
           goals: round.goal ? Object.values(round.goal).sort((a, b) => parseTimeFromString(a.time) - parseTimeFromString(b.time)) : []
         }))
         .sort((a, b) => a.index - b.index)
-      console.log('totalRecord: ', totalRecord)
-      setTodayRecord(totalGoals)
-      setDisplayRecord(totalRecord)
+      setTodayRecord(goalRecord)
+      setDisplayRecord(roundRecord)
     }
   }, [todaysRealtimeRecord, todaysRealtimeRound])
 
@@ -150,7 +148,7 @@ const LetsRecord = (props) => {
     return new Date(0, 0, 0, hours, minutes, seconds)
   }
 
-  const formatRecordByName = (record) => {
+  const formatRecordByName = (goalRecord, roundRecord) => {
     const stats = {}
     if (
       weeklyTeamData?.data &&
@@ -163,7 +161,7 @@ const LetsRecord = (props) => {
         if (member.length === 1) {
           oneCharacterMembers.forEach((player) => {
             if (player.includes(member)) {
-              stats[player] = { 출석: 1, 골: 0, 어시: 0 }
+              stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
             }
           })
         } else {
@@ -173,13 +171,13 @@ const LetsRecord = (props) => {
           )
           others.forEach((player) => {
             if (member && player.includes(member)) {
-              stats[player] = { 출석: 1, 골: 0, 어시: 0 }
+              stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
             }
           })
         }
       })
 
-      record.forEach((item) => {
+      goalRecord.forEach((item) => {
         const { assist, goal } = item
 
         if (goal !== '') {
@@ -224,8 +222,57 @@ const LetsRecord = (props) => {
           }
         }
       })
+
+      const formattedRoundRecord = formatRoundRecord(roundRecord)
+      Object.entries(formattedRoundRecord).forEach(([key, value]) => {
+        if (key.length === 1) {
+          oneCharacterMembers.forEach((player) => {
+            if (player.includes(key) && stats[player]) {
+              stats[player]['승점'] = value
+            }
+          })
+        } else {
+          const others = existingMembers.filter((existing) => !oneCharacterMembers.includes(existing))
+          others.forEach((player) => {
+            if (player.includes(key) && stats[player]) {
+              stats[player]['승점'] = value
+            }
+          })
+        }
+      })
       return stats
     }
+  }
+
+  const formatRoundRecord = (records) => {
+    return records.reduce((acc, rec) => {
+      const winnerTeam = rec.winnerTeam
+
+      if (
+        !winnerTeam ||
+        !Array.isArray(winnerTeam.member) ||
+        !Array.isArray(winnerTeam.number)
+      ) {
+        return acc
+      }
+
+      const len = winnerTeam.number.length
+      const scorePerMember =
+        len === 2 ? 1 :
+          len === 1 ? 3 :
+            0
+
+      if (scorePerMember === 0) return acc
+
+      // 한 라운드 안에서 중복 제거
+      const uniqueMembers = [...new Set(winnerTeam.member)]
+
+      uniqueMembers.forEach((name) => {
+        acc[name] = (acc[name] || 0) + scorePerMember
+      })
+
+      return acc
+    }, {})
   }
 
   function compareObjects(objA, objB) {
@@ -239,7 +286,8 @@ const LetsRecord = (props) => {
       if (
         objA[key]['출석'] !== objB[key]['출석'] ||
         objA[key]['골'] !== objB[key]['골'] ||
-        objA[key]['어시'] !== objB[key]['어시']
+        objA[key]['어시'] !== objB[key]['어시'] ||
+        objA[key]['승점'] !== objB[key]['승점']
       ) {
         return false
       }
@@ -248,15 +296,17 @@ const LetsRecord = (props) => {
   }
 
   // Firestore 데이터 등록
-  const stats = useMemo(() => formatRecordByName(todayRecord), [todayRecord])
+  const stats = useMemo(() => formatRecordByName(todayRecord, displayRecord), [todayRecord])
+
   useEffect(() => {
     if (stats && canRegister) {
       const registerRecord = async () => {
         const docRef = doc(db, thisYear, today)
         await setDoc(docRef, stats)
         console.log('Document written with ID: ', docRef.id)
+        setWrittenData(stats)
       }
-      if (!compareObjects(stats, writtenData)) {
+      if ((!compareObjects(stats, writtenData) && Object.keys(writtenData).length !== 0) || !writtenData) {
         registerRecord()
       }
     }
@@ -293,8 +343,8 @@ const LetsRecord = (props) => {
 
   return (
     <div className={tapContainerStyle}>
-      <TapTitleText active={open} title={"Today's Record"} />
-      {!showRequestUpdateButton && <Separator fullWidth={false} />}
+      {/*<TapTitleText active={open} title={"Today's Record"} />*/}
+      {/*{!showRequestUpdateButton && <Separator fullWidth={false} />}*/}
       <div className={templateContainerStyle}>
         <>
           {showMVP && (
@@ -351,7 +401,7 @@ const LetsRecord = (props) => {
           />
         </>
       </div>
-      {showSelectTeamPopup &&
+      {showSelectTeamPopup && (
         <SelectTeamPopup
           playingTeams={playingTeams}
           weeklyTeamData={weeklyTeamData}
@@ -360,8 +410,8 @@ const LetsRecord = (props) => {
           setPlayingTeams={setPlayingTeams}
           setShowSelectTeamPopup={setShowSelectTeamPopup}
         />
-      }
-      {showSelectScorerTeamPopup &&
+      )}
+      {showSelectScorerTeamPopup && (
         <SelectScorerTeamPopup
           scorerTeam={scorerTeam}
           playingTeams={playingTeams}
@@ -371,7 +421,7 @@ const LetsRecord = (props) => {
           setScorerTeam={setScorerTeam}
           setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
         />
-      }
+      )}
     </div>
   )
 }
