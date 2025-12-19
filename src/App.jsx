@@ -7,6 +7,7 @@ import updateMembers from '@/hooks/updateMembers.js'
 import MainPage from '@/components/pages/MainPage.jsx'
 import AdminPage from '@/components/pages/AdminPage.jsx'
 import VotingPage from '@/components/pages/VotingPage.jsx'
+import DevPage from '@/components/pages/DevPage.jsx'
 import updateCurrentTime from '@/hooks/updateCurrentTime.js'
 
 import './App.css'
@@ -48,6 +49,7 @@ const App = () => {
         />
         <Route path="/vote" element={<VotingPage />} isDarkMode={isDarkMode} />
         <Route path="/admin" element={<AdminPage />} />
+        <Route path="/dev" element={<DevPage />} />
       </Routes>
     </BrowserRouter>
   )

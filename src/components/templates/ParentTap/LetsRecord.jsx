@@ -60,7 +60,7 @@ const LetsRecord = (props) => {
       setRegisterHeight(registerRef.current.clientHeight)
     }
     if (
-      [0, 7].includes(thisDay) &&
+      ![0, 7].includes(thisDay) &&
       currentTime >= gameStartTime &&
       currentTime <= recordTapCloseTime
     ) {
@@ -299,9 +299,11 @@ const LetsRecord = (props) => {
   const stats = useMemo(() => formatRecordByName(todayRecord, displayRecord), [todayRecord])
 
   useEffect(() => {
-    if (stats && canRegister) {
+    if (stats) {
+    // if (stats && canRegister) {
       const registerRecord = async () => {
-        const docRef = doc(db, thisYear, today)
+        // const docRef = doc(db, thisYear, today)
+        const docRef = doc(db, thisYear + '_dev', today)
         await setDoc(docRef, stats)
         console.log('Document written with ID: ', docRef.id)
         setWrittenData(stats)
