@@ -10,7 +10,7 @@ const RecordContainer = (props) => {
   const { time: { today, thisYear } } = getTimes()
   const [openRounds, setOpenRounds] = useState(new Set())
   const [closedRounds, setClosedRounds] = useState(new Set())
-  const containerStyle = `w-[96%] relative overflow-auto flex flex-col items-center p-2 border border-transparent `
+  const containerStyle = `w-[96%] relative overflow-auto flex flex-col items-center p-2 border border-transparent overflow-x-hidden `
   const dynamicStyle = `${open ? 'flex' : 'hidden'} ${showMVP ? 'opacity-10' : 'opacity-100'}`
 
   const hasInitOpenRounds = useRef(false)

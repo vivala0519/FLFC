@@ -5,8 +5,6 @@ import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
 
-import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
-import Separator from '@/components/atoms/Separator.jsx'
 import DailyMVP from '@/components/organisms/DailyMVP.jsx'
 import RecordContainer from '@/components/organisms/RecordContainer.jsx'
 import WriteContainer from '@/components/organisms/WriteContainer.jsx'
