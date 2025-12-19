@@ -11,13 +11,13 @@ const RecordRow = (props) => {
   const [showTeamMembers, setShowTeamMembers] = useState(false)
   const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 py-1`
   const recordAreaStyle = 'flex items-center font-dnf-forged gap-2 w-full'
-  const roundTextStyle = 'text-[13px] dark:text-black'
+  const roundTextStyle = 'text-[13px] text-black dark:text-gray-100'
   const winnerDivStyle = 'flex items-center relative bottom-[2px]'
-  const teamStyle = 'font-dnf-forged text-teamWin mr-1'
-  const winStyle = 'font-hahmlet text-goal text-sm'
+  const teamStyle = 'font-dnf-forged text-teamWin dark:text-blue-300 mr-1'
+  const winStyle = 'font-hahmlet text-goal dark:text-red-300 text-sm'
   const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
   const arrowIcon = 'bg-[url("@/assets/up2.png")] '
-  const roundExitButtonStyle = 'text-goal animate-pulse'
+  const roundExitButtonStyle = 'text-goal dark:text-red-500 animate-pulse'
   const ALL_TEAMS = ['1', '2', '3']
 
   const getRoundRef = (db, thisYear, today, roundId) =>

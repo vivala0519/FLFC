@@ -10,7 +10,7 @@ const RecordContainer = (props) => {
   const { time: { today, thisYear } } = getTimes()
   const [openRounds, setOpenRounds] = useState(new Set())
   const [closedRounds, setClosedRounds] = useState(new Set())
-  const containerStyle = `w-[96%] relative overflow-auto flex flex-col items-center bg-white p-2 border border-transparent `
+  const containerStyle = `w-[96%] relative overflow-auto flex flex-col items-center p-2 border border-transparent `
   const dynamicStyle = `${open ? 'flex' : 'hidden'} ${showMVP ? 'opacity-10' : 'opacity-100'}`
 
   const hasInitOpenRounds = useRef(false)
@@ -20,7 +20,6 @@ const RecordContainer = (props) => {
       setOpenRounds(new Set(displayRecord.map((_, idx) => idx)))
       hasInitOpenRounds.current = true
     }
-    console.log(displayRecord)
   }, [displayRecord])
 
   const deleteRecord = (index) => {
@@ -90,7 +89,7 @@ const RecordContainer = (props) => {
               setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
               setSelectTeamPopupMessage={setSelectTeamPopupMessage}
             />
-            <div className={'text-black'}>득점 없당</div>
+            <div className={'text-black dark:text-gray-100'}>득점 없당</div>
           </div>
         )
       }
@@ -128,7 +127,7 @@ const RecordContainer = (props) => {
                 deleteRecord={deleteRecord}
               />
             ))}
-            {record.goals.length === 0 && <div className={'text-black'}>득점 없당</div>}
+            {record.goals.length === 0 && <div className={'text-black dark:text-gray-100'}>득점 없당</div>}
           </div>
         </div>
       ))}

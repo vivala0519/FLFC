@@ -2,7 +2,7 @@ import RecordTypeText from "./Text/RecordTypeText.jsx";
 
 const RecordEl = (props) => {
   const {type, text} = props
-  const textStyle = `font-bold text-black text-[20px]`
+  const textStyle = `font-bold text-black dark:text-gray-100 text-[20px]`
 
   return (
     <div className={'flex flex-row'}>

@@ -422,6 +422,9 @@ const LeftButton = styled.div`
     width: 15px;
     height: 15px;
   }
+  @media (prefers-color-scheme: dark) {
+    filter: invert(1);
+  }
 `
 
 const Week = styled.span`
