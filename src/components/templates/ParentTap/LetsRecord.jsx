@@ -72,9 +72,9 @@ const LetsRecord = (props) => {
       setCanRegister(true)
     }
     if (
-      [0, 7].includes(thisDay) &&
+      !([0, 7].includes(thisDay) &&
       currentTime >= gameEndTime &&
-      currentTime <= recordTapCloseTime
+      currentTime <= recordTapCloseTime)
     ) {
       setShowMVP(true)
       setShowRequestUpdateButton(true)
