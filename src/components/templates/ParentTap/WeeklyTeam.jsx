@@ -240,15 +240,15 @@ function WeeklyTeam(props) {
         )}
         <div className="w-full flex justify-center mb-5">
           <div
-            className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-goal'}`}
+            className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-[#bb2649] animate-pulse p-2'}`}
           >
-            <div className="flex flex-col gap-5 items-start bg-white p-1 rounded-md">
+            <div className="flex flex-col gap-5 items-start p-1 rounded-md">
               {!editMode ? (
                 [1, 2, 3].map((team, index) => (
                   <div key={index} className="flex gap-5">
                     <span
                       style={{ width: '25px' }}
-                      className="text-black relative left-1 flex items-center"
+                      className="relative left-1 flex items-center"
                     >
                       {team}팀
                     </span>
@@ -256,7 +256,7 @@ function WeeklyTeam(props) {
                       {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
                         <span
                           key={idx}
-                          className="text-black whitespace-pre flex items-center"
+                          className="whitespace-pre flex items-center"
                         >
                           {player}
                         </span>
