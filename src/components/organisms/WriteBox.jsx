@@ -141,7 +141,7 @@ const WriteBox = (props) => {
               <span className={'animate-goal-roll-1 absolute top-[10px] left-[32px] w-[60px] h-[60px]'}>등록</span>
             </div>
           )}
-          {showFastIcon && (
+          {showFastIcon && !scorer.trim() && (
             <div
               className={`${itemStyle} ${goalIconStyle} ${
                 isLeaving ? 'animate-slide-out-right' : 'animate-spinFast'
