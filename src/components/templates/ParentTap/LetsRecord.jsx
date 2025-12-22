@@ -122,7 +122,7 @@ const LetsRecord = (props) => {
 
   useEffect(() => {
     function setHeight() {
-      const height = window.innerHeight - (headerHeight + registerHeight + 100)
+      const height = window.innerHeight - (headerHeight + registerHeight + 150)
       setDynamicHeight(height)
     }
     setHeight()
