@@ -21,8 +21,8 @@ const RecordRoom = (props) => {
   } = getTimes()
   const [fetchData, setFetchData] = useState([])
   const [analyzedData, setAnalyzedData] = useState({})
-  const tapName = ['출석', '골', '어시', '히스토리', '분석']
-  const [tap, setTap] = useState('출석')
+  const tapName = ['승점', '출석', '골', '어시', '분석', '히스토리']
+  const [tap, setTap] = useState('승점')
   const [year, setYear] = useState(thisYear)
   const [yearData, setYearData] = useState({})
   const [analyedYearData, setAnalyzedYearData] = useState({})
@@ -177,26 +177,33 @@ const RecordRoom = (props) => {
         {/*</div>*/}
         <div
           className="flex flex-row w-full justify-center"
-          style={{ gap: '10%' }}
+          style={{ gap: '8%' }}
         >
+          <Tap
+            className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '승점' && 'text-goal'}`}
+            style={{ width: 'fit-content' }}
+            onClick={() => setTap(tapName[0])}
+          >
+            승점
+          </Tap>
           <Tap
             className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '출석' && 'text-goal'}`}
             style={{ width: 'fit-content' }}
-            onClick={() => setTap(tapName[0])}
+            onClick={() => setTap(tapName[1])}
           >
             출석
           </Tap>
           <Tap
             className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '골' && 'text-goal'}`}
             style={{ width: 'fit-content' }}
-            onClick={() => setTap(tapName[1])}
+            onClick={() => setTap(tapName[2])}
           >
             골
           </Tap>
           <Tap
             className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '어시' && 'text-goal'}`}
             style={{ width: 'fit-content' }}
-            onClick={() => setTap(tapName[2])}
+            onClick={() => setTap(tapName[3])}
           >
             어시
           </Tap>
@@ -210,7 +217,7 @@ const RecordRoom = (props) => {
           <Tap
             className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '히스토리' && 'text-goal'}`}
             style={{ width: 'fit-content' }}
-            onClick={() => setTap(tapName[3])}
+            onClick={() => setTap(tapName[5])}
           >
             히스토리
           </Tap>
@@ -218,7 +225,7 @@ const RecordRoom = (props) => {
         {/*<Help onClick={() => setShowHelp(true)}/>*/}
       </div>
       <div>
-        {['현황판', '출석', '골', '어시'].includes(tap) ? (
+        {['현황판', '승점', '출석', '골', '어시'].includes(tap) ? (
           <DataTable
             tap={tap}
             tableData={tableData}

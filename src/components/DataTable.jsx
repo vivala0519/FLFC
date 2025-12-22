@@ -117,7 +117,16 @@ const DataTable = (props) => {
   // 탭에 따른 정렬
   useEffect(() => {
     if (quarterData?.members) {
-      if (tap === '골') {
+      if (tap === '승점') {
+        // eslint-disable-next-line no-unsafe-optional-chaining
+        const sortedByPoints = [...quarterData.members['active']].sort((a, b) => {
+          const aPoints = quarterData.totalData.get(a)['승점']
+          const bPoints = quarterData.totalData.get(b)['승점']
+          return bPoints - aPoints
+        })
+        setSortedNames(sortedByPoints)
+        extractWinners(sortedByPoints)
+      } else if (tap === '골') {
         // eslint-disable-next-line no-unsafe-optional-chaining
         const sortedByGoal = [...quarterData.members['active']].sort((a, b) => {
           const aGoals = quarterData.totalData.get(a)['골']
@@ -394,9 +403,14 @@ const DataTable = (props) => {
                 <span key={data.id}>{Number(data.id.slice(2, 4)) + '일'}</span>
               ))}
               {year !== '2021' ? (
-                <span
-                  style={{ fontSize: '9px' }}
-                >{`${quarterName}분기\n총합`}</span>
+                <div>
+                <p
+                  style={{ fontSize: '11px' }}
+                >{`${quarterName}분기`}</p>
+                  <p
+                    style={{ fontSize: '11px' }}
+                  >총합</p>
+                </div>
               ) : (
                 <span
                   style={{ fontSize: '9px', whiteSpace: 'pre-line' }}
@@ -490,6 +504,19 @@ const DataTable = (props) => {
                       </CustomMinWidthSpan>
                     </>
                   )}
+                  {tap === '승점' &&
+                    tableData?.data?.map((data, index) => (
+                      <span
+                        style={{ minWidth: '13% !important' }}
+                        key={name + index}
+                      >
+                        {data.data[name]
+                          ? Number(data.data[name][tap]) === 0
+                            ? '-'
+                            : data.data[name][tap]
+                          : '-'}
+                      </span>
+                    ))}
                   {tap === '출석' &&
                     tableData?.data?.map((data, index) => (
                       <span

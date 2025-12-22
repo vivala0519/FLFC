@@ -20,9 +20,10 @@ export const extractQuarterData = async (yearParameter) => {
         if (Object.prototype.hasOwnProperty.call(idData, name)) {
           const stats = idData[name]
           if (!quarterStats.has(name)) {
-            quarterStats.set(name, { 골: 0, 어시: 0, 출석: 0 })
+            quarterStats.set(name, { 승점: 0, 골: 0, 어시: 0, 출석: 0 })
           }
           const existingStats = quarterStats.get(name)
+          existingStats['승점'] += parseInt(stats['승점'] || 0)
           existingStats['골'] += parseInt(stats['골'] || 0)
           existingStats['어시'] += parseInt(stats['어시'] || 0)
           existingStats['출석'] += stats['출석'] ? stats['출석'] : 0
