@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 
 const MvpPlayer = ({player}) => {
   const containerStyle = 'flex flex-col'
-  const playerNameStyle = 'underline decoration-2 decoration-double decoration-yellow-400 text-signature font-dnf-forged'
+  const playerNameStyle = 'underline decoration-2 decoration-double decoration-yellow-400 text-blueSignature font-dnf-forged'
   const recodeStyle = 'text-vivaMagenta text-xs'
   const computedRecodeText = useMemo(() => {
     let text = '';

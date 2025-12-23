@@ -32,7 +32,7 @@ const LetsRecord = (props) => {
   const [todayRecord, setTodayRecord] = useState([])
   const [displayRecord, setDisplayRecord] = useState([])
   const [dynamicHeight, setDynamicHeight] = useState(0)
-  const [writtenData, setWrittenData] = useState({})
+  const [writtenData, setWrittenData] = useState(null)
   const [registerHeight, setRegisterHeight] = useState(0)
   const [canRegister, setCanRegister] = useState(true)
   const [lastRecord, setLastRecord] = useState('')
@@ -297,7 +297,7 @@ const LetsRecord = (props) => {
   const stats = useMemo(() => formatRecordByName(todayRecord, displayRecord), [todayRecord])
 
   useEffect(() => {
-    if (stats) {
+    if (Object.keys(stats).length > 0 && todayRecord && canRegister) {
     // if (stats && canRegister) {
       const registerRecord = async () => {
         // const docRef = doc(db, thisYear, today)
@@ -306,7 +306,10 @@ const LetsRecord = (props) => {
         console.log('Document written with ID: ', docRef.id)
         setWrittenData(stats)
       }
-      if ((!compareObjects(stats, writtenData) && Object.keys(writtenData).length !== 0) || !writtenData) {
+      if (!writtenData) {
+        registerRecord()
+      }
+      if (writtenData && !compareObjects(stats, writtenData)) {
         registerRecord()
       }
     }
@@ -348,12 +351,18 @@ const LetsRecord = (props) => {
       <div className={templateContainerStyle}>
         <>
           {showMVP && (
-            <DailyMVP
-              setShowMVP={setShowMVP}
-              recordData={recordData}
-              year={thisYear}
-              today={today}
-            />
+            <div className={'absolute z-10 top-[10%] w-[90%]'}>
+              <DailyMVP
+                setShowMVP={setShowMVP}
+                recordData={recordData}
+                year={thisYear}
+                today={today}
+              />
+              <TeamScorePopup
+                setShowMVP={setShowMVP}
+                recordData={displayRecord}
+              />
+            </div>
           )}
           <RecordContainer
             open={open}

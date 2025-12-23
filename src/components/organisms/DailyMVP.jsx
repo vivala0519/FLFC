@@ -20,7 +20,7 @@ const DailyMVP = (props) => {
   const dayTextStyle =
     'text-[10px] font-dnf text-vivaMagenta relative top-[1px] underline decoration-2 decoration-solid decoration-yellow-400'
   const popupContainerStyle =
-    'absolute z-10 text-assist top-[30%] w-[90%] h-[200px] bg-white box cursor-pointer flex flex-col desktop:w-[30%]'
+    'text-assist h-[200px] bg-white box cursor-pointer flex flex-col desktop:w-[30%]'
   // confetti 상수
   const CONFETTI_NUMBER = 100
   const CONFETTI_RADIUS = 4

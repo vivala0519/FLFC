@@ -30,6 +30,7 @@ const getRoundRef = (db, thisYear, today, roundId) =>
 
 // 골 기록 3군데 저장
 const saveGoalRecord = async (db, thisYear, today, roundId, record) => {
+  if (!record) return
   const { id } = record
 
   const goalRef = ref(db, `${thisYear}/${today}_rounds/${roundId}/goal/${id}`)
@@ -153,7 +154,6 @@ const WriteContainer = (props) => {
     }
 
     const winner = getNumberAtLeastTwo(currentList)
-    console.log('winner: ', winner)
     // 2골 이상 득점한 팀 바로 승리 처리
     if (winner) {
       await handleRoundWinner(roundId, winner, fromDraw)
@@ -167,7 +167,6 @@ const WriteContainer = (props) => {
     let teamNumber = Object.keys(weeklyTeamData.data).find((k) =>
       weeklyTeamData.data[k].includes(scorerName),
     )
-    console.log(teamNumber)
 
     // 팀을 못 찾으면 팝업 열어서 선택 받기
     if (!teamNumber || ['용병', '자책'].includes(scorerName)) {
@@ -301,10 +300,12 @@ const WriteContainer = (props) => {
       console.log('popupType: ', popupType)
       if (popupType === 'playing') {
         // 2) 득점자의 팀 getGoalTeam에 추가
-        await updateGoalTeam(roundId, storedGoalData.goal)
+        await updateGoalTeam(roundId, storedGoalData.goal, storedGoalData)
 
         // 3) 골 기록 저장
-        await saveGoalRecord(db, thisYear, today, roundId, storedGoalData)
+        if (storedGoalData) {
+          await saveGoalRecord(db, thisYear, today, roundId, storedGoalData)
+        }
 
         // 4) UI 정리
         setLastRecord(storedGoalData.id)
