@@ -40,7 +40,7 @@ const DataTable = (props) => {
   const [kingList, setKingList] = useState([])
   const [arrowState, setArrowState] = useState('이름')
   const [arrowDirection, setArrowDirection] = useState(true)
-  const startYear = 2021
+  const startYear = tap === '승점' ? 2026 : 2021
 
   useEffect(() => {
     if (tableData?.data?.length > 0) {
@@ -403,14 +403,14 @@ const DataTable = (props) => {
                 <span key={data.id}>{Number(data.id.slice(2, 4)) + '일'}</span>
               ))}
               {year !== '2021' ? (
-                <div>
+                <span>
                 <p
                   style={{ fontSize: '11px' }}
                 >{`${quarterName}분기`}</p>
                   <p
                     style={{ fontSize: '11px' }}
                   >총합</p>
-                </div>
+                </span>
               ) : (
                 <span
                   style={{ fontSize: '9px', whiteSpace: 'pre-line' }}

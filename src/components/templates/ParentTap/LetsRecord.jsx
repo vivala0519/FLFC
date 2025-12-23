@@ -6,6 +6,7 @@ import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
 
 import DailyMVP from '@/components/organisms/DailyMVP.jsx'
+import TeamScorePopup from '@/components/organisms/TeamScorePopup.jsx'
 import RecordContainer from '@/components/organisms/RecordContainer.jsx'
 import WriteContainer from '@/components/organisms/WriteContainer.jsx'
 import SelectTeamPopup from '@/components/organisms/SelectTeamPopup.jsx'
