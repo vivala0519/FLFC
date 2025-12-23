@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const TeamScorePopup = (props) => {
-  const { setShowMVP, recordData } = props
+  const { setShowMVP, recordData, weeklyTeamData } = props
   const [teamScore, setTeamScore] = useState({'1': {}, '2': {}, '3': {}})
 
   const popupContainerStyle =
@@ -50,10 +50,15 @@ const TeamScorePopup = (props) => {
         <span>2팀:</span>
         <span>{teamScore['2']?.win + '승 ' + teamScore['2']?.draw + '무'}</span>
       </div>
-      <div className={'flex gap-2'}>
-        <span>3팀:</span>
-        <span>{teamScore['3']?.win + '승 ' + teamScore['3']?.draw + '무'}</span>
-      </div>
+      {
+        weeklyTeamData?.data['3'][0] &&
+        <div className={'flex gap-2'}>
+          <span>3팀:</span>
+          <span>
+            {teamScore['3']?.win + '승 ' + teamScore['3']?.draw + '무'}
+          </span>
+        </div>
+      }
     </div>
   )
 }
