@@ -298,7 +298,7 @@ const LetsRecord = (props) => {
   const stats = useMemo(() => formatRecordByName(todayRecord, displayRecord), [todayRecord])
 
   useEffect(() => {
-    if (Object.keys(stats).length > 0 && todayRecord && canRegister) {
+    if (stats && Object.keys(stats).length > 0 && todayRecord && canRegister) {
     // if (stats && canRegister) {
       const registerRecord = async () => {
         // const docRef = doc(db, thisYear, today)
