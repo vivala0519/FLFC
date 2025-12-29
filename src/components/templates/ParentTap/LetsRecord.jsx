@@ -270,10 +270,13 @@ const LetsRecord = (props) => {
 
       goalRecord.forEach((item) => {
         const { assist, goal } = item
+        if (item.id === 'fever-time-bar') {
+          return
+        }
 
         if (goal !== '') {
           // 외자 골 처리
-          if (goal.length === 1) {
+          if (goal?.length === 1) {
             oneCharacterMembers.forEach((player) => {
               if (player.includes(goal) && stats[player]) {
                 stats[player]['골']++
@@ -294,7 +297,7 @@ const LetsRecord = (props) => {
 
         if (assist !== '') {
           // 외자 어시 처리
-          if (assist.length === 1) {
+          if (assist?.length === 1) {
             oneCharacterMembers.forEach((player) => {
               if (player.includes(assist) && stats[player]) {
                 stats[player]['어시']++
@@ -316,7 +319,7 @@ const LetsRecord = (props) => {
 
       const formattedRoundRecord = formatRoundRecord(roundRecord)
       Object.entries(formattedRoundRecord).forEach(([key, value]) => {
-        if (key.length === 1) {
+        if (key?.length === 1) {
           oneCharacterMembers.forEach((player) => {
             if (player.includes(key) && stats[player]) {
               stats[player]['승점'] = value
@@ -387,7 +390,7 @@ const LetsRecord = (props) => {
   }
 
   // Firestore 데이터 등록
-  const stats = useMemo(() => formatRecordByName(todayRecord, displayRecord), [todayRecord])
+  const stats = formatRecordByName(todayRecord, displayRecord)
 
   useEffect(() => {
     if (stats && Object.keys(stats).length > 0 && todayRecord && canRegister) {
@@ -397,6 +400,15 @@ const LetsRecord = (props) => {
         await setDoc(docRef, stats)
         console.log('Document written with ID: ', docRef.id)
         setWrittenData(stats)
+        // 스크롤 맨 밑으로
+        const scrollContainer = scrollContainerRef.current
+        if (scrollContainer) {
+          const scrollHeight = scrollContainer.scrollHeight
+          scrollContainer.scrollTo({
+            top: scrollHeight,
+            behavior: 'smooth',
+          })
+        }
       }
       if (!writtenData) {
         registerRecord()
@@ -404,15 +416,6 @@ const LetsRecord = (props) => {
       if (writtenData && !compareObjects(stats, writtenData)) {
         registerRecord()
       }
-    }
-    // 스크롤 맨 밑으로
-    const scrollContainer = scrollContainerRef.current
-    if (scrollContainer) {
-      const scrollHeight = scrollContainer.scrollHeight
-      scrollContainer.scrollTo({
-        top: scrollHeight,
-        behavior: 'smooth',
-      })
     }
   }, [todayRecord, stats, existingMembers])
 
