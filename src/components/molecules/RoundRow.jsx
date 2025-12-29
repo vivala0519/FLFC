@@ -250,10 +250,19 @@ const RecordRow = (props) => {
                     {record.winnerTeam.number}팀{' '}
                   </span>
                 )}
-                <span className={winStyle}>{record.winnerTeam.number.length === 1 ? 'Win' : 'Draw'}</span>
+                <span className={winStyle}>
+                  {record.winnerTeam.number.length === 1 ? 'Win' : 'Draw'}
+                </span>
               </div>
-            ) : (
-              isOver10Minutes(record.time) ? (
+            ) : isOver10Minutes(record.time) ? (
+              <>
+                {record?.teamList?.length === 2 && (
+                  <div className={teamStyle}>
+                    {record.teamList[0]}팀{' '}
+                    <span className={'text-assist'}>vs</span>{' '}
+                    {record.teamList[1]}팀
+                  </div>
+                )}
                 <div
                   className={roundExitButtonStyle}
                   onClick={() => exitRoundHandler(record.id)}
@@ -262,10 +271,14 @@ const RecordRow = (props) => {
                     <span>종료</span>
                   </div>
                 </div>
-              ) : (
-                record?.teamList?.length === 2 && (<div className={teamStyle}>
-                  {record.teamList[0]}팀 <span className={'text-assist'}>vs</span> {record.teamList[1]}팀
-                </div>)
+              </>
+            ) : (
+              record?.teamList?.length === 2 && (
+                <div className={teamStyle}>
+                  {record.teamList[0]}팀{' '}
+                  <span className={'text-assist'}>vs</span> {record.teamList[1]}
+                  팀
+                </div>
               )
             )}
           </div>

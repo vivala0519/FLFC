@@ -122,32 +122,28 @@ const RecordContainer = (props) => {
       className={containerStyle + dynamicStyle}
       style={{ height: open ? dynamicHeight : '' }}
     >
-      {
-        displayRecord.length === 0 && (
-          <div className={'w-full flex flex-col items-center'}>
-            <div
-              className={`border-t-2 mb-2 w-[85%] border-blue-300`}
-            ></div>
-            <RoundRow
-              index={0}
-              fakeRow={true}
-              record={{ winner: null, time: '08:00:00' }}
-              weeklyTeamData={weeklyTeamData}
-              setPendingRoundId={setPendingRoundId}
-              setShowSelectTeamPopup={setShowSelectTeamPopup}
-              setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
-              setSelectTeamPopupMessage={setSelectTeamPopupMessage}
-            />
-            <div className={'text-black dark:text-gray-100'}>득점 없당</div>
-          </div>
-        )
-      }
+      {displayRecord.length === 0 && (
+        <div className={'w-full flex flex-col items-center'}>
+          <div className={`border-t-2 mb-2 w-[85%] border-blue-300`}></div>
+          <RoundRow
+            index={0}
+            fakeRow={true}
+            record={{ winner: null, time: '08:00:00' }}
+            weeklyTeamData={weeklyTeamData}
+            setPendingRoundId={setPendingRoundId}
+            setShowSelectTeamPopup={setShowSelectTeamPopup}
+            setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
+            setSelectTeamPopupMessage={setSelectTeamPopupMessage}
+          />
+          <div className={'text-black dark:text-gray-100'}>득점 없당</div>
+        </div>
+      )}
       {displayRecord?.map((record, index) => (
         <div className={'w-full flex flex-col items-center'} key={index}>
           {/*{index !== 0 && (*/}
-            <div
-              className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mb-2 w-[85%]`}
-            ></div>
+          <div
+            className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mb-2 w-[85%]`}
+          ></div>
           {/*)}*/}
           <RoundRow
             key={index}
