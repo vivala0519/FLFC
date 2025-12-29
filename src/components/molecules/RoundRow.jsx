@@ -7,7 +7,21 @@ import { uid } from 'uid'
 
 const RecordRow = (props) => {
   const { time: { today, thisYear, currentTime } } = getTimes()
-  const { record, index, fakeRow, isOpen, roundShowHandler, weeklyTeamData, setShowSelectTeamPopup, setPendingRoundId, setSelectTeamPopupMessage } = props
+  const {
+    record,
+    index,
+    fakeRow,
+    isOpen,
+    roundShowHandler,
+    weeklyTeamData,
+    setShowSelectTeamPopup,
+    setPendingRoundId,
+    setSelectTeamPopupMessage,
+    setShowSelectScorerTeamPopup,
+    setSelectScorerTeamPopupMessage,
+    setPopupType,
+    setPlayingTeams,
+  } = props
   const [showTeamMembers, setShowTeamMembers] = useState(false)
   const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 py-1`
   const recordAreaStyle = 'flex items-center font-dnf-forged gap-2 w-full'
@@ -140,17 +154,31 @@ const RecordRow = (props) => {
     if ([0, 2].includes(mostGetGoalTeam.length)) {
       // 첫 라운드 가위바위보
       if (!roundData.index || roundData.index === 0) {
-        // if (!roundData.teamList) {
+        if (!roundData.teamList) {
           await selectWinnerTeam()
-        // }
+        } else {
+          setPlayingTeams(new Set(roundData.teamList))
+          setSelectScorerTeamPopupMessage('가위바위보 어느 팀이 이겼나요?')
+          setShowSelectScorerTeamPopup(true)
+          setPopupType('')
+        }
       } else {
         // 나중에 들어온 팀 (index 0)
-        await update(roundRef, { winnerTeam: {number: roundData.teamList, member: weeklyTeamData.data[String(roundData.teamList[0])].concat(weeklyTeamData.data[String(roundData.teamList[1])])} })
+        await update(roundRef, {
+          winnerTeam: {
+            number: roundData.teamList,
+            member: weeklyTeamData.data[String(roundData.teamList[0])].concat(
+              weeklyTeamData.data[String(roundData.teamList[1])],
+            ),
+          },
+        })
         const newRoundId = await createRound()
-        const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(String(team)))
+        const restTeam = ALL_TEAMS.find(
+          (team) => !roundData.teamList.includes(String(team)),
+        )
         const nextTeamList = [restTeam, String(roundData.teamList[0])]
         const newRoundRef = getRoundRef(db, thisYear, today, newRoundId)
-        await update(newRoundRef, {teamList: nextTeamList})
+        await update(newRoundRef, { teamList: nextTeamList })
       }
     }
   }
@@ -200,7 +228,9 @@ const RecordRow = (props) => {
               {renderMembers(record.winnerTeam?.member)}
             </span>
             {/*<span className={teamStyle + ' text-[14px]'}>{record.winnerTeam?.member.join(' ')}</span>*/}
-            <span className={winStyle + ' relative bottom-[2px]'}>{record.winnerTeam.number.length === 1 ? '+ 3' : '+ 1'}</span>
+            <span className={winStyle + ' relative bottom-[2px]'}>
+              {record.winnerTeam.number.length === 1 ? '+ 3' : '+ 1'}
+            </span>
           </div>
         </div>
       ) : (

@@ -154,6 +154,8 @@ const RecordContainer = (props) => {
             index={index}
             fakeRow={false}
             record={record}
+            setPopupType={setPopupType}
+            setPlayingTeams={setPlayingTeams}
             isOpen={!closedRounds.has(index)}
             weeklyTeamData={weeklyTeamData}
             roundShowHandler={roundShowHandler}

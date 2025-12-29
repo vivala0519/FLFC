@@ -473,11 +473,13 @@ const LetsRecord = (props) => {
             lastRecord={lastRecord}
             isFeverTime={isFeverTime}
             canRegister={canRegister}
+            setPopupType={setPopupType}
             playingTeams={playingTeams}
             dynamicHeight={dynamicHeight}
             displayRecord={displayRecord}
             weeklyTeamData={weeklyTeamData}
             scrollContainerRef={scrollContainerRef}
+            setPlayingTeams={setPlayingTeams}
             setPendingRoundId={setPendingRoundId}
             setShowSelectTeamPopup={setShowSelectTeamPopup}
             setSelectTeamPopupMessage={setSelectTeamPopupMessage}

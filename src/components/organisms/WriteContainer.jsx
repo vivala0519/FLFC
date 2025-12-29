@@ -165,16 +165,28 @@ const WriteContainer = (props) => {
 
   // scorer가 속한 팀을 찾아서 applyTeamGoal 실행
   const updateGoalTeam = async (roundId, scorerName, record) => {
-    let teamNumber = Object.keys(weeklyTeamData.data).find((k) =>
-      weeklyTeamData.data[k].includes(scorerName),
-    )
+    let teamNumber = null
+    if (!['용병', '자책'].includes(scorerName)) {
+      teamNumber = Object.keys(weeklyTeamData.data).find((k) =>
+        weeklyTeamData.data[k].includes(scorerName),
+      )
+    }
+
+    if (
+      !teamNumber &&
+      record.assist &&
+      !['용병', '자책'].includes(record.assist)
+    ) {
+      teamNumber = Object.keys(weeklyTeamData.data).find((k) =>
+        weeklyTeamData.data[k].includes(record.assist),
+      )
+    }
 
     // 팀을 못 찾으면 팝업 열어서 선택 받기
-    if (!teamNumber || ['용병', '자책'].includes(scorerName)) {
+    if (!teamNumber) {
       console.log('no teamNumber for scorer', scorerName)
       setShowSelectScorerTeamPopup(true)
       setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
-
 
       const dateRef = ref(db, `${thisYear}/${today}_rounds`)
       const snapshot = await get(dateRef)
