@@ -40,7 +40,7 @@ const LetsRecord = (props) => {
   const [writtenData, setWrittenData] = useState(null)
   const [registerHeight, setRegisterHeight] = useState(0)
   const [feverTimeHeight, setFeverTimeHeight] = useState(0)
-  const [canRegister, setCanRegister] = useState(true)
+  const [canRegister, setCanRegister] = useState(false)
   const [lastRecord, setLastRecord] = useState('')
   const [showMVP, setShowMVP] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
@@ -66,7 +66,7 @@ const LetsRecord = (props) => {
       setRegisterHeight(registerRef.current.clientHeight)
     }
     if (
-      ![0, 7].includes(thisDay) &&
+      [0, 7].includes(thisDay) &&
       currentTime >= gameStartTime &&
       currentTime <= recordTapCloseTime
     ) {
@@ -80,7 +80,7 @@ const LetsRecord = (props) => {
       setCanRegister(true)
     }
     if (
-      !([0, 7].includes(thisDay) &&
+      ([0, 7].includes(thisDay) &&
       currentTime >= gameEndTime &&
       currentTime <= recordTapCloseTime)
     ) {
@@ -391,10 +391,9 @@ const LetsRecord = (props) => {
 
   useEffect(() => {
     if (stats && Object.keys(stats).length > 0 && todayRecord && canRegister) {
-    // if (stats && canRegister) {
       const registerRecord = async () => {
-        // const docRef = doc(db, thisYear, today)
-        const docRef = doc(db, thisYear + '_dev', today)
+        const docRef = doc(db, thisYear, today)
+        // const docRef = doc(db, thisYear + '_dev', today)
         await setDoc(docRef, stats)
         console.log('Document written with ID: ', docRef.id)
         setWrittenData(stats)
@@ -486,7 +485,7 @@ const LetsRecord = (props) => {
             setSelectScorerTeamPopupMessage={setSelectScorerTeamPopupMessage}
             setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
           />
-          {showFeverTime && !isFeverTime && (
+          {canRegister && showFeverTime && !isFeverTime && (
             <div className="mt-2 w-[80%] z-4" ref={feverTimeRef}>
               <FeverTimeBar
                 isFeverTime={isFeverTime}

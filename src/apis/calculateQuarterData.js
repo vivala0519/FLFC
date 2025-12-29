@@ -6,7 +6,8 @@ import { collection, getDocs } from 'firebase/firestore'
 export const extractQuarterData = async (yearParameter) => {
   const thisYear = new Date().getFullYear()
   const year = yearParameter ? yearParameter : String(thisYear)
-  const collectionRef = collection(db, year + '_dev')
+  const collectionRef = collection(db, year)
+  // const collectionRef = collection(db, year + '_dev')
   const snapshot = await getDocs(collectionRef)
   const fetchedData = snapshot.docs.map((doc) => ({
     id: doc.id,
