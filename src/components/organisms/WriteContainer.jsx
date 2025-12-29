@@ -441,11 +441,11 @@ const WriteContainer = (props) => {
       } else {
         let checkMember = false
         roundData.teamList.forEach((teamNumber) => {
-          if (weeklyTeamData.data[teamNumber].includes(scorer) && scorer.includes('용병')) {
+          if (weeklyTeamData.data[teamNumber].includes(scorer)) {
             checkMember = true
           }
           if (
-            weeklyTeamData.data[teamNumber].includes(assistant) && assistant.includes('용병')) {
+            weeklyTeamData.data[teamNumber].includes(assistant)) {
             checkMember = true
           }
         })
