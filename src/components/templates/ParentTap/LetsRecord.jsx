@@ -65,11 +65,7 @@ const LetsRecord = (props) => {
     if (registerRef.current) {
       setRegisterHeight(registerRef.current.clientHeight)
     }
-    if (
-      [0, 7].includes(thisDay) &&
-      currentTime >= gameStartTime &&
-      currentTime <= recordTapCloseTime
-    ) {
+    if (thisDay !== 6) {
       setOpen(true)
     }
     if (
@@ -87,7 +83,7 @@ const LetsRecord = (props) => {
       setShowMVP(true)
       setShowRequestUpdateButton(true)
     }
-  }, [])
+  }, [thisDay])
 
   // daily 실시간 record
   useEffect(() => {

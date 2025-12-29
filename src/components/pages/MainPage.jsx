@@ -29,9 +29,8 @@ const MainPage = (props) => {
 
   // Data Generation
   useEffect(() => {
-    ;(async () => {
-      const collectionRef = collection(db, thisYear)
-      // const collectionRef = collection(db, thisYear + '_dev')
+    const run = async () => {
+      const collectionRef = collection(db, thisYear + '_dev')
       const snapshot = await getDocs(collectionRef)
       const fetchedData = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -52,7 +51,8 @@ const MainPage = (props) => {
       setLastWeeklyTeamId(
         fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id,
       )
-    })()
+    }
+    run()
   }, [tap])
 
   // 위클리 팀 등록

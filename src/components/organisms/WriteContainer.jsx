@@ -199,7 +199,6 @@ const WriteContainer = (props) => {
           const curIndex = typeof cur.index === 'number' ? cur.index : -1
           return curIndex > prevIndex ? cur : prev
         })
-        console.log(rounds[lastRound.id]['teamList'])
         setPlayingTeams(new Set(rounds[lastRound.id]['teamList']))
       }
       return

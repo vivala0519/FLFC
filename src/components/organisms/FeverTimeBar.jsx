@@ -7,7 +7,7 @@ const FeverTimeBar = (props) => {
 
   return (
     <div className={containerStyle} onClick={clickHandler}>
-      <span className={isFeverTime && 'animate-pulse'}>피버 타임 {!isFeverTime && 'Off'}</span>
+      <span className={isFeverTime && 'animate-pulse'}>피버 타임 {!isFeverTime && 'On'}</span>
     </div>
   )
 }

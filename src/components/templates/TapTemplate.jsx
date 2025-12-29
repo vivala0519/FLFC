@@ -23,31 +23,31 @@ const TapTemplate = (props) => {
   const [isFirstElementInViewport, setIsFirstElementInViewport] =
     useState(false)
   const testWeeklyTeamData = {
-    "id": "251222",
+    "id": "251228",
     "data": {
       "1": [
-        "승호",
-        "영진",
-        "지원",
-        "원효",
-        "용병",
-        "승호용병"
+        "근홍",
+        "희철",
+        "대열",
+        "원진",
+        "철민",
+        "승호"
       ],
       "2": [
-        "희재",
-        "승진",
-        "원진",
+        "근원",
+        "성현",
         "용병",
-        "대열",
-        "건휘"
+        "장식",
+        "승진",
+        "용병"
       ],
       "3": [
-        "희철",
-        "용",
-        "근원",
-        "장식",
+        "건휘",
+        "정민",
+        "승주",
         "종우",
-        "우진"
+        "희종",
+        "시현"
       ]
     }
   }
