@@ -1,0 +1,16 @@
+.box2 {
+    margin: max(1rem, 3vw);
+    border: 0.35rem solid;
+    padding: 3vw;
+    border-image: conic-gradient(from var(--angle), var(--c4), var(--c3) 0.1turn, var(--c3) 0.15turn, var(--c4) 0.25turn) 30;
+    animation: borderRotate var(--d) linear infinite forwards;
+    @media (min-width: 812px) {
+        padding: 1vw;
+    }
+}
+
+@keyframes borderRotate {
+    100% {
+        --angle: 420deg;
+    }
+}

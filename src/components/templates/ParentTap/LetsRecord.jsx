@@ -11,7 +11,10 @@ import RecordContainer from '@/components/organisms/RecordContainer.jsx'
 import WriteContainer from '@/components/organisms/WriteContainer.jsx'
 import SelectTeamPopup from '@/components/organisms/SelectTeamPopup.jsx'
 import SelectScorerTeamPopup from '@/components/organisms/SelectScorerTeamPopup.jsx'
+import FeverTimeBar from '@/components/organisms/FeverTimeBar.jsx'
 import './LetsRecord.css'
+import Swal from 'sweetalert2'
+import { get, getDatabase, ref, remove, set, update } from 'firebase/database'
 
 const LetsRecord = (props) => {
   const {
@@ -30,11 +33,13 @@ const LetsRecord = (props) => {
   const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
   const registerRef = useRef(null)
   const scrollContainerRef = useRef(null)
+  const feverTimeRef = useRef(null)
   const [todayRecord, setTodayRecord] = useState([])
   const [displayRecord, setDisplayRecord] = useState([])
   const [dynamicHeight, setDynamicHeight] = useState(0)
   const [writtenData, setWrittenData] = useState(null)
   const [registerHeight, setRegisterHeight] = useState(0)
+  const [feverTimeHeight, setFeverTimeHeight] = useState(0)
   const [canRegister, setCanRegister] = useState(true)
   const [lastRecord, setLastRecord] = useState('')
   const [showMVP, setShowMVP] = useState(false)
@@ -50,6 +55,8 @@ const LetsRecord = (props) => {
   const [selectScorerTeamPopupMessage, setSelectScorerTeamPopupMessage] = useState('')
   const [showSelectScorerTeamPopup, setShowSelectScorerTeamPopup] = useState(false)
   const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
+  const [showFeverTime, setShowFeverTime] = useState(false)
+  const [isFeverTime, setIsFeverTime] = useState(false)
   // style class
   const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-2'}`
   const templateContainerStyle = 'flex flex-col items-center w-full'
@@ -85,7 +92,14 @@ const LetsRecord = (props) => {
   // daily 실시간 record
   useEffect(() => {
     const data = todaysRealtimeRound
-    if (data) {
+    if (Object.keys(data).length > 0) {
+      const lastRoundValue = Object.values(data)?.reduce((max, cur) =>
+        cur.index > max.index ? cur : max,
+      )
+      if (lastRoundValue.goal && Object.keys(lastRoundValue?.goal)?.includes('fever-time-bar')) {
+        setIsFeverTime(true)
+      }
+
       // firestore에 등록하기 위한 전체 골 data
       const goalRecord = Object.values(data || {}).flatMap(round => {
         if (!round.goal) return []
@@ -141,6 +155,84 @@ const LetsRecord = (props) => {
       setWrittenData(data.data)
     }
   }, [recordData])
+
+  useEffect(() => {
+    const openFeverTime = new Date().setHours(9, 45, 0, 0)
+    if (open && currentTime >= openFeverTime) {
+      setShowFeverTime(true)
+    }
+  }, [open, currentTime])
+
+  const feverTimeHandler = () => {
+    Swal.fire({
+      title: '피버 타임 켤까요?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Fever!',
+      cancelButtonText: '취소',
+    }).then(async (result) => {
+      if (!result.isConfirmed) return
+
+      const db = getDatabase()
+      const basePath = `${thisYear}/${today}_rounds`
+
+      // 1) 마지막 라운드 찾기
+      const lastRound = await getLastRound(db, basePath)
+      if (!lastRound) return
+
+      const lastRoundRef = ref(db, `${basePath}/${lastRound.id}`)
+      const lastRoundSnap = await get(lastRoundRef)
+      const lastRoundValue = lastRoundSnap.val()
+
+      if (lastRoundValue?.goal) {
+        // 2-A) 골이 있는 라운드면 → 거기에 fever-time-bar 추가
+        await addFeverBarToRound(db, basePath, lastRound.id)
+      } else {
+        // 2-B) 골이 없는 라운드면 → 라운드 삭제 후,
+        //      새로 마지막 라운드 찾아서 fever-time-bar 추가
+        await remove(lastRoundRef)
+
+        const newLastRound = await getLastRound(db, basePath)
+        if (!newLastRound) return
+
+        await addFeverBarToRound(db, basePath, newLastRound.id)
+      }
+
+      setIsFeverTime(true)
+    })
+  }
+
+  /** 현재 시간 HH:mm:ss 포맷 */
+  const formatCurrentTime = (currentTime) => {
+    const h = currentTime.getHours().toString().padStart(2, '0')
+    const m = currentTime.getMinutes().toString().padStart(2, '0')
+    const s = currentTime.getSeconds().toString().padStart(2, '0')
+    return `${h}:${m}:${s}`
+  }
+
+  /** rounds 컬렉션에서 index가 가장 큰 라운드 찾기 */
+  const getLastRound = async (db, basePath) => {
+    const roundRef = ref(db, basePath)
+    const snap = await get(roundRef)
+    const rounds = snap.val()
+    if (!rounds) return null
+
+    const lastRoundObj = Object.values(rounds).reduce((max, cur) =>
+      cur.index > max.index ? cur : max,
+    )
+
+    return lastRoundObj // { id, index, ... }
+  }
+
+  /** 특정 라운드에 fever-time-bar goal 추가 */
+  const addFeverBarToRound = async (db, basePath, roundId) => {
+    const goalRef = ref(db, `${basePath}/${roundId}/goal/fever-time-bar`)
+    const formattedTime = formatCurrentTime(currentTime)
+
+    await set(goalRef, { id: 'fever-time-bar', time: formattedTime })
+  }
 
   const parseTimeFromString = (record) => {
     const [hours, minutes, seconds] = record.split(':')
@@ -339,11 +431,20 @@ const LetsRecord = (props) => {
     function setHeight() {
       const additionalHeight = requestUpdateMode ? 300 : 200
       const height =
-        window.innerHeight - (headerHeight + registerHeight + additionalHeight)
+        window.innerHeight -
+        (headerHeight + registerHeight + feverTimeHeight + additionalHeight)
       setDynamicHeight(height)
     }
     setHeight()
-  }, [requestUpdateMode])
+  }, [requestUpdateMode, registerHeight, feverTimeHeight])
+
+  useEffect(() => {
+    if (feverTimeRef.current) {
+      setFeverTimeHeight(feverTimeRef.current.clientHeight)
+    } else {
+      setFeverTimeHeight(0)
+    }
+  }, [feverTimeRef?.current?.clientHeight, showFeverTime, isFeverTime])
 
   return (
     <div className={tapContainerStyle}>
@@ -370,6 +471,7 @@ const LetsRecord = (props) => {
             open={open}
             showMVP={showMVP}
             lastRecord={lastRecord}
+            isFeverTime={isFeverTime}
             canRegister={canRegister}
             playingTeams={playingTeams}
             dynamicHeight={dynamicHeight}
@@ -382,6 +484,14 @@ const LetsRecord = (props) => {
             setSelectScorerTeamPopupMessage={setSelectScorerTeamPopupMessage}
             setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
           />
+          {showFeverTime && !isFeverTime && (
+            <div className="mt-2 w-[80%] z-4" ref={feverTimeRef}>
+              <FeverTimeBar
+                isFeverTime={isFeverTime}
+                clickHandler={feverTimeHandler}
+              />
+            </div>
+          )}
           <WriteContainer
             open={open}
             popupType={popupType}

@@ -6,7 +6,7 @@ import RecordRow from '@/components/molecules/RecordRow.jsx'
 import RoundRow from '@/components/molecules/RoundRow.jsx'
 
 const RecordContainer = (props) => {
-  const { scrollContainerRef, open, dynamicHeight, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage } = props
+  const { scrollContainerRef, open, isFeverTime, dynamicHeight, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams } = props
   const { time: { today, thisYear } } = getTimes()
   const [openRounds, setOpenRounds] = useState(new Set())
   const [closedRounds, setClosedRounds] = useState(new Set())
@@ -175,6 +175,7 @@ const RecordContainer = (props) => {
                 index={goalIndex}
                 effect={goal.id === lastRecord}
                 record={goal}
+                isFeverTime={isFeverTime}
                 useDelete={canRegister}
                 isLastRound={displayRecord.length - 1 === index}
                 deleteRecord={deleteRecord}

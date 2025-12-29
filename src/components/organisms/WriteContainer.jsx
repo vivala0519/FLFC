@@ -98,6 +98,7 @@ const WriteContainer = (props) => {
   const [assistant, setAssistant] = useState('')
   const [storedGoalData, setStoredGoalData] = useState(null)
   const [isWriting, setIsWriting] = useState(false)
+  const [isFeverTime, setIsFeverTime] = useState(false)
 
   const writeBoxPropsData = {
     scorer,
@@ -231,6 +232,10 @@ const WriteContainer = (props) => {
 
         // 아직 안 끝난 라운드 있으면 그 라운드 계속 사용
         if (!lastRound.winnerTeam) {
+          return lastRound.id
+        }
+        if (lastRound.goal && Object.keys(lastRound.goal).includes('fever-time-bar')) {
+          setIsFeverTime(true)
           return lastRound.id
         }
       }
@@ -403,44 +408,50 @@ const WriteContainer = (props) => {
       goal: scorer.trim(),
       assist: assistant.trim(),
     }
-
-    const roundRef = getRoundRef(db, thisYear, today, roundId)
-    const roundSnap = await get(roundRef)
-    const roundData = roundSnap.val()
-
-    // 팀 정보 아직 없음 → 팝업 띄우고 여기서 멈춤
-    if (!roundData.teamList || roundData.teamList.length < 2) {
-      if (roundData.index < 1) {
-        setSelectTeamPopupMessage('경기 중인 팀을 선택해주세요')
-        setShowSelectTeamPopup(true)
-        setStoredGoalData(record)
-        setPendingRoundId(roundId)
-        return
-      } else {
-        const wholeSnap = await get(ref(db, `${thisYear}/${today}_rounds`))
-        console.log('wholeSnap: ', wholeSnap.val())
-      }
+    if (isFeverTime) {
+      await saveGoalRecord(db, thisYear, today, roundId, record)
     } else {
-      let checkMember = false
-      roundData.teamList.forEach((teamNumber) => {
-        if (weeklyTeamData.data[teamNumber].includes(scorer)) {
-          checkMember = true
+      const roundRef = getRoundRef(db, thisYear, today, roundId)
+      const roundSnap = await get(roundRef)
+      const roundData = roundSnap.val()
+
+      // 팀 정보 아직 없음 → 팝업 띄우고 여기서 멈춤
+      if (!roundData.teamList || roundData.teamList.length < 2) {
+        if (roundData.index < 1) {
+          setSelectTeamPopupMessage('경기 중인 팀을 선택해주세요')
+          setShowSelectTeamPopup(true)
+          setStoredGoalData(record)
+          setPendingRoundId(roundId)
+          return
+        } else {
+          const wholeSnap = await get(ref(db, `${thisYear}/${today}_rounds`))
         }
-      })
-      if (!checkMember) {
-        setPlayingTeams(new Set(roundData.teamList))
-        setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
-        setShowSelectScorerTeamPopup(true)
-        setStoredGoalData(record)
-        return
+      } else {
+        let checkMember = false
+        roundData.teamList.forEach((teamNumber) => {
+          if (weeklyTeamData.data[teamNumber].includes(scorer) && scorer.includes('용병')) {
+            checkMember = true
+          }
+          if (
+            weeklyTeamData.data[teamNumber].includes(assistant) && assistant.includes('용병')) {
+            checkMember = true
+          }
+        })
+        if (!checkMember) {
+          setPlayingTeams(new Set(roundData.teamList))
+          setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
+          setShowSelectScorerTeamPopup(true)
+          setStoredGoalData(record)
+          return
+        }
       }
+
+      setStoredGoalData(record)
+
+      // 팀 정보 이미 있으면 → 바로 저장
+      await updateGoalTeam(roundId, record.goal, record)
+      // await saveGoalRecord(db, thisYear, today, roundId, record)
     }
-
-    setStoredGoalData(record)
-
-    // 팀 정보 이미 있으면 → 바로 저장
-    await updateGoalTeam(roundId, record.goal, record)
-    // await saveGoalRecord(db, thisYear, today, roundId, record)
 
     setLastRecord(goalId)
     setScorer('')
