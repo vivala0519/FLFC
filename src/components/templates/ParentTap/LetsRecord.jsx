@@ -28,7 +28,7 @@ const LetsRecord = (props) => {
       recordTapCloseTime,
     },
   } = getTimes()
-  const { existingMembers, oneCharacterMembers } = getMembers()
+  const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
   const { todaysRealtimeRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
   const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
   const registerRef = useRef(null)
@@ -251,6 +251,11 @@ const LetsRecord = (props) => {
               stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
             }
           })
+          Object.entries(membersNickName).forEach(([nick, name]) => {
+            if (nick.includes(member)) {
+              stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+            }
+          })
         } else {
           // 나머지 출석처리
           const others = existingMembers.filter(
@@ -259,6 +264,11 @@ const LetsRecord = (props) => {
           others.forEach((player) => {
             if (member && player.includes(member)) {
               stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+            }
+          })
+          Object.entries(membersNickName).forEach(([nick, name]) => {
+            if (nick.includes(member)) {
+              stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
             }
           })
         }
@@ -278,6 +288,11 @@ const LetsRecord = (props) => {
                 stats[player]['골']++
               }
             })
+            Object.entries(membersNickName).forEach(([nick, name]) => {
+              if (nick.includes(goal) && stats[name]) {
+                stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+              }
+            })
           } else {
             // 나머지 골 처리
             const others = existingMembers.filter(
@@ -286,6 +301,11 @@ const LetsRecord = (props) => {
             others.forEach((player) => {
               if (player.includes(goal) && stats[player]) {
                 stats[player]['골']++
+              }
+            })
+            Object.entries(membersNickName).forEach(([nick, name]) => {
+              if (nick.includes(goal) && stats[name]) {
+                stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
               }
             })
           }
@@ -299,6 +319,11 @@ const LetsRecord = (props) => {
                 stats[player]['어시']++
               }
             })
+            Object.entries(membersNickName).forEach(([nick, name]) => {
+              if (nick.includes(assist) && stats[name]) {
+                stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+              }
+            })
           } else {
             // 나머지 어시 처리
             const others = existingMembers.filter(
@@ -307,6 +332,11 @@ const LetsRecord = (props) => {
             others.forEach((player) => {
               if (player.includes(assist) && stats[player]) {
                 stats[player]['어시']++
+              }
+            })
+            Object.entries(membersNickName).forEach(([nick, name]) => {
+              if (nick.includes(assist) && stats[name]) {
+                stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
               }
             })
           }
@@ -321,11 +351,21 @@ const LetsRecord = (props) => {
               stats[player]['승점'] = value
             }
           })
+          Object.entries(membersNickName).forEach(([nick, name]) => {
+            if (nick.includes(key) && stats[name]) {
+              stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+            }
+          })
         } else {
           const others = existingMembers.filter((existing) => !oneCharacterMembers.includes(existing))
           others.forEach((player) => {
             if (player.includes(key) && stats[player]) {
               stats[player]['승점'] = value
+            }
+          })
+          Object.entries(membersNickName).forEach(([nick, name]) => {
+            if (nick.includes(key) && stats[name]) {
+              stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
             }
           })
         }

@@ -290,12 +290,10 @@ const WriteContainer = (props) => {
         cur.index > max.index ? cur : max,
       )
       const lastRoundId = lastRoundObj.id
-      console.log('scorerTeam: ', scorerTeam)
       await applyTeamGoal(lastRoundId, scorerTeam, true)
       setHandleRoundWinnerTrigger(null)
       setScorerTeam(null)
       setPendingRoundId(null)
-      console.log(lastRoundId)
     }
     if (handleRoundWinnerTrigger) {
       run()
@@ -313,7 +311,6 @@ const WriteContainer = (props) => {
       // 1) 라운드 teamList 채우기
       await ensureRoundTeamList(db, thisYear, today, roundId, playingTeams)
 
-      console.log('popupType: ', popupType)
       if (popupType === 'playing') {
         // 2) 득점자의 팀 getGoalTeam에 추가
         await updateGoalTeam(roundId, storedGoalData.goal, storedGoalData)

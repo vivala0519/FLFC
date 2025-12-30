@@ -20,6 +20,7 @@ export const totalMembersAtom = atom([])
 export const existingMembersAtom = atom([])
 export const retiredMembersAtom = atom([])
 export const oneCharacterMembersAtom = atom([])
+export const membersNickNameAtom = atom([])
 export const membersIdAtom = atom([])
 
 // records

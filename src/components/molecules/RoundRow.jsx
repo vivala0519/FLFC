@@ -131,7 +131,6 @@ const RecordRow = (props) => {
     setPendingRoundId(roundId)
     setSelectTeamPopupMessage('첫 라운드 어느 팀이 경기했나요?')
     setShowSelectTeamPopup(true)
-    console.log('selectWinnerTeam')
   }
 
   const exitRound = async (roundId) => {
@@ -139,7 +138,6 @@ const RecordRow = (props) => {
     const roundRef = getRoundRef(db, thisYear, today, roundId)
     const snap = await get(roundRef)
     const roundData = snap.val() || {}
-    console.log(roundData)
     const mostGetGoalTeam = getMostFrequentElements(roundData.getGoalTeam || [])
     // 한골
     if (mostGetGoalTeam.length === 1) {

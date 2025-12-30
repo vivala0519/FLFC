@@ -12,8 +12,6 @@ const SelectScorerTeamPopup = (props) => {
     const filteredData = Object.fromEntries(
       Object.entries(weeklyTeamData.data).filter(([key]) => [...playingTeams].map(String).includes(String(key)))
     )
-    console.log(filteredData)
-    console.log(Object.entries(filteredData))
     setCurrentTeams(filteredData)
   }, [playingTeams])
 
