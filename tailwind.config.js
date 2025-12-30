@@ -34,7 +34,7 @@ export default {
         myTeam: "url('@/assets/friendship.webp')",
         palmer: "url('@/assets/palmer.webp')",
         ronaldo: "url('@/assets/ronaldo.webp')",
-        rodrigo: "url('@/assets/rodrigo.webp')",
+        rodrigo: "url('@/assets/dembele.webp')",
         DeBruyne: "url('@/assets/DeBruyne.webp')",
         CJamChul: "url('@/assets/CJamChul.webp')",
         sonKaeDuo: "url('@/assets/sonKaeDuo.webp')",
