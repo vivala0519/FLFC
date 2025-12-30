@@ -22,35 +22,6 @@ const TapTemplate = (props) => {
   const [isLastElementInViewport, setIsLastElementInViewport] = useState(false)
   const [isFirstElementInViewport, setIsFirstElementInViewport] =
     useState(false)
-  const testWeeklyTeamData = {
-    "id": "251228",
-    "data": {
-      "1": [
-        "근홍",
-        "희철",
-        "대열",
-        "원진",
-        "철민",
-        "승호"
-      ],
-      "2": [
-        "근원",
-        "성현",
-        "용병",
-        "장식",
-        "승진",
-        "용병"
-      ],
-      "3": [
-        "건휘",
-        "정민",
-        "승주",
-        "종우",
-        "희종",
-        "시현"
-      ]
-    }
-  }
 
   // 슬라이드 시 탭 이동
   const handleTouchStart = (e) => {
@@ -113,8 +84,7 @@ const TapTemplate = (props) => {
           setOpen={setOpen}
           open={open}
           recordData={recordData}
-          // weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]}
-          weeklyTeamData={testWeeklyTeamData}
+          weeklyTeamData={weeklyTeamData[weeklyTeamData.length - 1]}
           setTap={setTap}
         />
       )}
