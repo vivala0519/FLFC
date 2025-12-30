@@ -42,9 +42,9 @@ const updateRecords = () => {
       onValue(todayRef, (snapshot) => {
         const realTimeRecord = snapshot.val()
         setRealtimeRecord(realTimeRecord)
-        setTodaysRealtimeRecord(realTimeRecord[today] || {})
-        setTodaysRealtimeRound(realTimeRecord[today + '_rounds'] || {})
-        setRequestList(realTimeRecord[today + '_request'] || {})
+        setTodaysRealtimeRecord(realTimeRecord[targetId] || {})
+        setTodaysRealtimeRound(realTimeRecord[targetId + '_rounds'] || {})
+        setRequestList(realTimeRecord[targetId + '_request'] || {})
       })
     }
   }, [setRealtimeRecord, setTodaysRealtimeRecord, thisYear, today])
