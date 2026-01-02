@@ -67,7 +67,7 @@ const RecordRoom = (props) => {
   }
 
   const getYearData = async (year) => {
-    const collectionRef = collection(db, year + '_dev')
+    const collectionRef = collection(db, year)
     const snapshot = await getDocs(collectionRef)
     let fetchedData = snapshot.docs.map((doc) => ({
       id: doc.id,

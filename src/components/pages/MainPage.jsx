@@ -30,7 +30,7 @@ const MainPage = (props) => {
   // Data Generation
   useEffect(() => {
     const run = async () => {
-      const collectionRef = collection(db, thisYear + '_dev')
+      const collectionRef = collection(db, thisYear)
       const snapshot = await getDocs(collectionRef)
       const fetchedData = snapshot.docs.map((doc) => ({
         id: doc.id,
