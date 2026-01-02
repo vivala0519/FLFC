@@ -282,7 +282,7 @@ function WeeklyTeam(props) {
                               key={idx}
                               type="text"
                               value={player}
-                              className="w-12 border-green-600 border-2 outline-none text-center"
+                              className="w-12 border-blue-600 border-2 outline-none text-center"
                               onChange={(event) =>
                                 teamMakerInputHandler(event, index, idx)
                               }
