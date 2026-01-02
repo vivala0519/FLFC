@@ -373,7 +373,7 @@ const WriteContainer = (props) => {
     }
 
     if (showSelectScorerTeamPopup) return
-    if (scorerTeam) {
+    if (scorerTeam && !handleRoundWinnerTrigger) {
       run()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
