@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { doc, setDoc } from 'firebase/firestore'
 import { db } from '../../../../firebase.js'
 import getTimes from '@/hooks/getTimes.js'
@@ -57,6 +57,7 @@ const LetsRecord = (props) => {
   const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   const [showFeverTime, setShowFeverTime] = useState(false)
   const [isFeverTime, setIsFeverTime] = useState(false)
+  const [loadingFlag, setLoadingFlag] = useState(false)
   // style class
   const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-2'}`
   const templateContainerStyle = 'flex flex-col items-center w-full'
@@ -87,6 +88,12 @@ const LetsRecord = (props) => {
 
   // daily 실시간 record
   useEffect(() => {
+    setLoadingFlag(true)
+    if (!todaysRealtimeRound) return
+    if (thisDay <= 6 && thisDay >= 1) {
+      setLoadingFlag(false)
+      return
+    }
     const data = todaysRealtimeRound
     if (Object.keys(data).length > 0) {
       const lastRoundValue = Object.values(data)?.reduce((max, cur) =>
@@ -115,6 +122,7 @@ const LetsRecord = (props) => {
       setTodayRecord(goalRecord)
       setDisplayRecord(roundRecord)
     }
+    setLoadingFlag(false)
   }, [todaysRealtimeRecord, todaysRealtimeRound])
 
   // request list
@@ -486,6 +494,11 @@ const LetsRecord = (props) => {
 
   return (
     <div className={tapContainerStyle}>
+      {loadingFlag && (
+        <div className="absolute z-20 bg-white w-full h-full flex items-center justify-center">
+          <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
+        </div>
+      )}
       {/*<TapTitleText active={open} title={"Today's Record"} />*/}
       {/*{!showRequestUpdateButton && <Separator fullWidth={false} />}*/}
       <div className={templateContainerStyle}>

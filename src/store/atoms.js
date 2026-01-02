@@ -26,7 +26,7 @@ export const membersIdAtom = atom([])
 // records
 const realtimeRecord = {}
 const todaysRealtimeRecord = {}
-const todaysRealtimeRound = {}
+const todaysRealtimeRound = null
 const requestList = []
 
 // votes

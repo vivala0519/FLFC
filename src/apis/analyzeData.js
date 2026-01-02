@@ -92,9 +92,7 @@ export const dataAnalysis = async (quarter, yearParameter) => {
     })
   }
 
-  const lastSeasonKings = fetchedData.find(
-    (data) => data.id === 'last_season_kings',
-  ).data
+  const lastSeasonKings = fetchedData.find((data) => data.id === 'last_season_kings')?.data
 
   // 1분기 이름별 통계 취합
   const firstQuarter = fetchedData.filter(
