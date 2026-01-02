@@ -495,7 +495,7 @@ const LetsRecord = (props) => {
   return (
     <div className={tapContainerStyle}>
       {loadingFlag && (
-        <div className="absolute z-20 w-full h-full flex items-center justify-center">
+        <div className="fixed z-20 bg-white dark:bg-gray-950 w-full h-[80%] flex items-center justify-center">
           <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
         </div>
       )}
