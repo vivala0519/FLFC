@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { useEffect, useState } from 'react'
 import { db } from '../../../../firebase.js'
 // import getTimes from '../../../hooks/getTimes.js'
+import getMembers from '@/hooks/getMembers.js'
 import { collection, getDocs } from 'firebase/firestore'
 
 // import Separator from '../../atoms/Separator.jsx'
@@ -31,6 +32,7 @@ function WeeklyTeam(props) {
     ['', '', '', '', '', ''],
   ])
   const [balancer, setBalancer] = useState('')
+  const { membersNickName } = getMembers()
 
   const tapContainerStyle = 'relative w-full h-[80vh]'
   const dayTitleContainerStyle = 'flex gap-5 justify-center items-center'
@@ -177,10 +179,13 @@ function WeeklyTeam(props) {
 
   const registerTeamHandler = () => {
     const newWeeklyTeamData = [...weeklyTeamData]
+    const replacedTeamData = inputTeamData.map(team =>
+        team.map(name => membersNickName[name]?.slice(1) ?? name)
+    )
     const newData = {
-      1: inputTeamData[0],
-      2: inputTeamData[1],
-      3: inputTeamData[2],
+      1: replacedTeamData[0],
+      2: replacedTeamData[1],
+      3: replacedTeamData[2],
     }
 
     newWeeklyTeamData[weeklyTeamData.length - 1].data = newData

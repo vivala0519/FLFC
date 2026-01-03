@@ -3,6 +3,7 @@ import Swal from 'sweetalert2'
 import { getDatabase, ref, get, set, update } from 'firebase/database'
 import { uid } from 'uid'
 import getTimes from '@/hooks/getTimes.js'
+import getMembers from '@/hooks/getMembers.js'
 import WriteBox from '@/components/organisms/WriteBox.jsx'
 import InfoMessageBox from '@/components/molecules/InfoMessageBox.jsx'
 import ShowRequestButton from '@/components/atoms/Button/ShowRequestButton.jsx'
@@ -93,6 +94,7 @@ const WriteContainer = (props) => {
   const {
     time: { today, thisYear, currentTime, gameStartTime, gameEndTime },
   } = getTimes()
+  const { membersNickName } = getMembers()
 
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
@@ -179,6 +181,13 @@ const WriteContainer = (props) => {
     ) {
       teamNumber = Object.keys(weeklyTeamData.data).find((k) =>
         weeklyTeamData.data[k].includes(record.assist),
+      )
+    }
+
+    if (Object.keys(membersNickName).includes(scorerName)) {
+      const replacedName = membersNickName[scorer].slice(1)
+      teamNumber = Object.keys(weeklyTeamData.data).find((k) =>
+          weeklyTeamData.data[k].includes(replacedName),
       )
     }
 
@@ -410,11 +419,25 @@ const WriteContainer = (props) => {
     const goalId = uid()
     const roundId = await createRound()
 
+    let scorerName = scorer
+    let assistantName = assistant
+
+    if (Object.keys(membersNickName).includes(scorer)) {
+      const replacedName = membersNickName[scorer].slice(1)
+      setScorer(replacedName)
+      scorerName = replacedName
+    }
+    if (Object.keys(membersNickName).includes(assistant)) {
+      const replacedName = membersNickName[scorer].slice(1)
+      setAssistant(replacedName)
+      assistantName = replacedName
+    }
+
     const record = {
       id: goalId,
       time,
-      goal: scorer.trim(),
-      assist: assistant.trim(),
+      goal: scorerName.trim(),
+      assist: assistantName.trim(),
     }
     if (isFeverTime) {
       await saveGoalRecord(db, thisYear, today, roundId, record)
@@ -437,14 +460,38 @@ const WriteContainer = (props) => {
       } else {
         let checkMember = false
         roundData.teamList.forEach((teamNumber) => {
-          if (weeklyTeamData.data[teamNumber].includes(scorer)) {
+          if (weeklyTeamData.data[teamNumber].includes(scorerName)) {
             checkMember = true
           }
           if (
-            weeklyTeamData.data[teamNumber].includes(assistant)) {
+            weeklyTeamData.data[teamNumber].includes(assistantName)) {
             checkMember = true
           }
         })
+        if (Object.keys(membersNickName).includes(scorerName)) {
+          const replacedName = membersNickName[scorerName].slice(1)
+          roundData.teamList.forEach((teamNumber) => {
+            if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
+              checkMember = true
+            }
+            if (
+                weeklyTeamData.data[teamNumber].includes(replacedName)) {
+              checkMember = true
+            }
+          })
+        }
+        if (Object.keys(membersNickName).includes(assistantName)) {
+          const replacedName = membersNickName[assistantName].slice(1)
+          roundData.teamList.forEach((teamNumber) => {
+            if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
+              checkMember = true
+            }
+            if (
+                weeklyTeamData.data[teamNumber].includes(replacedName)) {
+              checkMember = true
+            }
+          })
+        }
         if (!checkMember) {
           setPlayingTeams(new Set(roundData.teamList))
           setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
