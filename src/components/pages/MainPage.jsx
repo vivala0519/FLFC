@@ -24,6 +24,7 @@ const MainPage = (props) => {
   const [headerHeight, setHeaderHeight] = useState(0)
   const [lastWeeklyTeamId, setLastWeeklyTeamId] = useState(null)
   const [weeklyTeamData, setWeeklyTeamData] = useState([])
+  const [testFlag, setTestFlag] = useState(true)
 
   const pageStyle = `flex flex-col items-center h-[95vh] ${isDarkMode ? 'dark' : ''}`
 
@@ -74,6 +75,12 @@ const MainPage = (props) => {
 
   return (
     <div className={pageStyle}>
+      {testFlag && (
+          <div className="absolute z-20 bg-white dark:bg-black w-full h-full flex flex-col items-center justify-center">
+            <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
+            <span>8시에 만나요~</span>
+          </div>
+      )}
       <Analytics />
       <Header
         tap={tap}
