@@ -60,7 +60,7 @@
 /* 새 기록 effect */
 @keyframes bg-effect {
     0% {
-        background-color: yellow;
+        background-color: #FFC7C7;
     }
     100% {
         background-color: initial;
