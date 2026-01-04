@@ -92,7 +92,6 @@ const LetsRecord = (props) => {
     if (!todaysRealtimeRound) return
     if (thisDay <= 6 && thisDay >= 1) {
       setLoadingFlag(false)
-      return
     }
     const data = todaysRealtimeRound
     if (Object.keys(data).length > 0) {
