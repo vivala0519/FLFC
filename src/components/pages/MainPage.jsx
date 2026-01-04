@@ -24,7 +24,7 @@ const MainPage = (props) => {
   const [headerHeight, setHeaderHeight] = useState(0)
   const [lastWeeklyTeamId, setLastWeeklyTeamId] = useState(null)
   const [weeklyTeamData, setWeeklyTeamData] = useState([])
-  const [testFlag, setTestFlag] = useState(true)
+  const [testFlag, setTestFlag] = useState(false)
 
   const pageStyle = `flex flex-col items-center h-[95vh] ${isDarkMode ? 'dark' : ''}`
 
