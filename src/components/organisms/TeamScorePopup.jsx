@@ -5,7 +5,7 @@ const TeamScorePopup = (props) => {
   const [teamScore, setTeamScore] = useState({'1': {}, '2': {}, '3': {}})
 
   const popupContainerStyle =
-    'w-[100%] h-[150px] bg-white dark:text-black cursor-pointer flex flex-col desktop:w-[30%] flex gap-2 items-center justify-center'
+    'w-[100%] h-[150px] bg-white dark:text-black cursor-pointer border-gray-200 border-4 flex flex-col desktop:w-[30%] flex gap-2 items-center justify-center'
 
   useEffect(() => {
     const stats = {}

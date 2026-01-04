@@ -504,7 +504,7 @@ const LetsRecord = (props) => {
       <div className={templateContainerStyle}>
         <>
           {showMVP && (
-            <div className={'absolute z-10 top-[10%] w-[90%]'}>
+            <div className={'absolute z-10 flex flex-col items-center top-[10%] w-[90%]'}>
               <DailyMVP
                 setShowMVP={setShowMVP}
                 recordData={recordData}
