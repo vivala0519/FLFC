@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Analytics } from '@vercel/analytics/react'
 import { collection, doc, getDocs, setDoc } from 'firebase/firestore'
-import { getDatabase, set, onValue, ref, get } from 'firebase/database'
+import { getDatabase, ref, get } from 'firebase/database'
 
 import { db } from '../../../firebase.js'
 import getTimes from '@/hooks/getTimes.js'
@@ -32,8 +32,8 @@ const MainPage = (props) => {
   // Data Generation
   useEffect(() => {
     const run = async () => {
-      const db = await getDatabase()
-      const maintenanceRef = ref(db, 'maintenance')
+      const rtdb = await getDatabase()
+      const maintenanceRef = ref(rtdb, 'maintenance')
       const snap = await get(maintenanceRef)
       setTestFlag(snap.val())
       const collectionRef = collection(db, thisYear)
