@@ -3,7 +3,6 @@ import Swal from 'sweetalert2'
 import { get, getDatabase, ref, set, update } from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
 import { useEffect, useState } from 'react'
-import { uid } from 'uid'
 
 const RecordRow = (props) => {
   const { time: { today, thisYear, currentTime } } = getTimes()
