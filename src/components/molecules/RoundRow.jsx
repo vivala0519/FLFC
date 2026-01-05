@@ -2,7 +2,7 @@ import TimeText from '@/components/atoms/Text/TimeText.jsx'
 import Swal from 'sweetalert2'
 import { get, getDatabase, ref, set, update } from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { uid } from 'uid'
 
 const RecordRow = (props) => {
@@ -22,17 +22,31 @@ const RecordRow = (props) => {
     setPopupType,
     setPlayingTeams,
   } = props
+  const ALL_TEAMS = ['1', '2', '3']
   const [showTeamMembers, setShowTeamMembers] = useState(false)
+  const [editTeamMode, setEditTeamMode] = useState(false)
+  const [teamA, setTeamA] = useState("");
+  const [teamB, setTeamB] = useState("");
   const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 py-1`
   const recordAreaStyle = 'flex items-center font-dnf-forged gap-2 w-full'
   const roundTextStyle = 'text-[13px] text-black dark:text-gray-100'
   const winnerDivStyle = 'flex items-center relative bottom-[2px]'
-  const teamStyle = 'font-dnf-forged text-teamWin dark:text-blue-300 mr-1'
+  const teamStyle = 'font-dnf-forged text-teamWin dark:text-blue-300 mr-1 text-sm'
   const winStyle = 'font-hahmlet text-goal dark:text-red-300 text-sm'
   const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
   const arrowIcon = 'bg-[url("@/assets/up2.png")] '
   const roundExitButtonStyle = 'text-goal dark:text-red-500 animate-pulse'
-  const ALL_TEAMS = ['1', '2', '3']
+
+
+  const optionsForA = ALL_TEAMS.filter((opt) => opt !== teamB)
+  const optionsForB = ALL_TEAMS.filter((opt) => opt !== teamA)
+
+  useEffect(() => {
+    if (record?.teamList?.length === 2) {
+      setTeamA(record.teamList[0])
+      setTeamB(record.teamList[1])
+    }
+  }, [record?.teamList])
 
   const getRoundRef = (db, thisYear, today, roundId) =>
     ref(db, `${thisYear}/${today}_rounds/${roundId}`)
@@ -74,7 +88,6 @@ const RecordRow = (props) => {
       ':' +
       oneMinuteLater.getSeconds().toString().padStart(2, '0')
 
-    const roundId = uid()
     const dateRef = ref(db, `${thisYear}/${today}_rounds`)
     const snapshot = await get(dateRef)
 
@@ -122,6 +135,7 @@ const RecordRow = (props) => {
       teamList: [],
       getGoalTeam: [],
       pointWinners: [],
+      updated: false,
     }
 
     await set(roundRef, roundData)
@@ -159,6 +173,13 @@ const RecordRow = (props) => {
     }
     // 무승부
     if ([0, 2].includes(mostGetGoalTeam.length)) {
+      if (roundData.updated) {
+        setPlayingTeams(new Set(roundData.teamList))
+        setSelectScorerTeamPopupMessage('어느 팀이 이겼나요?')
+        setShowSelectScorerTeamPopup(true)
+        setPopupType('')
+        return
+      }
       // 첫 라운드 가위바위보
       if (!roundData.index || roundData.index === 0) {
         if (!roundData.teamList) {
@@ -206,6 +227,23 @@ const RecordRow = (props) => {
     })
   }
 
+  const cancelEditTeamMode = () => {
+    setTeamA(record.teamList[0])
+    setTeamB(record.teamList[1])
+    setEditTeamMode(false)
+  }
+
+  const updateTeamListHandler = async (roundId) => {
+    if (teamA === record.teamList[0] && teamB === record.teamList[1]) {
+      setEditTeamMode(false)
+      return
+    }
+    const db = getDatabase()
+    const roundRef = getRoundRef(db, thisYear, today, roundId)
+    await update(roundRef, {teamList: [teamA, teamB], updated: true})
+    setEditTeamMode(false)
+  }
+
   const renderMembers = (members = []) => {
     if (!Array.isArray(members) || members.length === 0) return null
 
@@ -243,10 +281,12 @@ const RecordRow = (props) => {
       ) : (
         <div className={rawStyle} key={index}>
           <div className={recordAreaStyle}>
-            <div className={'flex gap-2'}>
-              <span className={roundTextStyle}>{index + 1} Round</span>
-              {/*{record.winnerTeam && <div className={'flex gap-1 relative bottom-[3px]'}><span className={'text-blue-800'}>{record.winnerTeam}팀</span><span className={'text-goal'}>Win</span></div>}*/}
-            </div>
+            {!editTeamMode && (
+              <div className={'flex gap-2'}>
+                <span className={roundTextStyle}>{index + 1} Round</span>
+                {/*{record.winnerTeam && <div className={'flex gap-1 relative bottom-[3px]'}><span className={'text-blue-800'}>{record.winnerTeam}팀</span><span className={'text-goal'}>Win</span></div>}*/}
+              </div>
+            )}
             {record.winnerTeam ? (
               <div
                 className={winnerDivStyle}
@@ -261,41 +301,93 @@ const RecordRow = (props) => {
                   {record.winnerTeam.number.length === 1 ? 'Win' : 'Draw'}
                 </span>
               </div>
-            ) : isOver10Minutes(record.time) ? (
+              ) :
               <>
-                {record?.teamList?.length === 2 && (
-                  <div className={teamStyle}>
-                    {record.teamList[0]}팀{' '}
-                    <span className={'text-assist'}>vs</span>{' '}
-                    {record.teamList[1]}팀
+                {record?.teamList?.length === 2 &&
+                  (!editTeamMode ? (
+                    <div
+                      className={teamStyle}
+                      onClick={() => setEditTeamMode(true)}
+                    >
+                      {record.teamList[0]}팀{' '}
+                      <span className={'text-assist'}>vs</span>{' '}
+                      {record.teamList[1]}팀
+                    </div>
+                  ) : (
+                    <div className={'flex items-center gap-2'}>
+                      <select
+                        className={
+                          'border-2 border-gray-400 rounded-md px-2 py-1'
+                        }
+                        value={teamA}
+                        onChange={(e) => setTeamA(e.target.value)}
+                      >
+                        {optionsForA.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}팀
+                          </option>
+                        ))}
+                      </select>
+
+                      <span>vs</span>
+
+                      <select
+                        className={
+                          'border-2 border-gray-400 rounded-md px-2 py-1'
+                        }
+                        value={teamB}
+                        onChange={(e) => setTeamB(e.target.value)}
+                      >
+                        {optionsForB.map((opt) => (
+                          <option key={opt} value={opt}>
+                            {opt}팀
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        className={
+                          'border-2 border-red-400 flex items-center text-sm whitespace-nowrap px-3 py-2'
+                        }
+                        type="button"
+                        onClick={cancelEditTeamMode}
+                      >
+                        취소
+                      </button>
+                      <button
+                        className={
+                          'border-2 border-green-400 flex items-center text-sm whitespace-nowrap px-3 py-2'
+                        }
+                        type="button"
+                        onClick={() => updateTeamListHandler(record.id)}
+                      >
+                        확인
+                      </button>
+                    </div>
+                  ))}
+                {!editTeamMode && (
+                  <div
+                    className={roundExitButtonStyle}
+                    onClick={() => exitRoundHandler(record.id)}
+                  >
+                    <div className={''}>
+                      <span>종료</span>
+                    </div>
                   </div>
                 )}
-                <div
-                  className={roundExitButtonStyle}
-                  onClick={() => exitRoundHandler(record.id)}
-                >
-                  <div className={''}>
-                    <span>종료</span>
-                  </div>
-                </div>
               </>
-            ) : (
-              record?.teamList?.length === 2 && (
-                <div className={teamStyle}>
-                  {record.teamList[0]}팀{' '}
-                  <span className={'text-assist'}>vs</span> {record.teamList[1]}
-                  팀
-                </div>
-              )
-            )}
+            }
           </div>
-          <div className={'flex bottom-[1px] '}>
-            <TimeText text={record.time.slice(0, 5)} />
-          </div>
-          <span
-            className={itemStyle + arrowIcon}
-            onClick={() => !fakeRow && roundShowHandler(index)}
-          ></span>
+          {!editTeamMode && (
+            <div className={'flex bottom-[1px] '}>
+              <TimeText text={record.time.slice(0, 5)} />
+            </div>
+          )}
+          {!editTeamMode && (
+            <span
+              className={itemStyle + arrowIcon}
+              onClick={() => !fakeRow && roundShowHandler(index)}
+            />
+          )}
         </div>
       )}
     </>

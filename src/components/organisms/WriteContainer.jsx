@@ -235,7 +235,6 @@ const WriteContainer = (props) => {
       ':' +
       oneMinuteLater.getSeconds().toString().padStart(2, '0')
 
-    const roundId = uid()
     const dateRef = ref(db, `${thisYear}/${today}_rounds`)
     const snapshot = await get(dateRef)
 

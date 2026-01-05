@@ -10,7 +10,9 @@ const SelectScorerTeamPopup = (props) => {
 
   useEffect(() => {
     const filteredData = Object.fromEntries(
-      Object.entries(weeklyTeamData.data).filter(([key]) => [...playingTeams].map(String).includes(String(key)))
+      Object.entries(weeklyTeamData.data).filter(([key]) =>
+        [...playingTeams].map(String).includes(String(key)),
+      ),
     )
     setCurrentTeams(filteredData)
   }, [playingTeams])
@@ -22,7 +24,7 @@ const SelectScorerTeamPopup = (props) => {
   const buttonClickHandler = () => {
     if (!scorerTeam) return
     setShowSelectScorerTeamPopup(false)
-    if (selectScorerTeamPopupMessage === '가위바위보 어느 팀이 이겼나요?') {
+    if (selectScorerTeamPopupMessage.includes('어느 팀이 이겼나요?')) {
       setHandleRoundWinnerTrigger(scorerTeam)
     }
   }
