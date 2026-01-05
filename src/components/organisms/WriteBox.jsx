@@ -58,6 +58,7 @@ const WriteBox = (props) => {
   const typingTimeoutRef = useRef(null)
 
   useEffect(() => {
+    updateTypingStatus(false)
     return () => {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
