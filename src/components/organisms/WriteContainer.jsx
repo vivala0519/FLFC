@@ -122,7 +122,13 @@ const WriteContainer = (props) => {
     const roundData = roundSnap.val()
 
     // 이긴 팀 해당 라운드에 winnerTeam 업데이트
-    await update(roundRef, { winnerTeam: {number: fromDraw ? roundData.teamList : [winner], member: fromDraw ? weeklyTeamData.data[roundData.teamList[0]].concat(weeklyTeamData.data[roundData.teamList[1]]) : weeklyTeamData.data[winner]} })
+    await update(roundRef, {
+      winnerTeam: {
+        number: fromDraw ? roundData.teamList : [winner],
+        member: fromDraw ? weeklyTeamData.data[roundData.teamList[0]].concat(weeklyTeamData.data[roundData.teamList[1]]) : weeklyTeamData.data[winner]
+      },
+      lostTeam: !fromDraw && roundData.teamList.find(team => team !== winner)
+    })
 
     // 다음 라운드 구성
     const roundTeam = (roundData.teamList || []).map(String)

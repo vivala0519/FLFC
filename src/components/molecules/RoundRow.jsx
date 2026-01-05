@@ -143,7 +143,14 @@ const RecordRow = (props) => {
     const mostGetGoalTeam = getMostFrequentElements(roundData.getGoalTeam || [])
     // 한골
     if (mostGetGoalTeam.length === 1) {
-      await update(roundRef, { winnerTeam: {number: [mostGetGoalTeam[0]], member: weeklyTeamData.data[String(mostGetGoalTeam[0])]} })
+      await update(roundRef, {
+        winnerTeam: {
+          number: [mostGetGoalTeam[0]],
+          member: weeklyTeamData.data[String(mostGetGoalTeam[0])],
+        },
+        lostTeam: roundData.teamList.find((team) => team !== String(mostGetGoalTeam[0]),
+        ),
+      })
       const newRoundId = await createRound()
       const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(String(team)))
       const nextTeamList = [restTeam, String(mostGetGoalTeam[0])]
