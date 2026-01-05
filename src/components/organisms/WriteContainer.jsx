@@ -270,10 +270,11 @@ const WriteContainer = (props) => {
       startTime = time
     }
 
-    const roundRef = getRoundRef(db, thisYear, today, roundId)
+    const newRoundId = String(roundIndex + 1).padStart(2, '0')
+    const roundRef = getRoundRef(db, thisYear, today, newRoundId)
 
     const roundData = {
-      id: roundId,
+      id: newRoundId,
       index: roundIndex,
       time: startTime,
       winnerTeam: null,
@@ -283,7 +284,7 @@ const WriteContainer = (props) => {
     }
 
     await set(roundRef, roundData)
-    return roundId
+    return newRoundId
   }
 
   // ---------------------- Effect: 팀 선택 팝업 닫힌 후 처리 ----------------------

@@ -110,10 +110,12 @@ const RecordRow = (props) => {
       roundIndex = maxIndex + 1
       startTime = time
     }
-    const roundRef = getRoundRef(db, thisYear, today, roundId)
+
+    const newRoundId = String(roundIndex + 1).padStart(2, '0')
+    const roundRef = getRoundRef(db, thisYear, today, newRoundId)
 
     const roundData = {
-      id: roundId,
+      id: newRoundId,
       index: roundIndex,
       time: startTime,
       winnerTeam: null,
@@ -123,7 +125,7 @@ const RecordRow = (props) => {
     }
 
     await set(roundRef, roundData)
-    return roundId
+    return newRoundId
   }
 
   const selectWinnerTeam = async () => {
