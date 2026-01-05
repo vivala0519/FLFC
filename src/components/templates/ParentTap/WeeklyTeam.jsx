@@ -2,7 +2,7 @@ import Swal from 'sweetalert2'
 import styled from 'styled-components'
 import { useEffect, useState } from 'react'
 import { db } from '../../../../firebase.js'
-// import getTimes from '../../../hooks/getTimes.js'
+import getTimes from '../../../hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import { collection, getDocs } from 'firebase/firestore'
 
@@ -18,6 +18,7 @@ import check from '@/assets/check.png'
 import './WeeklyTeam.css'
 
 function WeeklyTeam(props) {
+  const { time: { currentTime } } = getTimes()
   // const { thisYear } = getTimes
   const { setRegisteredTeam } = props
   const [weeklyTeamData, setWeeklyTeamData] = useState([])
@@ -40,7 +41,7 @@ function WeeklyTeam(props) {
     'flex gap-[5px] items-center justify-center mt-[20px] cursor-pointer'
   const kakaoButtonStyle = 'bg-kakao bg-[length:100%_100%] w-[40px] h-[40px]'
 
-  const today = new Date()
+  const today = currentTime
   const currentDay = today.getDay()
   const daysUntilSunday = 7 - currentDay
   const nextSunday = new Date(today)

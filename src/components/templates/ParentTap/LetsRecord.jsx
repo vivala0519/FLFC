@@ -160,7 +160,7 @@ const LetsRecord = (props) => {
   }, [recordData])
 
   useEffect(() => {
-    const openFeverTime = new Date().setHours(9, 45, 0, 0)
+    const openFeverTime = new Date(currentTime).setHours(9, 45, 0, 0)
     if (open && currentTime >= openFeverTime) {
       setShowFeverTime(true)
     }

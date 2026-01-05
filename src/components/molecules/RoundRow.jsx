@@ -166,7 +166,11 @@ const RecordRow = (props) => {
       })
       const newRoundId = await createRound()
       const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(String(team)))
-      const nextTeamList = [restTeam, String(mostGetGoalTeam[0])]
+      let nextTeamList = [restTeam, String(mostGetGoalTeam[0])]
+      const isThirdTeamBlank = weeklyTeamData.data['3'].every((v) => v.trim() === '')
+      if (isThirdTeamBlank) {
+        nextTeamList = ['1', '2']
+      }
       const newRoundRef = getRoundRef(db, thisYear, today, newRoundId)
       await update(newRoundRef, {teamList: nextTeamList})
     }
@@ -203,7 +207,12 @@ const RecordRow = (props) => {
         const restTeam = ALL_TEAMS.find(
           (team) => !roundData.teamList.includes(String(team)),
         )
-        const nextTeamList = [restTeam, String(roundData.teamList[0])]
+        let nextTeamList = [restTeam, String(roundData.teamList[0])]
+
+        const isThirdTeamBlank = weeklyTeamData.data['3'].every((v) => v.trim() === '')
+        if (isThirdTeamBlank) {
+          nextTeamList = ['1', '2']
+        }
         const newRoundRef = getRoundRef(db, thisYear, today, newRoundId)
         await update(newRoundRef, { teamList: nextTeamList })
       }

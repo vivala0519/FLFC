@@ -134,7 +134,11 @@ const WriteContainer = (props) => {
     const roundTeam = (roundData.teamList || []).map(String)
     const newRoundId = await createRound()
     const restTeam = ALL_TEAMS.find((team) => !roundTeam.includes(team))
-    const nextTeamList = [restTeam, String(winner)]
+    let nextTeamList = [restTeam, String(winner)]
+    const isThirdTeamBlank = weeklyTeamData.data['3'].every((v) => v.trim() === '')
+    if (isThirdTeamBlank) {
+      nextTeamList = ['1', '2']
+    }
 
     const newRoundRef = getRoundRef(db, thisYear, today, newRoundId)
 
@@ -440,6 +444,47 @@ const WriteContainer = (props) => {
       assistantName = replacedName
     }
 
+    const checkMemberHandler = (roundData) => {
+      let checkMember = false
+      roundData.teamList.forEach((teamNumber) => {
+        if (weeklyTeamData.data[teamNumber].includes(scorerName)) {
+          checkMember = true
+        }
+        if (weeklyTeamData.data[teamNumber].includes(assistantName)) {
+          checkMember = true
+        }
+      })
+      if (Object.keys(membersNickName).includes(scorerName)) {
+        const replacedName = membersNickName[scorerName].slice(1)
+        roundData.teamList.forEach((teamNumber) => {
+          if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
+            checkMember = true
+          }
+          if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
+            checkMember = true
+          }
+        })
+      }
+      if (Object.keys(membersNickName).includes(assistantName)) {
+        const replacedName = membersNickName[assistantName].slice(1)
+        roundData.teamList.forEach((teamNumber) => {
+          if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
+            checkMember = true
+          }
+          if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
+            checkMember = true
+          }
+        })
+      }
+      if (!checkMember) {
+        setPlayingTeams(new Set(roundData.teamList))
+        setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
+        setShowSelectScorerTeamPopup(true)
+        setStoredGoalData(record)
+        return
+      }
+    }
+
     const record = {
       id: goalId,
       time,
@@ -456,6 +501,24 @@ const WriteContainer = (props) => {
       // 팀 정보 아직 없음 → 팝업 띄우고 여기서 멈춤
       if (!roundData.teamList || roundData.teamList.length < 2) {
         if (roundData.index < 1) {
+          // 두 팀뿐인 케이스
+          const isThirdTeamBlank = weeklyTeamData.data['3'].every((v) => v.trim() === '')
+          if (isThirdTeamBlank) {
+            roundData.teamList = ['1', '2']
+            await update(roundRef, { teamList: ['1', '2'] })
+
+            checkMemberHandler(roundData)
+            await updateGoalTeam(roundId, record.goal, record)
+
+            setLastRecord(goalId)
+            setScorer('')
+            setAssistant('')
+            setTimeout(() => {
+              scrollToElement()
+              setIsWriting(false)
+            }, 300)
+            return
+          }
           setSelectTeamPopupMessage('경기 중인 팀을 선택해주세요')
           setShowSelectTeamPopup(true)
           setStoredGoalData(record)
@@ -465,47 +528,7 @@ const WriteContainer = (props) => {
           const wholeSnap = await get(ref(db, `${thisYear}/${today}_rounds`))
         }
       } else {
-        let checkMember = false
-        roundData.teamList.forEach((teamNumber) => {
-          if (weeklyTeamData.data[teamNumber].includes(scorerName)) {
-            checkMember = true
-          }
-          if (
-            weeklyTeamData.data[teamNumber].includes(assistantName)) {
-            checkMember = true
-          }
-        })
-        if (Object.keys(membersNickName).includes(scorerName)) {
-          const replacedName = membersNickName[scorerName].slice(1)
-          roundData.teamList.forEach((teamNumber) => {
-            if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
-              checkMember = true
-            }
-            if (
-                weeklyTeamData.data[teamNumber].includes(replacedName)) {
-              checkMember = true
-            }
-          })
-        }
-        if (Object.keys(membersNickName).includes(assistantName)) {
-          const replacedName = membersNickName[assistantName].slice(1)
-          roundData.teamList.forEach((teamNumber) => {
-            if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
-              checkMember = true
-            }
-            if (
-                weeklyTeamData.data[teamNumber].includes(replacedName)) {
-              checkMember = true
-            }
-          })
-        }
-        if (!checkMember) {
-          setPlayingTeams(new Set(roundData.teamList))
-          setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
-          setShowSelectScorerTeamPopup(true)
-          setStoredGoalData(record)
-          return
-        }
+        checkMemberHandler(roundData)
       }
 
       setStoredGoalData(record)
