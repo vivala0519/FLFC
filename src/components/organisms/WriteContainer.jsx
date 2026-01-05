@@ -286,6 +286,7 @@ const WriteContainer = (props) => {
       teamList: [],
       getGoalTeam: [],
       pointWinners: [],
+      updated: false,
     }
 
     await set(roundRef, roundData)
