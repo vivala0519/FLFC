@@ -109,6 +109,8 @@ const DataTable = (props) => {
       setWinnerList(winner)
     } else if (tap === '출석') {
       setWinnerList(maxValuePeople)
+    } else if (tap === '승점') {
+      setWinnerList(maxValuePeople)
     } else {
       setWinnerList([])
     }
@@ -298,7 +300,7 @@ const DataTable = (props) => {
                     analyzedData?.lastFourWeeksAttendance &&
                     analyzedData.lastFourWeeksAttendance.size < 25
                       ? 'text-rose-700'
-                      : 'text-green-600'
+                      : 'text-blue-600'
                   }
                 >
                   {analyzedData?.lastFourWeeksAttendance &&
