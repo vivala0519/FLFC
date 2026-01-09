@@ -33,6 +33,7 @@ const HistoryTap = () => {
     <>
       <div className="w-full flex justify-around mt-3 border-t-2 border-t-gray-200 pt-2 pb-2 border-b-2 border-b-gray-200">
         <Trophy style={{ width: '40px' }}></Trophy>
+        <span className="flex items-center">승점왕</span>
         <span className="flex items-center">출석왕</span>
         <span className="flex items-center">득점왕</span>
         <span className="flex items-center">어시왕</span>
@@ -42,8 +43,15 @@ const HistoryTap = () => {
           key={index}
           className="w-full flex justify-around mt-2 pb-2 items-center border-b-2 border-b-gray-200"
         >
-          <span style={{ width: '40px' }}>
-            {index === 0 ? '초' : index + 1}대
+          <div className={'w-[44px] text-xs'}>
+            <p>{data.id.slice(0, 4)}</p>
+            <p>{data.id.split('_')[1].slice(0, 1)}분기</p>
+          </div>
+          <span
+            className={`min-w-[44px] ${blurMode && retiredMembers.includes(data.data['point_king']) ? 'blur-sm' : ''}`}
+            onClick={blurModeHandler}
+          >
+            {data.data['point_king']}
           </span>
           <span className="flex flex-col">
             {data.data['attendance_king'].map((name, idx) => (
