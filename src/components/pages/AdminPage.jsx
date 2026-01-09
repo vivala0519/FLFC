@@ -66,8 +66,7 @@ const AdminPage = (props) => {
   }
 
   const getDataFunction = async (startDate) => {
-    console.log('getDataFunction')
-    const sinceYear = 2022
+    const sinceYear = 2025
 
     const fetchAll = async () => {
       const thisYearNum = Number(thisYear) // 또는 new Date().getFullYear()
