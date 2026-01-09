@@ -141,7 +141,7 @@ export const dataAnalysis = async (quarter, yearParameter) => {
   const fourthQuarterData = {
     members: extractActiveMembers(fourthQuarterStats),
     totalData: fourthQuarterStats,
-    lastSeasonKings: lastSeasonKings[year + '3rd'],
+    lastSeasonKings: lastSeasonKings[year + '_3rd'],
   }
 
   let lastKings = null
