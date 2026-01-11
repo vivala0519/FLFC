@@ -32,6 +32,7 @@ const TeamScorePopup = (props) => {
           await remove(lastRoundRef)
         }
       }
+      console.log(recordData)
 
       recordData.forEach((rec) => {
         // 각 팀 스탯 분배
@@ -92,7 +93,7 @@ const TeamScorePopup = (props) => {
             '승 ' +
             teamScore['2']?.draw +
             '무 ' +
-            teamScore['1']?.lost +
+            teamScore['2']?.lost +
             '패'
           }
         </span>
@@ -105,7 +106,7 @@ const TeamScorePopup = (props) => {
               '승 ' +
               teamScore['3']?.draw +
               '무 ' +
-              teamScore['1']?.lost +
+              teamScore['3']?.lost +
               '패'
             }
           </span>
