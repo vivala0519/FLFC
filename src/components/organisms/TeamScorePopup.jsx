@@ -32,7 +32,6 @@ const TeamScorePopup = (props) => {
           await remove(lastRoundRef)
         }
       }
-      console.log(recordData)
 
       recordData.forEach((rec) => {
         // 각 팀 스탯 분배
