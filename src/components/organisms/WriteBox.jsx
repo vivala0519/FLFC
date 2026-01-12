@@ -157,9 +157,6 @@ const WriteBox = (props) => {
         </div>
         {otherUsersTyping.length > 0 && <div className={'relative top-[80px]'}>누군가 입력 중입니다..</div>}
       </div>
-      {/*{otherUsersTyping.length > 0 && (*/}
-      {/*  <TestingMark locationStyle="relative top-3 -right-20 text-[16px]" />*/}
-      {/*)}*/}
     </>
   )
 }
