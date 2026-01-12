@@ -178,6 +178,21 @@ const LetsRecord = (props) => {
     }).then(async (result) => {
       if (!result.isConfirmed) return
 
+      const getMostFrequentElements = (arr) => {
+        if (!arr) return []
+        const countMap = {}
+
+        for (const value of arr) {
+          countMap[value] = (countMap[value] || 0) + 1
+        }
+
+        const maxCount = Math.max(...Object.values(countMap))
+
+        return Object.entries(countMap)
+          .filter(([_, count]) => count === maxCount)
+          .map(([value]) => value)
+      }
+
       const db = getDatabase()
       const basePath = `${thisYear}/${today}_rounds`
 
@@ -190,7 +205,22 @@ const LetsRecord = (props) => {
       const lastRoundValue = lastRoundSnap.val()
 
       if (lastRoundValue?.goal) {
-        // 2-A) 골이 있는 라운드면 → 거기에 fever-time-bar 추가
+        // 2-A) 골이 있는 라운드면 → 승패 여부, fever-time-bar 추가
+        const mostGetGoalTeam = getMostFrequentElements(
+          lastRoundValue.getGoalTeam || [],
+        )
+        await update(lastRoundRef, {
+          winnerTeam: {
+            number: mostGetGoalTeam,
+            member:
+              mostGetGoalTeam.length === 1
+                ? weeklyTeamData.data[String(mostGetGoalTeam[0])]
+                : weeklyTeamData.data[String(mostGetGoalTeam[0])].concat(weeklyTeamData.data[String(mostGetGoalTeam[1])])
+          },
+          lostTeam: lastRoundValue.teamList.find(
+            (team) => team !== String(mostGetGoalTeam[0]),
+          ),
+        })
         await addFeverBarToRound(db, basePath, lastRound.id)
       } else {
         // 2-B) 골이 없는 라운드면 → 라운드 삭제 후,
