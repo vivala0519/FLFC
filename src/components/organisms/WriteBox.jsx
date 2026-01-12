@@ -114,7 +114,7 @@ const WriteBox = (props) => {
     </div>
   ) : (
     <>
-      <div ref={registerRef} className="flex mb-1 relative w-full h-full">
+      <div ref={registerRef} className="flex mb-1 relative w-full h-full justify-center">
         <div className="absolute flex flex-col gap-2 left-[9%]">
           {[0, 1].map((index) => (
             <div key={index} className="flex gap-0.5 items-center">
@@ -155,11 +155,11 @@ const WriteBox = (props) => {
             />
           )}
         </div>
+        {otherUsersTyping.length > 0 && <div className={'relative top-[80px]'}>누군가 입력 중입니다..</div>}
       </div>
       {/*{otherUsersTyping.length > 0 && (*/}
       {/*  <TestingMark locationStyle="relative top-3 -right-20 text-[16px]" />*/}
       {/*)}*/}
-      {otherUsersTyping.length > 0 && <div>누군가 입력 중입니다..</div>}
     </>
   )
 }
