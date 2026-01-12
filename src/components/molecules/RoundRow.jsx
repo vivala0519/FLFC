@@ -153,6 +153,10 @@ const RecordRow = (props) => {
     const roundRef = getRoundRef(db, thisYear, today, roundId)
     const snap = await get(roundRef)
     const roundData = snap.val() || {}
+    if (roundData.winnerTeam) {
+      window.location.reload()
+      return
+    }
     const mostGetGoalTeam = getMostFrequentElements(roundData.getGoalTeam || [])
     // 한골
     if (mostGetGoalTeam.length === 1) {
