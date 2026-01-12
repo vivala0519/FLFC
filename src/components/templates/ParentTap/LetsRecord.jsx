@@ -217,7 +217,7 @@ const LetsRecord = (props) => {
                 ? weeklyTeamData.data[String(mostGetGoalTeam[0])]
                 : weeklyTeamData.data[String(mostGetGoalTeam[0])].concat(weeklyTeamData.data[String(mostGetGoalTeam[1])])
           },
-          lostTeam: lastRoundValue.teamList.find(
+          lostTeam: mostGetGoalTeam.length === 1 && lastRoundValue.teamList.find(
             (team) => team !== String(mostGetGoalTeam[0]),
           ),
         })
