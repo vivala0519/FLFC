@@ -477,12 +477,27 @@ const WriteContainer = (props) => {
         })
       }
       if (!checkMember) {
+        const all = ['1', '2', '3']
+        const restTeam = all.filter(
+          (x) => !new Set(roundData.teamList).has(x))[0]
+        if (weeklyTeamData.data[restTeam].includes(scorerName) || weeklyTeamData.data[restTeam].includes(assistantName)) {
+          Swal.fire({
+            icon: 'error',
+            text: '득점자가 경기 중인 팀에 없어요. 이전 라운드가 종료되었는지 확인해주세요.',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              setIsWriting(false)
+            }
+          })
+          return false
+        }
         setPlayingTeams(new Set(roundData.teamList))
         setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
         setShowSelectScorerTeamPopup(true)
         setStoredGoalData(record)
-        return
+        return false
       }
+      return true
     }
 
     const record = {
@@ -507,7 +522,8 @@ const WriteContainer = (props) => {
             roundData.teamList = ['1', '2']
             await update(roundRef, { teamList: ['1', '2'] })
 
-            checkMemberHandler(roundData)
+            const checkMember = checkMemberHandler(roundData)
+            if (!checkMember) return
             await updateGoalTeam(roundId, record.goal, record)
 
             setLastRecord(goalId)
@@ -528,7 +544,60 @@ const WriteContainer = (props) => {
           const wholeSnap = await get(ref(db, `${thisYear}/${today}_rounds`))
         }
       } else {
-        checkMemberHandler(roundData)
+        const isPastMoreThanMinutes = (gameTime, minutes = 10, now = new Date()) => {
+          const m = /^(\d{2}):(\d{2}):(\d{2})$/.exec(gameTime)
+          if (!m) return false
+
+          const [, hh, mm, ss] = m.map(Number)
+
+          const target = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            now.getDate(),
+            hh,
+            mm,
+            ss,
+            0,
+          )
+
+          const diffMs = now - target
+          return diffMs >= minutes * 60 * 1000
+        }
+        if (isPastMoreThanMinutes(roundData.time, 11)) {
+          Swal.fire({
+            title: '10분 이상 지난 라운드예요',
+            icon: 'warning',
+            text: '이전 라운드가 종료됐는지 확인해주세요. 해당 라운드가 맞나요?',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: '계속',
+            cancelButtonText: '취소',
+          }).then( async (result) => {
+            if (result.isConfirmed) {
+              const checkMember = checkMemberHandler(roundData)
+              if (!checkMember) return
+
+              setStoredGoalData(record)
+
+              await updateGoalTeam(roundId, record.goal, record)
+
+              setLastRecord(goalId)
+              setScorer('')
+              setAssistant('')
+              setTimeout(() => {
+                scrollToElement()
+                setIsWriting(false)
+              }, 300)
+            }
+            if (result.isDismissed) {
+              setIsWriting(false)
+            }
+          })
+          return
+        }
+        const checkMember = checkMemberHandler(roundData)
+        if (!checkMember) return
       }
 
       setStoredGoalData(record)
