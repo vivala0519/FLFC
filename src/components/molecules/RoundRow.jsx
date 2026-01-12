@@ -252,19 +252,20 @@ const RecordRow = (props) => {
     }
     const db = getDatabase()
     const roundRef = getRoundRef(db, thisYear, today, roundId)
-    await update(roundRef, {teamList: [teamA, teamB], updated: true})
+    await update(roundRef, { teamList: [teamA, teamB], updated: true })
     setEditTeamMode(false)
   }
 
   const renderMembers = (members = []) => {
     if (!Array.isArray(members) || members.length === 0) return null
+    const filteredMembers = members.filter(member => !member.includes('용병'))
 
-    if (members.length <= 6) {
-      return members.join(' ')
+    if (filteredMembers.length <= 6) {
+      return filteredMembers.join(' ')
     }
 
-    const firstLine = members.slice(0, 6).join(' ')
-    const secondLine = members.slice(6).join(' ')
+    const firstLine = filteredMembers.slice(0, 6).join(' ')
+    const secondLine = filteredMembers.slice(6).join(' ')
 
     return (
       <>
