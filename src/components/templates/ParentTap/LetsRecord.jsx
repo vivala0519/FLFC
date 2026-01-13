@@ -551,6 +551,7 @@ const LetsRecord = (props) => {
                 today={today}
               />
               <TeamScorePopup
+                showMVP={showMVP}
                 setShowMVP={setShowMVP}
                 recordData={displayRecord}
                 weeklyTeamData={weeklyTeamData}
