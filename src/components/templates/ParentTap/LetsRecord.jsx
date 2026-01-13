@@ -163,11 +163,13 @@ const LetsRecord = (props) => {
 
   // 오늘의 기록된 데이터 가져오기
   useEffect(() => {
-    const data = recordData?.find((obj) => obj.id === today)
-    if (data?.data) {
-      setWrittenData(data.data)
+    if (firestoreRecord) {
+      const data = firestoreRecord[thisYear]?.find((obj) => obj.id === today)
+      if (data?.data) {
+        setWrittenData(data.data)
+      }
     }
-  }, [recordData])
+  }, [firestoreRecord])
 
   useEffect(() => {
     const openFeverTime = new Date(currentTime).setHours(9, 45, 0, 0)
@@ -546,7 +548,7 @@ const LetsRecord = (props) => {
             <div className={'absolute z-10 flex flex-col items-center top-[10%] w-[90%]'}>
               <DailyMVP
                 setShowMVP={setShowMVP}
-                recordData={recordData}
+                recordData={firestoreRecord ? firestoreRecord[thisYear] : []}
                 year={thisYear}
                 today={today}
               />

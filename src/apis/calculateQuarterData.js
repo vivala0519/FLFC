@@ -1,17 +1,15 @@
 import { db } from '../../firebase.js'
 import { extractActiveMembers } from './members.js'
 
-import { collection, getDocs } from 'firebase/firestore'
-
-export const extractQuarterData = async (yearParameter) => {
-  const thisYear = new Date().getFullYear()
-  const year = yearParameter ? yearParameter : String(thisYear)
-  const collectionRef = collection(db, year)
-  const snapshot = await getDocs(collectionRef)
-  const fetchedData = snapshot.docs.map((doc) => ({
-    id: doc.id,
-    data: doc.data(),
-  }))
+export const extractQuarterData =  (year, yearData) => {
+  // const thisYear = new Date().getFullYear()
+  // const year = yearParameter ? yearParameter : String(thisYear)
+  // const collectionRef = collection(db, year)
+  // const snapshot = await getDocs(collectionRef)
+  // const fetchedData = snapshot.docs.map((doc) => ({
+  //   id: doc.id,
+  //   data: doc.data(),
+  // }))
 
   const generateByQuarter = (quarterData, quarterStats) => {
     quarterData?.forEach((item) => {
@@ -35,7 +33,7 @@ export const extractQuarterData = async (yearParameter) => {
   // 2021년은 분기없이 총합
   if (year === '2021') {
     const totalQuarterStats = new Map()
-    generateByQuarter(fetchedData, totalQuarterStats)
+    generateByQuarter(yearData, totalQuarterStats)
     const totalQuarterData = {
       members: extractActiveMembers(totalQuarterStats, true),
       totalData: totalQuarterStats,
@@ -44,7 +42,7 @@ export const extractQuarterData = async (yearParameter) => {
   }
 
   // 1분기 이름별 통계 취합
-  const firstQuarter = fetchedData.filter(
+  const firstQuarter = yearData.filter(
     (item) => Number(item.id.slice(0, 2)) <= 3,
   )
   const firstQuarterStats = new Map()
@@ -55,7 +53,7 @@ export const extractQuarterData = async (yearParameter) => {
   }
 
   // 2분기 이름별 통계 취합
-  const secondQuarter = fetchedData.filter(
+  const secondQuarter = yearData.filter(
     (item) =>
       Number(item.id.slice(0, 2)) > 3 && Number(item.id.slice(0, 2)) <= 6,
   )
@@ -67,7 +65,7 @@ export const extractQuarterData = async (yearParameter) => {
   }
 
   // 3분기 이름별 통계 취합
-  const thirdQuarter = fetchedData.filter(
+  const thirdQuarter = yearData.filter(
     (item) =>
       Number(item.id.slice(0, 2)) > 6 && Number(item.id.slice(0, 2)) <= 9,
   )
@@ -79,7 +77,7 @@ export const extractQuarterData = async (yearParameter) => {
   }
 
   // 4분기 이름별 통계 취합
-  const fourthQuarter = fetchedData.filter(
+  const fourthQuarter = yearData.filter(
     (item) => Number(item.id.slice(0, 2)) > 9,
   )
   const fourthQuarterStats = new Map()

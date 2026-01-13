@@ -1,6 +1,4 @@
-import { db } from '../../firebase.js'
 import { extractActiveMembers } from './members.js'
-import { collection, getDocs } from 'firebase/firestore'
 
 function getLastFourSundays() {
   const today = new Date()
@@ -26,35 +24,37 @@ function getLastFourSundays() {
   return sundays
 }
 
-export const dataAnalysis = async (quarter, yearParameter) => {
+export const analyzeForStatusBoard = (fetchedData, quarter, yearParameter) => {
   const thisYear = new Date().getFullYear()
   const thisMonth = new Date().getMonth()
   const year = yearParameter ? yearParameter : String(thisYear)
-  const collectionRef = collection(db, year)
-  const snapshot = await getDocs(collectionRef)
-  const fetchedData = snapshot.docs.map((doc) => ({
-    id: doc.id,
-    data: doc.data(),
-  }))
+  // const collectionRef = collection(db, year)
+  // const snapshot = await getDocs(collectionRef)
+  // const fetchedData = snapshot.docs.map((doc) => ({
+  //   id: doc.id,
+  //   data: doc.data(),
+  // }))
+  // console.log(fetchedData)
+  // return
 
-  let fetchedDays = [...fetchedData]
-  // 1월이면 작년 12월꺼도 가져와야 함
-  if (thisMonth === 0) {
-    const lastYear = String(thisYear - 1)
-    const collectionRef = collection(db, lastYear)
-    const snapshot = await getDocs(collectionRef)
-    const secondFetchedData = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      data: doc.data(),
-    }))
-    fetchedDays = fetchedDays.concat(secondFetchedData)
-  }
+  // let fetchedDays = [...fetchedData]
+  // // 1월이면 작년 12월꺼도 가져와야 함
+  // if (thisMonth === 0) {
+  //   const lastYear = String(thisYear - 1)
+  //   const collectionRef = collection(db, lastYear)
+  //   const snapshot = await getDocs(collectionRef)
+  //   const secondFetchedData = snapshot.docs.map((doc) => ({
+  //     id: doc.id,
+  //     data: doc.data(),
+  //   }))
+  //   fetchedDays = fetchedDays.concat(secondFetchedData)
+  // }
 
   const lastFourSundays = getLastFourSundays()
   let keyCounts = new Map()
 
   lastFourSundays.forEach((sunday) => {
-    const dayData = fetchedDays.find((data) => data.id === sunday)
+    const dayData = fetchedData.find((data) => data.id === sunday)
     if (dayData) {
       Object.keys(dayData.data).forEach((key) => {
         keyCounts.set(key, (keyCounts.get(key) || 0) + 1)
@@ -291,8 +291,4 @@ export const dataAnalysis = async (quarter, yearParameter) => {
     ],
     lastFourWeeksAttendance: lastFourWeeksAttendance,
   }
-}
-
-export default {
-  dataAnalysis,
 }

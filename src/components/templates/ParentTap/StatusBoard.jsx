@@ -1,26 +1,25 @@
 import { useEffect, useState } from 'react'
 import DataTable from '../../DataTable.jsx'
+import getRecords from '@/hooks/getRecords.js'
 import './LetsRecord.css'
-import { dataAnalysis } from '../../../apis/analyzeData.js'
 
-const StatusBoard = (props) => {
-  const { propsData } = props
-
+const StatusBoard = () => {
+  const { statusBoardStat } = getRecords()
   const [analyzedData, setAnalyzedData] = useState({})
   const [lastSeasonKings, setLastSeasonKings] = useState({
     goal_king: '',
     assist_king: '',
     attendance_king: [],
   })
-
-  const fetchAnalysis = async () => {
-    const data = await dataAnalysis(0)
-    setAnalyzedData(data)
-  }
+  const [loadingFlag, setLoadingFlag] = useState(false)
 
   useEffect(() => {
-    fetchAnalysis()
-  }, [])
+    setLoadingFlag(true)
+    if (statusBoardStat) {
+      setAnalyzedData(statusBoardStat)
+      setLoadingFlag(false)
+    }
+  }, [statusBoardStat])
 
   useEffect(() => {
     if (analyzedData['active']) {
@@ -30,10 +29,14 @@ const StatusBoard = (props) => {
 
   return (
     <div className="w-full relative" style={{ top: '-10px' }}>
+      {loadingFlag && (
+        <div className="fixed left-[0rem] z-20 bg-white dark:bg-gray-950 w-full h-[80%] flex items-center justify-center">
+          <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
+        </div>
+      )}
       <div>
         <DataTable
           tap={'현황판'}
-          tableData={propsData}
           analyzedData={analyzedData}
           lastSeasonKings={lastSeasonKings}
         />
