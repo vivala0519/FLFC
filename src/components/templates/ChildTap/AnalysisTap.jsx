@@ -8,6 +8,7 @@ import CloseButton from '@/components/atoms/Button/CloseButton.jsx'
 
 import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
+import getRecords from '@/hooks/getRecords.js'
 
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
@@ -18,9 +19,8 @@ import TitleHolderCard from '../../organisms/TitleHolderCard.jsx'
 const AnalysisTap = (props) => {
   const { test } = props
   const { existingMembers } = getMembers()
-  const {
-    time: { thisYear },
-  } = getTimes()
+  const { time: { thisYear } } = getTimes()
+  const { totalWeeklyTeamData } = getRecords()
   const tapList = [0, 1, 2, 3, 4, 5, 6, 7, 8]
   const thisMonth = test ? 12 : new Date().getMonth() + 1
   const [quarter, setQuarter] = useState(0)
@@ -387,14 +387,7 @@ const AnalysisTap = (props) => {
   }
 
   const getWeeklyTeamData = async () => {
-    const weeklyTeamRef = collection(db, 'weeklyTeam')
-    const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
-    const fetchedData = weeklyTeamSnapshot.docs
-      .map((doc) => ({
-        id: doc.id,
-        data: doc.data(),
-      }))
-      .filter((data) => data['id'].slice(0, 2) === thisYear.slice(2, 4))
+    const fetchedData = totalWeeklyTeamData.filter((data) => data['id'].slice(0, 2) === thisYear.slice(2, 4))
 
     const filteredData = []
     if (thisMonth < 4) {

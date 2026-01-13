@@ -28,9 +28,21 @@ const realtimeRecord = {}
 const todaysRealtimeRecord = {}
 const todaysRealtimeRound = null
 const requestList = []
+const firestoreRecord = null
+const statusBoardStat = null
+const totalWeeklyTeamData = null
+
+export const realtimeRecordAtom = atom(realtimeRecord)
+export const todaysRealtimeRecordAtom = atom(todaysRealtimeRecord)
+export const todaysRealtimeRoundAtom = atom(todaysRealtimeRound)
+export const requestListAtom = atom(requestList)
+export const firestoreRecordAtom = atom(firestoreRecord)
+export const statusBoardStatAtom = atom(statusBoardStat)
+export const totalWeeklyTeamDataAtom = atom(totalWeeklyTeamData)
 
 // votes
 const voteList = []
+export const voteListAtom = atom(voteList)
 
 export const timeAtom = atom({
   currentTime: getCurrentDate(),
@@ -43,8 +55,3 @@ export const timeAtom = atom({
   gameEndTime: getGameEndTime,
   recordTapCloseTime: getRecordTapCloseTime,
 })
-export const realtimeRecordAtom = atom(realtimeRecord)
-export const todaysRealtimeRecordAtom = atom(todaysRealtimeRecord)
-export const todaysRealtimeRoundAtom = atom(todaysRealtimeRound)
-export const requestListAtom = atom(requestList)
-export const voteListAtom = atom(voteList)

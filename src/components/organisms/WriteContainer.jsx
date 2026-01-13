@@ -405,7 +405,7 @@ const WriteContainer = (props) => {
     const day = currentTime.getDay()
 
     if (
-      ![0, 7].includes(day) &&
+      day !== 0 &&
       currentTime >= gameStartTime &&
       currentTime <= gameEndTime
     ) {

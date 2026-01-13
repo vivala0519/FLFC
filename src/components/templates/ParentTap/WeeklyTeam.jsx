@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { db } from '../../../../firebase.js'
 import getTimes from '../../../hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
+import getRecords from '@/hooks/getRecords.js'
 import { collection, getDocs } from 'firebase/firestore'
 
 // import Separator from '../../atoms/Separator.jsx'
@@ -18,7 +19,8 @@ import check from '@/assets/check.png'
 import './WeeklyTeam.css'
 
 function WeeklyTeam(props) {
-  const { time: { currentTime } } = getTimes()
+  const { time: { currentTime }} = getTimes()
+  const { totalWeeklyTeamData} = getRecords()
   // const { thisYear } = getTimes
   const { setRegisteredTeam } = props
   const [weeklyTeamData, setWeeklyTeamData] = useState([])
@@ -52,15 +54,9 @@ function WeeklyTeam(props) {
   const sundayMonth = nextSunday.getMonth() + 1
 
   const fetchWeeklyTeamData = async () => {
-    const weeklyTeamRef = collection(db, 'weeklyTeam')
-    const weeklyTeamSnapshot = await getDocs(weeklyTeamRef)
-    const fetchedWeeklyTeamData = weeklyTeamSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      data: doc.data(),
-    }))
-    setWeeklyTeamData(fetchedWeeklyTeamData)
-    setPage(fetchedWeeklyTeamData.length - 1)
-    setLastDate(fetchedWeeklyTeamData[fetchedWeeklyTeamData.length - 1].id)
+    setWeeklyTeamData(totalWeeklyTeamData)
+    setPage(totalWeeklyTeamData.length - 1)
+    setLastDate(totalWeeklyTeamData[totalWeeklyTeamData.length - 1].id)
 
     const balancerRef = collection(db, 'balancer')
     const balancerSnapshot = await getDocs(balancerRef)
@@ -72,6 +68,7 @@ function WeeklyTeam(props) {
   }
 
   useEffect(() => {
+    if (window.location.href.includes('localhost:5173')) return
     if (!window.Kakao.isInitialized()) {
       window.Kakao.init(import.meta.env.VITE_KAKAO_API_KEY)
     }

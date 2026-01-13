@@ -75,12 +75,12 @@ const DataTable = (props) => {
         ),
       )
     } else {
-      if (analyzedData['members']) {
+      // if (analyzedData['members']) {
         // console.log(quarter)
         // console.log(analyzedData['members']['inactive'])
         // console.log(analyzedData['totalQuarterData'][Number(quarter) - 1])
         // setSortedAbsenteeNames(analyzedData['members']['inactive'].sort((a, b) => a.localeCompare(b)))
-      }
+      // }
     }
     // console.log(analyzedData)
 

@@ -17,23 +17,14 @@ import Swal from 'sweetalert2'
 import { get, getDatabase, ref, remove, set, update } from 'firebase/database'
 
 const LetsRecord = (props) => {
-  const {
-    time: {
-      today,
-      thisDay,
-      thisYear,
-      currentTime,
-      gameEndTime,
-      gameStartTime,
-      recordTapCloseTime,
-    },
-  } = getTimes()
+  const { time: { today, thisDay, thisYear, currentTime, gameEndTime, gameStartTime, recordTapCloseTime } } = getTimes()
   const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
-  const { todaysRealtimeRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
-  const { open, setOpen, recordData, weeklyTeamData, headerHeight } = props
+  const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
+  const { open, setOpen, headerHeight, setRegisteredTeam } = props
   const registerRef = useRef(null)
   const scrollContainerRef = useRef(null)
   const feverTimeRef = useRef(null)
+  const [weeklyTeamData, setWeeklyTeamData] = useState(null)
   const [todayRecord, setTodayRecord] = useState([])
   const [displayRecord, setDisplayRecord] = useState([])
   const [dynamicHeight, setDynamicHeight] = useState(0)
@@ -70,26 +61,45 @@ const LetsRecord = (props) => {
       setOpen(true)
     }
     if (
-      [0, 7].includes(thisDay) &&
+      thisDay === 0 &&
       currentTime >= gameStartTime &&
       currentTime <= gameEndTime
     ) {
+      const makeTodayYYMMDD = (now = new Date()) => {
+        const yy = String(now.getFullYear()).slice(-2)
+        const mm = String(now.getMonth() + 1).padStart(2, '0')
+        const dd = String(now.getDate()).padStart(2, '0')
+
+        return `${yy}${mm}${dd}`
+      }
+      // 오늘자 위클리팀 없으면 빈값으로 생성
+      if (weeklyTeamData && (makeTodayYYMMDD(currentTime) !== weeklyTeamData?.id)) {
+        const newData = {
+          1: ['', '', '', '', '', ''],
+          2: ['', '', '', '', '', ''],
+          3: ['', '', '', '', '', ''],
+        }
+        setRegisteredTeam({ id: makeTodayYYMMDD(currentTime), data: newData })
+      }
       setCanRegister(true)
     }
     if (
-      ([0, 7].includes(thisDay) &&
+      thisDay === 0 &&
       currentTime >= gameEndTime &&
-      currentTime <= recordTapCloseTime)
+      currentTime <= recordTapCloseTime
     ) {
       setShowMVP(true)
       setShowRequestUpdateButton(true)
     }
-  }, [thisDay])
+  }, [thisDay, weeklyTeamData])
 
   // daily 실시간 record
   useEffect(() => {
     setLoadingFlag(true)
     if (!todaysRealtimeRound) return
+    if (totalWeeklyTeamData) {
+      setWeeklyTeamData(totalWeeklyTeamData[totalWeeklyTeamData.length - 1])
+    }
     if (thisDay <= 6 && thisDay >= 1) {
       setLoadingFlag(false)
     }
@@ -122,7 +132,7 @@ const LetsRecord = (props) => {
       setDisplayRecord(roundRecord)
     }
     setLoadingFlag(false)
-  }, [todaysRealtimeRecord, todaysRealtimeRound])
+  }, [todaysRealtimeRecord, todaysRealtimeRound, totalWeeklyTeamData])
 
   // request list
   useEffect(() => {

@@ -7,11 +7,8 @@ import { db } from '../../../firebase.js'
 import getTimes from '@/hooks/getTimes.js'
 
 const AdminPage = (props) => {
-  const { recordData, weeklyTeamData } = props
   const { existingMembers } = getMembers()
-  const {
-    time: { thisYear, currentTime },
-  } = getTimes()
+  const { time: { thisYear, currentTime } } = getTimes()
   const month = (currentTime.getMonth() + 1).toString().padStart(2, '0')
   const date = currentTime.getDate().toString().padStart(2, '0')
   const [loadingFlag, setLoadingFlag] = useState(false)
