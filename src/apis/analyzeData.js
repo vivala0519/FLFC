@@ -26,30 +26,7 @@ function getLastFourSundays() {
 
 export const analyzeForStatusBoard = (fetchedData, quarter, yearParameter) => {
   const thisYear = new Date().getFullYear()
-  const thisMonth = new Date().getMonth()
   const year = yearParameter ? yearParameter : String(thisYear)
-  // const collectionRef = collection(db, year)
-  // const snapshot = await getDocs(collectionRef)
-  // const fetchedData = snapshot.docs.map((doc) => ({
-  //   id: doc.id,
-  //   data: doc.data(),
-  // }))
-  // console.log(fetchedData)
-  // return
-
-  // let fetchedDays = [...fetchedData]
-  // // 1월이면 작년 12월꺼도 가져와야 함
-  // if (thisMonth === 0) {
-  //   const lastYear = String(thisYear - 1)
-  //   const collectionRef = collection(db, lastYear)
-  //   const snapshot = await getDocs(collectionRef)
-  //   const secondFetchedData = snapshot.docs.map((doc) => ({
-  //     id: doc.id,
-  //     data: doc.data(),
-  //   }))
-  //   fetchedDays = fetchedDays.concat(secondFetchedData)
-  // }
-
   const lastFourSundays = getLastFourSundays()
   let keyCounts = new Map()
 

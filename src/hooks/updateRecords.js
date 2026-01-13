@@ -114,8 +114,7 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
     const yearData = firestoreRecord?.[year]
     if (!yearData) return
     ;(async () => {
-      // 1월이면 작년 12월 붙이기 (month는 0이 1월)
-      if (thisMonth === 0) {
+      if (thisMonth === 1) {
         const lastYear = String(thisYear - 1)
         const snapshot = await getDocs(collection(firestoreDb, lastYear))
         const lastDec = snapshot.docs
