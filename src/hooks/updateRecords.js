@@ -77,7 +77,7 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
     ;(async () => {
       const year = yearParameter
         ? String(yearParameter)
-        : String(thisYear + '_dev')
+        : String(thisYear)
       if (firestoreRecord?.[year]) return
 
       setRecordRoomLoadingFlag(true)
@@ -110,7 +110,7 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
 
     const year = yearParameter
       ? String(yearParameter)
-      : String(thisYear + '_dev')
+      : String(thisYear)
     const yearData = firestoreRecord?.[year]
     if (!yearData) return
     ;(async () => {
