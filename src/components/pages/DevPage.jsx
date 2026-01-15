@@ -1,7 +1,10 @@
 import { db } from '../../../firebase.js'
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore'
+import getMembers from '@/hooks/getMembers.js'
 
 const DevPage = () => {
+  const { existingMembers } = getMembers()
+
 
   const copyCollection = async () => {
     const collectionRef = collection(db, '2025')
@@ -14,9 +17,20 @@ const DevPage = () => {
     await Promise.all(writes)
   }
 
+  const clickHandler = async () => {
+    console.log(existingMembers)
+    const newObj = {}
+    existingMembers.forEach(member => {
+      newObj[member] = {preferredFoot: 'R'}
+    })
+
+    const membersDocRef = doc(db, `members`, 'info')
+    await setDoc(membersDocRef, newObj)
+  }
+
   return (
     <div>
-      <button onClick={copyCollection}>컬렉션 복사</button>
+      <button onClick={}>데이터 생성</button>
     </div>
   )
 }
