@@ -480,8 +480,8 @@ const LetsRecord = (props) => {
   useEffect(() => {
     if (stats && Object.keys(stats).length > 0 && todayRecord && canRegister) {
       const registerRecord = async () => {
-        // const docRef = doc(db, thisYear, today)
         const docRef = doc(db, thisYear, today)
+        // const docRef = doc(db, thisYear + '_dev', today)
         await setDoc(docRef, stats)
         console.log('Document written with ID: ', docRef.id)
         setWrittenData(stats)
