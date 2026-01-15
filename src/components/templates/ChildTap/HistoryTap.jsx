@@ -10,15 +10,28 @@ const HistoryTap = () => {
   const [blurMode, setBlurMode] = useState(true)
   const { retiredMembers } = getMembers()
 
+  const orderMap = { '1st': 1, '2nd': 2, '3rd': 3, '4th': 4 }
+
+
   const getHistoryData = async () => {
     const historyRef = collection(db, 'history')
     const historySnapshot = await getDocs(historyRef)
     const fetchedData = historySnapshot.docs
       .map((doc) => ({ id: doc.id, data: doc.data() }))
-      .filter(
-        (data) => !['changed_last_season', 'last_season'].includes(data.id),
-      )
-    setHistoryData(fetchedData)
+      .filter((data) => !['changed_last_season', 'last_season'].includes(data.id))
+      .sort((a, b) => b.id - a.id)
+
+    const sortedHistoryData = [...fetchedData].sort((a, b) => {
+      const [ay, ao] = String(a.id).split('_')
+      const [by, bo] = String(b.id).split('_')
+
+      const yearDiff = Number(by) - Number(ay)
+      if (yearDiff !== 0) return yearDiff
+
+      return (orderMap[bo] ?? -Infinity) - (orderMap[ao] ?? -Infinity)
+    })
+
+    setHistoryData(sortedHistoryData)
   }
 
   const blurModeHandler = () => {
