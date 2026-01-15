@@ -30,7 +30,7 @@ const DevPage = () => {
 
   return (
     <div>
-      <button onClick={}>데이터 생성</button>
+      <button>데이터 생성</button>
     </div>
   )
 }
