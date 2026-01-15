@@ -1,4 +1,3 @@
-import { db } from '../../firebase.js'
 import { extractActiveMembers } from './members.js'
 
 export const extractQuarterData =  (year, yearData) => {

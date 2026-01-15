@@ -30,6 +30,7 @@ export default {
         homeLight: "url('@/assets/home-light.png')",
         homeDark: "url('@/assets/home-dark.png')",
         football: "url('@/assets/circle-ball.png')",
+        ground: "url('@/assets/ground3.webp')",
         salah: "url('@/assets/salah.webp')",
         myTeam: "url('@/assets/friendship.webp')",
         palmer: "url('@/assets/palmer.webp')",
@@ -132,7 +133,7 @@ export default {
   safelist: [
     {
       pattern:
-        /bg-(salah|myTeam|palmer|ronaldo|rodrigo|DeBruyne|CJamChul|sonKaeDuo|slowStarter|earlyStarter|laurel)/,
+        /bg-(salah|myTeam|ground|palmer|ronaldo|rodrigo|DeBruyne|CJamChul|sonKaeDuo|slowStarter|earlyStarter|laurel)/,
     },
   ],
   plugins: [

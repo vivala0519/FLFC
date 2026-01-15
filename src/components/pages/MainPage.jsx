@@ -30,10 +30,10 @@ const MainPage = (props) => {
       const maintenanceRef = ref(rtdb, 'maintenance')
       const snap = await get(maintenanceRef)
       setTestFlag(snap.val())
-      setLastWeeklyTeamId(totalWeeklyTeamData[totalWeeklyTeamData.length - 1].id)
+      if (totalWeeklyTeamData) setLastWeeklyTeamId(totalWeeklyTeamData[totalWeeklyTeamData.length - 1].id)
     }
     run()
-  }, [tap])
+  }, [tap, totalWeeklyTeamData])
 
   // 위클리 팀 등록
   useEffect(() => {
