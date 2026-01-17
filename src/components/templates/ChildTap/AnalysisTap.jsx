@@ -85,7 +85,7 @@ const AnalysisTap = (props) => {
 
   useEffect(() => {
     // 4주 이상 진행됐을 시
-    if (thisQuarterData.length > 3) {
+    if (thisQuarterData.length > 1) {
       setNeedMoreData(false)
       const totalData = []
       thisQuarterData.forEach((data) => {
