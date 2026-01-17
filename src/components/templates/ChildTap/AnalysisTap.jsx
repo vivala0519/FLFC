@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { useEffect, useState } from 'react'
 import { db } from '../../../../firebase.js'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore'
 import { getDatabase, onValue, ref } from 'firebase/database'
 
 import CloseButton from '@/components/atoms/Button/CloseButton.jsx'
@@ -19,10 +19,9 @@ import TitleHolderCard from '../../organisms/TitleHolderCard.jsx'
 const AnalysisTap = (props) => {
   const { test } = props
   const { existingMembers } = getMembers()
-  const { time: { thisYear } } = getTimes()
-  const { totalWeeklyTeamData } = getRecords()
-  const tapList = [0, 1, 2, 3, 4, 5, 6, 7, 8]
-  const thisMonth = test ? 12 : new Date().getMonth() + 1
+  const { time: { thisYear, thisMonth } } = getTimes()
+  const { firestoreRecord, totalWeeklyTeamData } = getRecords()
+  const tapList = [0, 1, 2, 3, 4, 5, 6]
   const [quarter, setQuarter] = useState(0)
   const [needMoreData, setNeedMoreData] = useState(false)
   const [thisQuarterData, setThisQuarterData] = useState([])
@@ -38,10 +37,13 @@ const AnalysisTap = (props) => {
   const [twentyTwentyClub, setTwentyTwentyClub] = useState({})
   const [greedyPlayer, setGreedyPlayer] = useState({})
   const [altruisticPlayer, setAltruisticPlayer] = useState({})
+  const [bestSixPlayers, setBestSixPlayers] = useState(null)
+  const [membersInfo, setMembersInfo] = useState(null)
   const [tap, setTap] = useState(0)
   const [showIndividual, setShowIndividual] = useState(false)
 
   const tapDataList = [
+    bestSixPlayers,
     mostMvpPlayer,
     tenTenClub,
     twentyTwentyClub,
@@ -51,7 +53,6 @@ const AnalysisTap = (props) => {
     greedyPlayer,
     altruisticPlayer,
     mostPartnerPlayers,
-    mostMercenaryPlayer,
   ]
 
   // 개인별 데이터
@@ -59,8 +60,7 @@ const AnalysisTap = (props) => {
   const [thisQuarterPointData, setThisQuarterPointData] = useState(null)
   const [thisQuarterDataByTime, setThisQuarterDataByTime] = useState(null)
   const [thisQuarterMostPartners, setThisQuarterMostPartners] = useState({})
-  const [thisQuarterPlayersCombination, setThisQuarterPlayersCombination] =
-    useState(null)
+  const [thisQuarterPlayersCombination, setThisQuarterPlayersCombination] = useState(null)
   const [mercenaryBring, setMercenaryBring] = useState(null)
   const [integratedData, setIntegratedData] = useState(null)
   const [playerDetail, setPlayerDetail] = useState(null)
@@ -79,11 +79,13 @@ const AnalysisTap = (props) => {
     getRealTimeDatabaseData()
     getDailyMVPData()
     getWeeklyTeamData()
+    getWinPointData()
+    getMembersInfo()
   }, [])
 
   useEffect(() => {
     // 4주 이상 진행됐을 시
-    if (thisQuarterData.length > 2) {
+    if (thisQuarterData.length > 3) {
       setNeedMoreData(false)
       const totalData = []
       thisQuarterData.forEach((data) => {
@@ -118,6 +120,7 @@ const AnalysisTap = (props) => {
       // 플레이어당 골/어시 데이터
       const pointData = {}
       const pointDataMap = new Map()
+
       totalData.forEach((item) => {
         if (item.goal !== '용병') {
           // analyzedDataByTime 데이터 넣기
@@ -243,6 +246,155 @@ const AnalysisTap = (props) => {
         return existingMembers[i]
       }
     }
+  }
+
+  // 베스트6
+  const getQuarterItemsByMonth = (list, month) => {
+    const quarter = Math.floor((month - 1) / 3) + 1
+    const startMonth = (quarter - 1) * 3 + 1
+    const endMonth = quarter * 3
+
+    return list?.filter(({ id, data }) => {
+      if (id === 'last_season_kings') return false
+      if (data == null || typeof data !== 'object') return false
+
+      const mm = Number(id.slice(0, 2))
+      return mm >= startMonth && mm <= endMonth
+    })
+  }
+
+  const getStatsByName = (days) => {
+    const totals = {}
+
+    const ensure = (name) => {
+      if (!totals[name]) totals[name] = { 승점: 0, 골: 0, 어시: 0 }
+      return totals[name]
+    }
+
+    for (const day of days) {
+      const data = day?.data || {}
+      for (const [name, stats] of Object.entries(data)) {
+        const t = ensure(name)
+
+        const point = Number(stats?.['승점'] ?? 0)
+        const goal = Number(stats?.['골'] ?? 0)
+        const assist = Number(stats?.['어시'] ?? 0)
+
+        t['승점'] += Number.isFinite(point) ? point : 0
+        t['골'] += Number.isFinite(goal) ? goal : 0
+        t['어시'] += Number.isFinite(assist) ? assist : 0
+      }
+    }
+
+    return totals
+  }
+
+  const getTopSix = (statsMap, limit = 6) => {
+    return Object.entries(statsMap)
+      .map(([name, s]) => {
+        const point = Number(s?.['승점'] ?? 0)
+        const goal = Number(s?.['골'] ?? 0)
+        const assist = Number(s?.['어시'] ?? 0)
+        return {
+          name,
+          승점: Number.isFinite(point) ? point : 0,
+          골: Number.isFinite(goal) ? goal : 0,
+          어시: Number.isFinite(assist) ? assist : 0,
+          GA: (Number.isFinite(goal) ? goal : 0) + (Number.isFinite(assist) ? assist : 0),
+        }
+      })
+      .sort((a, b) => {
+        if (b.승점 !== a.승점) return b.승점 - a.승점
+        if (b.GA !== a.GA) return b.GA - a.GA
+        if (b.골 !== a.골) return b.골 - a.골
+        if (b.어시 !== a.어시) return b.어시 - a.어시
+        return a.name.localeCompare(b.name, 'ko')
+      })
+      .slice(0, limit)
+      .map(({ name, 승점, 골, 어시 }) => ({ name, 승점, 골, 어시 }))
+  }
+
+  const setPosition = (players) => {
+    const list = (players || []).map((p) => {
+      const goal = Number(p.골 ?? 0)
+      const assist = Number(p.어시 ?? 0)
+      const point = Number(p.승점 ?? 0)
+
+      const 골 = Number.isFinite(goal) ? goal : 0
+      const 어시 = Number.isFinite(assist) ? assist : 0
+      const 승점 = Number.isFinite(point) ? point : 0
+
+      return {
+        name: p.name,
+        승점,
+        골,
+        어시,
+        GA: 골 + 어시,
+        preferredFoot: membersInfo?.[p.name]?.['preferredFoot'],
+      }
+    })
+
+    const byNameAsc = (a, b) => a.name.localeCompare(b.name, 'ko')
+
+    // pivo: 골 최다
+    const pivo = [...list].sort((a, b) => b.골 - a.골 || b.GA - a.GA || b.승점 - a.승점 || byNameAsc(a, b))[0] || null
+
+    // goleiro: GA 최저
+    const goleiro = [...list].sort((a, b) => a.GA - b.GA || a.골 - b.골 || a.어시 - b.어시 || a.승점 - b.승점 || byNameAsc(a, b))[0] || null
+
+    const used = new Set([pivo?.name, goleiro?.name].filter(Boolean))
+
+    // leftAla/rightAla: 어시 최다 2명(단, pivo/goleiro 제외)
+    const alaCandidates = list.filter((p) => !used.has(p.name)).sort((a, b) => b.어시 - a.어시 || b.GA - a.GA || b.승점 - a.승점 || byNameAsc(a, b)).slice(0, 2)
+
+    const footRank = { L: 0, R: 1 }
+
+    const sortedAlaCandidates = [...alaCandidates].sort((a, b) => {
+      const fa = footRank[a.preferredFoot] ?? 99
+      const fb = footRank[b.preferredFoot] ?? 99
+
+      return fa - fb || a.name.localeCompare(b.name, 'ko')
+    })
+
+    const leftAla = sortedAlaCandidates[0] || null
+    const rightAla = sortedAlaCandidates[1] || null
+    if (leftAla) used.add(leftAla.name)
+    if (rightAla) used.add(rightAla.name)
+
+    // 남은 2명: GA 높은 사람 = fixo, 나머지 = cheerCaptin
+    const fixoCandidates = list.filter((p) => !used.has(p.name))
+
+    const sortedFixo = [...fixoCandidates].sort((a, b) => b.GA - a.GA || b.승점 - a.승점 || b.골 - a.골 || b.어시 - a.어시 || byNameAsc(a, b))
+
+    const fixo = sortedFixo[0] || null
+    const cheerCaptin = sortedFixo[1] || null
+
+    // 여기서부터: name 대신 객체(승점/골/어시 포함)를 value로 반환
+    const pick = (p) => (p ? { name: p.name, 승점: p.승점, 골: p.골, 어시: p.어시, GA: p.GA } : null)
+
+    return {
+      pivo: pick(pivo),
+      goleiro: pick(goleiro),
+      leftAla: pick(leftAla),
+      rightAla: pick(rightAla),
+      fixo: pick(fixo),
+      cheerCaptin: pick(cheerCaptin),
+    }
+  }
+
+  const getWinPointData = () => {
+    const dataByDays = getQuarterItemsByMonth(firestoreRecord[thisYear], thisMonth)
+    const pointsByName = getStatsByName(dataByDays)
+    const topSix = getTopSix(pointsByName)
+    const positionOfTopSix = setPosition(topSix)
+    setBestSixPlayers(positionOfTopSix)
+  }
+
+  const getMembersInfo = async () => {
+    const membersInfoRef = doc(db, 'members', 'info')
+    const snap = await getDoc(membersInfoRef)
+    const data = { id: snap.id, ...snap.data() }
+    setMembersInfo(data)
   }
 
   // 지난 분기 데이터 or 현재 분기 4주 이상 데이터
@@ -787,6 +939,7 @@ const AnalysisTap = (props) => {
         style: [],
         mvp: 0,
         mercenary: detailMap.mercenary ? detailMap.mercenary : 0,
+        preferredFoot: membersInfo?.[name]?.['preferredFoot'] === 'R' ? '오른발' : '왼발',
       }
       // play style
       if (detailMap.goal > detailMap.assist) {
@@ -870,51 +1023,34 @@ const AnalysisTap = (props) => {
         <div className="flex flex-col gap-3 items-center">
           <span className="text-xl">데이터를 모으는 중 입니다</span>
           <Mining />
-          <span className="text-sm">
-            4주 이상의 데이터 필요.. ({thisQuarterData.length}/4)
-          </span>
+          <span className="text-sm">4주 이상의 데이터 필요.. ({thisQuarterData.length}/4)</span>
         </div>
       )}
       {!needMoreData && (
-        <div
-          className="relative top-1"
-          style={{ width: '100%', top: '22vh', left: '5px' }}
-        >
+        <div className="relative top-1" style={{ width: '100%', top: '22vh', left: '5px' }}>
           <Arrow $direction={'left'} onClick={() => tapHandler('left')} />
           <Arrow $direction={'right'} onClick={() => tapHandler('right')} />
         </div>
       )}
       {test && (
-        <div
-          className="relative top-1"
-          style={{ width: '100%', top: '22vh', left: '5px' }}
-        >
+        <div className="relative top-1" style={{ width: '100%', top: '22vh', left: '5px' }}>
           <Arrow $direction={'left'} onClick={() => tapHandler('left')} />
           <Arrow $direction={'right'} onClick={() => tapHandler('right')} />
         </div>
       )}
-      {!needMoreData && (
-        <TitleHolderCard key={tap} tapNumber={tap} data={tapDataList[tap]} />
-      )}
+      {!needMoreData && <TitleHolderCard key={tap} tapNumber={tap} data={tapDataList[tap]} membersInfo={membersInfo} />}
       {!needMoreData && (
         <>
           {showIndividual ? (
             <div className="absolute bottom-0 flex flex-col items-end z-[2]">
-              <CloseButton
-                clickHandler={() => setShowIndividual(false)}
-                customStyle="relative w-[30px] right-0"
-              />
+              <CloseButton clickHandler={() => setShowIndividual(false)} customStyle="relative w-[30px] right-0" />
               <PlayersBox
                 className="flex gap-5 flex-wrap relative bottom-0 justify-center overflow-y-auto bg-white border-t-2 border-t-gray-200 border-b-2 border-b-gray-200"
                 $showDetail={showDetail}
               >
                 {!showDetail &&
                   thisQuarterPlayers.map((player) => (
-                    <ActivePlayer
-                      key={player}
-                      className="text-green-900 cursor-pointer"
-                      onClick={() => playerDetailHandler(player)}
-                    >
+                    <ActivePlayer key={player} className="text-green-900 cursor-pointer" onClick={() => playerDetailHandler(player)}>
                       {player}
                     </ActivePlayer>
                   ))}
@@ -929,11 +1065,12 @@ const AnalysisTap = (props) => {
                       ) : (
                         <div>
                           <ListBody>
+                            <ListTitle>주발</ListTitle>
+                            <span className="text-black"> {playerDetail['preferredFoot']}</span>
+                          </ListBody>
+                          <ListBody>
                             <ListTitle>MVP</ListTitle>
-                            <span className="text-black">
-                              {' '}
-                              {playerDetail['mvp'] + '회'}
-                            </span>
+                            <span className="text-black"> {playerDetail['mvp'] + '회'}</span>
                           </ListBody>
                           <ListBody>
                             <ListTitle>최다 골 합작</ListTitle>
@@ -960,21 +1097,11 @@ const AnalysisTap = (props) => {
                             </span>
                           </ListBody>
                           <ListBody>
-                            <ListTitle>용병 호출</ListTitle>
-                            <span className="text-black">
-                              {' '}
-                              {playerDetail['mercenary']}회
-                            </span>
-                          </ListBody>
-                          <ListBody>
                             <ListTitle>스타일</ListTitle>
                             <span className="text-black">
                               {' '}
                               {playerDetail['style'].map((style) => (
-                                <span
-                                  key={style}
-                                  style={{ marginRight: '5px' }}
-                                >
+                                <span key={style} style={{ marginRight: '5px' }}>
                                   #{style}
                                 </span>
                               ))}
@@ -983,10 +1110,7 @@ const AnalysisTap = (props) => {
                         </div>
                       )}
                     </div>
-                    <Close
-                      className="cursor-pointer text-sm text-black"
-                      onClick={() => setShowDetail(false)}
-                    >
+                    <Close className="cursor-pointer text-sm text-black" onClick={() => setShowDetail(false)}>
                       back
                     </Close>
                   </div>
@@ -994,10 +1118,7 @@ const AnalysisTap = (props) => {
               </PlayersBox>
             </div>
           ) : (
-            <div
-              className="absolute z-10 bottom-[7vh] right-[30px]"
-              onClick={() => setShowIndividual(true)}
-            >
+            <div className="absolute z-10 bottom-[7vh] right-[30px]" onClick={() => setShowIndividual(true)}>
               <div className="relative z-20 border-double border-0 border-b-2 border-t-2 border-blue-600">
                 <span className="text-[17px] text-goal">개인별</span>
               </div>

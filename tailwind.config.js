@@ -41,6 +41,8 @@ export default {
         sonKaeDuo: "url('@/assets/sonKaeDuo.webp')",
         slowStarter: "url('@/assets/slowStarter.webp')",
         earlyStarter: "url('@/assets/earlyStarter.webp')",
+        leftFoot: "url('@/assets/left_foot.png')",
+        rightFoot: "url('@/assets/right_foot.png')",
       },
       textColor: {
         goal: '#bb2649',
@@ -132,8 +134,7 @@ export default {
   },
   safelist: [
     {
-      pattern:
-        /bg-(salah|myTeam|ground|palmer|ronaldo|rodrigo|DeBruyne|CJamChul|sonKaeDuo|slowStarter|earlyStarter|laurel)/,
+      pattern: /bg-(salah|myTeam|ground|palmer|ronaldo|rodrigo|DeBruyne|CJamChul|sonKaeDuo|slowStarter|earlyStarter|laurel)/,
     },
   ],
   plugins: [
