@@ -995,7 +995,7 @@ const AnalysisTap = (props) => {
             </div>
           ) : (
             <div
-              className="absolute z-10 bottom-[7vh] right-[30px]"
+              className="absolute z-10 bottom-[5vh] right-[30px]"
               onClick={() => setShowIndividual(true)}
             >
               <div className="relative z-20 border-double border-0 border-b-2 border-t-2 border-blue-600">
