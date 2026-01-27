@@ -31,7 +31,7 @@ const LetsRecord = (props) => {
   const [writtenData, setWrittenData] = useState(null)
   const [registerHeight, setRegisterHeight] = useState(0)
   const [feverTimeHeight, setFeverTimeHeight] = useState(0)
-  const [canRegister, setCanRegister] = useState(false)
+  const [canRegister, setCanRegister] = useState(true)
   const [lastRecord, setLastRecord] = useState('')
   const [showMVP, setShowMVP] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
