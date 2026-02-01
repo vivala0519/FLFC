@@ -394,31 +394,29 @@ const LetsRecord = (props) => {
 
       const formattedRoundRecord = formatRoundRecord(roundRecord)
       Object.entries(formattedRoundRecord).forEach(([key, value]) => {
-        if (key?.length === 1) {
+        if (!key) return;
+
+        if (key.length === 1) {
           oneCharacterMembers.forEach((player) => {
             if (player.includes(key) && stats[player]) {
-              stats[player]['승점'] = value
+              stats[player]['승점'] = value;
             }
-          })
-          Object.entries(membersNickName).forEach(([nick, name]) => {
-            if (nick.includes(key) && stats[name]) {
-              stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-            }
-          })
+          });
         } else {
-          const others = existingMembers.filter((existing) => !oneCharacterMembers.includes(existing))
+          const others = existingMembers.filter((existing) => !oneCharacterMembers.includes(existing));
           others.forEach((player) => {
-            if (player.includes(key) && stats[player]) {
-              stats[player]['승점'] = value
+            if ((player === key || player.includes(key)) && stats[player]) {
+              stats[player]['승점'] = value;
             }
-          })
-          Object.entries(membersNickName).forEach(([nick, name]) => {
-            if (nick.includes(key) && stats[name]) {
-              stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-            }
-          })
+          });
         }
-      })
+
+        Object.entries(membersNickName).forEach(([nick, name]) => {
+          if (nick.includes(key) && stats[name]) {
+            stats[name]['승점'] = value;
+          }
+        });
+      });
       return stats
     }
   }
