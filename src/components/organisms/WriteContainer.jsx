@@ -476,7 +476,7 @@ const WriteContainer = (props) => {
           }
         })
       }
-      if (!checkMember) {
+      if (!checkMember && !['용병', '자책'].includes(scorer)) {
         const all = ['1', '2', '3']
         const restTeam = all.filter(
           (x) => !new Set(roundData.teamList).has(x))[0]
