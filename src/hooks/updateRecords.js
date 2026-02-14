@@ -11,7 +11,7 @@ import {
   totalWeeklyTeamDataAtom,
   timeAtom,
 } from '@/store/atoms'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, onSnapshot } from 'firebase/firestore'
 import { db as firestoreDb } from '../../firebase.js'
 import { analyzeForStatusBoard } from '../apis/analyzeData.js'
 
@@ -71,37 +71,39 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
   ])
 
   // 2) Firestore year fetch: year별 데이터만 담당
+
   useEffect(() => {
-    let cancelled = false
+    const year = yearParameter ? String(yearParameter) : String(thisYear)
 
-    ;(async () => {
-      const year = yearParameter
-        ? String(yearParameter)
-        : String(thisYear)
-      if (firestoreRecord?.[year]) return
+    // 로딩 시작
+    setRecordRoomLoadingFlag(true)
 
-      setRecordRoomLoadingFlag(true)
-      const colRef = collection(firestoreDb, year)
-      const snapshot = await getDocs(colRef)
+    const colRef = collection(firestoreDb, year)
+
+    // onSnapshot은 리스너(구독)를 등록합니다. 데이터가 변할 때마다 실행됩니다.
+    const unsubscribe = onSnapshot(colRef, (snapshot) => {
       const fetched = snapshot.docs.map((doc) => ({
         id: doc.id,
         data: doc.data(),
       }))
 
-      if (cancelled) return
       setFirestoreRecord((prev) => ({ ...prev, [year]: fetched }))
       setRecordRoomLoadingFlag(false)
-    })().catch(console.error)
+    }, (error) => {
+      console.error(error)
+      setRecordRoomLoadingFlag(false)
+    })
 
+    // 컴포넌트가 언마운트되거나 year가 바뀔 때 리스너를 해제(구독 취소)합니다.
     return () => {
-      cancelled = true
+      unsubscribe()
     }
   }, [
     thisYear,
     yearParameter,
-    firestoreRecord,
+    // firestoreRecord는 의존성 배열에서 빼야 합니다! (무한 루프 방지 및 로직상 불필요)
     setFirestoreRecord,
-    setRecordRoomLoadingFlag,
+    setRecordRoomLoadingFlag
   ])
 
   // 3) StatusBoard 분석: “데이터 준비되면 1번”만

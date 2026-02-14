@@ -40,39 +40,41 @@ const TeamScorePopup = (props) => {
       const getRoundRef = (db, thisYear, today, roundId) =>
         ref(db, `${thisYear}/${today}_rounds/${roundId}`)
       const db = getDatabase()
-      const lastRoundRef = getRoundRef(db, thisYear, today, lastRound.id)
+      if (lastRound) {
+        const lastRoundRef = getRoundRef(db, thisYear, today, lastRound.id)
+        // 마지막 경기 종료 안됐으면 종료
+        if (!lastRound.winnerTeam) {
+          const targetTime = "09:54:00"
+          if (toSeconds(lastRound.time) <= toSeconds(targetTime)) {
+            const mostGetGoalTeam = getMostFrequentElements(
+                lastRound.getGoalTeam || [],
+            )
+            await update(lastRoundRef, {
+              winnerTeam: {
+                number: mostGetGoalTeam,
+                member:
+                    mostGetGoalTeam.length === 1
+                        ? weeklyTeamData.data[String(mostGetGoalTeam[0])]
+                        : weeklyTeamData.data[String(mostGetGoalTeam[0])].concat(
+                            weeklyTeamData.data[String(mostGetGoalTeam[1])],
+                        ),
+              },
+              lostTeam:
+                  mostGetGoalTeam.length === 1 &&
+                  lastRound.teamList.find(
+                      (team) => team !== String(mostGetGoalTeam[0]),
+                  ),
+            })
+          }
+        }
+        // 마지막 경기 안한 라운드 체크 & 삭제
+        if ((lastRound && !lastRound.goals) || lastRound?.goals?.length === 0) {
+          const targetTime = '09:55:00'
+          if (toSeconds(lastRound.time) >= toSeconds(targetTime)) {
+            await remove(lastRoundRef)
+          }
+        }
 
-      // 마지막 경기 종료 안됐으면 종료
-      if (!lastRound.winnerTeam) {
-        const targetTime = "09:54:00"
-        if (toSeconds(lastRound.time) <= toSeconds(targetTime)) {
-          const mostGetGoalTeam = getMostFrequentElements(
-            lastRound.getGoalTeam || [],
-          )
-          await update(lastRoundRef, {
-            winnerTeam: {
-              number: mostGetGoalTeam,
-              member:
-                mostGetGoalTeam.length === 1
-                  ? weeklyTeamData.data[String(mostGetGoalTeam[0])]
-                  : weeklyTeamData.data[String(mostGetGoalTeam[0])].concat(
-                      weeklyTeamData.data[String(mostGetGoalTeam[1])],
-                    ),
-            },
-            lostTeam:
-              mostGetGoalTeam.length === 1 &&
-              lastRound.teamList.find(
-                (team) => team !== String(mostGetGoalTeam[0]),
-              ),
-          })
-        }
-      }
-      // 마지막 경기 안한 라운드 체크 & 삭제
-      if ((lastRound && !lastRound.goals) || lastRound?.goals?.length === 0) {
-        const targetTime = '09:55:00'
-        if (toSeconds(lastRound.time) >= toSeconds(targetTime)) {
-          await remove(lastRoundRef)
-        }
       }
 
       recordData.forEach((rec) => {

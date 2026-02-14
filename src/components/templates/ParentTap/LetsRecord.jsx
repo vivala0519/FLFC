@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { doc, setDoc } from 'firebase/firestore'
 import { db } from '../../../../firebase.js'
 import getTimes from '@/hooks/getTimes.js'
@@ -473,34 +473,49 @@ const LetsRecord = (props) => {
   }
 
   // Firestore 데이터 등록
-  const stats = formatRecordByName(todayRecord, displayRecord)
+  // const stats = formatRecordByName(todayRecord, displayRecord)
+  const stats = useMemo(() => {
+    return formatRecordByName(todayRecord, displayRecord)
+  }, [todayRecord, displayRecord, weeklyTeamData, existingMembers])
 
   useEffect(() => {
+    // stats가 유효하고, 기록이 있으며, 등록 가능한 상태일 때
     if (stats && Object.keys(stats).length > 0 && todayRecord && canRegister) {
+
       const registerRecord = async () => {
-        const docRef = doc(db, thisYear, today)
-        // const docRef = doc(db, thisYear + '_dev', today)
-        await setDoc(docRef, stats)
-        console.log('Document written with ID: ', docRef.id)
-        setWrittenData(stats)
-        // 스크롤 맨 밑으로
-        const scrollContainer = scrollContainerRef.current
-        if (scrollContainer) {
-          const scrollHeight = scrollContainer.scrollHeight
-          scrollContainer.scrollTo({
-            top: scrollHeight,
-            behavior: 'smooth',
-          })
+        try {
+          const docRef = doc(db, thisYear, today)
+          await setDoc(docRef, stats)
+          console.log(stats)
+          console.log('Document updated with ID: ', docRef.id)
+
+          // [중요] Firestore 저장 후 로컬 상태도 즉시 동기화
+          setWrittenData(stats)
+
+          // 스크롤 로직
+          const scrollContainer = scrollContainerRef.current
+          if (scrollContainer) {
+            scrollContainer.scrollTo({
+              top: scrollContainer.scrollHeight,
+              behavior: 'smooth',
+            })
+          }
+        } catch (error) {
+          console.error("Error writing document: ", error)
         }
       }
+
+      // 1. 아직 저장된 데이터가 없으면 저장
       if (!writtenData) {
         registerRecord()
       }
-      if (writtenData && !compareObjects(stats, writtenData)) {
+      // 2. 저장된 데이터가 있지만, 현재 계산된 stats와 다르면 저장
+      else if (!compareObjects(stats, writtenData)) {
+        console.log('regiserrecord')
         registerRecord()
       }
     }
-  }, [todayRecord, stats, existingMembers])
+  }, [stats, canRegister, thisYear, today])
 
   // MVP 화면 닫으면 컨페티 종료
   useEffect(() => {
