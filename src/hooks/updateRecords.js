@@ -139,14 +139,24 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
 
   // 4) weeklyTeam: 1회 fetch
   useEffect(() => {
-    if (totalWeeklyTeamData) return
-    ;(async () => {
-      const snapshot = await getDocs(collection(firestoreDb, 'weeklyTeam'))
-      const fetchedWeeklyTeamData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        data: doc.data(),
-      }))
-      setWeeklyTeamData(fetchedWeeklyTeamData)
-    })().catch(console.error)
-  }, [totalWeeklyTeamData, setWeeklyTeamData])
+    // 1. onSnapshot을 사용하여 실시간 리스너 설정
+    const unsubscribe = onSnapshot(
+        collection(firestoreDb, 'weeklyTeam'),
+        (snapshot) => {
+          const fetchedWeeklyTeamData = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            data: doc.data(),
+          }))
+
+          // 데이터가 변경될 때마다 state 업데이트
+          setWeeklyTeamData(fetchedWeeklyTeamData)
+        },
+        (error) => {
+          console.error('실시간 데이터를 가져오는 중 에러 발생:', error)
+        }
+    )
+
+    // 2. 컴포넌트가 언마운트될 때 리스너 해제 (메모리 누수 방지)
+    return () => unsubscribe()
+  }, [setWeeklyTeamData])
 }
