@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import updateVotes from '@/hooks/updateVotes.js'
 import useUpdateRecords from '@/hooks/updateRecords.js'
-import updateMembers from '@/hooks/updateMembers.js'
+import useUpdateMembers from '@/hooks/updateMembers.js'
 import MainPage from '@/components/pages/MainPage.jsx'
 import AdminPage from '@/components/pages/AdminPage.jsx'
 import VotingPage from '@/components/pages/VotingPage.jsx'
@@ -17,7 +17,7 @@ const App = () => {
   const [recordRoomLoadingFlag, setRecordRoomLoadingFlag] = useState(false)
   updateCurrentTime()
   useUpdateRecords(selectedYear, setRecordRoomLoadingFlag)
-  updateMembers()
+  useUpdateMembers()
   updateVotes()
 
   const [isDarkMode, setIsDarkMode] = useState(false)

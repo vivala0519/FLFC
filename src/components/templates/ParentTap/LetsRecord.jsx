@@ -478,33 +478,32 @@ const LetsRecord = (props) => {
     return formatRecordByName(todayRecord, displayRecord)
   }, [todayRecord, displayRecord, weeklyTeamData, existingMembers])
 
+  const registerRecord = async () => {
+    try {
+      console.log('스탯: ', stats)
+      const docRef = doc(db, thisYear, today)
+      await setDoc(docRef, stats)
+      console.log('Document updated with ID: ', docRef.id)
+
+      // [중요] Firestore 저장 후 로컬 상태도 즉시 동기화
+      setWrittenData(stats)
+
+      // 스크롤 로직
+      const scrollContainer = scrollContainerRef.current
+      if (scrollContainer) {
+        scrollContainer.scrollTo({
+          top: scrollContainer.scrollHeight,
+          behavior: 'smooth',
+        })
+      }
+    } catch (error) {
+      console.error("Error writing document: ", error)
+    }
+  }
+
   useEffect(() => {
     // stats가 유효하고, 기록이 있으며, 등록 가능한 상태일 때
     if (stats && Object.keys(stats).length > 0 && todayRecord && canRegister) {
-
-      const registerRecord = async () => {
-        try {
-          const docRef = doc(db, thisYear, today)
-          await setDoc(docRef, stats)
-          console.log(stats)
-          console.log('Document updated with ID: ', docRef.id)
-
-          // [중요] Firestore 저장 후 로컬 상태도 즉시 동기화
-          setWrittenData(stats)
-
-          // 스크롤 로직
-          const scrollContainer = scrollContainerRef.current
-          if (scrollContainer) {
-            scrollContainer.scrollTo({
-              top: scrollContainer.scrollHeight,
-              behavior: 'smooth',
-            })
-          }
-        } catch (error) {
-          console.error("Error writing document: ", error)
-        }
-      }
-
       // 1. 아직 저장된 데이터가 없으면 저장
       if (!writtenData) {
         registerRecord()
@@ -591,6 +590,7 @@ const LetsRecord = (props) => {
             setSelectTeamPopupMessage={setSelectTeamPopupMessage}
             setSelectScorerTeamPopupMessage={setSelectScorerTeamPopupMessage}
             setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
+            formatRecordByName={formatRecordByName}
           />
           {canRegister && showFeverTime && !isFeverTime && (
             <div className="mt-2 w-[80%] z-4" ref={feverTimeRef}>

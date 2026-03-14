@@ -6,7 +6,7 @@ import RecordRow from '@/components/molecules/RecordRow.jsx'
 import RoundRow from '@/components/molecules/RoundRow.jsx'
 
 const RecordContainer = (props) => {
-  const { scrollContainerRef, open, isFeverTime, dynamicHeight, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams } = props
+  const { formatRecordByName, scrollContainerRef, open, isFeverTime, dynamicHeight, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams } = props
   const { time: { today, thisYear } } = getTimes()
   const [openRounds, setOpenRounds] = useState(new Set())
   const [closedRounds, setClosedRounds] = useState(new Set())
@@ -170,6 +170,7 @@ const RecordContainer = (props) => {
             {record.goals?.map((goal, goalIndex) => (
               <RecordRow
                 key={'goal-' + goalIndex}
+                roundIndex={index}
                 index={goalIndex}
                 effect={goal.id === lastRecord}
                 record={goal}
@@ -177,6 +178,7 @@ const RecordContainer = (props) => {
                 useDelete={canRegister}
                 isLastRound={displayRecord.length - 1 === index}
                 deleteRecord={deleteRecord}
+                formatRecordByName={formatRecordByName}
               />
             ))}
             {record.goals.length === 0 && <div className={'text-black dark:text-gray-100'}>득점 없당</div>}

@@ -11,7 +11,7 @@ import {
   membersNickNameAtom,
 } from '@/store/atoms'
 
-const updateMembers = () => {
+const useUpdateMembers = () => {
   const [, setTotalMembers] = useAtom(totalMembersAtom)
   const [, setExistingMembers] = useAtom(existingMembersAtom)
   const [, setRetiredMembers] = useAtom(retiredMembersAtom)
@@ -30,10 +30,10 @@ const updateMembers = () => {
       const retiredMembers = fetchedMembersData['retired']
       const oneCharacterMembers = fetchedMembersData['oneCharacter']
       const membersNickName = fetchedMembersData['nickName']
+      const calculatedExisting = totalMembers.filter((member) => !retiredMembers.includes(member))
+      console.log('Firebase 연산 결과:', calculatedExisting)
       setTotalMembers(totalMembers)
-      setExistingMembers(
-        totalMembers.filter((member) => !retiredMembers.includes(member)),
-      )
+      setExistingMembers(calculatedExisting)
       setRetiredMembers(retiredMembers)
       setOneCharacterMembers(oneCharacterMembers)
       setMembersNickName(membersNickName)
@@ -48,4 +48,4 @@ const updateMembers = () => {
   }, [])
 }
 
-export default updateMembers
+export default useUpdateMembers
