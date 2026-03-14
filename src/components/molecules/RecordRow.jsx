@@ -37,7 +37,7 @@ const RecordRow = (props) => {
   }, [])
 
   const handleAreaClick = () => {
-    if (!isEditing) setIsEditing(true)
+    if (!isEditing && useDelete) setIsEditing(true)
   }
 
 
@@ -118,7 +118,7 @@ const RecordRow = (props) => {
             )}
           </div>
 
-          { !isEditing &&useDelete && isLastRound && (
+          { !isEditing && useDelete && isLastRound && (
               <DeleteButton clickHandler={() => deleteRecord(record.id, index)} />
           )}
           {isEditing && (<div className={'text-green-500 mb-1.5'} onClick={closeEditing}>확인</div>)}
