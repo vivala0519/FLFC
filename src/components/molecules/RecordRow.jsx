@@ -108,7 +108,7 @@ const RecordRow = (props) => {
                 isEditing={isEditing}
                 onChange={(e) => setGoalText(e.target.value)}
             />
-            {record.assist && (
+            {(record.assist || isEditing) && (
                 <RecordEl
                     type={'ASSIST'}
                     text={assistText}
