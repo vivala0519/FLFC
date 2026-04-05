@@ -10,6 +10,7 @@ import right from '@/assets/right.png'
 import medal from '@/assets/medal.png'
 import assist from '@/assets/assist2.png'
 import attendance from '@/assets/attendance2.png'
+import point from '@/assets/point_trophy.png'
 
 import getTimes from '@/hooks/getTimes.js'
 
@@ -179,6 +180,9 @@ const DataTable = (props) => {
     if (lastSeasonKings?.attendance_king.includes(name)) {
       return 'attendance'
     }
+    if (lastSeasonKings?.point_king.includes(name)) {
+      return 'point'
+    }
   }
 
   useEffect(() => {
@@ -187,6 +191,7 @@ const DataTable = (props) => {
       kings = [...lastSeasonKings.attendance_king]
       kings.push(lastSeasonKings.goal_king)
       kings.push(lastSeasonKings.assist_king)
+      kings.push(lastSeasonKings.point_king)
     }
 
     setKingList(kings)
@@ -867,7 +872,8 @@ const Trophy = styled.div`
         ? `url(${goal})`
         : props.$king === 'assist'
           ? `url(${assist})`
-          : `url(${attendance})`};
+          : props.$king === 'attendance'
+          ? `url(${attendance})` : `url(${point})`};
     background-position: center;
     background-repeat: no-repeat;
     background-size: 100% 100%;

@@ -10,6 +10,7 @@ const StatusBoard = () => {
     goal_king: '',
     assist_king: '',
     attendance_king: [],
+    point_king: '',
   })
   const [loadingFlag, setLoadingFlag] = useState(false)
 
