@@ -34,7 +34,7 @@ const RecordRow = (props) => {
   const winStyle = 'font-hahmlet text-goal dark:text-red-300 text-sm'
   const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
   const arrowIcon = 'bg-[url("@/assets/up2.png")] '
-  const roundExitButtonStyle = 'text-goal dark:text-red-500 animate-pulse'
+  const roundExitButtonStyle = 'text-goal dark:text-yellow-500 animate-pulse'
 
 
   const optionsForA = ALL_TEAMS.filter((opt) => opt !== teamB)
