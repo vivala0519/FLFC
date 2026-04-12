@@ -10,7 +10,7 @@ import right from '@/assets/right.png'
 import medal from '@/assets/medal.png'
 import assist from '@/assets/assist2.png'
 import attendance from '@/assets/attendance2.png'
-import point from '@/assets/point_trophy.png'
+import point from '@/assets/point_trophy3.png'
 
 import getTimes from '@/hooks/getTimes.js'
 
