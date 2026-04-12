@@ -61,7 +61,9 @@ const LetsRecord = (props) => {
       setOpen(true)
     }
     if (
-      thisDay === 0
+      thisDay === 0 &&
+      currentTime >= gameStartTime &&
+      currentTime <= gameEndTime
     ) {
       const makeTodayYYMMDD = (now = new Date()) => {
         const yy = String(now.getFullYear()).slice(-2)
