@@ -61,15 +61,21 @@ const LetsRecord = (props) => {
       setOpen(true)
     }
     if (thisDay === 0) {
-      const todayId = currentTime.toISOString().slice(2, 10).replace(/-/g, '');
+      const makeTodayYYMMDD = (now = new Date()) => {
+        const yy = String(now.getFullYear()).slice(-2)
+        const mm = String(now.getMonth() + 1).padStart(2, '0')
+        const dd = String(now.getDate()).padStart(2, '0')
 
-      // 데이터 업데이트 로직 (오늘자 데이터가 없을 경우)
-      if (weeklyTeamData && weeklyTeamData.id !== todayId) {
-        const emptyRow = Array(6).fill('');
-        setRegisteredTeam({
-          id: todayId,
-          data: { 1: [...emptyRow], 2: [...emptyRow], 3: [...emptyRow] }
-        });
+        return `${yy}${mm}${dd}`
+      }
+      // 오늘자 위클리팀 없으면 빈값으로 생성
+      if (weeklyTeamData && (makeTodayYYMMDD(currentTime) !== weeklyTeamData?.id)) {
+        const newData = {
+          1: ['', '', '', '', '', ''],
+          2: ['', '', '', '', '', ''],
+          3: ['', '', '', '', '', ''],
+        }
+        setRegisteredTeam({ id: makeTodayYYMMDD(currentTime), data: newData })
       }
 
       if (currentTime >= gameStartTime && currentTime <= gameEndTime) {
