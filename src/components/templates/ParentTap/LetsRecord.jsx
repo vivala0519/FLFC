@@ -296,11 +296,11 @@ const LetsRecord = (props) => {
               stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
             }
           })
-          Object.entries(membersNickName).forEach(([nick, name]) => {
-            if (nick.includes(member)) {
-              stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-            }
-          })
+          // Object.entries(membersNickName).forEach(([nick, name]) => {
+          //   if (nick.includes(member)) {
+          //     stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+          //   }
+          // })
         } else {
           // 나머지 출석처리
           const others = existingMembers.filter(
@@ -311,11 +311,11 @@ const LetsRecord = (props) => {
               stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
             }
           })
-          Object.entries(membersNickName).forEach(([nick, name]) => {
-            if (nick.includes(member)) {
-              stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-            }
-          })
+          // Object.entries(membersNickName).forEach(([nick, name]) => {
+          //   if (nick.includes(member)) {
+          //     stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+          //   }
+          // })
         }
       })
 
@@ -348,11 +348,11 @@ const LetsRecord = (props) => {
                 stats[player]['골']++
               }
             })
-            Object.entries(membersNickName).forEach(([nick, name]) => {
-              if (nick.includes(goal) && stats[name]) {
-                stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-              }
-            })
+            // Object.entries(membersNickName).forEach(([nick, name]) => {
+            //   if (nick.includes(goal) && stats[name]) {
+            //     stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+            //   }
+            // })
           }
         }
 
@@ -364,11 +364,11 @@ const LetsRecord = (props) => {
                 stats[player]['어시']++
               }
             })
-            Object.entries(membersNickName).forEach(([nick, name]) => {
-              if (nick.includes(assist) && stats[name]) {
-                stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-              }
-            })
+            // Object.entries(membersNickName).forEach(([nick, name]) => {
+            //   if (nick.includes(assist) && stats[name]) {
+            //     stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+            //   }
+            // })
           } else {
             // 나머지 어시 처리
             const others = existingMembers.filter(
@@ -379,11 +379,11 @@ const LetsRecord = (props) => {
                 stats[player]['어시']++
               }
             })
-            Object.entries(membersNickName).forEach(([nick, name]) => {
-              if (nick.includes(assist) && stats[name]) {
-                stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-              }
-            })
+            // Object.entries(membersNickName).forEach(([nick, name]) => {
+            //   if (nick.includes(assist) && stats[name]) {
+            //     stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+            //   }
+            // })
           }
         }
       })
@@ -407,11 +407,11 @@ const LetsRecord = (props) => {
           });
         }
 
-        Object.entries(membersNickName).forEach(([nick, name]) => {
-          if (nick.includes(key) && stats[name]) {
-            stats[name]['승점'] = value;
-          }
-        });
+        // Object.entries(membersNickName).forEach(([nick, name]) => {
+        //   if (nick.includes(key) && stats[name]) {
+        //     stats[name]['승점'] = value;
+        //   }
+        // });
       });
       return stats
     }
