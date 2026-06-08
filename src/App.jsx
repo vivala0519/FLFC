@@ -51,7 +51,6 @@ const App = () => {
             />
           }
         />
-        <Route path="/test" element={<MainPage test={true} />} />
         <Route
           path="/weeklyTeam"
           element={

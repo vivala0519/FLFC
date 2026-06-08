@@ -9,6 +9,7 @@ import InfoMessageBox from '@/components/molecules/InfoMessageBox.jsx'
 import ShowRequestButton from '@/components/atoms/Button/ShowRequestButton.jsx'
 import RequestBox from '@/components/organisms/RequestBox.jsx'
 import Separator from '@/components/atoms/Separator.jsx'
+import { getRoundParticipants } from '@/apis/roundParticipants.js'
 
 const ALL_TEAMS = ['1', '2', '3']
 
@@ -267,6 +268,15 @@ const WriteContainer = (props) => {
           setIsFeverTime(true)
           return lastRound.id
         }
+
+        const lastRoundRef = getRoundRef(db, thisYear, today, lastRound.id)
+        const participant = getRoundParticipants(
+          weeklyTeamData,
+          lastRound.teamList,
+        )
+        if (participant.length > 0) {
+          await update(lastRoundRef, { participant })
+        }
       }
 
       const indices = roundValues.map((r) =>
@@ -291,6 +301,7 @@ const WriteContainer = (props) => {
       getGoalTeam: [],
       pointWinners: [],
       updated: false,
+      participant: [],
     }
 
     await set(roundRef, roundData)
@@ -544,7 +555,7 @@ const WriteContainer = (props) => {
           const wholeSnap = await get(ref(db, `${thisYear}/${today}_rounds`))
         }
       } else {
-        const isPastMoreThanMinutes = (gameTime, minutes = 10, now = new Date()) => {
+        const isPastMoreThanMinutes = (gameTime, minutes = 10, now = currentTime) => {
           const m = /^(\d{2}):(\d{2}):(\d{2})$/.exec(gameTime)
           if (!m) return false
 

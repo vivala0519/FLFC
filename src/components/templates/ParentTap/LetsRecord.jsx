@@ -54,6 +54,12 @@ const LetsRecord = (props) => {
   const templateContainerStyle = 'flex flex-col items-center w-full'
 
   useEffect(() => {
+    if (totalWeeklyTeamData?.length) {
+      setWeeklyTeamData(totalWeeklyTeamData[totalWeeklyTeamData.length - 1])
+    }
+  }, [totalWeeklyTeamData])
+
+  useEffect(() => {
     if (registerRef.current) {
       setRegisterHeight(registerRef.current.clientHeight)
     }
@@ -93,9 +99,6 @@ const LetsRecord = (props) => {
   useEffect(() => {
     setLoadingFlag(true)
     if (!todaysRealtimeRound) return
-    if (totalWeeklyTeamData) {
-      setWeeklyTeamData(totalWeeklyTeamData[totalWeeklyTeamData.length - 1])
-    }
     if (thisDay <= 6 && thisDay >= 1) {
       setLoadingFlag(false)
     }

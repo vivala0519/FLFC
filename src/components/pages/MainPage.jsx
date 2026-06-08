@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Analytics } from '@vercel/analytics/react'
-import { collection, doc, getDocs, setDoc } from 'firebase/firestore'
+import { doc, setDoc } from 'firebase/firestore'
 import { getDatabase, ref, get } from 'firebase/database'
 import getRecords from '@/hooks/getRecords.js'
 

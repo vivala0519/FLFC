@@ -3,6 +3,7 @@ import Swal from 'sweetalert2'
 import { get, getDatabase, ref, set, update } from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
 import { useEffect, useState } from 'react'
+import { getRoundParticipants } from '@/apis/roundParticipants.js'
 
 const RecordRow = (props) => {
   const { time: { today, thisYear, currentTime } } = getTimes()
@@ -111,6 +112,15 @@ const RecordRow = (props) => {
         if (!lastRound.winnerTeam) {
           return lastRound.id
         }
+
+        const lastRoundRef = getRoundRef(db, thisYear, today, lastRound.id)
+        const participant = getRoundParticipants(
+          weeklyTeamData,
+          lastRound.teamList,
+        )
+        if (participant.length > 0) {
+          await update(lastRoundRef, { participant })
+        }
       }
 
       const indices = roundValues.map((r) =>
@@ -135,6 +145,7 @@ const RecordRow = (props) => {
       getGoalTeam: [],
       pointWinners: [],
       updated: false,
+      participant: [],
     }
 
     await set(roundRef, roundData)
@@ -153,6 +164,7 @@ const RecordRow = (props) => {
     const roundRef = getRoundRef(db, thisYear, today, roundId)
     const snap = await get(roundRef)
     const roundData = snap.val() || {}
+    const teamList = roundData['teamList']
     if (roundData.winnerTeam) {
       window.location.reload()
       return
@@ -167,6 +179,7 @@ const RecordRow = (props) => {
         },
         lostTeam: roundData.teamList.find((team) => team !== String(mostGetGoalTeam[0]),
         ),
+        participant: getRoundParticipants(weeklyTeamData, teamList),
       })
       const newRoundId = await createRound()
       const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(String(team)))
