@@ -9,6 +9,7 @@ import {
   firestoreRecordAtom,
   statusBoardStatAtom,
   totalWeeklyTeamDataAtom,
+  existingMembersAtom,
   timeAtom,
 } from '@/store/atoms'
 import { collection, getDocs, onSnapshot } from 'firebase/firestore'
@@ -25,6 +26,7 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
   const [totalWeeklyTeamData, setWeeklyTeamData] = useAtom(
     totalWeeklyTeamDataAtom,
   )
+  const [existingMembers] = useAtom(existingMembersAtom)
   const [time] = useAtom(timeAtom)
 
   const { thisYear, thisMonth, thisDay, today, currentTime } = time
@@ -109,6 +111,7 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
   // 3) StatusBoard 분석: “데이터 준비되면 1번”만
   useEffect(() => {
     if (statusBoardStat) return
+    if (existingMembers.length === 0) return
 
     const year = yearParameter
       ? String(yearParameter)
@@ -123,9 +126,11 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
           .map((doc) => ({ id: doc.id, data: doc.data() }))
           .filter((d) => d.id.slice(0, 2) === '12')
 
-        setStatusBoardStat(analyzeForStatusBoard([...yearData, ...lastDec]))
+        setStatusBoardStat(
+          analyzeForStatusBoard([...yearData, ...lastDec], existingMembers),
+        )
       } else {
-        setStatusBoardStat(analyzeForStatusBoard(yearData))
+        setStatusBoardStat(analyzeForStatusBoard(yearData, existingMembers))
       }
     })().catch(console.error)
   }, [
@@ -134,6 +139,7 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
     yearParameter,
     thisYear,
     thisMonth,
+    existingMembers,
     setStatusBoardStat,
   ])
 

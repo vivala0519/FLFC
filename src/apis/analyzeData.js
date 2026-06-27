@@ -1,4 +1,4 @@
-import { extractActiveMembers } from './members.js'
+import { extractActiveMembers } from './memberStats.js'
 
 function getLastFourSundays() {
   const today = new Date()
@@ -24,7 +24,12 @@ function getLastFourSundays() {
   return sundays
 }
 
-export const analyzeForStatusBoard = (fetchedData, quarter, yearParameter) => {
+export const analyzeForStatusBoard = (
+  fetchedData,
+  existingMembers = [],
+  quarter,
+  yearParameter,
+) => {
   const thisYear = new Date().getFullYear()
   const year = yearParameter ? yearParameter : String(thisYear)
   const lastFourSundays = getLastFourSundays()
@@ -78,7 +83,7 @@ export const analyzeForStatusBoard = (fetchedData, quarter, yearParameter) => {
   const firstQuarterStats = new Map()
   generateByQuarter(firstQuarter, firstQuarterStats)
   const firstQuarterData = {
-    members: extractActiveMembers(firstQuarterStats),
+    members: extractActiveMembers(firstQuarterStats, existingMembers),
     totalData: firstQuarterStats,
     lastSeasonKings: lastSeasonKings[Number(year) - 1 + '_4th'],
   }
@@ -91,7 +96,7 @@ export const analyzeForStatusBoard = (fetchedData, quarter, yearParameter) => {
   const secondQuarterStats = new Map()
   generateByQuarter(secondQuarter, secondQuarterStats)
   const secondQuarterData = {
-    members: extractActiveMembers(secondQuarterStats),
+    members: extractActiveMembers(secondQuarterStats, existingMembers),
     totalData: secondQuarterStats,
     lastSeasonKings: lastSeasonKings[year + '_1st'],
   }
@@ -104,7 +109,7 @@ export const analyzeForStatusBoard = (fetchedData, quarter, yearParameter) => {
   const thirdQuarterStats = new Map()
   generateByQuarter(thirdQuarter, thirdQuarterStats)
   const thirdQuarterData = {
-    members: extractActiveMembers(thirdQuarterStats),
+    members: extractActiveMembers(thirdQuarterStats, existingMembers),
     totalData: thirdQuarterStats,
     lastSeasonKings: lastSeasonKings[year + '_2nd'],
   }
@@ -116,7 +121,7 @@ export const analyzeForStatusBoard = (fetchedData, quarter, yearParameter) => {
   const fourthQuarterStats = new Map()
   generateByQuarter(fourthQuarter, fourthQuarterStats)
   const fourthQuarterData = {
-    members: extractActiveMembers(fourthQuarterStats),
+    members: extractActiveMembers(fourthQuarterStats, existingMembers),
     totalData: fourthQuarterStats,
     lastSeasonKings: lastSeasonKings[year + '_3rd'],
   }
@@ -251,7 +256,7 @@ export const analyzeForStatusBoard = (fetchedData, quarter, yearParameter) => {
       activeQuarterStats.get(item[0])['포인트총합순위'] = prevTotalPointRank
     }
   })
-  const members = extractActiveMembers(activeQuarterStats)
+  const members = extractActiveMembers(activeQuarterStats, existingMembers)
   const activeQuarterData = {
     members: members,
     totalData: activeQuarterStats,

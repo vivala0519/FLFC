@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 
 import getTimes from '@/hooks/getTimes.js'
 import getRecords from '@/hooks/getRecords.js'
+import getMembers from '@/hooks/getMembers.js'
 import { extractQuarterData } from '../../../apis/calculateQuarterData.js'
 
 import DataTable from '../../DataTable.jsx'
@@ -15,6 +16,7 @@ const RecordRoom = (props) => {
     time: { thisYear },
   } = getTimes()
   const { firestoreRecord } = getRecords()
+  const { totalMembers } = getMembers()
   const [fetchData, setFetchData] = useState([])
   const [analyzedData, setAnalyzedData] = useState({})
   const tapName = ['승점', '출석', '골', '어시', '분석', '히스토리']
@@ -31,11 +33,11 @@ const RecordRoom = (props) => {
   const [quarterData, setQuarterData] = useState([])
 
   const getYearData = (year) => {
-    if (firestoreRecord && firestoreRecord[year]) {
+    if (firestoreRecord && firestoreRecord[year] && totalMembers.length > 0) {
       const fetchedData = firestoreRecord[year].filter(
         (data) => data.id !== 'last_season_kings',
       )
-      const quarterData = extractQuarterData(year, fetchedData)
+      const quarterData = extractQuarterData(year, fetchedData, totalMembers)
 
       const yearsData = { ...yearData }
       yearsData[year] = fetchedData
@@ -52,15 +54,17 @@ const RecordRoom = (props) => {
 
   // 연도 변경
   useEffect(() => {
+    if (totalMembers.length === 0) return
+
     setBlockSetPage(false)
     setSelectedYear(year)
-    if (!yearData[year]) {
+    if (!yearData[year] || !analyedYearData[year]) {
       getYearData(year)
     } else {
       setFetchData(yearData[year])
       setAnalyzedData(analyedYearData[year])
     }
-  }, [year, firestoreRecord])
+  }, [year, firestoreRecord, totalMembers])
 
   useEffect(() => {
     // 월별 주차 계산

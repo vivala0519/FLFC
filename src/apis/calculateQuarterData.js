@@ -1,6 +1,6 @@
-import { extractActiveMembers } from './members.js'
+import { extractActiveMembers } from './memberStats.js'
 
-export const extractQuarterData =  (year, yearData) => {
+export const extractQuarterData =  (year, yearData, totalMembers = []) => {
   // const thisYear = new Date().getFullYear()
   // const year = yearParameter ? yearParameter : String(thisYear)
   // const collectionRef = collection(db, year)
@@ -34,7 +34,7 @@ export const extractQuarterData =  (year, yearData) => {
     const totalQuarterStats = new Map()
     generateByQuarter(yearData, totalQuarterStats)
     const totalQuarterData = {
-      members: extractActiveMembers(totalQuarterStats, true),
+      members: extractActiveMembers(totalQuarterStats, totalMembers),
       totalData: totalQuarterStats,
     }
     return { totalQuarterData: [totalQuarterData] }
@@ -47,7 +47,7 @@ export const extractQuarterData =  (year, yearData) => {
   const firstQuarterStats = new Map()
   generateByQuarter(firstQuarter, firstQuarterStats)
   const firstQuarterData = {
-    members: extractActiveMembers(firstQuarterStats, true),
+    members: extractActiveMembers(firstQuarterStats, totalMembers),
     totalData: firstQuarterStats,
   }
 
@@ -59,7 +59,7 @@ export const extractQuarterData =  (year, yearData) => {
   const secondQuarterStats = new Map()
   generateByQuarter(secondQuarter, secondQuarterStats)
   const secondQuarterData = {
-    members: extractActiveMembers(secondQuarterStats, true),
+    members: extractActiveMembers(secondQuarterStats, totalMembers),
     totalData: secondQuarterStats,
   }
 
@@ -71,7 +71,7 @@ export const extractQuarterData =  (year, yearData) => {
   const thirdQuarterStats = new Map()
   generateByQuarter(thirdQuarter, thirdQuarterStats)
   const thirdQuarterData = {
-    members: extractActiveMembers(thirdQuarterStats, true),
+    members: extractActiveMembers(thirdQuarterStats, totalMembers),
     totalData: thirdQuarterStats,
   }
 
@@ -82,7 +82,7 @@ export const extractQuarterData =  (year, yearData) => {
   const fourthQuarterStats = new Map()
   generateByQuarter(fourthQuarter, fourthQuarterStats)
   const fourthQuarterData = {
-    members: extractActiveMembers(fourthQuarterStats, true),
+    members: extractActiveMembers(fourthQuarterStats, totalMembers),
     totalData: fourthQuarterStats,
   }
 
