@@ -296,7 +296,7 @@ const LetsRecord = (props) => {
         if (member.length === 1) {
           oneCharacterMembers.forEach((player) => {
             if (player.includes(member)) {
-              stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+              stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0, 경기: 0 }
             }
           })
           // Object.entries(membersNickName).forEach(([nick, name]) => {
@@ -311,7 +311,7 @@ const LetsRecord = (props) => {
           )
           others.forEach((player) => {
             if (member && player.includes(member)) {
-              stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+              stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0, 경기: 0 }
             }
           })
           // Object.entries(membersNickName).forEach(([nick, name]) => {
@@ -338,7 +338,7 @@ const LetsRecord = (props) => {
             })
             Object.entries(membersNickName).forEach(([nick, name]) => {
               if (nick.includes(goal) && stats[name]) {
-                stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
+                stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0, 경기: 0 }
               }
             })
           } else {
@@ -391,6 +391,30 @@ const LetsRecord = (props) => {
         }
       })
 
+      const formattedMatchRecord = formatMatchRecord(roundRecord)
+      Object.entries(formattedMatchRecord).forEach(([key, value]) => {
+        if (!key) return;
+
+        if (key.length === 1) {
+          oneCharacterMembers.forEach((player) => {
+            if (player.includes(key) && stats[player]) {
+              stats[player]['경기'] = value;
+            }
+          });
+        } else {
+          const others = existingMembers.filter(
+              (existing) => !oneCharacterMembers.includes(existing)
+          );
+
+          others.forEach((player) => {
+            if ((player === key || player.includes(key)) && stats[player]) {
+              stats[player]['경기'] = value;
+            }
+          });
+        }
+      });
+
+
       const formattedRoundRecord = formatRoundRecord(roundRecord)
       Object.entries(formattedRoundRecord).forEach(([key, value]) => {
         if (!key) return;
@@ -418,6 +442,32 @@ const LetsRecord = (props) => {
       });
       return stats
     }
+  }
+
+  const formatMatchRecord = (records) => {
+    return records.reduce((acc, rec) => {
+      if (!Array.isArray(rec.participant)) {
+        return acc
+      }
+
+      // 빈 문자열 제거 + '용병' 포함 제거 + 한 경기 내 중복 제거
+      const uniqueParticipants = [
+        ...new Set(
+            rec.participant.filter(
+                (name) =>
+                    name &&
+                    name.trim() !== '' &&
+                    !name.includes('용병')
+            )
+        )
+      ]
+
+      uniqueParticipants.forEach((name) => {
+        acc[name] = (acc[name] || 0) + 1
+      })
+
+      return acc
+    }, {})
   }
 
   const formatRoundRecord = (records) => {

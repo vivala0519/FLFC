@@ -330,12 +330,16 @@ const DataTable = (props) => {
                   <span>승점</span>
                   {arrowState === '승점' && <DownArrow className="arrow" />}
                 </StatTd>
-                <StatTd onClick={() => sortBy('골')}>
-                  <span>골</span>
-                  {arrowState === '골' && <DownArrow className="arrow" />}
+                <StatTd onClick={() => sortBy('경기')}>
+                  <span>경기수</span>
+                  {arrowState === '승점' && <DownArrow className="arrow" />}
+                </StatTd>
+                <StatTd onClick={() => sortBy('승점률')}>
+                  <span>{`경기당\n평균 승점`}</span>
+                  {arrowState === '승점률' && <DownArrow className="arrow" />}
                 </StatTd>
                 <StatTd onClick={() => sortBy('골')}>
-                  <span>골순위</span>
+                  <span>골</span>
                   {arrowState === '골' && <DownArrow className="arrow" />}
                 </StatTd>
                 <StatTd onClick={() => sortBy('일평균득점')}>
@@ -346,10 +350,6 @@ const DataTable = (props) => {
                 </StatTd>
                 <StatTd onClick={() => sortBy('어시')}>
                   <span>어시</span>
-                  {arrowState === '어시' && <DownArrow className="arrow" />}
-                </StatTd>
-                <StatTd onClick={() => sortBy('어시')}>
-                  <span>어시순위</span>
                   {arrowState === '어시' && <DownArrow className="arrow" />}
                 </StatTd>
                 <StatTd onClick={() => sortBy('일평균어시')}>
@@ -364,18 +364,8 @@ const DataTable = (props) => {
                     <DownArrow className="arrow" />
                   )}
                 </StatTd>
-                <StatTd onClick={() => sortBy('공격포인트')}>
-                  <span>공포순위</span>
-                  {arrowState === '공격포인트' && (
-                    <DownArrow className="arrow" />
-                  )}
-                </StatTd>
                 <StatTd onClick={() => sortBy('출석')}>
                   <span>출석</span>
-                  {arrowState === '출석' && <DownArrow className="arrow" />}
-                </StatTd>
-                <StatTd onClick={() => sortBy('출석')}>
-                  <span>출석순위</span>
                   {arrowState === '출석' && <DownArrow className="arrow" />}
                 </StatTd>
                 <CustomMinWidthDiv
@@ -385,18 +375,6 @@ const DataTable = (props) => {
                   $propsSize="8px"
                 >
                   <span>{`출석/어시/골\n포인트 총합`}</span>
-                  {arrowState === '포인트총합' && (
-                    <DownArrow className="arrow" />
-                  )}
-                </CustomMinWidthDiv>
-                <CustomMinWidthDiv
-                  id="last_element"
-                  onClick={() => sortBy('포인트총합')}
-                  $propsWidth="15%"
-                  $propsMax="9.5%"
-                  $propsSize="9px"
-                >
-                  <span>{'포인트 총합\n순위'}</span>
                   {arrowState === '포인트총합' && (
                     <DownArrow className="arrow" />
                   )}
@@ -459,61 +437,57 @@ const DataTable = (props) => {
                       <span>{name}</span>
                     </div>
                   )}
-                  {/* 승점 골	골순위	일평균 득점	어시	어시순위	일평균 어시	공격포인트	순위	출석	출석순위	포인트 총합(출석,어시,골)	포인트 총합순위*/}
+                  {/* 경기  승점 골	골순위	일평균 득점	어시	어시순위	일평균 어시	공격포인트	순위	출석	출석순위	포인트 총합(출석,어시,골)	포인트 총합순위*/}
                   {tap === '현황판' && (
-                    <>
-                      <span>
+                      <>
+                        <span>
                         {analyzedData?.active?.totalData?.get(name)?.['승점'] ?? '-'}
                       </span>
-                      <span>
+                        <span>
+                        {analyzedData?.active?.totalData?.get(name)?.['경기'] ?? '-'}
+                      </span>
+                        <span>
+                        {analyzedData?.active?.totalData?.get(name)?.['승점률'] ?? '-'}
+                      </span>
+                        <span>
                         {analyzedData.active.totalData.get(name)['골']}
                       </span>
-                      <span>
-                        {analyzedData.active.totalData.get(name)['골순위']}
-                      </span>
-                      <span>
+                        <span>
                         {analyzedData.active.totalData.get(name)['일평균득점']}
                       </span>
-                      <span>
+                        <span>
                         {analyzedData.active.totalData.get(name)['어시']}
                       </span>
-                      <span>
-                        {analyzedData.active.totalData.get(name)['어시순위']}
-                      </span>
-                      <span>
+                        <span>
                         {analyzedData.active.totalData.get(name)['일평균어시']}
                       </span>
-                      <CustomMinWidthSpan $propsWidth="14%">
-                        {analyzedData.active.totalData.get(name)['공격포인트']}
-                      </CustomMinWidthSpan>
-                      <span>
-                        {
-                          analyzedData.active.totalData.get(name)[
-                            '공격포인트순위'
-                          ]
-                        }
-                      </span>
-                      <span>
+                        <CustomMinWidthSpan $propsWidth="14%">
+                          {analyzedData.active.totalData.get(name)['공격포인트']}
+                        </CustomMinWidthSpan>
+                        <span>
                         {analyzedData.active.totalData.get(name)['출석']}
                       </span>
-                      <span>
-                        {analyzedData.active.totalData.get(name)['출석순위']}
-                      </span>
-                      <CustomMinWidthSpan $propsWidth="14%" $propsMax="10%">
-                        {analyzedData.active.totalData.get(name)['포인트총합']}
-                      </CustomMinWidthSpan>
-                      <CustomMinWidthSpan $propsWidth="14%" $propsMax="10%">
-                        {
-                          analyzedData.active.totalData.get(name)[
-                            '포인트총합순위'
-                          ]
-                        }
-                      </CustomMinWidthSpan>
-                    </>
+                        <CustomMinWidthSpan $propsWidth="14%" $propsMax="10%">
+                          {analyzedData.active.totalData.get(name)['포인트총합']}
+                        </CustomMinWidthSpan>
+                      </>
                   )}
+                  {tap === '경기' &&
+                      tableData?.data?.map((data, index) => (
+                          <span
+                              style={{ minWidth: '13% !important' }}
+                              key={name + index}
+                          >
+                        {data.data[name]
+                            ? Number(data.data[name][tap]) === 0
+                                ? '-'
+                                : data.data[name][tap]
+                            : '-'}
+                      </span>
+                      ))}
                   {tap === '승점' &&
-                    tableData?.data?.map((data, index) => (
-                      <span
+                      tableData?.data?.map((data, index) => (
+                          <span
                         style={{ minWidth: '13% !important' }}
                         key={name + index}
                       >

@@ -62,15 +62,32 @@ export const analyzeForStatusBoard = (
         if (Object.prototype.hasOwnProperty.call(idData, name)) {
           const stats = idData[name]
           if (!quarterStats.has(name)) {
-            quarterStats.set(name, { 골: 0, 어시: 0, 출석: 0, 승점: 0 })
+            quarterStats.set(name, {
+              골: 0,
+              어시: 0,
+              출석: 0,
+              승점: 0,
+              경기: 0,
+              승점률: 0,
+            })
           }
           const existingStats = quarterStats.get(name)
-          existingStats['골'] += parseInt(stats['골'] || 0)
-          existingStats['어시'] += parseInt(stats['어시'] || 0)
-          existingStats['승점'] += parseInt(stats['승점'] || 0)
+          existingStats['골'] += Number(stats['골'] || 0)
+          existingStats['어시'] += Number(stats['어시'] || 0)
+          existingStats['승점'] += Number(stats['승점'] || 0)
+          existingStats['경기'] += Number(stats['경기'] || 0)
           existingStats['출석'] += stats['출석'] ? stats['출석'] : 0
         }
       }
+    })
+  }
+
+  const applyRateStats = (quarterStats) => {
+    quarterStats.forEach((value) => {
+      value['승점률'] =
+        value['경기'] > 0
+          ? Math.ceil((value['승점'] / value['경기']) * 100) / 100
+          : 0
     })
   }
 
@@ -82,6 +99,7 @@ export const analyzeForStatusBoard = (
   )
   const firstQuarterStats = new Map()
   generateByQuarter(firstQuarter, firstQuarterStats)
+  applyRateStats(firstQuarterStats)
   const firstQuarterData = {
     members: extractActiveMembers(firstQuarterStats, existingMembers),
     totalData: firstQuarterStats,
@@ -95,6 +113,7 @@ export const analyzeForStatusBoard = (
   )
   const secondQuarterStats = new Map()
   generateByQuarter(secondQuarter, secondQuarterStats)
+  applyRateStats(secondQuarterStats)
   const secondQuarterData = {
     members: extractActiveMembers(secondQuarterStats, existingMembers),
     totalData: secondQuarterStats,
@@ -108,11 +127,13 @@ export const analyzeForStatusBoard = (
   )
   const thirdQuarterStats = new Map()
   generateByQuarter(thirdQuarter, thirdQuarterStats)
+  applyRateStats(thirdQuarterStats)
   const thirdQuarterData = {
     members: extractActiveMembers(thirdQuarterStats, existingMembers),
     totalData: thirdQuarterStats,
     lastSeasonKings: lastSeasonKings[year + '_2nd'],
   }
+  console.log(thirdQuarterStats)
 
   // 4분기 이름별 통계 취합
   const fourthQuarter = fetchedData.filter(
@@ -120,6 +141,7 @@ export const analyzeForStatusBoard = (
   )
   const fourthQuarterStats = new Map()
   generateByQuarter(fourthQuarter, fourthQuarterStats)
+  applyRateStats(fourthQuarterStats)
   const fourthQuarterData = {
     members: extractActiveMembers(fourthQuarterStats, existingMembers),
     totalData: fourthQuarterStats,
