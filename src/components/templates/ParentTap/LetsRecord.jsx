@@ -15,6 +15,7 @@ import FeverTimeBar from '@/components/organisms/FeverTimeBar.jsx'
 import './LetsRecord.css'
 import Swal from 'sweetalert2'
 import { get, getDatabase, ref, remove, set, update } from 'firebase/database'
+import { getRoundParticipants } from '@/apis/roundParticipants.js'
 
 const LetsRecord = (props) => {
   const { time: { today, thisDay, thisYear, currentTime, gameEndTime, gameStartTime, recordTapCloseTime } } = getTimes()
@@ -220,7 +221,12 @@ const LetsRecord = (props) => {
         const mostGetGoalTeam = getMostFrequentElements(
           lastRoundValue.getGoalTeam || [],
         )
+        const participant = getRoundParticipants(
+          weeklyTeamData,
+          lastRoundValue.teamList,
+        )
         await update(lastRoundRef, {
+          participant,
           winnerTeam: {
             number: mostGetGoalTeam,
             member:
@@ -504,17 +510,17 @@ const LetsRecord = (props) => {
   function compareObjects(objA, objB) {
     const keysA = Object.keys(objA)
     const keysB = Object.keys(objB)
+    const statKeys = ['출석', '골', '어시', '승점', '경기']
 
     if (keysA.length !== keysB.length) {
       return false
     }
     for (let key of keysA) {
-      if (
-        objA[key]['출석'] !== objB[key]['출석'] ||
-        objA[key]['골'] !== objB[key]['골'] ||
-        objA[key]['어시'] !== objB[key]['어시'] ||
-        objA[key]['승점'] !== objB[key]['승점']
-      ) {
+      if (!objB[key]) {
+        return false
+      }
+
+      if (statKeys.some((statKey) => objA[key][statKey] !== objB[key][statKey])) {
         return false
       }
     }
@@ -552,7 +558,9 @@ const LetsRecord = (props) => {
 
   useEffect(() => {
     // stats가 유효하고, 기록이 있으며, 등록 가능한 상태일 때
-    if (stats && Object.keys(stats).length > 0 && todayRecord && canRegister) {
+    const canSaveRecord = canRegister || showMVP
+
+    if (stats && Object.keys(stats).length > 0 && todayRecord && canSaveRecord) {
       // 1. 아직 저장된 데이터가 없으면 저장
       if (!writtenData) {
         registerRecord()
@@ -563,7 +571,7 @@ const LetsRecord = (props) => {
         registerRecord()
       }
     }
-  }, [stats, canRegister, thisYear, today])
+  }, [stats, canRegister, showMVP, thisYear, today])
 
   // MVP 화면 닫으면 컨페티 종료
   useEffect(() => {

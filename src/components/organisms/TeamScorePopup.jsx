@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getDatabase, ref, update, remove } from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
+import { getRoundParticipants } from '@/apis/roundParticipants.js'
 
 const TeamScorePopup = (props) => {
   const {
@@ -42,35 +43,53 @@ const TeamScorePopup = (props) => {
       const db = getDatabase()
       if (lastRound) {
         const lastRoundRef = getRoundRef(db, thisYear, today, lastRound.id)
+        const participant = getRoundParticipants(
+          weeklyTeamData,
+          lastRound.teamList,
+        )
+        const noGoalRound = !lastRound.goals || lastRound.goals.length === 0
+        const roundCloseTime = '09:55:00'
         // 마지막 경기 종료 안됐으면 종료
-        if (!lastRound.winnerTeam) {
-          const targetTime = "09:54:00"
-          if (toSeconds(lastRound.time) <= toSeconds(targetTime)) {
-            const mostGetGoalTeam = getMostFrequentElements(
+        if (!lastRound.winnerTeam && weeklyTeamData?.data) {
+          if (toSeconds(lastRound.time) < toSeconds(roundCloseTime)) {
+            if (noGoalRound) {
+              await update(lastRoundRef, {
+                participant,
+                winnerTeam: {
+                  number: lastRound.teamList,
+                  member: participant,
+                },
+                lostTeam: false,
+              })
+            } else {
+              const mostGetGoalTeam = getMostFrequentElements(
                 lastRound.getGoalTeam || [],
-            )
-            await update(lastRoundRef, {
-              winnerTeam: {
-                number: mostGetGoalTeam,
-                member:
-                    mostGetGoalTeam.length === 1
-                        ? weeklyTeamData.data[String(mostGetGoalTeam[0])]
-                        : weeklyTeamData.data[String(mostGetGoalTeam[0])].concat(
-                            weeklyTeamData.data[String(mostGetGoalTeam[1])],
-                        ),
-              },
-              lostTeam:
-                  mostGetGoalTeam.length === 1 &&
-                  lastRound.teamList.find(
-                      (team) => team !== String(mostGetGoalTeam[0]),
-                  ),
-            })
+              )
+              if (mostGetGoalTeam.length > 0) {
+                await update(lastRoundRef, {
+                  participant,
+                  winnerTeam: {
+                    number: mostGetGoalTeam,
+                    member:
+                      mostGetGoalTeam.length === 1
+                          ? weeklyTeamData.data[String(mostGetGoalTeam[0])]
+                          : weeklyTeamData.data[String(mostGetGoalTeam[0])].concat(
+                              weeklyTeamData.data[String(mostGetGoalTeam[1])],
+                          ),
+                  },
+                  lostTeam:
+                    mostGetGoalTeam.length === 1 &&
+                    lastRound.teamList.find(
+                        (team) => team !== String(mostGetGoalTeam[0]),
+                    ),
+                })
+              }
+            }
           }
         }
         // 마지막 경기 안한 라운드 체크 & 삭제
-        if ((lastRound && !lastRound.goals) || lastRound?.goals?.length === 0) {
-          const targetTime = '09:55:00'
-          if (toSeconds(lastRound.time) >= toSeconds(targetTime)) {
+        if (noGoalRound) {
+          if (toSeconds(lastRound.time) >= toSeconds(roundCloseTime)) {
             await remove(lastRoundRef)
           }
         }
@@ -114,7 +133,7 @@ const TeamScorePopup = (props) => {
       run()
     }
 
-    }, [recordData, showMVP])
+    }, [recordData, showMVP, weeklyTeamData, thisYear, today])
 
   return (
     <div className={popupContainerStyle} onClick={() => setShowMVP(false)}>
