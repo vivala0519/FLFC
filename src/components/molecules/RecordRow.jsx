@@ -11,7 +11,9 @@ import {db} from "../../../firebase.js";
 
 const RecordRow = (props) => {
   const { record, index, roundIndex, deleteRecord, useDelete, effect, isLastRound, isFeverTime, formatRecordByName } = props
-  const { time: { thisYear, today } } = getTimes()
+  const {
+    time: { thisYear, today, thisDay, currentTime, gameStartTime, gameEndTime },
+  } = getTimes()
   const { todaysRealtimeRound } = getRecords()
 
   const [randomInt, setRandomInt] = useState(1)
@@ -19,6 +21,10 @@ const RecordRow = (props) => {
   const [isEditing, setIsEditing] = useState(false)
   const [goalText, setGoalText] = useState(record.goal)
   const [assistText, setAssistText] = useState(record.assist || '')
+  const canWriteFirestoreRecord =
+    thisDay === 0 &&
+    currentTime >= gameStartTime &&
+    currentTime <= gameEndTime
 
   const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] border-b-2 border-blue-100 pt-1 pl-3 ${effect ? 'bg-effect' : ''}`
   const recordAreaStyle = 'flex items-center pl-5 pr-2 gap-3 relative bottom-[2px] cursor-pointer'
@@ -47,6 +53,11 @@ const RecordRow = (props) => {
   }
 
   const registerRecord = async (stats) => {
+    if (!canWriteFirestoreRecord) {
+      console.warn('Firestore record write blocked outside Sunday 08:00-10:00')
+      return
+    }
+
     const docRef = doc(db, thisYear, today)
     await setDoc(docRef, stats)
     console.log('Document updated with ID: ', docRef.id)

@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { doc, setDoc } from 'firebase/firestore'
 import { getDatabase, ref, get } from 'firebase/database'
 import getRecords from '@/hooks/getRecords.js'
+import getTimes from '@/hooks/getTimes.js'
 
 import { db } from '../../../firebase.js'
 
@@ -13,6 +14,9 @@ import TapTemplate from '@/components/templates/TapTemplate.jsx'
 const MainPage = (props) => {
   const { isDarkMode, test, weeklyTeamUrl, setSelectedYear, recordRoomLoadingFlag } = props
   const { totalWeeklyTeamData } = getRecords()
+  const {
+    time: { thisDay, currentTime, gameStartTime, gameEndTime },
+  } = getTimes()
   const [tap, setTap] = useState(0)
   const [open, setOpen] = useState(false)
   const [registeredTeam, setRegisteredTeam] = useState(null)
@@ -22,6 +26,10 @@ const MainPage = (props) => {
   const [testFlag, setTestFlag] = useState(false)
 
   const pageStyle = `flex flex-col items-center h-[95vh] ${isDarkMode ? 'dark' : ''}`
+  const canWriteFirestore =
+    thisDay === 0 &&
+    currentTime >= gameStartTime &&
+    currentTime <= gameEndTime
 
   // Data Generation
   useEffect(() => {
@@ -38,6 +46,12 @@ const MainPage = (props) => {
   // 위클리 팀 등록
   useEffect(() => {
     if (registeredTeam) {
+      if (!canWriteFirestore) {
+        console.warn('Firestore weeklyTeam write blocked outside Sunday 08:00-10:00')
+        setRegisteredTeam(null)
+        return
+      }
+
       ;(async () => {
         const docRef = doc(db, 'weeklyTeam', registeredTeam.id)
         await setDoc(docRef, registeredTeam.data)
@@ -45,7 +59,7 @@ const MainPage = (props) => {
         setRegisteredTeam(null)
       })()
     }
-  }, [registeredTeam])
+  }, [registeredTeam, canWriteFirestore])
 
   useEffect(() => {
     if (weeklyTeamUrl) {

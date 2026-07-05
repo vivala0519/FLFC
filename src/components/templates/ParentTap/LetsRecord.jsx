@@ -53,6 +53,10 @@ const LetsRecord = (props) => {
   // style class
   const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-2'}`
   const templateContainerStyle = 'flex flex-col items-center w-full'
+  const canWriteFirestoreRecord =
+    thisDay === 0 &&
+    currentTime >= gameStartTime &&
+    currentTime <= gameEndTime
 
   useEffect(() => {
     if (totalWeeklyTeamData?.length) {
@@ -67,6 +71,8 @@ const LetsRecord = (props) => {
     if (thisDay !== 6) {
       setOpen(true)
     }
+    setCanRegister(canWriteFirestoreRecord)
+
     if (thisDay === 0) {
       const makeTodayYYMMDD = (now = new Date()) => {
         const yy = String(now.getFullYear()).slice(-2)
@@ -76,7 +82,11 @@ const LetsRecord = (props) => {
         return `${yy}${mm}${dd}`
       }
       // 오늘자 위클리팀 없으면 빈값으로 생성
-      if (weeklyTeamData && (makeTodayYYMMDD(currentTime) !== weeklyTeamData?.id)) {
+      if (
+        canWriteFirestoreRecord &&
+        weeklyTeamData &&
+        makeTodayYYMMDD(currentTime) !== weeklyTeamData?.id
+      ) {
         const newData = {
           1: ['', '', '', '', '', ''],
           2: ['', '', '', '', '', ''],
@@ -85,16 +95,12 @@ const LetsRecord = (props) => {
         setRegisteredTeam({ id: makeTodayYYMMDD(currentTime), data: newData })
       }
 
-      if (currentTime >= gameStartTime && currentTime <= gameEndTime) {
-        setCanRegister(true);
-      }
-
       if (currentTime >= gameEndTime && currentTime <= recordTapCloseTime) {
         setShowMVP(true)
         setShowRequestUpdateButton(true)
       }
     }
-  }, [thisDay, weeklyTeamData])
+  }, [thisDay, weeklyTeamData, canWriteFirestoreRecord])
 
   // daily 실시간 record
   useEffect(() => {
@@ -534,6 +540,11 @@ const LetsRecord = (props) => {
   }, [todayRecord, displayRecord, weeklyTeamData, existingMembers])
 
   const registerRecord = async () => {
+    if (!canWriteFirestoreRecord) {
+      console.warn('Firestore record write blocked outside Sunday 08:00-10:00')
+      return
+    }
+
     try {
       console.log('스탯: ', stats)
       const docRef = doc(db, thisYear, today)
@@ -558,7 +569,7 @@ const LetsRecord = (props) => {
 
   useEffect(() => {
     // stats가 유효하고, 기록이 있으며, 등록 가능한 상태일 때
-    const canSaveRecord = canRegister || showMVP
+    const canSaveRecord = canWriteFirestoreRecord
 
     if (stats && Object.keys(stats).length > 0 && todayRecord && canSaveRecord) {
       // 1. 아직 저장된 데이터가 없으면 저장
@@ -571,7 +582,7 @@ const LetsRecord = (props) => {
         registerRecord()
       }
     }
-  }, [stats, canRegister, showMVP, thisYear, today])
+  }, [stats, canWriteFirestoreRecord, thisYear, today])
 
   // MVP 화면 닫으면 컨페티 종료
   useEffect(() => {
