@@ -112,6 +112,25 @@ const WriteContainer = (props) => {
 
   const db = getDatabase()
 
+  const getMemberTeam = (name) => {
+    if (!name || ['용병', '자책'].includes(name)) return null
+
+    const normalizedName = Object.keys(membersNickName).includes(name)
+      ? membersNickName[name].slice(1)
+      : name
+
+    return Object.keys(weeklyTeamData.data).find((teamNumber) =>
+      weeklyTeamData.data[teamNumber].includes(normalizedName),
+    )
+  }
+
+  const openScorerTeamPopup = (roundData, record) => {
+    setPlayingTeams(new Set((roundData?.teamList || []).map(String)))
+    setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
+    setShowSelectScorerTeamPopup(true)
+    setStoredGoalData(record)
+  }
+
   // ---------------------- 라운드/우승 처리 헬퍼들 ----------------------
 
   // 라운드 우승 처리 + 다음 라운드 세팅
@@ -178,49 +197,25 @@ const WriteContainer = (props) => {
 
   // scorer가 속한 팀을 찾아서 applyTeamGoal 실행
   const updateGoalTeam = async (roundId, scorerName, record) => {
-    let teamNumber = null
-    if (!['용병', '자책'].includes(scorerName)) {
-      teamNumber = Object.keys(weeklyTeamData.data).find((k) =>
-        weeklyTeamData.data[k].includes(scorerName),
-      )
-    }
+    const roundRef = getRoundRef(db, thisYear, today, roundId)
+    const roundSnap = await get(roundRef)
+    const roundData = roundSnap.val()
+    const roundTeamList = (roundData?.teamList || []).map(String)
+    let teamNumber = getMemberTeam(scorerName)
 
-    if (
-      !teamNumber &&
-      record.assist &&
-      !['용병', '자책'].includes(record.assist)
-    ) {
-      teamNumber = Object.keys(weeklyTeamData.data).find((k) =>
-        weeklyTeamData.data[k].includes(record.assist),
-      )
-    }
-
-    if (Object.keys(membersNickName).includes(scorerName)) {
-      const replacedName = membersNickName[scorer].slice(1)
-      teamNumber = Object.keys(weeklyTeamData.data).find((k) =>
-          weeklyTeamData.data[k].includes(replacedName),
-      )
+    if (!teamNumber && record.assist) {
+      teamNumber = getMemberTeam(record.assist)
     }
 
     // 팀을 못 찾으면 팝업 열어서 선택 받기
     if (!teamNumber) {
       console.log('no teamNumber for scorer', scorerName)
-      setShowSelectScorerTeamPopup(true)
-      setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
+      await openScorerTeamPopup(roundData, record)
+      return
+    }
 
-      const dateRef = ref(db, `${thisYear}/${today}_rounds`)
-      const snapshot = await get(dateRef)
-      const rounds = snapshot.val()
-      const roundValues = Object.values(rounds)
-
-      if (roundValues.length > 0) {
-        const lastRound = roundValues.reduce((prev, cur) => {
-          const prevIndex = typeof prev.index === 'number' ? prev.index : -1
-          const curIndex = typeof cur.index === 'number' ? cur.index : -1
-          return curIndex > prevIndex ? cur : prev
-        })
-        setPlayingTeams(new Set(rounds[lastRound.id]['teamList']))
-      }
+    if (!roundTeamList.includes(String(teamNumber))) {
+      await openScorerTeamPopup(roundData, record)
       return
     }
 
@@ -450,64 +445,38 @@ const WriteContainer = (props) => {
       scorerName = replacedName
     }
     if (Object.keys(membersNickName).includes(assistant)) {
-      const replacedName = membersNickName[scorer].slice(1)
+      const replacedName = membersNickName[assistant].slice(1)
       setAssistant(replacedName)
       assistantName = replacedName
     }
 
     const checkMemberHandler = (roundData) => {
-      let checkMember = false
-      roundData.teamList.forEach((teamNumber) => {
-        if (weeklyTeamData.data[teamNumber].includes(scorerName)) {
-          checkMember = true
-        }
-        if (weeklyTeamData.data[teamNumber].includes(assistantName)) {
-          checkMember = true
-        }
-      })
-      if (Object.keys(membersNickName).includes(scorerName)) {
-        const replacedName = membersNickName[scorerName].slice(1)
-        roundData.teamList.forEach((teamNumber) => {
-          if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
-            checkMember = true
-          }
-          if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
-            checkMember = true
-          }
-        })
-      }
-      if (Object.keys(membersNickName).includes(assistantName)) {
-        const replacedName = membersNickName[assistantName].slice(1)
-        roundData.teamList.forEach((teamNumber) => {
-          if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
-            checkMember = true
-          }
-          if (weeklyTeamData.data[teamNumber].includes(replacedName)) {
-            checkMember = true
-          }
-        })
-      }
-      if (!checkMember && !['용병', '자책'].includes(scorer)) {
-        const all = ['1', '2', '3']
-        const restTeam = all.filter(
-          (x) => !new Set(roundData.teamList).has(x))[0]
-        if (weeklyTeamData.data[restTeam].includes(scorerName) || weeklyTeamData.data[restTeam].includes(assistantName)) {
-          Swal.fire({
-            icon: 'error',
-            text: '득점자가 경기 중인 팀에 없어요. 이전 라운드가 종료되었는지 확인해주세요.',
-          }).then((result) => {
-            if (result.isConfirmed) {
-              setIsWriting(false)
-            }
-          })
-          return false
-        }
-        setPlayingTeams(new Set(roundData.teamList))
-        setSelectScorerTeamPopupMessage('어느 팀의 득점인가요?')
-        setShowSelectScorerTeamPopup(true)
-        setStoredGoalData(record)
+      const roundTeamList = (roundData.teamList || []).map(String)
+      const scorerMemberTeam = getMemberTeam(scorerName)
+
+      if (
+        scorerMemberTeam &&
+        !roundTeamList.includes(String(scorerMemberTeam))
+      ) {
+        openScorerTeamPopup(roundData, record)
         return false
       }
+
+      const assistantMemberTeam = getMemberTeam(assistantName)
+      if (
+        !scorerMemberTeam &&
+        assistantMemberTeam &&
+        !roundTeamList.includes(String(assistantMemberTeam))
+      ) {
+        openScorerTeamPopup(roundData, record)
+        return false
+      }
+
+      if (!scorerMemberTeam && !assistantMemberTeam && !['용병', '자책'].includes(scorerName)) {
+        openScorerTeamPopup(roundData, record)
+        return false
+      }
+
       return true
     }
 

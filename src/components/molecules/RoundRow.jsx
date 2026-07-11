@@ -32,6 +32,7 @@ const RecordRow = (props) => {
   const roundTextStyle = 'text-[13px] text-black dark:text-gray-100'
   const winnerDivStyle = 'flex items-center relative bottom-[2px]'
   const teamStyle = 'font-dnf-forged text-teamWin dark:text-blue-300 mr-1 text-sm'
+  const opponentStyle = 'font-dnf-forged text-gray-400 dark:text-gray-500 text-[10px] ml-1 mt-1'
   const winStyle = 'font-hahmlet text-goal dark:text-red-300 text-sm'
   const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
   const arrowIcon = 'bg-[url("@/assets/up2.png")] '
@@ -269,6 +270,22 @@ const RecordRow = (props) => {
     setEditTeamMode(false)
   }
 
+  const getEndedRoundDisplay = () => {
+    const teamList = (record.teamList || []).map(String)
+    const winnerNumbers = (record.winnerTeam?.number || []).map(String)
+
+    if (winnerNumbers.length === 1) {
+      const winner = winnerNumbers[0]
+      const opponents = teamList.filter((team) => team !== winner)
+
+      return { winner, opponents, teamList }
+    }
+
+    return { winner: null, opponents: [], teamList }
+  }
+
+  const endedRoundDisplay = getEndedRoundDisplay()
+
   const renderMembers = (members = []) => {
     if (!Array.isArray(members) || members.length === 0) return null
     const filteredMembers = members.filter(member => !member.includes('용병'))
@@ -318,14 +335,28 @@ const RecordRow = (props) => {
                 className={winnerDivStyle}
                 onClick={() => setShowTeamMembers(true)}
               >
-                {record.winnerTeam.number.length === 1 && (
-                  <span className={teamStyle}>
-                    {record.winnerTeam.number}팀{' '}
-                  </span>
+                {endedRoundDisplay.winner && (
+                  <span className={teamStyle}>{endedRoundDisplay.winner}팀</span>
                 )}
                 <span className={winStyle}>
                   {record.winnerTeam.number.length === 1 ? 'Win' : 'Draw'}
                 </span>
+                {endedRoundDisplay.opponents.length > 0 && (
+                  <span className={opponentStyle}>
+                    vs{' '}
+                    {endedRoundDisplay.opponents
+                      .map((team) => `${team}팀`)
+                      .join(', ')}
+                  </span>
+                )}
+                {!endedRoundDisplay.winner &&
+                  endedRoundDisplay.teamList.length > 0 && (
+                    <span className={opponentStyle}>
+                      {endedRoundDisplay.teamList
+                        .map((team) => `${team}팀`)
+                        .join(' vs ')}
+                    </span>
+                  )}
               </div>
               ) :
               <>
