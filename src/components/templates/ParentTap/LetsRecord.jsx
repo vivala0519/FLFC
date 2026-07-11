@@ -30,6 +30,8 @@ const LetsRecord = (props) => {
   const [displayRecord, setDisplayRecord] = useState([])
   const [dynamicHeight, setDynamicHeight] = useState(0)
   const [writtenData, setWrittenData] = useState(null)
+  const [writtenDataLoaded, setWrittenDataLoaded] = useState(false)
+  const [realtimeRoundLoaded, setRealtimeRoundLoaded] = useState(false)
   const [registerHeight, setRegisterHeight] = useState(0)
   const [feverTimeHeight, setFeverTimeHeight] = useState(0)
   const [canRegister, setCanRegister] = useState(false)
@@ -57,6 +59,13 @@ const LetsRecord = (props) => {
     thisDay === 0 &&
     currentTime >= gameStartTime &&
     currentTime <= gameEndTime
+  const canFinalizeFirestoreRecord =
+    thisDay === 0 &&
+    showMVP &&
+    currentTime >= gameEndTime &&
+    currentTime <= recordTapCloseTime
+  const canWriteFirestoreStats =
+    canWriteFirestoreRecord || canFinalizeFirestoreRecord
 
   useEffect(() => {
     if (totalWeeklyTeamData?.length) {
@@ -105,38 +114,44 @@ const LetsRecord = (props) => {
   // daily 실시간 record
   useEffect(() => {
     setLoadingFlag(true)
-    if (!todaysRealtimeRound) return
+    if (todaysRealtimeRound === null || todaysRealtimeRound === undefined) return
+    setRealtimeRoundLoaded(true)
     if (thisDay <= 6 && thisDay >= 1) {
       setLoadingFlag(false)
     }
     const data = todaysRealtimeRound
-    if (Object.keys(data).length > 0) {
-      const lastRoundValue = Object.values(data)?.reduce((max, cur) =>
-        cur.index > max.index ? cur : max,
-      )
-      if (lastRoundValue.goal && Object.keys(lastRoundValue?.goal)?.includes('fever-time-bar')) {
-        setIsFeverTime(true)
-      }
-
-      // firestore에 등록하기 위한 전체 골 data
-      const goalRecord = Object.values(data || {}).flatMap(round => {
-        if (!round.goal) return []
-
-        return Object.values(round.goal).map(goal => ({
-          ...goal,
-        })).sort((a, b) => parseTimeFromString(a.time) - parseTimeFromString(b.time))
-      })
-      // display 위한 라운드/골 데이터
-      const roundRecord = Object.entries(data || {})
-        .map(([roundId, round]) => ({
-          ...round,
-          roundId,
-          goals: round.goal ? Object.values(round.goal).sort((a, b) => parseTimeFromString(a.time) - parseTimeFromString(b.time)) : []
-        }))
-        .sort((a, b) => a.index - b.index)
-      setTodayRecord(goalRecord)
-      setDisplayRecord(roundRecord)
+    if (Object.keys(data).length === 0) {
+      setTodayRecord([])
+      setDisplayRecord([])
+      setLoadingFlag(false)
+      return
     }
+
+    const lastRoundValue = Object.values(data)?.reduce((max, cur) =>
+      cur.index > max.index ? cur : max,
+    )
+    if (lastRoundValue.goal && Object.keys(lastRoundValue?.goal)?.includes('fever-time-bar')) {
+      setIsFeverTime(true)
+    }
+
+    // firestore에 등록하기 위한 전체 골 data
+    const goalRecord = Object.values(data || {}).flatMap(round => {
+      if (!round.goal) return []
+
+      return Object.values(round.goal).map(goal => ({
+        ...goal,
+      })).sort((a, b) => parseTimeFromString(a.time) - parseTimeFromString(b.time))
+    })
+    // display 위한 라운드/골 데이터
+    const roundRecord = Object.entries(data || {})
+      .map(([roundId, round]) => ({
+        ...round,
+        roundId,
+        goals: round.goal ? Object.values(round.goal).sort((a, b) => parseTimeFromString(a.time) - parseTimeFromString(b.time)) : []
+      }))
+      .sort((a, b) => a.index - b.index)
+    setTodayRecord(goalRecord)
+    setDisplayRecord(roundRecord)
     setLoadingFlag(false)
   }, [todaysRealtimeRecord, todaysRealtimeRound, totalWeeklyTeamData])
 
@@ -169,13 +184,13 @@ const LetsRecord = (props) => {
 
   // 오늘의 기록된 데이터 가져오기
   useEffect(() => {
-    if (firestoreRecord) {
-      const data = firestoreRecord[thisYear]?.find((obj) => obj.id === today)
-      if (data?.data) {
-        setWrittenData(data.data)
-      }
-    }
-  }, [firestoreRecord])
+    const yearRecord = firestoreRecord?.[thisYear]
+    if (!yearRecord) return
+
+    const data = yearRecord.find((obj) => obj.id === today)
+    setWrittenData(data?.data ?? null)
+    setWrittenDataLoaded(true)
+  }, [firestoreRecord, thisYear, today])
 
   useEffect(() => {
     const openFeverTime = new Date(currentTime).setHours(9, 45, 0, 0)
@@ -533,6 +548,16 @@ const LetsRecord = (props) => {
     return true
   }
 
+  const hasRecordActivity = (recordData) => {
+    if (!recordData) return false
+
+    return Object.values(recordData).some((stats) =>
+      ['골', '어시', '승점', '경기'].some(
+        (statKey) => Number(stats?.[statKey] || 0) > 0,
+      ),
+    )
+  }
+
   // Firestore 데이터 등록
   // const stats = formatRecordByName(todayRecord, displayRecord)
   const stats = useMemo(() => {
@@ -540,8 +565,8 @@ const LetsRecord = (props) => {
   }, [todayRecord, displayRecord, weeklyTeamData, existingMembers])
 
   const registerRecord = async () => {
-    if (!canWriteFirestoreRecord) {
-      console.warn('Firestore record write blocked outside Sunday 08:00-10:00')
+    if (!canWriteFirestoreStats) {
+      console.warn('Firestore record write blocked outside allowed record window')
       return
     }
 
@@ -569,9 +594,19 @@ const LetsRecord = (props) => {
 
   useEffect(() => {
     // stats가 유효하고, 기록이 있으며, 등록 가능한 상태일 때
-    const canSaveRecord = canWriteFirestoreRecord
+    const canSaveRecord = canWriteFirestoreStats
+    const dataLoaded = writtenDataLoaded && realtimeRoundLoaded
+    const shouldSkipInitialAttendanceOnly =
+      hasRecordActivity(writtenData) && !hasRecordActivity(stats)
 
-    if (stats && Object.keys(stats).length > 0 && todayRecord && canSaveRecord) {
+    if (
+      stats &&
+      Object.keys(stats).length > 0 &&
+      todayRecord &&
+      canSaveRecord &&
+      dataLoaded &&
+      !shouldSkipInitialAttendanceOnly
+    ) {
       // 1. 아직 저장된 데이터가 없으면 저장
       if (!writtenData) {
         registerRecord()
@@ -582,7 +617,15 @@ const LetsRecord = (props) => {
         registerRecord()
       }
     }
-  }, [stats, canWriteFirestoreRecord, thisYear, today])
+  }, [
+    stats,
+    canWriteFirestoreStats,
+    writtenData,
+    writtenDataLoaded,
+    realtimeRoundLoaded,
+    thisYear,
+    today,
+  ])
 
   // MVP 화면 닫으면 컨페티 종료
   useEffect(() => {

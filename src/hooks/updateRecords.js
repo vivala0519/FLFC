@@ -108,9 +108,8 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
     setRecordRoomLoadingFlag
   ])
 
-  // 3) StatusBoard 분석: “데이터 준비되면 1번”만
+  // 3) StatusBoard 분석: Firestore 데이터가 갱신될 때마다 재계산
   useEffect(() => {
-    if (statusBoardStat) return
     if (existingMembers.length === 0) return
 
     const year = yearParameter
@@ -134,7 +133,6 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
       }
     })().catch(console.error)
   }, [
-    statusBoardStat,
     firestoreRecord,
     yearParameter,
     thisYear,

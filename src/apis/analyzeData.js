@@ -133,7 +133,6 @@ export const analyzeForStatusBoard = (
     totalData: thirdQuarterStats,
     lastSeasonKings: lastSeasonKings[year + '_2nd'],
   }
-  console.log(thirdQuarterStats)
 
   // 4분기 이름별 통계 취합
   const fourthQuarter = fetchedData.filter(
