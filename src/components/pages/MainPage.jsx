@@ -55,7 +55,7 @@ const MainPage = (props) => {
 
   return (
     <div className={pageStyle}>
-      {!testFlag && (
+      {testFlag && (
         <div className="absolute z-20 bg-white dark:bg-black w-full h-full flex flex-col items-center justify-center">
           <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
           <span>점검중 이따 만나요~</span>
