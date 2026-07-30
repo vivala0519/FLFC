@@ -170,6 +170,7 @@ const AdminPage = (props) => {
             </thead>
             <tbody>
               {threeMonthNonePlayerInfo.map((data) => (
+                data[1] &&
                 <tr key={data[0]}>
                   <td style={{ padding: '8px' }}>{data[0]}</td>
                   <td style={{ padding: '8px' }}>{data[1] ? data[1] : '-'}</td>
