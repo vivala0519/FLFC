@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Analytics } from '@vercel/analytics/react'
 import { doc, setDoc } from 'firebase/firestore'
 import { getDatabase, ref, get } from 'firebase/database'
 import getRecords from '@/hooks/getRecords.js'
+import getTimes from '@/hooks/getTimes.js'
 
 import { db } from '../../../firebase.js'
 
@@ -10,9 +11,24 @@ import Header from '@/components/organisms/Header.jsx'
 import Footer from '@/components/organisms/Footer.jsx'
 import TapTemplate from '@/components/templates/TapTemplate.jsx'
 
+const makeWeeklyTeamId = (date = new Date()) => {
+  const yy = String(date.getFullYear()).slice(-2)
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+
+  return `${yy}${mm}${dd}`
+}
+
+const makeBlankWeeklyTeamData = () => ({
+  1: ['', '', '', '', '', ''],
+  2: ['', '', '', '', '', ''],
+  3: ['', '', '', '', '', ''],
+})
+
 const MainPage = (props) => {
   const { isDarkMode, test, weeklyTeamUrl, setSelectedYear, recordRoomLoadingFlag } = props
   const { totalWeeklyTeamData } = getRecords()
+  const { time: { currentTime } } = getTimes()
   const [tap, setTap] = useState(0)
   const [open, setOpen] = useState(false)
   const [registeredTeam, setRegisteredTeam] = useState(null)
@@ -20,6 +36,7 @@ const MainPage = (props) => {
   const [headerHeight, setHeaderHeight] = useState(0)
   const [lastWeeklyTeamId, setLastWeeklyTeamId] = useState(null)
   const [testFlag, setTestFlag] = useState(false)
+  const autoRegisteredWeeklyTeamIdRef = useRef(null)
 
   const pageStyle = `flex flex-col items-center h-[95vh] ${isDarkMode ? 'dark' : ''}`
 
@@ -30,7 +47,9 @@ const MainPage = (props) => {
       const maintenanceRef = ref(rtdb, 'maintenance')
       const snap = await get(maintenanceRef)
       setTestFlag(snap.val())
-      if (totalWeeklyTeamData) setLastWeeklyTeamId(totalWeeklyTeamData[totalWeeklyTeamData.length - 1].id)
+      if (totalWeeklyTeamData?.length) {
+        setLastWeeklyTeamId(totalWeeklyTeamData[totalWeeklyTeamData.length - 1].id)
+      }
     }
     run()
   }, [tap, totalWeeklyTeamData])
@@ -46,6 +65,25 @@ const MainPage = (props) => {
       })()
     }
   }, [registeredTeam])
+
+  useEffect(() => {
+    if (!Array.isArray(totalWeeklyTeamData)) return
+    if (currentTime.getDay() !== 0) return
+
+    const weeklyTeamId = makeWeeklyTeamId(currentTime)
+    const alreadyRegistered = totalWeeklyTeamData.some(
+      (weeklyTeam) => weeklyTeam.id === weeklyTeamId,
+    )
+
+    if (alreadyRegistered) return
+    if (autoRegisteredWeeklyTeamIdRef.current === weeklyTeamId) return
+
+    autoRegisteredWeeklyTeamIdRef.current = weeklyTeamId
+    setRegisteredTeam({
+      id: weeklyTeamId,
+      data: makeBlankWeeklyTeamData(),
+    })
+  }, [currentTime, totalWeeklyTeamData])
 
   useEffect(() => {
     if (weeklyTeamUrl) {
