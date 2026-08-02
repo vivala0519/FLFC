@@ -21,7 +21,7 @@ const LetsRecord = (props) => {
   const { time: { today, thisDay, thisYear, currentTime, gameEndTime, gameStartTime, recordTapCloseTime } } = getTimes()
   const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
   const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
-  const { open, setOpen, headerHeight, setRegisteredTeam } = props
+  const { open, setOpen, headerHeight } = props
   const registerRef = useRef(null)
   const scrollContainerRef = useRef(null)
   const feverTimeRef = useRef(null)
@@ -83,27 +83,6 @@ const LetsRecord = (props) => {
     setCanRegister(canWriteFirestoreRecord)
 
     if (thisDay === 0) {
-      const makeTodayYYMMDD = (now = new Date()) => {
-        const yy = String(now.getFullYear()).slice(-2)
-        const mm = String(now.getMonth() + 1).padStart(2, '0')
-        const dd = String(now.getDate()).padStart(2, '0')
-
-        return `${yy}${mm}${dd}`
-      }
-      // 오늘자 위클리팀 없으면 빈값으로 생성
-      if (
-        canWriteFirestoreRecord &&
-        weeklyTeamData &&
-        makeTodayYYMMDD(currentTime) !== weeklyTeamData?.id
-      ) {
-        const newData = {
-          1: ['', '', '', '', '', ''],
-          2: ['', '', '', '', '', ''],
-          3: ['', '', '', '', '', ''],
-        }
-        setRegisteredTeam({ id: makeTodayYYMMDD(currentTime), data: newData })
-      }
-
       if (currentTime >= gameEndTime && currentTime <= recordTapCloseTime) {
         setShowMVP(true)
         setShowRequestUpdateButton(true)

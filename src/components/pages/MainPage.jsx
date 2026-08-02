@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Analytics } from '@vercel/analytics/react'
-import { doc, setDoc } from 'firebase/firestore'
+import { doc, runTransaction, setDoc } from 'firebase/firestore'
 import { getDatabase, ref, get } from 'firebase/database'
 import getRecords from '@/hooks/getRecords.js'
 import getTimes from '@/hooks/getTimes.js'
@@ -79,9 +79,16 @@ const MainPage = (props) => {
     if (autoRegisteredWeeklyTeamIdRef.current === weeklyTeamId) return
 
     autoRegisteredWeeklyTeamIdRef.current = weeklyTeamId
-    setRegisteredTeam({
-      id: weeklyTeamId,
-      data: makeBlankWeeklyTeamData(),
+    const weeklyTeamRef = doc(db, 'weeklyTeam', weeklyTeamId)
+
+    runTransaction(db, async (transaction) => {
+      const weeklyTeamSnapshot = await transaction.get(weeklyTeamRef)
+
+      if (!weeklyTeamSnapshot.exists()) {
+        transaction.set(weeklyTeamRef, makeBlankWeeklyTeamData())
+      }
+    }).catch((error) => {
+      console.error('Failed to auto-register weekly team:', error)
     })
   }, [currentTime, totalWeeklyTeamData])
 
