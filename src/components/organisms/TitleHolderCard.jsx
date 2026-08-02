@@ -13,8 +13,8 @@ const TitleHolderCard = (props) => {
     'earlyStarter',
     'slowStarter',
     'sonKaeDuo',
-    'ronaldo',
-    'DeBruyne',
+    // 'ronaldo',
+    // 'DeBruyne',
     'myTeam',
   ]
   const tapTitleList = [
@@ -24,8 +24,8 @@ const TitleHolderCard = (props) => {
     'Best 얼리 스타터',
     'Best 슬로우 스타터',
     '손케 듀오',
-    '내가!',
-    '너가!',
+    // '내가!',
+    // '너가!',
     '친해지길 바라',
   ]
   const tapDescriptionList = [
@@ -35,8 +35,8 @@ const TitleHolderCard = (props) => {
     '전반 포인트 비율이 높은 플레이어',
     '후반 포인트 비율이 높은 플레이어',
     '합작 골이 가장 많은 듀오',
-    '골 비율이 가장 높은 플레이어',
-    '어시 비율이 가장 높은 플레이어',
+    // '골 비율이 가장 높은 플레이어',
+    // '어시 비율이 가장 높은 플레이어',
     '최다 같은 팀 듀오',
   ]
 
