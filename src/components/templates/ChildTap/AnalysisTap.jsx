@@ -21,7 +21,7 @@ const AnalysisTap = (props) => {
   const { existingMembers } = getMembers()
   const { time: { thisYear } } = getTimes()
   const { totalWeeklyTeamData } = getRecords()
-  const tapList = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+  const tapList = [0, 1, 2, 3, 4, 5, 6]
   const thisMonth = test ? 12 : new Date().getMonth() + 1
   const [quarter, setQuarter] = useState(0)
   const [needMoreData, setNeedMoreData] = useState(false)
@@ -48,8 +48,8 @@ const AnalysisTap = (props) => {
     bestEarlyStarter,
     bestSlowStarter,
     sonKaeDuo,
-    greedyPlayer,
-    altruisticPlayer,
+    // greedyPlayer,
+    // altruisticPlayer,
     mostPartnerPlayers,
     mostMercenaryPlayer,
   ]
