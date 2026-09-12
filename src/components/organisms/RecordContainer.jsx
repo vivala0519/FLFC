@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import Swal from 'sweetalert2'
 import { get, getDatabase, ref, remove, set} from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
@@ -6,7 +6,7 @@ import RecordRow from '@/components/molecules/RecordRow.jsx'
 import RoundRow from '@/components/molecules/RoundRow.jsx'
 
 const RecordContainer = (props) => {
-  const { formatRecordByName, scrollContainerRef, open, isFeverTime, dynamicHeight, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams } = props
+  const { formatRecordByName, recordsLoaded, open, isFeverTime, dynamicHeight, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams } = props
   const { time: { today, thisYear } } = getTimes()
   const [openRounds, setOpenRounds] = useState(new Set())
   const [closedRounds, setClosedRounds] = useState(new Set())
@@ -14,6 +14,28 @@ const RecordContainer = (props) => {
   const dynamicStyle = `${open ? 'flex' : 'hidden'} ${showMVP ? 'opacity-10' : 'opacity-100'}`
 
   const hasInitOpenRounds = useRef(false)
+  const scrollContainerRef = useRef(null)
+  const hasScrolledOnEntryRef = useRef(false)
+  const shouldFollowLatestRef = useRef(true)
+
+  useLayoutEffect(() => {
+    const container = scrollContainerRef.current
+    if (!recordsLoaded || !open || !container || container.clientHeight === 0) return
+
+    // Wait for loaded rows and layout before consuming the initial scroll.
+    if (!hasScrolledOnEntryRef.current || shouldFollowLatestRef.current) {
+      container.scrollTop = container.scrollHeight
+      hasScrolledOnEntryRef.current = true
+      shouldFollowLatestRef.current = true
+    }
+  }, [displayRecord, dynamicHeight, open, recordsLoaded])
+
+  const handleScroll = (event) => {
+    if (!hasScrolledOnEntryRef.current) return
+
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
+    shouldFollowLatestRef.current = scrollHeight - clientHeight - scrollTop <= 4
+  }
 
   useEffect(() => {
     if (!hasInitOpenRounds.current && displayRecord && displayRecord.length > 0) {
@@ -119,6 +141,7 @@ const RecordContainer = (props) => {
   return (
     <div
       ref={scrollContainerRef}
+      onScroll={handleScroll}
       className={containerStyle + dynamicStyle}
       style={{ height: open ? dynamicHeight : '' }}
     >

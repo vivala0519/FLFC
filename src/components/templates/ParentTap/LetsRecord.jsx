@@ -23,7 +23,6 @@ const LetsRecord = (props) => {
   const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
   const { open, setOpen, headerHeight } = props
   const registerRef = useRef(null)
-  const scrollContainerRef = useRef(null)
   const feverTimeRef = useRef(null)
   const [weeklyTeamData, setWeeklyTeamData] = useState(null)
   const [todayRecord, setTodayRecord] = useState([])
@@ -558,14 +557,6 @@ const LetsRecord = (props) => {
       // [중요] Firestore 저장 후 로컬 상태도 즉시 동기화
       setWrittenData(stats)
 
-      // 스크롤 로직
-      const scrollContainer = scrollContainerRef.current
-      if (scrollContainer) {
-        scrollContainer.scrollTo({
-          top: scrollContainer.scrollHeight,
-          behavior: 'smooth',
-        })
-      }
     } catch (error) {
       console.error("Error writing document: ", error)
     }
@@ -673,7 +664,7 @@ const LetsRecord = (props) => {
             dynamicHeight={dynamicHeight}
             displayRecord={displayRecord}
             weeklyTeamData={weeklyTeamData}
-            scrollContainerRef={scrollContainerRef}
+            recordsLoaded={realtimeRoundLoaded}
             setPlayingTeams={setPlayingTeams}
             setPendingRoundId={setPendingRoundId}
             setShowSelectTeamPopup={setShowSelectTeamPopup}
@@ -701,7 +692,6 @@ const LetsRecord = (props) => {
             weeklyTeamData={weeklyTeamData}
             pendingRoundId={pendingRoundId}
             requestUpdateMode={requestUpdateMode}
-            scrollContainerRef={scrollContainerRef}
             showSelectTeamPopup={showSelectTeamPopup}
             handleRoundWinnerTrigger={handleRoundWinnerTrigger}
             showSelectScorerTeamPopup={showSelectScorerTeamPopup}

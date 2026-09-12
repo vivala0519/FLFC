@@ -65,7 +65,6 @@ const ensureRoundTeamList = async (db, thisYear, today, roundId, playingTeams) =
 const WriteContainer = (props) => {
   const {
     weeklyTeamData,
-    scrollContainerRef,
     registerRef,
     open,
     canRegister,
@@ -354,7 +353,6 @@ const WriteContainer = (props) => {
         setPendingRoundId(null)
 
         setTimeout(() => {
-          scrollToElement()
           setIsWriting(false)
         }, 300)
       } else {
@@ -392,7 +390,6 @@ const WriteContainer = (props) => {
       setScorer('')
       setAssistant('')
       setTimeout(() => {
-        scrollToElement()
         setIsWriting(false)
       }, 300)
       // setPendingRoundId(null)
@@ -510,7 +507,6 @@ const WriteContainer = (props) => {
             setScorer('')
             setAssistant('')
             setTimeout(() => {
-              scrollToElement()
               setIsWriting(false)
             }, 300)
             return
@@ -566,7 +562,6 @@ const WriteContainer = (props) => {
               setScorer('')
               setAssistant('')
               setTimeout(() => {
-                scrollToElement()
                 setIsWriting(false)
               }, 300)
             }
@@ -591,22 +586,8 @@ const WriteContainer = (props) => {
     setScorer('')
     setAssistant('')
     setTimeout(() => {
-      scrollToElement()
       setIsWriting(false)
     }, 300)
-  }
-
-  // ---------------------- 스크롤 내려주기 ----------------------
-
-  const scrollToElement = () => {
-    const scrollContainer = scrollContainerRef.current
-
-    if (scrollContainer) {
-      scrollContainer.scrollTo({
-        top: scrollContainer.scrollTop + scrollContainer.clientHeight,
-        behavior: 'smooth',
-      })
-    }
   }
 
   // ---------------------- 렌더 ----------------------
