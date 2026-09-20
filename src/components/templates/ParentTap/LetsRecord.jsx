@@ -20,7 +20,7 @@ import { getRoundParticipants } from '@/apis/roundParticipants.js'
 const LetsRecord = (props) => {
   const { time: { today, thisDay, thisYear, currentTime, gameEndTime, gameStartTime, recordTapCloseTime } } = getTimes()
   const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
-  const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
+  const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
   const { open, setOpen, headerHeight } = props
   const registerRef = useRef(null)
   const feverTimeRef = useRef(null)
@@ -131,7 +131,7 @@ const LetsRecord = (props) => {
     setTodayRecord(goalRecord)
     setDisplayRecord(roundRecord)
     setLoadingFlag(false)
-  }, [todaysRealtimeRecord, todaysRealtimeRound, totalWeeklyTeamData])
+  }, [todaysRealtimeRound, totalWeeklyTeamData])
 
   // request list
   useEffect(() => {

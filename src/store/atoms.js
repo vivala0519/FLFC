@@ -24,16 +24,12 @@ export const membersNickNameAtom = atom([])
 export const membersIdAtom = atom([])
 
 // records
-const realtimeRecord = {}
-const todaysRealtimeRecord = {}
 const todaysRealtimeRound = null
 const requestList = []
 const firestoreRecord = null
 const statusBoardStat = null
 const totalWeeklyTeamData = null
 
-export const realtimeRecordAtom = atom(realtimeRecord)
-export const todaysRealtimeRecordAtom = atom(todaysRealtimeRecord)
 export const todaysRealtimeRoundAtom = atom(todaysRealtimeRound)
 export const requestListAtom = atom(requestList)
 export const firestoreRecordAtom = atom(firestoreRecord)

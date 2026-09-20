@@ -2,8 +2,6 @@ import { useEffect } from 'react'
 import { getDatabase, onValue, ref } from 'firebase/database'
 import { useAtom } from 'jotai'
 import {
-  realtimeRecordAtom,
-  todaysRealtimeRecordAtom,
   todaysRealtimeRoundAtom,
   requestListAtom,
   firestoreRecordAtom,
@@ -17,8 +15,6 @@ import { db as firestoreDb } from '../../firebase.js'
 import { analyzeForStatusBoard } from '../apis/analyzeData.js'
 
 export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag) {
-  const [, setRealtimeRecord] = useAtom(realtimeRecordAtom)
-  const [, setTodaysRealtimeRecord] = useAtom(todaysRealtimeRecordAtom)
   const [, setTodaysRealtimeRound] = useAtom(todaysRealtimeRoundAtom)
   const [, setRequestList] = useAtom(requestListAtom)
   const [firestoreRecord, setFirestoreRecord] = useAtom(firestoreRecordAtom)
@@ -33,8 +29,6 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
   // 1) RTDB subscribe: 구독만 담당
   useEffect(() => {
     const rtdb = getDatabase()
-    const todayRef = ref(rtdb, `${thisYear}/`)
-    const lastYearRef = ref(rtdb, `${thisYear - 1}/`)
 
     const dateToId = (d) =>
       `${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
@@ -50,24 +44,28 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
     const useLastYear =
       targetId.slice(0, 2) === '12' && today.slice(0, 2) === '01'
 
-    const unsubscribe = onValue(
-      useLastYear ? lastYearRef : todayRef,
+    const targetYear = useLastYear ? String(Number(thisYear) - 1) : thisYear
+    const unsubscribeRounds = onValue(
+      ref(rtdb, `${targetYear}/${targetId}_rounds`),
       (snapshot) => {
-        const realTimeRecord = snapshot.val() || {}
-        setRealtimeRecord(realTimeRecord)
-        setTodaysRealtimeRecord(realTimeRecord[targetId] || {})
-        setTodaysRealtimeRound(realTimeRecord[`${targetId}_rounds`] || {})
-        setRequestList(realTimeRecord[`${targetId}_request`] || {})
+        setTodaysRealtimeRound(snapshot.val() || {})
+      },
+    )
+    const unsubscribeRequests = onValue(
+      ref(rtdb, `${targetYear}/${targetId}_request`),
+      (snapshot) => {
+        setRequestList(snapshot.val() || {})
       },
     )
 
-    return () => unsubscribe()
+    return () => {
+      unsubscribeRounds()
+      unsubscribeRequests()
+    }
   }, [
     thisYear,
     today,
     thisDay,
-    setRealtimeRecord,
-    setTodaysRealtimeRecord,
     setTodaysRealtimeRound,
     setRequestList,
   ])

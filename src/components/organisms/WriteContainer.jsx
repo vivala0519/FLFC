@@ -30,7 +30,7 @@ const getNumberAtLeastTwo = (arr) => {
 const getRoundRef = (db, thisYear, today, roundId) =>
   ref(db, `${thisYear}/${today}_rounds/${roundId}`)
 
-// 골 기록 3군데 저장
+// 라운드 골 기록과 백업 저장
 const saveGoalRecord = async (db, thisYear, today, roundId, record) => {
   if (!record) return
   const { id } = record
@@ -38,7 +38,6 @@ const saveGoalRecord = async (db, thisYear, today, roundId, record) => {
   const goalRef = ref(db, `${thisYear}/${today}_rounds/${roundId}/goal/${id}`)
   await set(goalRef, record)
 
-  await set(ref(db, `${thisYear}/${today}/${id}`), record)
   await set(ref(db, `${thisYear}/${today}_backup/${id}`), record)
 }
 

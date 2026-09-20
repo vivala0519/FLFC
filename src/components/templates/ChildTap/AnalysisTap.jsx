@@ -9,6 +9,7 @@ import CloseButton from '@/components/atoms/Button/CloseButton.jsx'
 import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
+import { getQuarterRoundGoals } from '@/apis/roundGoals.js'
 
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
@@ -76,10 +77,16 @@ const AnalysisTap = (props) => {
     } else {
       setQuarter(4)
     }
-    getRealTimeDatabaseData()
     getDailyMVPData()
     getWeeklyTeamData()
   }, [])
+
+  useEffect(() => {
+    const yearRef = ref(getDatabase(), test ? '2024' : thisYear)
+    return onValue(yearRef, (snapshot) => {
+      setThisQuarterData(getQuarterRoundGoals(snapshot.val(), thisMonth))
+    })
+  }, [test, thisYear, thisMonth])
 
   useEffect(() => {
     // 4주 이상 진행됐을 시
@@ -107,10 +114,10 @@ const AnalysisTap = (props) => {
         tempObject = { key: temp[0] + ' - ' + temp[1], count: item.count }
         fullNameDuo.push(tempObject)
       })
-      setSonKaeDuo({
+      setSonKaeDuo(fullNameDuo.length > 0 ? {
         name: [fullNameDuo[0]['key']],
         count: fullNameDuo[0]['count'] + '골',
-      })
+      } : {})
 
       // 시간에 따른 포인트 분석 데이터
       const analyzedDataByTime = {}
@@ -234,8 +241,11 @@ const AnalysisTap = (props) => {
     } else {
       // 데이터 모으는 중
       setNeedMoreData(true)
+      setThisQuarterPointData(new Map())
+      setThisQuarterDataByTime(new Map())
+      setThisQuarterPlayersCombination(new Map())
     }
-  }, [thisQuarterData])
+  }, [thisQuarterData, existingMembers])
 
   const getFullName = (name) => {
     for (let i = 0; i < existingMembers.length; i++) {
@@ -243,50 +253,6 @@ const AnalysisTap = (props) => {
         return existingMembers[i]
       }
     }
-  }
-
-  // 지난 분기 데이터 or 현재 분기 4주 이상 데이터
-  const getRealTimeDatabaseData = async () => {
-    const db = getDatabase()
-    const todayRef = ref(db, test ? '2024' : thisYear)
-    onValue(todayRef, (snapshot) => {
-      const data = snapshot.val()
-      let filteredData = []
-      if (thisMonth < 4) {
-        filteredData = Object.entries(data).filter(([key, item]) => {
-          if (key.length === 4 && Number(key.slice(0, 2)) <= 3) {
-            return item
-          }
-        })
-      } else if (thisMonth < 7) {
-        filteredData = Object.entries(data).filter(([key, item]) => {
-          if (
-            key.length === 4 &&
-            Number(key.slice(0, 2)) > 3 &&
-            Number(key.slice(0, 2)) <= 6
-          ) {
-            return item
-          }
-        })
-      } else if (thisMonth < 10) {
-        filteredData = Object.entries(data).filter(([key, item]) => {
-          if (
-            key.length === 4 &&
-            Number(key.slice(0, 2)) > 6 &&
-            Number(key.slice(0, 2)) <= 9
-          ) {
-            return item
-          }
-        })
-      } else {
-        filteredData = Object.entries(data).filter(([key, item]) => {
-          if (key.length === 4 && Number(key.slice(0, 2)) > 9) {
-            return item
-          }
-        })
-      }
-      setThisQuarterData(filteredData)
-    })
   }
 
   const getDailyMVPData = async () => {
@@ -559,6 +525,8 @@ const AnalysisTap = (props) => {
     })
     if (bestEarlyStarterArray.length === 1) {
       setBestEarlyStarter({ name: [getFullName(bestEarlyStarterArray[0])] })
+    } else {
+      setBestEarlyStarter({})
     }
   }
 
@@ -579,6 +547,8 @@ const AnalysisTap = (props) => {
     })
     if (bestSlowStarterArray.length === 1) {
       setBestSlowStarter({ name: [getFullName(bestSlowStarterArray[0])] })
+    } else {
+      setBestSlowStarter({})
     }
   }
 
@@ -747,43 +717,33 @@ const AnalysisTap = (props) => {
   }, [weeklyTeamData])
 
   useEffect(() => {
-    if (
-      thisQuarterPlayers.length > 0 &&
-      thisQuarterPointData?.size > 0 &&
-      thisQuarterDataByTime?.size > 0 &&
-      Object.keys(thisQuarterMostPartners).length > 0 &&
-      thisQuarterMVP.length > 0 &&
-      thisQuarterPlayersCombination?.size > 0
-    ) {
+    if (thisQuarterPointData && thisQuarterDataByTime) {
       const integratedMap = new Map()
       thisQuarterPointData.forEach((value, key) => {
         integratedMap.set(key, {
           ...value,
           ...thisQuarterDataByTime.get(key),
           ...thisQuarterMostPartners[key],
-          ...mercenaryBring.get(key),
+          ...mercenaryBring?.get(key),
         })
       })
 
       setIntegratedData(integratedMap)
     }
   }, [
-    thisQuarterPlayers,
     thisQuarterDataByTime,
     thisQuarterMostPartners,
     thisQuarterPointData,
-    thisQuarterMVP,
     mercenaryBring,
-    thisQuarterPlayersCombination,
   ])
 
   const playerDetailHandler = (name) => {
-    const detailMap = integratedData.get(name.slice(1, 3))
+    const detailMap = integratedData?.get(name.slice(1, 3))
     if (detailMap) {
       const detail = {
         name: name,
-        mostPartner: detailMap.name,
-        mostPartnerCount: detailMap.count,
+        mostPartner: detailMap.name || [],
+        mostPartnerCount: detailMap.count || 0,
         style: [],
         mvp: 0,
         mercenary: detailMap.mercenary ? detailMap.mercenary : 0,
