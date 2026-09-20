@@ -10,6 +10,7 @@ import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
 import { getQuarterRoundGoals } from '@/apis/roundGoals.js'
+import { analyzeStarterStats } from '@/apis/analyzeStarterStats.js'
 
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
@@ -120,39 +121,14 @@ const AnalysisTap = (props) => {
       } : {})
 
       // 시간에 따른 포인트 분석 데이터
-      const analyzedDataByTime = {}
-      const analyzedDataByTimeMap = new Map()
+      const { dataByTime, earlyStarter, slowStarter } = analyzeStarterStats(totalData)
+      setBestEarlyStarter(earlyStarter ? { name: [getFullName(earlyStarter)] } : {})
+      setBestSlowStarter(slowStarter ? { name: [getFullName(slowStarter)] } : {})
       // 플레이어당 골/어시 데이터
       const pointData = {}
       const pointDataMap = new Map()
       totalData.forEach((item) => {
         if (item.goal !== '용병') {
-          // analyzedDataByTime 데이터 넣기
-          if (!analyzedDataByTime[item.goal]) {
-            analyzedDataByTime[item.goal] = {
-              first: Number(item.time.split(':')[0]) < 9 ? 1 : 0,
-              second: Number(item.time.split(':')[0]) >= 9 ? 1 : 0,
-            }
-            analyzedDataByTimeMap.set(item.goal, {
-              first: Number(item.time.split(':')[0]) < 9 ? 1 : 0,
-              second: Number(item.time.split(':')[0]) >= 9 ? 1 : 0,
-            })
-          } else {
-            if (Number(item.time.split(':')[0]) < 9) {
-              analyzedDataByTime[item.goal].first++
-              analyzedDataByTimeMap.set(item.goal, {
-                first: analyzedDataByTime[item.goal].first + 1,
-                second: analyzedDataByTime[item.goal].second,
-              })
-            } else {
-              analyzedDataByTime[item.goal].second++
-              analyzedDataByTimeMap.set(item.goal, {
-                first: analyzedDataByTime[item.goal].first,
-                second: analyzedDataByTime[item.goal].second + 1,
-              })
-            }
-          }
-
           // pointData 데이터 넣기
           if (!pointData[item.goal]) {
             pointData[item.goal] = { goal: 1, assist: 0 }
@@ -166,32 +142,6 @@ const AnalysisTap = (props) => {
           }
         }
         if (item.assist && item.assist !== '용병') {
-          // analyzedDataByTime 데이터 넣기
-          if (!analyzedDataByTime[item.assist]) {
-            analyzedDataByTime[item.assist] = {
-              first: Number(item.time.split(':')[0]) < 9 ? 1 : 0,
-              second: Number(item.time.split(':')[0]) >= 9 ? 1 : 0,
-            }
-            analyzedDataByTimeMap.set(item.assist, {
-              first: Number(item.time.split(':')[0]) < 9 ? 1 : 0,
-              second: Number(item.time.split(':')[0]) >= 9 ? 1 : 0,
-            })
-          } else {
-            if (Number(item.time.split(':')[0]) < 9) {
-              analyzedDataByTime[item.assist].first++
-              analyzedDataByTimeMap.set(item.assist, {
-                first: analyzedDataByTime[item.assist].first + 1,
-                second: analyzedDataByTime[item.assist].second,
-              })
-            } else {
-              analyzedDataByTime[item.assist].second++
-              analyzedDataByTimeMap.set(item.assist, {
-                first: analyzedDataByTime[item.assist].first,
-                second: analyzedDataByTime[item.assist].second + 1,
-              })
-            }
-          }
-
           // pointdata 데이터 넣기
           if (!pointData[item.assist]) {
             pointData[item.assist] = { goal: 0, assist: 1 }
@@ -205,22 +155,6 @@ const AnalysisTap = (props) => {
           }
         }
       })
-      // 전/후반 비율 계산
-      Object.entries(analyzedDataByTime).forEach(([key, value]) => {
-        if (value.first > 0 && value.second > 0) {
-          const total = value.first + value.second
-          value.firstRate = ((value.first / total) * 100).toFixed(3)
-          value.secondRate = ((value.second / total) * 100).toFixed(3)
-          analyzedDataByTimeMap.set(key, {
-            ...value,
-            firstRate: value.firstRate,
-            secondRate: value.secondRate,
-          })
-        }
-      })
-      getEarlyStarter(analyzedDataByTime)
-      getSlowStarter(analyzedDataByTime)
-
       // 골/어시 비율 계산
       Object.entries(pointData).forEach(([key, value]) => {
         const total = value.goal + value.assist
@@ -236,7 +170,7 @@ const AnalysisTap = (props) => {
       getGreedyPlayer(pointData)
       getAltruisticPlayer(pointData)
 
-      setThisQuarterDataByTime(analyzedDataByTimeMap)
+      setThisQuarterDataByTime(dataByTime)
       setThisQuarterPointData(pointDataMap)
     } else {
       // 데이터 모으는 중
@@ -244,6 +178,8 @@ const AnalysisTap = (props) => {
       setThisQuarterPointData(new Map())
       setThisQuarterDataByTime(new Map())
       setThisQuarterPlayersCombination(new Map())
+      setBestEarlyStarter({})
+      setBestSlowStarter({})
     }
   }, [thisQuarterData, existingMembers])
 
@@ -506,50 +442,6 @@ const AnalysisTap = (props) => {
       (combination) => combination.count === count,
     )
     return maxCombination
-  }
-
-  const getEarlyStarter = (analyzedData) => {
-    const bestEarlyStarterArray = []
-    let maxRate = 0
-    Object.values(analyzedData).forEach((value) => {
-      if (value.firstRate) {
-        if (maxRate < value.firstRate) {
-          maxRate = value.firstRate
-        }
-      }
-    })
-    Object.entries(analyzedData).forEach(([key, value]) => {
-      if (value.firstRate === maxRate) {
-        bestEarlyStarterArray.push(key)
-      }
-    })
-    if (bestEarlyStarterArray.length === 1) {
-      setBestEarlyStarter({ name: [getFullName(bestEarlyStarterArray[0])] })
-    } else {
-      setBestEarlyStarter({})
-    }
-  }
-
-  const getSlowStarter = (analyzedData) => {
-    const bestSlowStarterArray = []
-    let maxRate = 0
-    Object.values(analyzedData).forEach((value) => {
-      if (value.secondRate) {
-        if (maxRate < value.secondRate) {
-          maxRate = value.secondRate
-        }
-      }
-    })
-    Object.entries(analyzedData).forEach(([key, value]) => {
-      if (value.secondRate === maxRate) {
-        bestSlowStarterArray.push(key)
-      }
-    })
-    if (bestSlowStarterArray.length === 1) {
-      setBestSlowStarter({ name: [getFullName(bestSlowStarterArray[0])] })
-    } else {
-      setBestSlowStarter({})
-    }
   }
 
   const getPointClub = (pointData) => {
