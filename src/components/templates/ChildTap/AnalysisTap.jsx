@@ -641,11 +641,11 @@ const AnalysisTap = (props) => {
         mercenary: detailMap.mercenary ? detailMap.mercenary : 0,
       }
       // play style
-      if (detailMap.goal > detailMap.assist) {
-        detail['style'].push('개인적')
-      } else if (detailMap.goal < detailMap.assist) {
-        detail['style'].push('이타적')
-      }
+      // if (detailMap.goal > detailMap.assist) {
+      //   detail['style'].push('개인적')
+      // } else if (detailMap.goal < detailMap.assist) {
+      //   detail['style'].push('이타적')
+      // }
       if (detailMap.first > detailMap.second) {
         detail['style'].push('얼리스타터')
       } else if (detailMap.first < detailMap.second) {
