@@ -1,18 +1,18 @@
-const getUniqueLeader = (players, rateKey) => {
+const getLeaders = (players, rateKey) => {
   let maxRate = 50
-  let leader = null
+  let leaders = []
 
   for (const [name, stats] of players) {
     const rate = stats[rateKey]
     if (rate > maxRate) {
       maxRate = rate
-      leader = name
-    } else if (rate === maxRate) {
-      leader = null
+      leaders = [name]
+    } else if (rate === maxRate && maxRate > 50) {
+      leaders.push(name)
     }
   }
 
-  return leader
+  return leaders.sort((a, b) => a.localeCompare(b, 'ko'))
 }
 
 export const analyzeStarterStats = (records) => {
@@ -40,7 +40,7 @@ export const analyzeStarterStats = (records) => {
 
   return {
     dataByTime,
-    earlyStarter: getUniqueLeader(dataByTime, 'firstRate'),
-    slowStarter: getUniqueLeader(dataByTime, 'secondRate'),
+    earlyStarter: getLeaders(dataByTime, 'firstRate'),
+    slowStarter: getLeaders(dataByTime, 'secondRate'),
   }
 }
