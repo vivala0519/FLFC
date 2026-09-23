@@ -1,5 +1,5 @@
 export const analyzeStarterPointRate = (yearData, weeklyTeams, members, year, month) => {
-  const empty = { early: [], late: [] }
+  const empty = { early: [], late: [], playerRates: new Map() }
   if (!Number.isInteger(month) || month < 1 || month > 12) return empty
   if (!Array.isArray(weeklyTeams) || !Array.isArray(members)) return empty
 
@@ -76,5 +76,10 @@ export const analyzeStarterPointRate = (yearData, weeklyTeams, members, year, mo
     )
   }
 
-  return { early: leaders('early'), late: leaders('late') }
+  const playerRates = new Map([...playerStats].map(([name, stats]) => [name, {
+    early: stats.early.games ? stats.early.points / stats.early.games : 0,
+    late: stats.late.games ? stats.late.points / stats.late.games : 0,
+  }]))
+
+  return { early: leaders('early'), late: leaders('late'), playerRates }
 }

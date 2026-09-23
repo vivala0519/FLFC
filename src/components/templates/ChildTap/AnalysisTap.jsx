@@ -834,68 +834,35 @@ const AnalysisTap = (props) => {
   }, [weeklyTeamData])
 
   const playerDetailHandler = (name) => {
-    const detailMap = integratedData?.get(name.slice(1, 3))
-    if (detailMap) {
-      const detail = {
-        name: name,
-        mostPartner: detailMap.name || [],
-        mostPartnerCount: detailMap.count || 0,
-        style: [],
-        mvp: 0,
-        mercenary: detailMap.mercenary ? detailMap.mercenary : 0,
-      }
-      // play style
-      // if (detailMap.goal > detailMap.assist) {
-      //   detail['style'].push('개인적')
-      // } else if (detailMap.goal < detailMap.assist) {
-      //   detail['style'].push('이타적')
-      // }
-      if (detailMap.first > detailMap.second) {
-        detail['style'].push('얼리스타터')
-      } else if (detailMap.first < detailMap.second) {
-        detail['style'].push('슬로우스타터')
-      }
-      // mvp count
-      let mvpCount = 0
-      thisQuarterMVP.forEach((mvp) => {
-        if (mvp && mvp.includes(name)) {
-          mvpCount += 1
-        }
-      })
-      detail['mvp'] = mvpCount
-      // combination
-      const combi = []
-      let maxPoint = 0
-      thisQuarterPlayersCombination.forEach((value, key) => {
-        if (key.includes(name.slice(1, 3))) {
-          const temp = key.split('_')
-          if (temp[0] !== name.slice(1, 3)) {
-            combi.push([temp[0], value])
-          }
-          if (temp[1] !== name.slice(1, 3)) {
-            combi.push([temp[1], value])
-          }
-          if (value > maxPoint) {
-            maxPoint = value
-          }
-        }
-      })
-      const maxCombi = []
-      combi.forEach((item) => {
-        if (item[1] === maxPoint) {
-          maxCombi.push(item[0])
-        }
-      })
-      detail['combi'] = maxCombi
-      detail['combiCount'] = maxPoint
-      setPlayerDetail(detail)
-    } else {
-      const detail = {
-        name: name,
-        description: '추가 분석 기록이 없습니다.',
-      }
-      setPlayerDetail(detail)
+    const shortName = name.slice(1, 3)
+    const detailMap = integratedData?.get(shortName) || {
+      ...thisQuarterMostPartners?.[shortName],
+      ...mercenaryBring?.get(shortName),
     }
+    const rates = starterPointRates.playerRates.get(name)
+    const style = rates?.early > rates?.late ? ['얼리스타터']
+      : rates?.late > rates?.early ? ['슬로우스타터'] : []
+    const detail = {
+      name,
+      mostPartner: detailMap.name || [],
+      mostPartnerCount: detailMap.count || 0,
+      style,
+      mvp: thisQuarterMVP.filter((mvp) => mvp?.includes(name)).length,
+      mercenary: detailMap.mercenary || 0,
+    }
+    const combi = []
+    let maxPoint = 0
+    thisQuarterPlayersCombination.forEach((value, key) => {
+      if (key.includes(shortName)) {
+        const temp = key.split('_')
+        if (temp[0] !== shortName) combi.push([temp[0], value])
+        if (temp[1] !== shortName) combi.push([temp[1], value])
+        if (value > maxPoint) maxPoint = value
+      }
+    })
+    detail.combi = combi.filter((item) => item[1] === maxPoint).map((item) => item[0])
+    detail.combiCount = maxPoint
+    setPlayerDetail(detail)
     setShowDetail(true)
   }
 
@@ -997,31 +964,27 @@ const AnalysisTap = (props) => {
                       <dd className="min-w-0 break-words">{preferredFootLabel}</dd>
                     </div>
                   </dl>
-                  {playerDetail.description ? (
-                    <p className="text-sm">{playerDetail.description}</p>
-                  ) : (
-                    <dl className="space-y-2 text-sm">
-                      {[
-                        ['MVP', `${playerDetail.mvp}회`],
-                        [
-                          '최다 골 합작',
-                          playerDetail.combi.length > 0 ? `${playerDetail.combi.join(', ')} · ${playerDetail.combiCount}골` : '기록 없음',
-                        ],
-                        [
-                          '최다 같은 팀',
-                          playerDetail.mostPartner.length > 0
-                            ? `${playerDetail.mostPartner.join(', ')} · ${playerDetail.mostPartnerCount}회`
-                            : '기록 없음',
-                        ],
-                        ['스타일', playerDetail.style.length > 0 ? playerDetail.style.map((style) => `#${style}`).join(' ') : '기록 없음'],
-                      ].map(([label, value]) => (
-                        <div key={label} className="flex gap-4">
-                          <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
-                          <dd className="min-w-0 break-words">{value}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                  )}
+                  <dl className="space-y-2 text-sm">
+                    {[
+                      ['MVP', `${playerDetail.mvp}회`],
+                      [
+                        '최다 골 합작',
+                        playerDetail.combi.length > 0 ? `${playerDetail.combi.join(', ')} · ${playerDetail.combiCount}골` : '기록 없음',
+                      ],
+                      [
+                        '최다 같은 팀',
+                        playerDetail.mostPartner.length > 0
+                          ? `${playerDetail.mostPartner.join(', ')} · ${playerDetail.mostPartnerCount}회`
+                          : '기록 없음',
+                      ],
+                      ['스타일', playerDetail.style.length > 0 ? playerDetail.style.map((style) => `#${style}`).join(' ') : '기록 없음'],
+                    ].map(([label, value]) => (
+                      <div key={label} className="flex gap-4">
+                        <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
+                        <dd className="min-w-0 break-words">{value}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 </div>
               )}
             </div>
