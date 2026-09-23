@@ -5,7 +5,7 @@ const InfoMessageBox = (props) => {
   return (
     <div className={boxStyle}>
       <p className='mb-1 text-base text-black dark:text-white'>기록 가능 시간이 아닙니다.</p>
-      <p>Open : 07:50 ~ 10:05 Sun.</p>
+      <p>Open : 07:50 ~ 10:00 Sun.</p>
     </div>
   )
 }

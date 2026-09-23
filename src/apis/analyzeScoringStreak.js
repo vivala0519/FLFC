@@ -41,3 +41,31 @@ export const analyzeScoringStreak = (recordsByYear, members, asOfDate) => {
     count,
   }
 }
+
+export const analyzeLongestAbsent = (recordsByYear, members, asOfDate) => {
+  const candidates = new Set([...new Set(members || [])].filter((name) =>
+    typeof name === 'string' && name.trim() && !name.includes('용병'),
+  ))
+  const lastAttendance = new Map()
+
+  for (const [year, records] of Object.entries(recordsByYear || {})) {
+    for (const record of records || []) {
+      const date = recordDate(year, record?.id)
+      if (!date || date > asOfDate) continue
+      for (const [name, stats] of Object.entries(record.data || {})) {
+        if (!candidates.has(name) || !(Number(stats?.['출석']) > 0)) continue
+        if (!lastAttendance.has(name) || date > lastAttendance.get(name)) {
+          lastAttendance.set(name, date)
+        }
+      }
+    }
+  }
+
+  if (lastAttendance.size === 0) return { name: [], lastDate: null }
+  const lastDate = [...lastAttendance.values()].sort()[0]
+  return {
+    name: [...lastAttendance].filter(([, date]) => date === lastDate)
+      .map(([name]) => name).sort((a, b) => a.localeCompare(b, 'ko')),
+    lastDate,
+  }
+}

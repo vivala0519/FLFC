@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { collection, getDocs, onSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase.js'
-import { analyzeScoringStreak } from '../apis/analyzeScoringStreak.js'
+import { analyzeLongestAbsent, analyzeScoringStreak } from '../apis/analyzeScoringStreak.js'
 
 const FIRST_RECORD_YEAR = 2021
-const EMPTY_RESULT = { name: [], count: 0 }
+const EMPTY_RESULT = { name: [], count: 0, recordsByYear: null }
+const EMPTY_LONGEST_ABSENT = { name: [], lastDate: null }
 
-export default function useScoringStreak(members, asOfDate) {
+export default function useScoringStreak(members, asOfDate, activeMembers = members) {
   const historyCache = useRef(new Map())
   const [result, setResult] = useState({ status: 'loading', ...EMPTY_RESULT })
 
@@ -52,11 +53,12 @@ export default function useScoringStreak(members, asOfDate) {
             id: document.id,
             data: document.data(),
           }))
-          const analysis = analyzeScoringStreak({
+          const recordsByYear = {
             ...Object.fromEntries(olderRecords),
             [currentYear]: currentRecords,
-          }, members, asOfDate)
-          setResult({ status: 'ready', ...analysis })
+          }
+          const analysis = analyzeScoringStreak(recordsByYear, members, asOfDate)
+          setResult({ status: 'ready', ...analysis, recordsByYear })
         } catch {
           if (!cancelled && currentRevision === revision) {
             setResult({ status: 'error', ...EMPTY_RESULT })
@@ -75,5 +77,10 @@ export default function useScoringStreak(members, asOfDate) {
     }
   }, [members, asOfDate])
 
-  return result
+  const longestAbsent = useMemo(() => result.status === 'ready'
+    ? analyzeLongestAbsent(result.recordsByYear, activeMembers, asOfDate)
+    : EMPTY_LONGEST_ABSENT,
+  [result.status, result.recordsByYear, activeMembers, asOfDate])
+  const { recordsByYear, ...scoringStreak } = result
+  return { ...scoringStreak, longestAbsent }
 }

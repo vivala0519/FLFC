@@ -14,22 +14,6 @@ const getPoints = (value) => {
   return Number.isFinite(number) && number > 0 ? number : 0
 }
 
-const getMatchStats = (stats) => {
-  if (stats?.['경기'] == null || stats?.['승점'] == null) return null
-  const matches = Number(stats['경기'])
-  const winPoints = Number(stats['승점'])
-  if (!Number.isFinite(matches) || matches < 0 || !Number.isFinite(winPoints) || winPoints < 0) return null
-  return { matches, winPoints }
-}
-
-const pointsPerGame = (appearances) => {
-  const totals = appearances.reduce((sum, { matchStats }) => ({
-    matches: sum.matches + matchStats.matches,
-    winPoints: sum.winPoints + matchStats.winPoints,
-  }), { matches: 0, winPoints: 0 })
-  return totals.matches > 0 ? totals.winPoints / totals.matches : null
-}
-
 export const getRecentFormCutoff = (asOfDate) => {
   const mostRecentSunday = new Date(`${asOfDate}T00:00:00Z`)
   mostRecentSunday.setUTCDate(mostRecentSunday.getUTCDate() - mostRecentSunday.getUTCDay())
@@ -38,7 +22,7 @@ export const getRecentFormCutoff = (asOfDate) => {
   return mostRecentSunday.toISOString().slice(0, 10)
 }
 
-// Use daily attendance totals so an attended day with no goals/assists still counts.
+// Compare totals from the most recent two appearances with the previous two.
 export const analyzeRecentForm = (recordsByYear, members, asOfDate) => {
   const appearances = new Map(
     [...new Set(members)].filter((name) => name && !name.includes('용병')).map((name) => [name, []]),
@@ -64,8 +48,8 @@ export const analyzeRecentForm = (recordsByYear, members, asOfDate) => {
       if (playerAppearances.length < WINDOW_SIZE * 2) {
         playerAppearances.push({
           date,
-          points: getPoints(stats['골']) + getPoints(stats['어시']),
-          matchStats: getMatchStats(stats),
+          attackPoints: getPoints(stats['골']) + getPoints(stats['어시']),
+          winPoints: getPoints(stats['승점']),
         })
       }
     }
@@ -81,21 +65,19 @@ export const analyzeRecentForm = (recordsByYear, members, asOfDate) => {
     }
     const previousGames = playerAppearances.slice(WINDOW_SIZE)
     if (previousGames.some(({ date }) => date < cutoffDate)) continue
-    if (playerAppearances.some(({ matchStats }) => matchStats === null)) continue
     const recentGames = playerAppearances.slice(0, WINDOW_SIZE)
-    const recentWinPointsPerGame = pointsPerGame(recentGames)
-    const previousWinPointsPerGame = pointsPerGame(previousGames)
-    if (recentWinPointsPerGame === null || previousWinPointsPerGame === null) continue
-    const recentAverage = recentGames.reduce((sum, game) => sum + game.points, 0) / WINDOW_SIZE
-    const previousAverage = previousGames.reduce((sum, game) => sum + game.points, 0) / WINDOW_SIZE
+    const recentAttackPoints = recentGames.reduce((sum, game) => sum + game.attackPoints, 0)
+    const previousAttackPoints = previousGames.reduce((sum, game) => sum + game.attackPoints, 0)
+    const recentWinPoints = recentGames.reduce((sum, game) => sum + game.winPoints, 0)
+    const previousWinPoints = previousGames.reduce((sum, game) => sum + game.winPoints, 0)
     comparisons.push({
       name,
-      previousAverage,
-      recentAverage,
-      increase: recentAverage - previousAverage,
-      previousWinPointsPerGame,
-      recentWinPointsPerGame,
-      winPointIncrease: recentWinPointsPerGame - previousWinPointsPerGame,
+      previousAttackPoints,
+      recentAttackPoints,
+      increase: recentAttackPoints - previousAttackPoints,
+      previousWinPoints,
+      recentWinPoints,
+      winPointIncrease: recentWinPoints - previousWinPoints,
     })
   }
 

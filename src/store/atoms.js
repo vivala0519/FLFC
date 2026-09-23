@@ -1,6 +1,7 @@
 import { atom } from 'jotai'
 
 // time
+// const getCurrentDate = () => new Date(2026, 7, 16, 9, 55)
 const getCurrentDate = () => new Date()
 const getCurrentYear = () => String(getCurrentDate().getFullYear())
 const getCurrentMonth = () => getCurrentDate().getMonth() + 1

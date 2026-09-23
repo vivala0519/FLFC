@@ -4,12 +4,14 @@ const numberOrZero = (value) => {
 }
 
 const byName = (a, b) => a.name.localeCompare(b.name, 'ko')
+const byPointRate = (a, b) => b.승점 * a.경기 - a.승점 * b.경기
 
-// Reserve GK for the highest-point registered goalkeeper with quarter records.
+// Reserve GK for the highest-ranked eligible registered goalkeeper.
 export const analyzeBestFive = (records, memberInfo, month) => {
   if (!Number.isInteger(month) || month < 1 || month > 12) return null
   const quarter = Math.ceil(month / 3)
   const totals = new Map()
+  const attendanceDays = new Set()
 
   for (const record of records || []) {
     if (!/^\d{4}$/.test(record?.id) ||
@@ -17,58 +19,60 @@ export const analyzeBestFive = (records, memberInfo, month) => {
       !record.data || typeof record.data !== 'object') continue
 
     for (const [name, stats] of Object.entries(record.data)) {
-      if (!name || name.includes('용병')) continue
-      const total = totals.get(name) || { name, 승점: 0, 골: 0, 어시: 0 }
-      total.승점 += numberOrZero(stats?.['승점'])
+      if (!name || name.includes('용병') || !(Number(stats?.['출석']) > 0)) continue
+      attendanceDays.add(record.id)
+      const total = totals.get(name) || { name, 출석일: new Set(), 경기: 0, 승점: 0, 골: 0, 어시: 0 }
+      total.출석일.add(record.id)
+      const games = Number(stats['경기'])
+      const points = Number(stats['승점'])
+      if (Number.isFinite(games) && games > 0 && Number.isFinite(points) && points >= 0) {
+        total.경기 += games
+        total.승점 += points
+      }
       total.골 += numberOrZero(stats?.['골'])
       total.어시 += numberOrZero(stats?.['어시'])
       totals.set(name, total)
     }
   }
 
-  const rankedPlayers = [...totals.values()].map((player) => ({
-    ...player,
-    GA: player.골 + player.어시,
-    preferredFoot: memberInfo?.[player.name]?.preferredFoot,
-  })).sort((a, b) =>
-    b.승점 - a.승점 || b.GA - a.GA || b.골 - a.골 ||
-    b.어시 - a.어시 || byName(a, b),
-  )
+  const requiredDays = Math.ceil(attendanceDays.size / 2)
+  const eligiblePlayers = [...totals.values()]
+    .filter((player) => player.출석일.size >= requiredDays)
+    .map((player) => ({
+      ...player,
+      GA: player.골 + player.어시,
+      승점률: player.경기 > 0 ? player.승점 / player.경기 : null,
+      preferredFoot: memberInfo?.[player.name]?.preferredFoot,
+    }))
+  if (eligiblePlayers.length === 0) return null
+
+  const pivo = [...eligiblePlayers].sort((a, b) =>
+    b.골 - a.골 || b.어시 - a.어시 || byName(a, b),
+  )[0]
+  const rankedByRate = eligiblePlayers
+    .filter((player) => player.경기 > 0)
+    .sort((a, b) =>
+      byPointRate(a, b) || b.GA - a.GA || b.골 - a.골 ||
+      b.어시 - a.어시 || byName(a, b),
+    )
 
   const isGoalkeeper = (player) => {
     const info = memberInfo?.[player.name]
     return info?.goalKeeper === true || info?.goalkeeper === true
   }
-  const registeredGoalkeeper = rankedPlayers.find(isGoalkeeper)
-  const topFive = registeredGoalkeeper
-    ? [registeredGoalkeeper, ...rankedPlayers.filter((player) => player.name !== registeredGoalkeeper.name).slice(0, 4)]
-    : rankedPlayers.slice(0, 5)
-
-  if (topFive.length === 0) return null
-
-  // Without a registered goalkeeper in this quarter, the fifth-ranked player fills GK.
-  const goleiro = registeredGoalkeeper || topFive[topFive.length - 1]
-  const pivo = topFive.filter((player) => player.name !== goleiro?.name).sort((a, b) =>
-    b.골 - a.골 || b.GA - a.GA || b.승점 - a.승점 || byName(a, b),
-  )[0] || null
-  // Each position needs a different player, including when every stat is tied.
-  const used = new Set([pivo?.name, goleiro?.name].filter(Boolean))
-  const alaCandidates = topFive.filter((player) => !used.has(player.name))
-    .sort((a, b) =>
-      b.어시 - a.어시 || b.GA - a.GA || b.승점 - a.승점 || byName(a, b),
-    ).slice(0, 2)
-  const footRank = { L: 0, R: 1 }
-  const [leftAla = null, rightAla = null] = alaCandidates.sort((a, b) =>
-    (footRank[a.preferredFoot] ?? 99) - (footRank[b.preferredFoot] ?? 99) || byName(a, b),
-  )
-  if (leftAla) used.add(leftAla.name)
-  if (rightAla) used.add(rightAla.name)
-
-  const fixo = topFive.filter((player) => !used.has(player.name))
-    .sort((a, b) =>
-      b.GA - a.GA || b.승점 - a.승점 || b.골 - a.골 ||
-      b.어시 - a.어시 || byName(a, b),
-    )[0] || null
+  const used = new Set([pivo.name])
+  const take = (players) => {
+    const player = players.find((candidate) => !used.has(candidate.name)) || null
+    if (player) used.add(player.name)
+    return player
+  }
+  const registeredGoalkeeper = take(rankedByRate.filter(isGoalkeeper))
+  const byAssists = (a, b) => b.어시 - a.어시 || b.골 - a.골 || byName(a, b)
+  const leftAla = take(eligiblePlayers.filter((player) => player.preferredFoot === 'L').sort(byAssists))
+  const rightAla = take(eligiblePlayers.filter((player) => player.preferredFoot === 'R').sort(byAssists))
+  const fixo = take(rankedByRate)
+  // Without an eligible registered goalkeeper, use the best remaining rate.
+  const goleiro = registeredGoalkeeper || take(rankedByRate)
 
   return { pivo, leftAla, rightAla, fixo, goleiro }
 }

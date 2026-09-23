@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { db } from '../../../../firebase.js'
 import { collection, getDocs } from 'firebase/firestore'
 import { getDatabase, onValue, ref } from 'firebase/database'
 
 import NewBadge from '@/components/atoms/NewBadge.jsx'
 import BestFiveCard from '@/components/organisms/BestFiveCard.jsx'
+import PlayerRadarChart from '@/components/organisms/PlayerRadarChart.jsx'
 import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
@@ -13,7 +14,10 @@ import useScoringStreak from '@/hooks/useScoringStreak.js'
 import useBestFive from '@/hooks/useBestFive.js'
 import { getQuarterRoundGoals } from '@/apis/roundGoals.js'
 import { analyzeStarterStats } from '@/apis/analyzeStarterStats.js'
+import { analyzeStarterPointRate } from '@/apis/analyzeStarterPointRate.js'
 import { analyzeWinningTrio } from '@/apis/analyzeWinningTrio.js'
+import { analyzeLowScoringDuo } from '@/apis/analyzeLowScoringDuo.js'
+import { analyzePlayerRadar } from '@/apis/analyzePlayerRadar.js'
 
 const analysisIconPaths = {
   bestFive: <path d="m12 2 2.8 6 6.6.8-4.8 4.5 1.2 6.5L12 17l-5.8 2.8 1.2-6.5-4.8-4.5 6.6-.8L12 2Z" />,
@@ -48,6 +52,15 @@ const analysisIconPaths = {
   </>,
   streak: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></>,
   partners: <><path d="M10 7H8a4 4 0 0 0 0 8h3m3-8h2a4 4 0 0 1 0 8h-3M8 11h8" /></>,
+  handshake: <>
+    <path d="m11 17 2 2a1 1 0 1 0 3-3" />
+    <path d="M11 4H3a1 1 0 0 0-1 1v8.172a2 2 0 0 0 .586 1.414L8.5 20.5a1 1 0 1 0 3-3" />
+    <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.88-3.88a3 3 0 0 0-4.24 0l-.88.88a1 1 0 1 1-3-3l2.81-2.81a5.79 5.79 0 0 1 7.06-.87l.654.394a2 2 0 0 0 1.031.286H21a1 1 0 0 1 1 1V13a1 1 0 0 1-1 1h-1" />
+  </>,
+  alarm: <>
+    <circle cx="12" cy="13" r="8" />
+    <path d="M12 9v4l2 2M5 3l2 2M19 3l-2 2M5 21l2-2M19 21l-2-2" />
+  </>,
 }
 
 const AnalysisIcon = ({ name }) => (
@@ -73,11 +86,19 @@ const trendChangeFormatter = new Intl.NumberFormat('ko-KR', {
 
 const detailsButtonClass = 'ml-6 rounded px-1 py-0.5 text-xs font-medium text-blue-700 underline underline-offset-2 hover:text-blue-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 dark:text-yellow-400 dark:hover:text-yellow-300'
 
+const closeDialogOnBackdropClick = (event) => {
+  if (event.target !== event.currentTarget) return
+  const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect()
+  if (event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom) {
+    event.currentTarget.close()
+  }
+}
+
 const bestFiveRoles = [
   { key: 'pivo', label: 'ST', description: '스트라이커', metric: 'goals' },
-  { key: 'leftAla', label: 'LM', description: '왼쪽 미드필더', metric: 'goals' },
-  { key: 'rightAla', label: 'RM', description: '오른쪽 미드필더', metric: 'goals' },
-  { key: 'fixo', label: 'DF', description: '수비수', metric: 'goals' },
+  { key: 'leftAla', label: 'LM', description: '왼쪽 미드필더', metric: 'assists' },
+  { key: 'rightAla', label: 'RM', description: '오른쪽 미드필더', metric: 'assists' },
+  { key: 'fixo', label: 'DF', description: '수비수', metric: 'points' },
   { key: 'goleiro', label: 'GK', description: '골키퍼', metric: 'points' },
 ]
 
@@ -90,30 +111,57 @@ const AnalysisTap = (props) => {
   const bestFiveDialogRef = useRef(null)
   const asOfDate = test ? '2024-12-31' : `${thisYear}-${String(currentMonth).padStart(2, '0')}-${String(thisDate).padStart(2, '0')}`
   const recentForm = useRecentForm(existingMembers, asOfDate)
-  const scoringStreakResult = useScoringStreak(totalMembers, asOfDate)
+  const scoringStreakResult = useScoringStreak(totalMembers, asOfDate, existingMembers)
   const scoringStreak = {
     ...scoringStreakResult,
     count: scoringStreakResult.count > 0 ? `${scoringStreakResult.count}일 연속` : '',
   }
+  const longestAbsent = {
+    ...scoringStreakResult.longestAbsent,
+    status: scoringStreakResult.status,
+    count: scoringStreakResult.longestAbsent.lastDate
+      ? `마지막 출석 ${scoringStreakResult.longestAbsent.lastDate.replaceAll('-', '.')}` : '',
+  }
   const thisMonth = test ? 12 : new Date().getMonth() + 1
   const bestFive = useBestFive(test ? '2024' : thisYear, thisMonth)
-  const [quarter, setQuarter] = useState(0)
+  const playerComparison = useMemo(() => analyzePlayerRadar(
+    bestFive.records, existingMembers, thisMonth,
+  ), [bestFive.records, existingMembers, thisMonth])
+  const quarter = Math.ceil(thisMonth / 3)
   const [needMoreData, setNeedMoreData] = useState(false)
   const [thisQuarterData, setThisQuarterData] = useState([])
   const [yearRoundData, setYearRoundData] = useState(null)
+  const [roundLoadError, setRoundLoadError] = useState(false)
+  const [processedQuarterSource, setProcessedQuarterSource] = useState(null)
+  const [processedWeeklyTeamSource, setProcessedWeeklyTeamSource] = useState(null)
+  const [processedPartnerData, setProcessedPartnerData] = useState(null)
+  const [mvpStatus, setMvpStatus] = useState('loading')
   const [thisQuarterPlayers, setThisQuarterPlayers] = useState([])
   const [sonKaeDuo, setSonKaeDuo] = useState({})
   const [mostMvpPlayer, setMostMvpPlayer] = useState({})
   const [weeklyTeamData, setWeeklyTeamData] = useState(null)
   const [mostPartnerPlayers, setMostPartnerPlayers] = useState({})
   const [mostMercenaryPlayer, setMostMercenaryPlayer] = useState({})
-  const [bestEarlyStarter, setBestEarlyStarter] = useState({})
-  const [bestSlowStarter, setBestSlowStarter] = useState({})
   const [tenTenClub, setTenTenClub] = useState({})
   const [twentyTwentyClub, setTwentyTwentyClub] = useState({})
   const [greedyPlayer, setGreedyPlayer] = useState({})
   const [altruisticPlayer, setAltruisticPlayer] = useState({})
   const [showIndividual, setShowIndividual] = useState(false)
+  const starterPointRates = useMemo(() => analyzeStarterPointRate(
+    yearRoundData,
+    totalWeeklyTeamData,
+    totalMembers,
+    test ? '2024' : thisYear,
+    thisMonth,
+  ), [yearRoundData, totalWeeklyTeamData, totalMembers, test, thisYear, thisMonth])
+  const formatStarter = (players, period) => ({
+    name: players.map((player) => {
+      const { name } = player
+      return `${name}`
+    }),
+  })
+  const bestEarlyStarter = formatStarter(starterPointRates.early, 'early')
+  const bestSlowStarter = formatStarter(starterPointRates.late, 'late')
   const winningTrioStats = useMemo(() => analyzeWinningTrio(
     yearRoundData,
     totalWeeklyTeamData,
@@ -125,6 +173,17 @@ const AnalysisTap = (props) => {
     name: [winningTrioStats.players.join(' - ')],
     count: `승률 ${Math.round(winningTrioStats.winRate * 100)}%`,
   } : {}
+  const lowScoringDuoStats = useMemo(() => analyzeLowScoringDuo(
+    thisQuarterData,
+    totalWeeklyTeamData,
+    totalMembers,
+    test ? '2024' : thisYear,
+    thisMonth,
+  ), [thisQuarterData, totalWeeklyTeamData, totalMembers, test, thisYear, thisMonth])
+  const lowScoringDuo = lowScoringDuoStats ? {
+    name: lowScoringDuoStats.pairs.map(({ players }) => players.join(' - ')),
+    count: `같은 팀 ${lowScoringDuoStats.pairs[0].sharedDays}회 · 합작 ${lowScoringDuoStats.pairs[0].points}골`,
+  } : {}
 
   const analysisItems = [
     {
@@ -132,7 +191,7 @@ const AnalysisTap = (props) => {
       isNew: true,
       icon: 'bestFive',
       title: 'BEST Ⅴ',
-      description: '이번 분기 승점 기반 베스트 5',
+      // description: '분기 출석률 50% 이상',
       data: bestFive,
     },
     {
@@ -158,7 +217,7 @@ const AnalysisTap = (props) => {
       isNew: true,
       icon: 'rising',
       title: '최근 상승세',
-      // description: '최근 2회 vs 이전 2회 출석당 공격포인트 상승 선수',
+      // description: '최근 출석 2회와 직전 2회의 공격포인트·승점 합계 비교',
       data: recentForm,
     },
     {
@@ -166,28 +225,32 @@ const AnalysisTap = (props) => {
       isNew: true,
       icon: 'falling',
       title: '최근 하락세',
+      // description: '최근 출석 2회와 직전 2회의 공격포인트·승점 합계 비교',
       data: recentForm,
     },
     {
+      type: 'starter',
       icon: 'early',
       title: '얼리 스타터',
-      description: '8시 - 9시 포인트 비율이 높은 플레이어',
+      description: '9시 이전 승점생산률이 제일 높은 플레이어',
       data: bestEarlyStarter,
     },
     {
+      type: 'starter',
       icon: 'late',
       title: '슬로우 스타터',
-      description: '9시 - 10시 포인트 비율이 높은 플레이어',
+      description: '9시 이후 승점생산률이 제일 높은 플레이어',
       data: bestSlowStarter,
     },
     {
       isNew: true,
       icon: 'trio',
       title: '세 얼간이',
-      description: '승률 제일 높은 트리오',
+      description: '승률이 제일 높은 트리오',
       data: winningTrio,
     },
     {
+      type: 'duo',
       icon: 'duo',
       title: '손케 듀오',
       description: '합작 골이 가장 많은 듀오',
@@ -198,7 +261,7 @@ const AnalysisTap = (props) => {
       isNew: true,
       icon: 'streak',
       title: '꾸준한 해결사',
-      description: '출석할 때마다 연속 골 횟수 Top 플레이어',
+      description: '출석할 때마다 골을 기록한 연속 횟수 Top 플레이어',
       data: scoringStreak,
     },
     {
@@ -207,41 +270,66 @@ const AnalysisTap = (props) => {
       description: '최다 같은 팀 듀오',
       data: mostPartnerPlayers,
     },
+    {
+      type: 'low-scoring-duo',
+      isNew: true,
+      icon: 'handshake',
+      title: '친해지자..',
+      description: '같은 팀 횟수 대비 공격포인트가 가장 낮은 듀오',
+      data: lowScoringDuo,
+    },
+    {
+      type: 'longest-absent',
+      isNew: true,
+      icon: 'alarm',
+      title: '깨어나세요..',
+      description: '마지막 출석이 가장 오래된 플레이어',
+      data: longestAbsent,
+    },
   ]
 
   // 개인별 데이터
   const [thisQuarterMVP, setThisQuarterMVP] = useState([])
   const [thisQuarterPointData, setThisQuarterPointData] = useState(null)
   const [thisQuarterDataByTime, setThisQuarterDataByTime] = useState(null)
-  const [thisQuarterMostPartners, setThisQuarterMostPartners] = useState({})
+  const [thisQuarterMostPartners, setThisQuarterMostPartners] = useState(null)
   const [thisQuarterPlayersCombination, setThisQuarterPlayersCombination] =
     useState(null)
   const [mercenaryBring, setMercenaryBring] = useState(null)
-  const [integratedData, setIntegratedData] = useState(null)
+  const integratedData = useMemo(() => {
+    if (!thisQuarterPointData || !thisQuarterDataByTime ||
+      thisQuarterMostPartners === null || mercenaryBring === null) return null
+    const integratedMap = new Map()
+    thisQuarterPointData.forEach((value, key) => {
+      integratedMap.set(key, {
+        ...value,
+        ...thisQuarterDataByTime.get(key),
+        ...thisQuarterMostPartners[key],
+        ...mercenaryBring.get(key),
+      })
+    })
+    return integratedMap
+  }, [thisQuarterPointData, thisQuarterDataByTime, thisQuarterMostPartners, mercenaryBring])
   const [playerDetail, setPlayerDetail] = useState(null)
   const [showDetail, setShowDetail] = useState(false)
+  const selectedFoot = bestFive.memberInfo?.[playerDetail?.name]?.preferredFoot
+  const preferredFootLabel = selectedFoot === 'L' ? '왼발'
+    : selectedFoot === 'R' ? '오른발'
+      : bestFive.memberInfo ? '정보 없음'
+        : bestFive.status === 'error' ? '정보를 불러오지 못했습니다' : '불러오는 중'
 
   useEffect(() => {
-    if (thisMonth < 4) {
-      setQuarter(1)
-    } else if (thisMonth < 7) {
-      setQuarter(2)
-    } else if (thisMonth < 10) {
-      setQuarter(3)
-    } else {
-      setQuarter(4)
-    }
-    getDailyMVPData()
-    getWeeklyTeamData()
+    getDailyMVPData().catch(() => setMvpStatus('error'))
   }, [])
 
   useEffect(() => {
     const yearRef = ref(getDatabase(), test ? '2024' : thisYear)
+    setRoundLoadError(false)
     return onValue(yearRef, (snapshot) => {
       const value = snapshot.val()
-      setYearRoundData(value)
+      setYearRoundData(value || {})
       setThisQuarterData(getQuarterRoundGoals(value, thisMonth))
-    })
+    }, () => setRoundLoadError(true))
   }, [test, thisYear, thisMonth])
 
   useEffect(() => {
@@ -254,31 +342,17 @@ const AnalysisTap = (props) => {
           totalData.push(value)
         })
       })
-      const resultDuo = [...getSonKaeDuo(totalData)]
-      const fullNameDuo = []
-      resultDuo.forEach((item) => {
-        const temp = []
-        let tempObject = {}
-        item.key.split('_').forEach((name) => {
-          for (let i = 0; i < existingMembers.length; i++) {
-            if (existingMembers[i].includes(name)) {
-              temp.push(existingMembers[i])
-              break
-            }
-          }
-        })
-        tempObject = { key: temp[0] + ' - ' + temp[1], count: item.count }
-        fullNameDuo.push(tempObject)
-      })
-      setSonKaeDuo(fullNameDuo.length > 0 ? {
-        name: [fullNameDuo[0]['key']],
-        count: fullNameDuo[0]['count'] + '골',
+      const { leaders, chasing } = getSonKaeDuo(totalData)
+      const duoName = ({ key }) => key.split('_').map((name) => getFullName(name) || name).join(' - ')
+      setSonKaeDuo(leaders.length > 0 ? {
+        name: leaders.map(duoName),
+        count: `${leaders[0].count}골`,
+        additional: chasing.map(duoName),
+        additionalCount: chasing.length > 0 ? `${chasing[0].count}골` : '',
       } : {})
 
       // 시간에 따른 포인트 분석 데이터
-      const { dataByTime, earlyStarter, slowStarter } = analyzeStarterStats(totalData)
-      setBestEarlyStarter({ name: [...new Set(earlyStarter.map(getFullName).filter(Boolean))] })
-      setBestSlowStarter({ name: [...new Set(slowStarter.map(getFullName).filter(Boolean))] })
+      const { dataByTime } = analyzeStarterStats(totalData)
       // 플레이어당 골/어시 데이터
       const pointData = {}
       const pointDataMap = new Map()
@@ -333,9 +407,8 @@ const AnalysisTap = (props) => {
       setThisQuarterPointData(new Map())
       setThisQuarterDataByTime(new Map())
       setThisQuarterPlayersCombination(new Map())
-      setBestEarlyStarter({})
-      setBestSlowStarter({})
     }
+    setProcessedQuarterSource({ data: thisQuarterData, members: existingMembers })
   }, [thisQuarterData, existingMembers])
 
   const getFullName = (name) => {
@@ -441,10 +514,13 @@ const AnalysisTap = (props) => {
       }
     })
     setMostMvpPlayer({ name: mostMVP, count: count + '회' })
+    setMvpStatus('ready')
   }
 
-  const getWeeklyTeamData = async () => {
-    const fetchedData = totalWeeklyTeamData.filter((data) => data['id'].slice(0, 2) === thisYear.slice(2, 4))
+  const getWeeklyTeamData = useCallback(() => {
+    const fetchedData = totalWeeklyTeamData.filter((data) =>
+      typeof data?.id === 'string' && data.id.slice(0, 2) === thisYear.slice(2, 4),
+    )
 
     const filteredData = []
     if (thisMonth < 4) {
@@ -476,10 +552,8 @@ const AnalysisTap = (props) => {
     // 전체 주차 통합
     const totalTeamData = []
     filteredData.forEach((arr) => {
-      totalTeamData.push(arr[1])
-      totalTeamData.push(arr[2])
-      if (arr[3]) {
-        totalTeamData.push(arr[3])
+      for (const teamNumber of [1, 2, 3]) {
+        if (Array.isArray(arr?.[teamNumber])) totalTeamData.push(arr[teamNumber])
       }
     })
 
@@ -490,6 +564,7 @@ const AnalysisTap = (props) => {
     let maxMercenaryCount = 0
     totalTeamData.forEach((row) => {
       row.forEach((player) => {
+        if (typeof player !== 'string' || !player) return
         if (player.includes('용병') && player.length > 2) {
           const bring = player.slice(0, 2)
           if (bring !== '용병') {
@@ -508,14 +583,12 @@ const AnalysisTap = (props) => {
             }
           }
         }
-        setMercenaryBring(mercenaryMap)
-
         if (player && !player.includes('용병')) {
           if (!playerData[player]) {
             playerData[player] = {}
           }
           const exceptSelf = row.filter(
-            (name) => ![player, ''].includes(name) && !name.includes('용병'),
+            (name) => typeof name === 'string' && ![player, ''].includes(name) && !name.includes('용병'),
           )
           exceptSelf.forEach((name) => {
             if (!playerData[player][name]) {
@@ -528,6 +601,7 @@ const AnalysisTap = (props) => {
       })
     })
 
+    setMercenaryBring(mercenaryMap)
     setWeeklyTeamData(playerData)
 
     // 이번 분기 플레이어 set
@@ -551,19 +625,24 @@ const AnalysisTap = (props) => {
         temp.push(key)
       }
     })
-    let resultPlayer = ''
     if (temp.length === 1) {
-      const fullName = getFullName(temp[0])
+      const fullName = existingMembers.find((member) => member.includes(temp[0]))
       setMostMercenaryPlayer({
         name: [fullName],
         count: maxMercenaryCount + '회',
       })
     }
-  }
+    setProcessedWeeklyTeamSource({ data: totalWeeklyTeamData, members: existingMembers })
+  }, [totalWeeklyTeamData, thisYear, thisMonth, existingMembers])
+
+  useEffect(() => {
+    if (Array.isArray(totalWeeklyTeamData) && existingMembers.length > 0) {
+      getWeeklyTeamData()
+    }
+  }, [totalWeeklyTeamData, existingMembers, getWeeklyTeamData])
 
   const getSonKaeDuo = (totalData) => {
     // 최다 골 합작
-    const combinations = {}
     const combinationMap = new Map()
     totalData.forEach((item) => {
       if (
@@ -574,29 +653,19 @@ const AnalysisTap = (props) => {
       ) {
         const sortedKey = [item.goal, item.assist].sort()
         const key = `${sortedKey[0]}_${sortedKey[1]}`
-        if (!combinations[key]) {
-          combinations[key] = { key: key, count: 0 }
-          combinationMap.set(key, 0)
-        }
-        combinations[key].count++
-        combinationMap.set(key, combinationMap.get(key) + 1)
+        combinationMap.set(key, (combinationMap.get(key) || 0) + 1)
       }
     })
     setThisQuarterPlayersCombination(combinationMap)
 
-    let count = -1
-    let maxCombination = []
-    const combinationArray = [...Object.values(combinations)]
-    combinationArray.forEach((combination) => {
-      if (combination.count >= count) {
-        maxCombination.push(combination)
-        count = combination.count
-      }
-    })
-    maxCombination = maxCombination.filter(
-      (combination) => combination.count === count,
-    )
-    return maxCombination
+    const ranked = [...combinationMap].map(([key, count]) => ({ key, count }))
+      .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
+    const topCount = ranked[0]?.count
+    const nextCount = ranked.find(({ count }) => count < topCount)?.count
+    return {
+      leaders: ranked.filter(({ count }) => count === topCount),
+      chasing: nextCount === undefined ? [] : ranked.filter(({ count }) => count === nextCount),
+    }
   }
 
   const getPointClub = (pointData) => {
@@ -730,6 +799,7 @@ const AnalysisTap = (props) => {
       mostPartners[key] = { name: mostPartner, count: count }
     })
     setThisQuarterMostPartners(mostPartners)
+    setProcessedPartnerData(data)
 
     const maxCountPlayer = []
     Object.entries(mostPartners).forEach(([key, value]) => {
@@ -762,27 +832,6 @@ const AnalysisTap = (props) => {
       getMostPartner(weeklyTeamData)
     }
   }, [weeklyTeamData])
-
-  useEffect(() => {
-    if (thisQuarterPointData && thisQuarterDataByTime) {
-      const integratedMap = new Map()
-      thisQuarterPointData.forEach((value, key) => {
-        integratedMap.set(key, {
-          ...value,
-          ...thisQuarterDataByTime.get(key),
-          ...thisQuarterMostPartners[key],
-          ...mercenaryBring?.get(key),
-        })
-      })
-
-      setIntegratedData(integratedMap)
-    }
-  }, [
-    thisQuarterDataByTime,
-    thisQuarterMostPartners,
-    thisQuarterPointData,
-    mercenaryBring,
-  ])
 
   const playerDetailHandler = (name) => {
     const detailMap = integratedData?.get(name.slice(1, 3))
@@ -843,221 +892,58 @@ const AnalysisTap = (props) => {
     } else {
       const detail = {
         name: name,
-        description: '경기 데이터가 없습니다.',
+        description: '추가 분석 기록이 없습니다.',
       }
       setPlayerDetail(detail)
     }
     setShowDetail(true)
   }
 
+  const hasLoadError = roundLoadError || mvpStatus === 'error'
+  const isDataLoading =
+    yearRoundData === null ||
+    !Array.isArray(totalWeeklyTeamData) ||
+    totalMembers.length === 0 ||
+    existingMembers.length === 0 ||
+    mvpStatus === 'loading' ||
+    bestFive.status === 'loading' ||
+    recentForm.status === 'loading' ||
+    scoringStreakResult.status === 'loading' ||
+    needMoreData ||
+    processedQuarterSource?.data !== thisQuarterData ||
+    processedQuarterSource?.members !== existingMembers ||
+    processedWeeklyTeamSource?.data !== totalWeeklyTeamData ||
+    processedWeeklyTeamSource?.members !== existingMembers ||
+    weeklyTeamData === null ||
+    processedPartnerData !== weeklyTeamData ||
+    thisQuarterMostPartners === null ||
+    thisQuarterPointData === null ||
+    thisQuarterDataByTime === null ||
+    thisQuarterPlayersCombination === null ||
+    mercenaryBring === null ||
+    integratedData === null
+
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-2 pb-10 text-left">
       <h2 className="my-5 text-center text-sm">
         {thisYear} - 제 {quarter} 시즌
       </h2>
-      {needMoreData && !test && (
+      {hasLoadError ? (
+        <div className="py-8 text-center" role="alert">
+          분석 데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.
+        </div>
+      ) : isDataLoading ? (
         <div className="py-8 text-center" role="status">
           <p>데이터를 모으는 중 입니다</p>
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">4주 이상의 데이터 필요.. ({thisQuarterData.length}/4)</p>
         </div>
-      )}
-      <>
-        <dl className="divide-y divide-gray-200 dark:divide-gray-700">
-          {analysisItems.map(({ type, isNew, icon, title, description, data }) => {
-            if (needMoreData && type !== 'scoring-streak') return null
-            const players = data.name?.filter(Boolean) ?? []
-            const almostPlayers = data.additional?.filter(Boolean) ?? []
-            const trendPlayers = type === 'recent-fall' ? recentForm.decliners : recentForm.leaders
-
-            return (
-              <div key={title} className="py-5 first:pt-0">
-                <dt className="flex items-center gap-2 font-bold text-lg">
-                  <AnalysisIcon name={icon} />
-                  <span className="relative inline-block">
-                    {title}
-                    {isNew && <NewBadge />}
-                  </span>
-                  {type === 'best-five' && (
-                    <button
-                      type="button"
-                      className={detailsButtonClass}
-                      aria-label="BEST Ⅴ 카드 자세히 보기"
-                      aria-haspopup="dialog"
-                      aria-controls="best-five-card-dialog"
-                      onClick={() => bestFiveDialogRef.current?.showModal()}
-                    >
-                      자세히 보기
-                    </button>
-                  )}
-                  {(type === 'recent-form' || type === 'recent-fall') && (
-                    <button
-                      type="button"
-                      className={detailsButtonClass}
-                      aria-label={`${title} 계산 방식 자세히 보기`}
-                      aria-haspopup="dialog"
-                      aria-controls="recent-form-method-dialog"
-                      onClick={() => recentFormDialogRef.current?.showModal()}
-                    >
-                      자세히 보기
-                    </button>
-                  )}
-                </dt>
-                <dd className="mt-1 text-sm text-gray-500 dark:text-gray-400">{description}</dd>
-                {type === 'best-five' ? (
-                  <dd className="mt-2" aria-live="polite">
-                    {data.status === 'loading' ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">선수 기록을 불러오는 중입니다.</p>
-                    ) : data.status === 'error' ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">선수 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.</p>
-                    ) : data.positions ? (
-                      <div className="grid gap-x-4 gap-y-2 sm:grid-cols-2">
-                        {bestFiveRoles.map(({ key, label, description: roleDescription, metric }) => {
-                          const player = data.positions[key]
-                          const foot = player?.preferredFoot === 'R' ? '오른발' : player?.preferredFoot === 'L' ? '왼발' : null
-                          return (
-                            <div key={key} className="flex min-w-0 flex-wrap items-baseline gap-x-2">
-                              <span className="w-6 shrink-0 text-xs font-semibold text-gray-500 dark:text-gray-400" aria-label={roleDescription}>
-                                {label}
-                              </span>
-                              <span className="font-semibold text-blueSignature dark:text-yellow-400">{player?.name || '-'}</span>
-                              {player && (
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                  {metric === 'points' ? `${player.승점}승점` : `${player.골}골 ${player.어시}어시`}
-                                  {foot && ` · ${foot}`}
-                                </span>
-                              )}
-                            </div>
-                          )
-                        })}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">이번 분기 선수 기록이 없습니다.</p>
-                    )}
-                  </dd>
-                ) : type === 'scoring-streak' && data.status !== 'ready' ? (
-                  <dd className="mt-2 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
-                    {data.status === 'loading'
-                      ? '전체 출석 기록을 불러오는 중입니다.'
-                      : '전체 출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'}
-                  </dd>
-                ) : type === 'recent-form' || type === 'recent-fall' ? (
-                  <>
-                    <dd className="mt-2" aria-live="polite">
-                      {recentForm.status === 'ready' && trendPlayers.length > 0 ? (
-                        <ul className="space-y-1">
-                          {trendPlayers.map((player) => (
-                            <li key={player.name} className="flex flex-wrap items-baseline gap-x-2">
-                              <span className="font-semibold text-blueSignature dark:text-yellow-400">{player.name}</span>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                공격포인트 생산량 {trendChangeFormatter.format(player.increase)} · 승점 생산률{' '}
-                                {trendChangeFormatter.format(player.winPointIncrease)}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {recentForm.status === 'loading'
-                            ? '출석 기록을 불러오는 중입니다.'
-                            : recentForm.status === 'error'
-                              ? '출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'
-                              : recentForm.eligibleCount === 0
-                                ? '이번 분기 2회 이상, 총 4회 이상 출석하고 이전 2회가 최근 8주 안에 있으며 경기·승점 기록이 있어야 비교할 수 있습니다.'
-                                : `최근 공격포인트와 경기당 승점의 ${type === 'recent-fall' ? '하락' : '상승'} 조건에 맞는 선수가 없습니다.`}
-                        </p>
-                      )}
-                    </dd>
-                  </>
-                ) : (
-                  <>
-                    <dd className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="min-w-0 break-words font-semibold text-blueSignature dark:text-yellow-400">
-                        {players.length > 0 ? players.join(' ') : '-'}
-                      </span>
-                      {players.length > 0 && data.count && <span className="text-sm">{data.count}</span>}
-                    </dd>
-                    {almostPlayers.length > 0 && (
-                      <dd className="mt-2 break-words text-sm text-gray-500 dark:text-gray-400">
-                        <span className="mr-2 font-medium text-goal dark:text-rose-400">달성 임박</span>
-                        {almostPlayers.join(', ')}
-                      </dd>
-                    )}
-                  </>
-                )}
-              </div>
-            )
-          })}
-        </dl>
-
-        <dialog
-          ref={bestFiveDialogRef}
-          id="best-five-card-dialog"
-          aria-labelledby="best-five-card-title"
-          className="m-auto max-h-[85vh] w-[min(92vw,22rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-center text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <h3 id="best-five-card-title" className="font-kbo text-xl text-goal">BEST Ⅴ</h3>
-            <form method="dialog">
-              <button type="submit" className="rounded px-2 py-1 text-sm text-blue-700 hover:underline dark:text-yellow-400">닫기</button>
-            </form>
-          </div>
-          {bestFive.status === 'ready' && bestFive.positions ? (
-            <div className="mt-4 flex flex-col items-center gap-3">
-              <BestFiveCard positions={bestFive.positions} />
-              <p className="text-xs text-gray-600 dark:text-gray-400">카드를 눌러 포지션별 기록을 확인하세요.</p>
-              <p className="text-xs text-gray-600 dark:text-gray-400">GK는 등록된 골키퍼 중 이번 분기 승점이 가장 높은 선수를 선정합니다. 등록 골키퍼의 이번 분기 기록이 없으면 다른 선수 중 승점 5위가 대신합니다.</p>
-            </div>
-          ) : (
-            <p className="mt-4 text-sm text-gray-600 dark:text-gray-400" aria-live="polite">
-              {bestFive.status === 'loading'
-                ? '선수 기록을 불러오는 중입니다.'
-                : bestFive.status === 'error'
-                  ? '선수 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'
-                  : '이번 분기 선수 기록이 없습니다.'}
-            </p>
-          )}
-        </dialog>
-
-        <dialog
-          ref={recentFormDialogRef}
-          id="recent-form-method-dialog"
-          aria-labelledby="recent-form-method-title"
-          className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-left text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <h3 id="recent-form-method-title" className="text-lg font-bold">
-              최근 상승세·하락세 계산 방식
-            </h3>
-            <form method="dialog">
-              <button type="submit" className="rounded px-2 py-1 text-sm text-blue-700 hover:underline dark:text-yellow-400">
-                닫기
-              </button>
-            </form>
-          </div>
-          <div className="mt-4 space-y-3 text-sm leading-relaxed">
-            <p>선수별 최근 출석 2회와 그 직전 출석 2회를 비교합니다.</p>
-            <ul className="list-disc space-y-2 pl-5">
-              <li>공격포인트 생산량: 해당 2회에서 기록한 골과 어시스트 합계 ÷ 2회 출석</li>
-              <li>승점 생산률: 해당 2회에서 얻은 승점 합계 ÷ 해당 2회 경기 수 합계</li>
-              <li>상승세: 두 지표 중 하나 이상 증가하고, 다른 지표는 감소하지 않은 플레이어</li>
-              <li>하락세: 두 지표 중 하나 이상 감소하고, 다른 지표는 증가하지 않은 플레이어</li>
-            </ul>
-            <p>
-              두 지표의 방향이 엇갈리거나 둘 다 그대로인 선수는 표시하지 않습니다. 선수 옆 수치는 최근 구간 값에서 이전 구간 값을 뺀 변화량입니다.
-            </p>
-            <p className="text-gray-600 dark:text-gray-400">이번 분기 2회 이상, 8주 이내에 총 4회 이상 출석해야 합니다.</p>
-          </div>
-        </dialog>
-
-        {!needMoreData && (
-          <section className="border-t border-gray-200 pt-5 dark:border-gray-700" aria-labelledby="individual-analysis-title">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h3 id="individual-analysis-title" className="font-bold">
-                개인별 분석
-              </h3>
+      ) : (
+        <>
+          <section className="mb-5 border-y-2 border-gray-200 dark:border-gray-700 py-4" aria-label="개인별 기록">
+            <div className="flex justify-center">
               <button
                 type="button"
-                className="bg-transparent px-2 py-1 text-sm text-blue-700 dark:text-blue-400"
+                className="bg-transparent py-1 text-sm text-blue-700 dark:text-yellow-400 border-2 border-blue-500 dark:border-yellow-400"
                 aria-expanded={showIndividual}
                 aria-controls="individual-analysis"
                 onClick={() => {
@@ -1070,13 +956,13 @@ const AnalysisTap = (props) => {
             </div>
             <div id="individual-analysis" hidden={!showIndividual}>
               {!showDetail ? (
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap gap-2 justify-center items-center">
                   {thisQuarterPlayers.length > 0 ? (
                     thisQuarterPlayers.map((player) => (
                       <button
                         type="button"
                         key={player}
-                        className="bg-transparent px-2 py-1 text-sm text-green-800 dark:text-green-400"
+                        className="bg-transparent px-2 py-1 text-sm text-blueSignature dark:text-yellow-400"
                         onClick={() => playerDetailHandler(player)}
                       >
                         {player}
@@ -1098,6 +984,19 @@ const AnalysisTap = (props) => {
                       플레이어 목록으로
                     </button>
                   </div>
+                  {bestFive.status === 'ready' ? (
+                    <PlayerRadarChart name={playerDetail.name} comparison={playerComparison} />
+                  ) : (
+                    <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">
+                      {bestFive.status === 'error' ? '비교 기록을 불러오지 못했습니다.' : '비교 기록을 불러오는 중입니다.'}
+                    </p>
+                  )}
+                  <dl className="mb-2 text-sm">
+                    <div className="flex gap-4">
+                      <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">주발</dt>
+                      <dd className="min-w-0 break-words">{preferredFootLabel}</dd>
+                    </div>
+                  </dl>
                   {playerDetail.description ? (
                     <p className="text-sm">{playerDetail.description}</p>
                   ) : (
@@ -1127,8 +1026,170 @@ const AnalysisTap = (props) => {
               )}
             </div>
           </section>
-        )}
-      </>
+        <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+          {analysisItems.map(({ type, isNew, icon, title, description, data }) => {
+            const players = data.name?.filter(Boolean) ?? []
+            const almostPlayers = data.additional?.filter(Boolean) ?? []
+            const trendPlayers = type === 'recent-fall' ? recentForm.decliners : recentForm.leaders
+
+            return (
+              <div key={title} className="py-5 first:pt-0">
+                <dt className="flex items-center gap-2 font-bold text-lg">
+                  <AnalysisIcon name={icon} />
+                  <span className="relative inline-block">
+                    {title}
+                    {isNew && <NewBadge />}
+                  </span>
+                  {type === 'best-five' && (
+                    <button
+                      type="button"
+                      className={detailsButtonClass}
+                      aria-label="BEST Ⅴ 선정 기준 자세히 보기"
+                      aria-haspopup="dialog"
+                      aria-controls="best-five-method-dialog"
+                      onClick={() => bestFiveDialogRef.current?.showModal()}
+                    >
+                      자세히 보기
+                    </button>
+                  )}
+                  {(type === 'recent-form' || type === 'recent-fall') && (
+                    <button
+                      type="button"
+                      className={detailsButtonClass}
+                      aria-label={`${title} 계산 방식 자세히 보기`}
+                      aria-haspopup="dialog"
+                      aria-controls="recent-form-method-dialog"
+                      onClick={() => recentFormDialogRef.current?.showModal()}
+                    >
+                      자세히 보기
+                    </button>
+                  )}
+                </dt>
+                {description && <dd className="mt-1 text-sm text-gray-500 dark:text-gray-400">{description}</dd>}
+                {type === 'best-five' ? (
+                  <dd className="mt-4" aria-live="polite">
+                    {data.status === 'loading' ? (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">플레이어 기록을 불러오는 중입니다.</p>
+                    ) : data.status === 'error' ? (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">플레이어 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.</p>
+                    ) : data.positions ? (
+                      <BestFiveCard positions={data.positions} />
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">이번 분기 출석률 50% 이상인 플레이어가 없습니다.</p>
+                    )}
+                  </dd>
+                ) : (type === 'scoring-streak' || type === 'longest-absent') && data.status !== 'ready' ? (
+                  <dd className="mt-2 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
+                    {data.status === 'loading'
+                      ? '전체 출석 기록을 불러오는 중입니다.'
+                      : '전체 출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'}
+                  </dd>
+                ) : type === 'recent-form' || type === 'recent-fall' ? (
+                  <>
+                    <dd className="mt-2" aria-live="polite">
+                      {recentForm.status === 'ready' && trendPlayers.length > 0 ? (
+                        <ul className="space-y-1">
+                          {trendPlayers.map((player) => (
+                            <li key={player.name} className="flex flex-wrap items-baseline gap-x-2">
+                              <span className="font-semibold text-blueSignature dark:text-yellow-400">{player.name}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">
+                                공포 {trendChangeFormatter.format(player.increase)} · 승점{' '}
+                                {trendChangeFormatter.format(player.winPointIncrease)}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {recentForm.status === 'loading'
+                            ? '출석 기록을 불러오는 중입니다.'
+                            : recentForm.status === 'error'
+                              ? '출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'
+                              : recentForm.eligibleCount === 0
+                                ? '이번 분기 2회 이상, 총 4회 이상 출석하고 이전 2회가 최근 8주 안에 있어야 비교할 수 있습니다.'
+                                : `최근 공격포인트와 승점 합계의 ${type === 'recent-fall' ? '하락' : '상승'} 조건에 맞는 플레이어가 없습니다.`}
+                        </p>
+                      )}
+                    </dd>
+                  </>
+                ) : (
+                  <>
+                    <dd className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="min-w-0 break-words font-semibold text-blueSignature dark:text-yellow-400">
+                        {players.length > 0 ? players.join(type === 'duo' || type === 'low-scoring-duo' || type === 'starter' ? ', ' : ' ') : '-'}
+                      </span>
+                      {players.length > 0 && data.count && <span className="text-sm">{data.count}</span>}
+                    </dd>
+                    {almostPlayers.length > 0 && (
+                        <dd className="mt-2 break-words text-sm text-gray-500 dark:text-gray-400">
+                          <p className="mr-2 font-medium text-goal dark:text-rose-400">
+                            {type === 'duo' ? '추격 듀오' : '달성 임박'}
+                          </p>
+                          {almostPlayers.join(', ')}
+                          <p>{type === 'duo' && data.additionalCount && `${data.additionalCount}`}</p>
+                        </dd>
+                    )}
+                  </>
+                )}
+              </div>
+            )
+          })}
+        </dl>
+
+        <dialog
+          ref={bestFiveDialogRef}
+          id="best-five-method-dialog"
+          aria-labelledby="best-five-method-title"
+          onClick={closeDialogOnBackdropClick}
+          className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-left text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <h3 id="best-five-method-title" className="text-lg font-bold">BEST Ⅴ</h3>
+            <form method="dialog">
+              <button type="submit" className="rounded px-2 py-1 text-sm text-blue-700 hover:underline dark:text-yellow-400">닫기</button>
+            </form>
+          </div>
+          <div className="mt-4 space-y-3 text-sm leading-relaxed">
+            <p>이번 분기 출석일의 50% 이상 참석한 플레이어 중</p>
+            <ul className="list-disc space-y-2 pl-5">
+              <li>ST: 골이 가장 많은 플레이어</li>
+              <li>LM: 왼발잡이 중 어시가 가장 많은 플레이어</li>
+              <li>RM: 오른발잡이 중 어시가 가장 많은 플레이어</li>
+              <li>DF: 승점생산률이 가장 높은 플레이어</li>
+              <li>GK: 키퍼만 참여 플레이어 중 승점생산률 가장 높은 플레이어 (없을 시 승점생산률 2위)</li>
+            </ul>
+          </div>
+        </dialog>
+
+        <dialog
+          ref={recentFormDialogRef}
+          id="recent-form-method-dialog"
+          aria-labelledby="recent-form-method-title"
+          onClick={closeDialogOnBackdropClick}
+          className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-left text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <h3 id="recent-form-method-title" className="text-lg font-bold">
+              최근 상승세·하락세 계산 방식
+            </h3>
+            <form method="dialog">
+              <button type="submit" className="rounded px-2 py-1 text-sm text-blue-700 hover:underline dark:text-yellow-400">
+                닫기
+              </button>
+            </form>
+          </div>
+          <div className="mt-4 space-y-3 text-sm leading-relaxed">
+            <p>플레이어별 최근 출석 2회와 그 직전 출석 2회를 비교합니다.</p>
+            <ul className="list-disc space-y-2 pl-5">
+              <li>상승세: 두 지표 중 하나 이상 증가하고, 다른 지표는 감소하지 않은 플레이어</li>
+              <li>하락세: 두 지표 중 하나 이상 감소하고, 다른 지표는 증가하지 않은 플레이어</li>
+            </ul>
+            <p className="text-gray-600 dark:text-gray-400">이번 분기 2회 이상, 8주 이내에 총 4회 이상 출석해야 합니다.</p>
+          </div>
+        </dialog>
+
+        </>
+      )}
     </div>
   )
 }
