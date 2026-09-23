@@ -30,7 +30,7 @@ export default {
         homeLight: "url('@/assets/home-light.png')",
         homeDark: "url('@/assets/home-dark.png')",
         football: "url('@/assets/circle-ball.png')",
-        ground: "url('@/assets/ground3-transparent.png')",
+        ground: "url('@/assets/ground4.png')",
         salah: "url('@/assets/salah.webp')",
         myTeam: "url('@/assets/friendship.webp')",
         palmer: "url('@/assets/palmer.webp')",
