@@ -66,12 +66,17 @@ const DataTable = (props) => {
   useEffect(() => {
     if (analyzedData?.active?.members && tap === '현황판') {
       setSortedNames(
-        analyzedData?.active?.members['active'].sort((a, b) =>
-          a.localeCompare(b),
-        ),
+        [...analyzedData.active.members.active].sort((a, b) => {
+          if (arrowState === '이름') {
+            return arrowDirection ? a.localeCompare(b) : b.localeCompare(a)
+          }
+          const aValue = Number(analyzedData.active.totalData.get(a)?.[arrowState]) || 0
+          const bValue = Number(analyzedData.active.totalData.get(b)?.[arrowState]) || 0
+          return bValue - aValue || a.localeCompare(b)
+        }),
       )
       setSortedAbsenteeNames(
-        analyzedData?.active?.members['inactive'].sort((a, b) =>
+        [...analyzedData.active.members.inactive].sort((a, b) =>
           a.localeCompare(b),
         ),
       )
@@ -86,7 +91,7 @@ const DataTable = (props) => {
     // console.log(analyzedData)
 
     // setSortedAbsenteeNames(analyzedData?.active?.members['inactive'].sort((a, b) => a.localeCompare(b)))
-  }, [analyzedData])
+  }, [analyzedData, tap, arrowState, arrowDirection])
 
   const extractWinners = (sortedByValue) => {
     const maxValue = Math.max(
@@ -232,31 +237,7 @@ const DataTable = (props) => {
 
   // th에 따른 정렬
   const sortBy = (by) => {
-    if (by === '이름') {
-      if (!arrowDirection) {
-        setSortedNames(
-          analyzedData?.active?.members['active'].sort((a, b) =>
-            a.localeCompare(b),
-          ),
-        )
-      } else {
-        setSortedNames(
-          analyzedData?.active?.members['active']
-            .sort((a, b) => a.localeCompare(b))
-            .reverse(),
-        )
-      }
-      setArrowDirection(!arrowDirection)
-    } else {
-      setSortedNames(
-        [...sortedNames].sort((a, b) => {
-          const aEl = analyzedData.active.totalData.get(a)[by]
-          const bEl = analyzedData.active.totalData.get(b)[by]
-          return bEl - aEl
-        }),
-      )
-      setArrowDirection(false)
-    }
+    setArrowDirection(by === '이름' ? !arrowDirection : false)
     setArrowState(by)
   }
 
@@ -332,7 +313,7 @@ const DataTable = (props) => {
                 </StatTd>
                 <StatTd onClick={() => sortBy('경기')}>
                   <span>경기수</span>
-                  {arrowState === '승점' && <DownArrow className="arrow" />}
+                  {arrowState === '경기' && <DownArrow className="arrow" />}
                 </StatTd>
                 <StatTd onClick={() => sortBy('승점률')}>
                   <span>{`경기당\n평균 승점`}</span>
