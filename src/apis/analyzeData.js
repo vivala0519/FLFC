@@ -86,7 +86,7 @@ export const analyzeForStatusBoard = (
     quarterStats.forEach((value) => {
       value['승점률'] =
         value['경기'] > 0
-          ? Math.ceil((value['승점'] / value['경기']) * 100) / 100
+          ? Number((value['승점'] / value['경기']).toFixed(2))
           : 0
     })
   }

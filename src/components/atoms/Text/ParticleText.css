@@ -1,0 +1,22 @@
+.particle-text {
+  position: relative;
+  display: inline-block;
+  white-space: pre;
+}
+
+/* Keep the real text in flow, including its font metrics and accessible text. */
+.particle-text__source { opacity: 1; }
+.particle-text[data-particles-ready='true'] > .particle-text__source { opacity: 0; }
+
+.particle-text__canvas {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.particle-text[data-particles-ready='true'] > .particle-text__canvas { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .particle-text { animation: none; }
+}
