@@ -10,7 +10,6 @@ const DailyMVP = (props) => {
   const { setShowMVP, recordData, year, today } = props
   const yymmdd = year.slice(2, 4) + today
   const [bestPlayers, setBestPlayers] = useState([])
-  const confetti = new JSConfetti()
   // style class
   const mvpTextStyle = 'relative top-[1px] font-kbo text-[25px]'
   const closeMessageStyle = 'mt-3 relative text-sm text-gray-300 -bottom-[12%]'
@@ -21,44 +20,36 @@ const DailyMVP = (props) => {
     'text-[10px] font-dnf text-vivaMagenta relative top-[1px] underline decoration-2 decoration-solid decoration-yellow-400'
   const popupContainerStyle =
     'text-assist w-full h-[200px] bg-white box cursor-pointer flex flex-col desktop:w-[30%]'
-  // confetti 상수
-  const CONFETTI_NUMBER = 100
-  const CONFETTI_RADIUS = 4
-  const CONFETTI_COLORS = [
-    '#EAB308',
-    '#F59E0B',
-    '#FBBF24',
-    '#FCD34D',
-    '#FDE68A',
-  ]
-  const EMOJI_SIZE = 100
-  const FIREWORK_INTERVAL = 1000
-  const FIREWORK_DURATION = 3000
-
-  const firework = (confetti) => {
-    confetti.addConfetti({
-      confettiNumber: CONFETTI_NUMBER,
-      confettiRadius: CONFETTI_RADIUS,
-      confettiColors: CONFETTI_COLORS,
-    })
-    confetti.addConfetti({
-      emojis: ['🍗'],
-      emojiSize: EMOJI_SIZE,
-      confettiNumber: 1,
-    })
-  }
-
   useEffect(() => {
-    firework(confetti)
-    const intervalId = setInterval(() => firework(confetti), FIREWORK_INTERVAL)
+    const confetti = new JSConfetti()
+    const firework = () => {
+      confetti.addConfetti({
+        confettiNumber: 100,
+        confettiRadius: 4,
+        confettiColors: ['#EAB308', '#F59E0B', '#FBBF24', '#FCD34D', '#FDE68A'],
+      })
+      confetti.addConfetti({
+        emojis: ['🍗'],
+        emojiSize: 100,
+        confettiNumber: 1,
+      })
+    }
 
-    setTimeout(() => {
+    firework()
+    const intervalId = setInterval(firework, 1000)
+    let timeoutId
+    let stopped = false
+    const stopConfetti = () => {
+      if (stopped) return
+      stopped = true
       clearInterval(intervalId)
-      const canvasElements = document.getElementsByTagName('canvas')
-      while (canvasElements.length > 0) {
-        canvasElements[0].parentNode.removeChild(canvasElements[0])
-      }
-    }, FIREWORK_DURATION)
+      clearTimeout(timeoutId)
+      confetti.clearCanvas()
+      confetti.destroyCanvas()
+    }
+
+    timeoutId = setTimeout(stopConfetti, 3000)
+    return stopConfetti
   }, [])
 
   useEffect(() => {

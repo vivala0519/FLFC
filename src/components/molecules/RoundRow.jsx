@@ -27,13 +27,14 @@ const RecordRow = (props) => {
   const [editTeamMode, setEditTeamMode] = useState(false)
   const [teamA, setTeamA] = useState("");
   const [teamB, setTeamB] = useState("");
-  const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 py-1`
-  const recordAreaStyle = 'flex items-center font-dnf-forged gap-2 w-full'
-  const roundTextStyle = 'text-[13px] text-black dark:text-gray-100'
-  const winnerDivStyle = 'flex items-center relative bottom-[2px]'
+  const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 mobile:gap-2 py-1`
+  const recordAreaStyle = 'flex flex-wrap min-w-0 items-center font-dnf-forged gap-x-2 gap-y-1 w-full'
+  const roundTextStyle = 'whitespace-nowrap text-[13px] text-black dark:text-gray-100'
+  const winnerDivStyle = 'flex flex-wrap min-w-0 items-center relative bottom-[2px]'
   const teamStyle = 'font-dnf-forged text-teamWin dark:text-blue-300 mr-1 text-sm'
   const opponentStyle = 'font-dnf-forged text-gray-400 dark:text-gray-500 text-[10px] ml-1 mt-1'
   const winStyle = 'font-hahmlet text-goal dark:text-red-300 text-sm'
+  const scoreStyle = 'shrink-0 whitespace-nowrap text-xs font-semibold tabular-nums text-gray-700 dark:text-gray-200'
   const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
   const arrowIcon = 'bg-[url("@/assets/up2.png")] '
   const roundExitButtonStyle = 'text-goal dark:text-yellow-500 animate-pulse'
@@ -285,6 +286,18 @@ const RecordRow = (props) => {
   }
 
   const endedRoundDisplay = getEndedRoundDisplay()
+  const scoreTeams = endedRoundDisplay.winner
+    ? [endedRoundDisplay.winner, ...endedRoundDisplay.opponents]
+    : endedRoundDisplay.teamList
+  const goalCount = Object.entries(record.goal || {}).filter(
+    ([id, goal]) => id !== 'fever-time-bar' && goal?.id !== 'fever-time-bar',
+  ).length
+  // Draw resolution can append team entries without actual goal records.
+  const goalTeams = Array.isArray(record.getGoalTeam)
+    ? record.getGoalTeam.slice(0, goalCount).map(String) : []
+  const scores = scoreTeams.map((team) => goalTeams.filter((goalTeam) => goalTeam === team).length)
+  const scoreText = scoreTeams.length === 2 ? scores.join(' : ') : null
+  const scoreLabel = scoreTeams.map((team, i) => `${team}팀 ${scores[i]}골`).join(', ')
 
   const renderMembers = (members = []) => {
     if (!Array.isArray(members) || members.length === 0) return null
@@ -357,13 +370,18 @@ const RecordRow = (props) => {
                         .join(' vs ')}
                     </span>
                   )}
+                {scoreText && (
+                  <span className={scoreStyle + ' ml-2'} aria-label={scoreLabel}>
+                    {scoreText}
+                  </span>
+                )}
               </div>
               ) :
-              <>
+              <div className="flex items-center gap-1">
                 {record?.teamList?.length === 2 &&
                   (!editTeamMode ? (
                     <div
-                      className={teamStyle}
+                      className={teamStyle + ' whitespace-nowrap'}
                       onClick={() => setEditTeamMode(true)}
                     >
                       {record.teamList[0]}팀{' '}
@@ -421,9 +439,14 @@ const RecordRow = (props) => {
                       </button>
                     </div>
                   ))}
+                {!editTeamMode && scoreText && (
+                  <span className={scoreStyle} aria-label={scoreLabel}>
+                    {scoreText}
+                  </span>
+                )}
                 {!editTeamMode && (
                   <div
-                    className={roundExitButtonStyle}
+                    className={roundExitButtonStyle + ' shrink-0 whitespace-nowrap'}
                     onClick={() => exitRoundHandler(record.id)}
                   >
                     <div className={''}>
@@ -431,17 +454,17 @@ const RecordRow = (props) => {
                     </div>
                   </div>
                 )}
-              </>
+              </div>
             }
           </div>
           {!editTeamMode && (
-            <div className={'flex bottom-[1px] '}>
+            <div className={'flex shrink-0 bottom-[1px] '}>
               <TimeText text={record.time.slice(0, 5)} />
             </div>
           )}
           {!editTeamMode && (
             <span
-              className={itemStyle + arrowIcon}
+              className={itemStyle + arrowIcon + ' shrink-0'}
               onClick={() => !fakeRow && roundShowHandler(index)}
             />
           )}

@@ -597,16 +597,6 @@ const LetsRecord = (props) => {
     today,
   ])
 
-  // MVP 화면 닫으면 컨페티 종료
-  useEffect(() => {
-    if (!showMVP) {
-      const canvasElements = document.getElementsByTagName('canvas')
-      while (canvasElements.length > 0) {
-        canvasElements[0].parentNode.removeChild(canvasElements[0])
-      }
-    }
-  }, [showMVP])
-
   useEffect(() => {
     function setHeight() {
       const additionalHeight = requestUpdateMode ? 300 : 200

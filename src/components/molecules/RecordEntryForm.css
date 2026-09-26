@@ -1,0 +1,16 @@
+.record-entry-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 100px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 360px;
+  min-height: 94px;
+  margin: 0 auto 4px;
+}
+
+.record-entry-form__fields { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.record-entry-form__field { display: grid; grid-template-columns: 50px minmax(0, 1fr); align-items: center; gap: 3px; }
+.record-entry-form__field > div { justify-content: center; }
+.record-entry-form__field span { position: static; margin: 0; font-size: 12px; }
+.record-entry-form__field input { position: static; width: 100%; min-width: 0; max-width: 110px; }

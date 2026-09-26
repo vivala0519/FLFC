@@ -1,0 +1,63 @@
+.particle-register {
+  position: relative;
+  display: block;
+  flex: none;
+  width: 100px;
+  height: 94px;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.particle-register:hover,
+.particle-register:disabled {
+  border: 0;
+  background: transparent;
+}
+
+.particle-register:disabled { cursor: default; }
+.particle-register:focus-visible { outline: 2px solid #079ccc; outline-offset: 2px; }
+.particle-register:not(:disabled):active { transform: scale(0.96); }
+
+.particle-register__canvas {
+  display: block;
+  width: 100%;
+  height: 80px;
+  pointer-events: none;
+}
+
+.particle-register__label {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  left: 0;
+  font-size: 12px;
+  line-height: 16px;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.particle-register[data-state='assembled'] .particle-register__label { opacity: 1; transform: translateY(0); }
+.particle-register__fallback { position: absolute; inset: 0 0 14px; pointer-events: none; }
+.particle-register__fallback img { position: absolute; width: 46px; height: 46px; top: 17px; left: calc(50% - 23px); }
+.particle-register__fallback i {
+  position: absolute;
+  top: calc(50% + var(--y));
+  left: calc(50% + var(--x));
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: #079ccc;
+}
+.particle-register__fallback i:nth-child(3n) { background: #c99730; }
+
+@media (prefers-reduced-motion: reduce) {
+  .particle-register__label { transition: none; }
+  .particle-register:not(:disabled):active { transform: none; }
+}
