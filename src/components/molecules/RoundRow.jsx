@@ -10,9 +10,9 @@ const RecordRow = (props) => {
   const {
     record,
     index,
-    fakeRow,
+    // fakeRow,
     isOpen,
-    roundShowHandler,
+    // roundShowHandler,
     weeklyTeamData,
     setShowSelectTeamPopup,
     setPendingRoundId,
@@ -31,12 +31,12 @@ const RecordRow = (props) => {
   const recordAreaStyle = 'flex flex-wrap min-w-0 items-center font-dnf-forged gap-x-2 gap-y-1 w-full'
   const roundTextStyle = 'whitespace-nowrap text-[13px] text-black dark:text-gray-100'
   const winnerDivStyle = 'flex flex-wrap min-w-0 items-center relative bottom-[2px]'
-  const teamStyle = 'font-dnf-forged text-teamWin dark:text-blue-300 mr-1 text-sm'
+  const teamStyle = 'relative font-dnf-forged text-teamWin dark:text-blue-300 mr-1 text-sm top-[2px]'
   const opponentStyle = 'font-dnf-forged text-gray-400 dark:text-gray-500 text-[10px] ml-1 mt-1'
   const winStyle = 'font-hahmlet text-goal dark:text-red-300 text-sm'
-  const scoreStyle = 'shrink-0 whitespace-nowrap text-xs font-semibold tabular-nums text-gray-700 dark:text-gray-200'
-  const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
-  const arrowIcon = 'bg-[url("@/assets/up2.png")] '
+  const scoreStyle = 'relative top-[2px] shrink-0 whitespace-nowrap text-xs font-semibold tabular-nums text-gray-700 dark:text-gray-200'
+  // const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
+  // const arrowIcon = 'bg-[url("@/assets/up2.png")] '
   const roundExitButtonStyle = 'text-goal dark:text-yellow-500 animate-pulse'
 
 
@@ -458,16 +458,16 @@ const RecordRow = (props) => {
             }
           </div>
           {!editTeamMode && (
-            <div className={'flex shrink-0 bottom-[1px] '}>
+            <div className={'flex relative shrink-0 bottom-[2px] right-2'}>
               <TimeText text={record.time.slice(0, 5)} />
             </div>
           )}
-          {!editTeamMode && (
-            <span
-              className={itemStyle + arrowIcon + ' shrink-0'}
-              onClick={() => !fakeRow && roundShowHandler(index)}
-            />
-          )}
+          {/*{!editTeamMode && (*/}
+          {/*  <span*/}
+          {/*    className={itemStyle + arrowIcon + ' shrink-0'}*/}
+          {/*    onClick={() => !fakeRow && roundShowHandler(index)}*/}
+          {/*  />*/}
+          {/*)}*/}
         </div>
       )}
     </>
