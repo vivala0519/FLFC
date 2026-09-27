@@ -1,6 +1,6 @@
 const metrics = [
-  { key: 'goals', label: '골', unit: '골' },
-  { key: 'assists', label: '어시', unit: '어시' },
+  { key: 'goalRate', label: '출석당 골', unit: '골' },
+  { key: 'assistRate', label: '출석당 어시', unit: '어시' },
   { key: 'points', label: '승점', unit: '점' },
   { key: 'pointRate', label: '승점생산률', unit: '점/경기' },
   { key: 'attendance', label: '출석', unit: '회' },
@@ -37,6 +37,8 @@ export const analyzePlayerRadar = (records, members, month) => {
   }
 
   for (const player of players.values()) {
+    player.goalRate = player.attendance > 0 ? player.goals / player.attendance : 0
+    player.assistRate = player.attendance > 0 ? player.assists / player.attendance : 0
     player.pointRate = player.games > 0 ? player.points / player.games : 0
   }
 
