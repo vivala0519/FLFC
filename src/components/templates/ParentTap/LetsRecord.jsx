@@ -22,7 +22,7 @@ const LetsRecord = (props) => {
   const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
   const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
   const { open, setOpen, headerHeight } = props
-  const registerRef = useRef(null)
+  const writeContainerRef = useRef(null)
   const feverTimeRef = useRef(null)
   const [weeklyTeamData, setWeeklyTeamData] = useState(null)
   const [todayRecord, setTodayRecord] = useState([])
@@ -74,9 +74,17 @@ const LetsRecord = (props) => {
   }, [totalWeeklyTeamData])
 
   useEffect(() => {
-    if (registerRef.current) {
-      setRegisterHeight(registerRef.current.clientHeight)
-    }
+    const container = writeContainerRef.current
+    if (!container) return
+
+    const measureHeight = () => setRegisterHeight(container.getBoundingClientRect().height)
+    measureHeight()
+    const observer = new ResizeObserver(measureHeight)
+    observer.observe(container)
+    return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
     if (thisDay !== 6) {
       setOpen(true)
     }
@@ -155,19 +163,6 @@ const LetsRecord = (props) => {
       setRequestList(sortedRequestArray)
     }
   }, [todaysRequestList])
-
-  useEffect(() => {
-    function setHeight() {
-      const height = window.innerHeight - (headerHeight + registerHeight + 150)
-      setDynamicHeight(height)
-    }
-    // setHeight()
-    // window.addEventListener('resize', setHeight)
-
-    return () => {
-      // window.removeEventListener('resize', setHeight)
-    }
-  }, [headerHeight, registerHeight])
 
   // 오늘의 기록된 데이터 가져오기
   useEffect(() => {
@@ -608,14 +603,16 @@ const LetsRecord = (props) => {
 
   useEffect(() => {
     function setHeight() {
-      const additionalHeight = requestUpdateMode ? 300 : 100
-      const height =
+      const additionalHeight = requestUpdateMode ? 300 : 70
+      const height = Math.max(120,
         window.innerHeight -
-        (headerHeight + registerHeight + feverTimeHeight + additionalHeight)
+        (headerHeight + registerHeight + feverTimeHeight + additionalHeight))
       setDynamicHeight(height)
     }
     setHeight()
-  }, [requestUpdateMode, registerHeight, feverTimeHeight])
+    window.addEventListener('resize', setHeight)
+    return () => window.removeEventListener('resize', setHeight)
+  }, [requestUpdateMode, registerHeight, feverTimeHeight, headerHeight])
 
   useEffect(() => {
     if (feverTimeRef.current) {
@@ -687,7 +684,7 @@ const LetsRecord = (props) => {
             popupType={popupType}
             scorerTeam={scorerTeam}
             requestList={requestList}
-            registerRef={registerRef}
+            containerRef={writeContainerRef}
             editingRecordKey={editingRecordKey}
             canRegister={canRegister}
             playingTeams={playingTeams}

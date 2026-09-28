@@ -4,11 +4,11 @@ import ParticleRegisterButton from '@/components/atoms/ParticleRegisterButton.js
 import './RecordEntryForm.css'
 
 // Presentational controls shared by the live WriteBox and the offline /test page.
-const RecordEntryForm = ({ data, registerRef, registerHandler, handleKeyDown, handleBlur, disabled = false, buttonType = 'button' }) => {
+const RecordEntryForm = ({ data, registerHandler, handleKeyDown, handleBlur, disabled = false, buttonType = 'button' }) => {
   const { scorer, setScorer, assistant, setAssistant } = data
 
   return (
-    <div ref={registerRef} className="record-entry-form">
+    <div className="record-entry-form">
       <div className="record-entry-form__fields relative left-[40px]">
         {[0, 1].map((index) => (
           <div key={index} className="record-entry-form__field">

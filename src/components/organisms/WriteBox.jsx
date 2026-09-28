@@ -6,7 +6,7 @@ import { uid } from 'uid'
 import { getDatabase, set, onValue, ref } from 'firebase/database'
 
 const WriteBox = (props) => {
-  const { registerRef, registerHandler, data, isWriting, editingRecordKey } = props
+  const { registerHandler, data, isWriting, editingRecordKey } = props
   const [isTyping, setIsTyping] = useState(false)
   const [otherUsersTyping, setOtherUsersTyping] = useState([])
   const itemStyle = `w-[20px] h-[20px] bg-[length:100%_100%] transform rotate-[11deg] relative bottom-[2px] right-[2px] `
@@ -117,7 +117,6 @@ const WriteBox = (props) => {
     <>
       <RecordEntryForm
         data={data}
-        registerRef={registerRef}
         registerHandler={registerHandler}
         handleKeyDown={handleKeyDown}
         handleBlur={handleBlur}

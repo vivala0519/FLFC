@@ -64,7 +64,7 @@ const ensureRoundTeamList = async (db, thisYear, today, roundId, playingTeams) =
 const WriteContainer = (props) => {
   const {
     weeklyTeamData,
-    registerRef,
+    containerRef,
     editingRecordKey,
     open,
     canRegister,
@@ -595,6 +595,7 @@ const WriteContainer = (props) => {
 
   return (
     <div
+      ref={containerRef}
       className={
         !canRegister ? 'w-full' : 'flex flex-col items-center mt-4 w-[80%]'
       }
@@ -605,18 +606,17 @@ const WriteContainer = (props) => {
         <WriteBox
           isWriting={isWriting}
           editingRecordKey={editingRecordKey}
-          registerRef={registerRef}
           registerHandler={registerHandler}
           data={writeBoxPropsData}
         />
       ) : (
         <div className="relative flex justify-center">
           {!requestUpdateMode ? (
-            <div>
+            <div className={'w-[80%]'}>
               <InfoMessageBox open={open} />
-              {showRequestUpdateButton && (
-                <ShowRequestButton setRequestUpdateMode={setRequestUpdateMode} />
-              )}
+              {/*{showRequestUpdateButton && (*/}
+              {/*  <ShowRequestButton setRequestUpdateMode={setRequestUpdateMode} />*/}
+              {/*)}*/}
             </div>
           ) : (
             <RequestBox
