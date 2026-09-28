@@ -188,7 +188,7 @@ const AnalysisTap = (props) => {
   const analysisItems = [
     {
       type: 'best-five',
-      isNew: true,
+      // isNew: true,
       icon: 'bestFive',
       title: 'BEST Ⅴ',
       // description: '분기 출석률 50% 이상',
@@ -214,7 +214,7 @@ const AnalysisTap = (props) => {
     },
     {
       type: 'recent-form',
-      isNew: true,
+      // isNew: true,
       icon: 'rising',
       title: '최근 상승세',
       // description: '최근 출석 2회와 직전 2회의 공격포인트·승점 합계 비교',
@@ -222,7 +222,7 @@ const AnalysisTap = (props) => {
     },
     {
       type: 'recent-fall',
-      isNew: true,
+      // isNew: true,
       icon: 'falling',
       title: '최근 하락세',
       // description: '최근 출석 2회와 직전 2회의 공격포인트·승점 합계 비교',
@@ -243,7 +243,7 @@ const AnalysisTap = (props) => {
       data: bestSlowStarter,
     },
     {
-      isNew: true,
+      // isNew: true,
       icon: 'trio',
       title: '세 얼간이',
       description: '승률이 제일 높은 트리오',
@@ -258,7 +258,7 @@ const AnalysisTap = (props) => {
     },
     {
       type: 'scoring-streak',
-      isNew: true,
+      // isNew: true,
       icon: 'streak',
       title: '꾸준한 해결사',
       description: '출석할 때마다 골을 기록한 연속 횟수 Top 플레이어',
@@ -272,7 +272,7 @@ const AnalysisTap = (props) => {
     },
     {
       type: 'low-scoring-duo',
-      isNew: true,
+      // isNew: true,
       icon: 'handshake',
       title: '친해지자..',
       description: '같은 팀 횟수 대비 공격포인트가 가장 낮은 듀오',
@@ -280,7 +280,7 @@ const AnalysisTap = (props) => {
     },
     {
       type: 'longest-absent',
-      isNew: true,
+      // isNew: true,
       icon: 'alarm',
       title: '깨어나세요..',
       description: '마지막 출석이 가장 오래된 플레이어',
