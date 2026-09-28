@@ -1,8 +1,8 @@
 const metrics = [
-  { key: 'goalRate', label: '출석당 골', unit: '골' },
-  { key: 'assistRate', label: '출석당 어시', unit: '어시' },
+  { key: 'goalRate', label: '일평균 골', unit: '골' },
+  { key: 'assistRate', label: '일평균 어시', unit: '어시' },
   { key: 'points', label: '승점', unit: '점' },
-  { key: 'pointRate', label: '승점생산률', unit: '점/경기' },
+  { key: 'pointRate', label: '경기당 승점생산률', unit: '점' },
   { key: 'attendance', label: '출석', unit: '회' },
 ]
 
