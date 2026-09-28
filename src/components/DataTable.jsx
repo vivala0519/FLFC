@@ -48,6 +48,8 @@ const DataTable = (props) => {
   const [arrowDirection, setArrowDirection] = useState(true)
   const startYear = tap === '승점' ? 2026 : 2021
 
+  const [isDark, setIsDark] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches)
+
   useEffect(() => {
     if (tableData?.data?.length > 0) {
       // console.log('tableData.data', tableData.data)
@@ -277,7 +279,7 @@ const DataTable = (props) => {
           {tap === '현황판' ? (
             <div>
               <p
-                className="w-full text-blue-800"
+                className="w-full text-blueSignature dark:text-blue-300"
                 style={{
                   fontSize: '12px',
                   textAlign: 'left',
@@ -290,7 +292,7 @@ const DataTable = (props) => {
                   className={
                     analyzedData?.lastFourWeeksAttendance &&
                     analyzedData.lastFourWeeksAttendance.size < 25
-                      ? 'text-rose-700'
+                      ? 'text-goal dark:text-yellow-400'
                       : 'text-blue-600'
                   }
                 >
@@ -396,11 +398,7 @@ const DataTable = (props) => {
               <div key={'sorted-' + index}>
                 <TableRowStat key={index} $tap={tap}>
                   {tap === '현황판' ? (
-                    <FirstColumn
-                      $realActive={analyzedData.lastFourWeeksAttendance.has(
-                        name,
-                      )}
-                    >
+                    <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)} $isDark={isDark}>
                       {kingList.includes(name) && (
                         <Trophy className="trophy" $king={findTrophy(name)} />
                       )}
@@ -809,7 +807,7 @@ const FirstColumn = styled.div`
     right: 0;
     position: absolute;
     border-right: ${(props) =>
-      props.$realActive ? '5px double #1d4ed8' : '1px solid #ccc'};
+      props.$realActive ? props.$isDark ? '5px double #93c5fd' : '5px double #1d4ed8' : '1px solid #ccc'};
   }
 `
 

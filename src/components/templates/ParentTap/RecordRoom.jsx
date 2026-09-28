@@ -137,51 +137,45 @@ const RecordRoom = (props) => {
           <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
         </div>
       )}
-      <div
-        className="flex flex-row w-full mb-2 p-1"
-        style={{ fontFamily: 'DNFForgedBlade' }}
-      >
-        <div
-          className="flex flex-row w-full justify-center"
-          style={{ gap: '8%' }}
-        >
+      <div className="flex flex-row w-full mb-2 p-1" style={{ fontFamily: 'DNFForgedBlade' }}>
+        <div className="flex flex-row w-full justify-center" style={{ gap: '8%' }}>
           <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '승점' && 'text-goal'}`}
+            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '승점' && 'text-goal dark:text-yellow-400'}`}
             style={{ width: 'fit-content' }}
             onClick={() => setTapHandler(0)}
           >
             승점
           </div>
           <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '출석' && 'text-goal'}`}
+            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '출석' && 'text-goal dark:text-yellow-400'}`}
             style={{ width: 'fit-content' }}
             onClick={() => setTapHandler(1)}
           >
             출석
           </div>
           <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '골' && 'text-goal'}`}
+            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '골' && 'text-goal dark:text-yellow-400'}`}
             style={{ width: 'fit-content' }}
             onClick={() => setTapHandler(2)}
           >
             골
           </div>
           <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '어시' && 'text-goal'}`}
+            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '어시' && 'text-goal dark:text-yellow-400'}`}
             style={{ width: 'fit-content' }}
             onClick={() => setTapHandler(3)}
           >
             어시
           </div>
           <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '분석' && 'text-goal'}`}
+            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '분석' && 'text-goal dark:text-yellow-400'}`}
             style={{ width: 'fit-content' }}
             onClick={() => setTapHandler(4)}
           >
             분석
           </div>
           <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 cursor-pointer ${tap === '히스토리' && 'text-goal'}`}
+            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '히스토리' && 'text-goal dark:text-yellow-400'}`}
             style={{ width: 'fit-content' }}
             onClick={() => setTapHandler(5)}
           >
