@@ -14,6 +14,11 @@ import point from '@/assets/point_trophy3.png'
 
 import getTimes from '@/hooks/getTimes.js'
 
+const formatQuarterPointsPerGame = (stats) =>
+  stats['경기'] > 0
+    ? `${Number((stats['승점'] / stats['경기']).toFixed(2))}점`
+    : '-'
+
 const DataTable = (props) => {
   const {
     time: { thisYear },
@@ -369,7 +374,7 @@ const DataTable = (props) => {
                 <span key={data.id}>{Number(data.id.slice(2, 4)) + '일'}</span>
               ))}
               {year !== '2021' ? (
-                <span>
+                <span style={tap === '승점' ? { minWidth: '82px' } : undefined}>
                 <p
                   style={{ fontSize: '11px' }}
                 >{`${quarterName}분기`}</p>
@@ -519,7 +524,16 @@ const DataTable = (props) => {
                       </span>
                     ))}
                   {tap !== '현황판' && quarterData?.totalData.get(name) && (
-                    <span>{quarterData.totalData.get(name)[tap]}</span>
+                    tap === '승점' ? (
+                      <QuarterPointsCell>
+                        <span>{quarterData.totalData.get(name)['승점']}점</span>
+                        <small>
+                          경기당 {formatQuarterPointsPerGame(quarterData.totalData.get(name))}
+                        </small>
+                      </QuarterPointsCell>
+                    ) : (
+                      <span>{quarterData.totalData.get(name)[tap]}</span>
+                    )
                   )}
                 </TableRowStat>
                 <StyledHR $tap={tap} />
@@ -749,6 +763,21 @@ const TableRowStat = styled.div`
     @media (max-width: 812px) {
       min-width: ${(props) => (props.$tap === '현황판' ? '14%' : '13%')};
     }
+  }
+`
+
+const QuarterPointsCell = styled.span`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 82px !important;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  > small {
+    font-size: 10px;
+    opacity: 0.75;
   }
 `
 

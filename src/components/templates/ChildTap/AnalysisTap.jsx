@@ -910,7 +910,7 @@ const AnalysisTap = (props) => {
             <div className="flex justify-center">
               <button
                 type="button"
-                className="bg-transparent py-1 text-sm text-blue-700 dark:text-yellow-400 border-2 border-blue-500 dark:border-yellow-400"
+                className="bg-transparent py-1 text-sm w-40 h-12 text-blue-700 dark:text-yellow-400 border-2 border-blue-500 dark:border-yellow-400"
                 aria-expanded={showIndividual}
                 aria-controls="individual-analysis"
                 onClick={() => {
