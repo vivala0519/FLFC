@@ -200,6 +200,9 @@ export const analyzeForStatusBoard = (
       Math.ceil((value['어시'] / value['출석']) * 100) / 100,
     )
     value['공격포인트'] = value['골'] + value['어시']
+    value['일평균공격포인트'] = value['출석'] > 0
+      ? Math.ceil((value['공격포인트'] / value['출석']) * 100) / 100
+      : 0
     value['포인트총합'] = value['포인트']
     value['골순위'] = 0
     value['어시순위'] = 0

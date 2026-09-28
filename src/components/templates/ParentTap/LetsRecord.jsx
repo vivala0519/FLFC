@@ -603,10 +603,9 @@ const LetsRecord = (props) => {
 
   useEffect(() => {
     function setHeight() {
-      const additionalHeight = requestUpdateMode ? 300 : 70
       const height = Math.max(120,
         window.innerHeight -
-        (headerHeight + registerHeight + feverTimeHeight + additionalHeight))
+        (headerHeight + registerHeight + feverTimeHeight))
       setDynamicHeight(height)
     }
     setHeight()

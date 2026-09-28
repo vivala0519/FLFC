@@ -5,12 +5,8 @@ import './DataTable.css'
 import up from '@/assets/up2.png'
 import down from '@/assets/down2.png'
 import left from '@/assets/left.png'
-import goal from '@/assets/goal2.png'
 import right from '@/assets/right.png'
 import medal from '@/assets/medal.png'
-import assist from '@/assets/assist2.png'
-import attendance from '@/assets/attendance2.png'
-import point from '@/assets/point_trophy3.png'
 
 import getTimes from '@/hooks/getTimes.js'
 
@@ -18,6 +14,30 @@ const formatQuarterPointsPerGame = (stats) =>
   stats['경기'] > 0
     ? `${Number((stats['승점'] / stats['경기']).toFixed(2))}`
     : '-'
+
+const getKingTitles = (kings, name) => {
+  const awards = [
+    ['goal_king', '득점왕'],
+    ['assist_king', '어시왕'],
+    ['point_king', '승점왕'],
+    ['attendance_king', '출석왕'],
+  ]
+
+  return awards
+    .filter(([key]) => {
+      const winners = kings?.[key]
+      return Array.isArray(winners) ? winners.includes(name) : winners === name
+    })
+    .map(([, title]) => title)
+}
+
+const KingLabels = ({ titles }) => titles.length > 0 && (
+  <div className="absolute -left-6 top-0 flex w-[75px] flex-wrap items-center justify-center gap-x-1 text-[8px] leading-3 text-[#bb2649] dark:text-red-300 font-dnf-bit animate-pulse">
+    {titles.map((title) => (
+      <span key={title} className="inline-block whitespace-nowrap -rotate-[12deg]">{title}</span>
+    ))}
+  </div>
+)
 
 const DataTable = (props) => {
   const {
@@ -43,9 +63,9 @@ const DataTable = (props) => {
   const [sortedAbsenteeNames, setSortedAbsenteeNames] = useState([])
   const [quarterName, setQuarterName] = useState('')
   const [winnerList, setWinnerList] = useState([])
-  const [kingList, setKingList] = useState([])
   const [arrowState, setArrowState] = useState('이름')
-  const [arrowDirection, setArrowDirection] = useState(true)
+  const [sortDirection, setSortDirection] = useState('asc')
+  const selectedStatusColumnIndex = STATUS_BOARD_SORT_KEYS.indexOf(arrowState) + 1
   const startYear = tap === '승점' ? 2026 : 2021
 
   const [isDark, setIsDark] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -75,11 +95,12 @@ const DataTable = (props) => {
       setSortedNames(
         [...analyzedData.active.members.active].sort((a, b) => {
           if (arrowState === '이름') {
-            return arrowDirection ? a.localeCompare(b) : b.localeCompare(a)
+            return sortDirection === 'asc' ? a.localeCompare(b) : b.localeCompare(a)
           }
           const aValue = Number(analyzedData.active.totalData.get(a)?.[arrowState]) || 0
           const bValue = Number(analyzedData.active.totalData.get(b)?.[arrowState]) || 0
-          return bValue - aValue || a.localeCompare(b)
+          const difference = sortDirection === 'asc' ? aValue - bValue : bValue - aValue
+          return difference || a.localeCompare(b)
         }),
       )
       setSortedAbsenteeNames(
@@ -98,7 +119,7 @@ const DataTable = (props) => {
     // console.log(analyzedData)
 
     // setSortedAbsenteeNames(analyzedData?.active?.members['inactive'].sort((a, b) => a.localeCompare(b)))
-  }, [analyzedData, tap, arrowState, arrowDirection])
+  }, [analyzedData, tap, arrowState, sortDirection])
 
   const extractWinners = (sortedByValue) => {
     const maxValue = Math.max(
@@ -182,33 +203,6 @@ const DataTable = (props) => {
     }
   }, [analyzedData, tap, quarterData])
 
-  const findTrophy = (name) => {
-    if (lastSeasonKings?.goal_king === name) {
-      return 'goal'
-    }
-    if (lastSeasonKings?.assist_king === name) {
-      return 'assist'
-    }
-    if (lastSeasonKings?.attendance_king.includes(name)) {
-      return 'attendance'
-    }
-    if (lastSeasonKings?.point_king.includes(name)) {
-      return 'point'
-    }
-  }
-
-  useEffect(() => {
-    let kings = []
-    if (lastSeasonKings) {
-      kings = [...lastSeasonKings.attendance_king]
-      kings.push(lastSeasonKings.goal_king)
-      kings.push(lastSeasonKings.assist_king)
-      kings.push(lastSeasonKings.point_king)
-    }
-
-    setKingList(kings)
-  }, [lastSeasonKings])
-
   // 페이지에 따른 분기 이름 설정
   useEffect(() => {
     if (tap !== '현황판') {
@@ -244,8 +238,19 @@ const DataTable = (props) => {
 
   // th에 따른 정렬
   const sortBy = (by) => {
-    setArrowDirection(by === '이름' ? !arrowDirection : false)
+    setSortDirection((current) =>
+      by === arrowState
+        ? current === 'asc' ? 'desc' : 'asc'
+        : by === '이름' ? 'asc' : 'desc',
+    )
     setArrowState(by)
+  }
+
+  const renderSortArrow = (column) => {
+    const Arrow = column === arrowState && sortDirection === 'asc'
+      ? UpArrow
+      : DownArrow
+    return <Arrow className={arrowState === column ? 'arrow' : 'opacity-50'} aria-hidden="true" />
   }
 
   return (
@@ -275,7 +280,7 @@ const DataTable = (props) => {
         </div>
       )}
       <TableContainer>
-        <Table>
+        <Table $tap={tap}>
           {tap === '현황판' ? (
             <div>
               <p
@@ -283,7 +288,8 @@ const DataTable = (props) => {
                 style={{
                   fontSize: '12px',
                   textAlign: 'left',
-                  marginBottom: '2px',
+                  marginBottom: '6px',
+                  paddingLeft: '6px',
                 }}
               >
                 실참여 인원 :{' '}
@@ -300,73 +306,64 @@ const DataTable = (props) => {
                     analyzedData.lastFourWeeksAttendance.size}
                 </span>
               </p>
-              <TableHeaderStat>
+              <TableHeaderStat $sortedIndex={selectedStatusColumnIndex}>
                 <StatTd
                   id="first_element"
-                  style={{ minWidth: '72px', maxWidth: '75px' }}
+                  style={{ paddingLeft: '12px', minWidth: '72px', maxWidth: '75px' }}
                   onClick={() => sortBy('이름')}
                 >
                   <span>이름</span>
-                  {arrowState === '이름' &&
-                    (arrowDirection ? (
-                      <DownArrow className="arrow" />
-                    ) : (
-                      <UpArrow className="arrow" />
-                    ))}
+                  {renderSortArrow('이름')}
                 </StatTd>
                 <StatTd onClick={() => sortBy('승점')}>
                   <span>승점</span>
-                  {arrowState === '승점' && <DownArrow className="arrow" />}
+                  {renderSortArrow('승점')}
                 </StatTd>
                 <StatTd onClick={() => sortBy('경기')}>
                   <span>경기수</span>
-                  {arrowState === '경기' && <DownArrow className="arrow" />}
+                  {renderSortArrow('경기')}
                 </StatTd>
                 <StatTd onClick={() => sortBy('승점률')}>
-                  <span>{`경기당\n평균 승점`}</span>
-                  {arrowState === '승점률' && <DownArrow className="arrow" />}
+                  <span>{`경기당\n승점`}</span>
+                  {renderSortArrow('승점률')}
                 </StatTd>
                 <StatTd onClick={() => sortBy('골')}>
                   <span>골</span>
-                  {arrowState === '골' && <DownArrow className="arrow" />}
+                  {renderSortArrow('골')}
                 </StatTd>
                 <StatTd onClick={() => sortBy('일평균득점')}>
                   <span>{`일평균\n득점`}</span>
-                  {arrowState === '일평균득점' && (
-                    <DownArrow className="arrow" />
-                  )}
+                  {renderSortArrow('일평균득점')}
                 </StatTd>
                 <StatTd onClick={() => sortBy('어시')}>
                   <span>어시</span>
-                  {arrowState === '어시' && <DownArrow className="arrow" />}
+                  {renderSortArrow('어시')}
                 </StatTd>
                 <StatTd onClick={() => sortBy('일평균어시')}>
                   <span>{`일평균\n어시`}</span>
-                  {arrowState === '일평균어시' && (
-                    <DownArrow className="arrow" />
-                  )}
+                  {renderSortArrow('일평균어시')}
                 </StatTd>
                 <StatTd onClick={() => sortBy('공격포인트')}>
                   <span>{'공격\n포인트'}</span>
-                  {arrowState === '공격포인트' && (
-                    <DownArrow className="arrow" />
-                  )}
+                  {renderSortArrow('공격포인트')}
+                </StatTd>
+                <StatTd onClick={() => sortBy('일평균공격포인트')}>
+                  <span>{'일평균\n공격포인트'}</span>
+                  {renderSortArrow('일평균공격포인트')}
                 </StatTd>
                 <StatTd onClick={() => sortBy('출석')}>
                   <span>출석</span>
-                  {arrowState === '출석' && <DownArrow className="arrow" />}
+                  {renderSortArrow('출석')}
                 </StatTd>
-                <CustomMinWidthDiv
-                  onClick={() => sortBy('포인트총합')}
-                  $propsWidth="15%"
-                  $propsMax="9.5%"
-                  $propsSize="8px"
-                >
-                  <span>{`출석/어시/골\n포인트 총합`}</span>
-                  {arrowState === '포인트총합' && (
-                    <DownArrow className="arrow" />
-                  )}
-                </CustomMinWidthDiv>
+                {/*<CustomMinWidthDiv*/}
+                {/*  onClick={() => sortBy('포인트총합')}*/}
+                {/*  $propsWidth="15%"*/}
+                {/*  $propsMax="9.5%"*/}
+                {/*  $propsSize="8px"*/}
+                {/*>*/}
+                {/*  <span>{`출석/어시/골\n포인트 총합`}</span>*/}
+                {/*  {renderSortArrow('포인트총합')}*/}
+                {/*</CustomMinWidthDiv>*/}
               </TableHeaderStat>
             </div>
           ) : (
@@ -396,15 +393,15 @@ const DataTable = (props) => {
             {/*실 출석 인원 먼저*/}
             {sortedNames?.map((name, index) => (
               <div key={'sorted-' + index}>
-                <TableRowStat key={index} $tap={tap}>
+                <TableRowStat
+                  key={index}
+                  $tap={tap}
+                  $sortedIndex={tap === '현황판' ? selectedStatusColumnIndex : 0}
+                >
                   {tap === '현황판' ? (
                     <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)} $isDark={isDark}>
-                      {kingList.includes(name) && (
-                        <Trophy className="trophy" $king={findTrophy(name)} />
-                      )}
-                      <StatusBoardName
-                        style={{ width: '72px', borderRight: '1px solid #ccc' }}
-                      >
+                      <KingLabels titles={getKingTitles(lastSeasonKings, name)} />
+                      <StatusBoardName>
                         {name}
                       </StatusBoardName>
                     </FirstColumn>
@@ -449,11 +446,14 @@ const DataTable = (props) => {
                           {analyzedData.active.totalData.get(name)['공격포인트']}
                         </CustomMinWidthSpan>
                         <span>
+                          {analyzedData.active.totalData.get(name)['일평균공격포인트']}
+                        </span>
+                        <span>
                         {analyzedData.active.totalData.get(name)['출석']}
                       </span>
-                        <CustomMinWidthSpan $propsWidth="14%" $propsMax="10%">
-                          {analyzedData.active.totalData.get(name)['포인트총합']}
-                        </CustomMinWidthSpan>
+                        {/*<CustomMinWidthSpan $propsWidth="14%" $propsMax="10%">*/}
+                        {/*  {analyzedData.active.totalData.get(name)['포인트총합']}*/}
+                        {/*</CustomMinWidthSpan>*/}
                       </>
                   )}
                   {tap === '경기' &&
@@ -540,17 +540,19 @@ const DataTable = (props) => {
             {/*장기 미출석 인원*/}
             {sortedAbsenteeNames?.map((name, index) => (
               <div key={'sorted-ab-' + index}>
-                <TableRowOther key={index}>
+                <TableRowOther
+                  key={index}
+                  $tap={tap}
+                  $sortedIndex={tap === '현황판' ? selectedStatusColumnIndex : 0}
+                >
                   {tap === '현황판' ? (
                     <FirstColumn
                       $realActive={analyzedData.lastFourWeeksAttendance.has(
                         name,
                       )}
                     >
-                      {kingList.includes(name) && (
-                        <Trophy className="trophy" $king={findTrophy(name)} />
-                      )}
-                      <div style={{ width: '75px' }}>{name}</div>
+                      <KingLabels titles={getKingTitles(lastSeasonKings, name)} />
+                      <StatusBoardName>{name}</StatusBoardName>
                     </FirstColumn>
                   ) : (
                     <div style={{ minWidth: '20%', flex: '1' }}>{name}</div>
@@ -580,7 +582,13 @@ const DataTable = (props) => {
                               : ''}
                           </span>
                         ))}
-                  <span className="flex items-center pre text-xs"></span>
+                  {tap === '현황판' ? (
+                    Array.from({ length: STATUS_BOARD_SORT_KEYS.length - 1 }, (_, cellIndex) => (
+                      <span key={cellIndex} aria-hidden="true" />
+                    ))
+                  ) : (
+                    <span className="flex items-center pre text-xs"></span>
+                  )}
                 </TableRowOther>
                 <StyledHR $tap={tap} />
               </div>
@@ -593,6 +601,23 @@ const DataTable = (props) => {
 }
 
 export default DataTable
+
+const STATUS_BOARD_COLUMNS = '75px repeat(7, minmax(60px, 1fr)) minmax(70px, 1.1fr) minmax(80px, 1.2fr) minmax(60px, 1fr)'
+const STATUS_BOARD_MIN_WIDTH = 75 + 7 * 60 + 70 + 80 + 60
+const STATUS_BOARD_SORT_KEYS = ['이름', '승점', '경기', '승점률', '골', '일평균득점', '어시', '일평균어시', '공격포인트', '일평균공격포인트', '출석']
+const selectedColumnStyle = (index) => index > 0 && `
+  > :nth-child(${index}) {
+    background-color: #eff6ff;
+    color: #111827;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    > :nth-child(${index}) {
+      background-color: #374151;
+      color: #f9fafb;
+    }
+  }
+`
 
 const MonthContainer = styled.div`
   display: flex;
@@ -643,36 +668,40 @@ const TableContainer = styled.div`
 const Table = styled.div`
   display: flex;
   flex-direction: column;
+  min-width: ${(props) => props.$tap === '현황판' ? `${STATUS_BOARD_MIN_WIDTH}px` : '0'};
 `
 
 const TableHeaderStat = styled.div`
-  display: flex;
-  align-items: center;
-  //padding: 8px 16px;
-  //width: fit-content;
-  padding-bottom: 8px;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: ${STATUS_BOARD_COLUMNS};
+  align-items: stretch;
+  padding-bottom: 2px;
 
   > div {
-    flex: 1;
-    min-width: 7%;
-    max-width: 7%;
-    height: 36px;
+    min-width: 0;
+    min-height: 36px;
     display: flex;
+    gap: 2px;
+    padding: 0 2px;
     white-space: pre-line;
     border-right: 1px solid #ccc;
     justify-content: center;
     align-items: center;
+    > span {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
     @media (max-width: 812px) {
       font-size: 12px;
-      min-width: 14%;
     }
   }
+
+  ${(props) => selectedColumnStyle(props.$sortedIndex)}
 `
 
 const StatTd = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   position: relative;
   cursor: pointer;
 `
@@ -698,25 +727,33 @@ const CustomMinWidthSpan = styled.span`
 `
 
 const UpArrow = styled.div`
-  position: absolute;
-  top: 24px;
-  width: 20px;
-  height: 20px;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
   background-image: url(${up});
   background-position: center;
   background-repeat: no-repeat;
   background-size: 100% 100%;
+  @media (max-width: 812px) {
+    flex-basis: 10px;
+    width: 10px;
+    height: 10px;
+  }
 `
 
 const DownArrow = styled.div`
-  position: absolute;
-  top: 24px;
-  width: 20px;
-  height: 20px;
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
   background-image: url(${down});
   background-position: center;
   background-repeat: no-repeat;
   background-size: 100% 100%;
+  @media (max-width: 812px) {
+    flex-basis: 10px;
+    width: 10px;
+    height: 10px;
+  }
 `
 
 const TableHeaderOther = styled.div`
@@ -749,9 +786,10 @@ const TableBody = styled.div`
 `
 
 const TableRowStat = styled.div`
-  display: flex;
+  display: ${(props) => props.$tap === '현황판' ? 'grid' : 'flex'};
+  grid-template-columns: ${STATUS_BOARD_COLUMNS};
   align-items: center;
-  height: 35px;
+  min-height: 35px;
 
   > span {
     flex: 1;
@@ -759,9 +797,21 @@ const TableRowStat = styled.div`
     border-right: 1px solid #ccc;
     //border-top: 1px solid #ccc;
     @media (max-width: 812px) {
-      min-width: ${(props) => (props.$tap === '현황판' ? '14%' : '13%')};
+      min-width: 13%;
     }
   }
+
+  ${(props) => props.$tap === '현황판' && `
+    > span {
+      min-width: 0 !important;
+      display: flex;
+      align-self: stretch;
+      align-items: center;
+      justify-content: center;
+    }
+  `}
+
+  ${(props) => selectedColumnStyle(props.$sortedIndex)}
 `
 
 const QuarterPointsCell = styled.span`
@@ -780,20 +830,42 @@ const QuarterPointsCell = styled.span`
 `
 
 const TableRowOther = styled.div`
-  display: flex;
+  display: ${(props) => props.$tap === '현황판' ? 'grid' : 'flex'};
+  grid-template-columns: ${STATUS_BOARD_COLUMNS};
   align-items: center;
-  height: 35px;
+  min-height: 35px;
 
   > span {
     flex: 1;
     min-width: 13%;
   }
+
+  ${(props) => props.$tap === '현황판' && `
+    > span {
+      min-width: 0;
+      align-self: stretch;
+      border-right: 1px solid #ccc;
+    }
+  `}
+
+  ${(props) => selectedColumnStyle(props.$sortedIndex)}
 `
 
 const FirstColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 75px;
+  min-height: 35px;
   position: sticky;
   left: 0;
   z-index: 1;
+  background-color: #fff;
+
+  @media (prefers-color-scheme: dark) {
+    background-color: #242424;
+  }
 
   &::after {
     content: '';
@@ -809,7 +881,7 @@ const FirstColumn = styled.div`
 
 const StyledHR = styled.hr`
   @media (max-width: 812px) {
-    width: ${(props) => props.$tap === '현황판' && '189%'} !important;
+    width: ${(props) => props.$tap === '현황판' && '100%'} !important;
   }
 `
 
@@ -834,30 +906,5 @@ const Medal = styled.div`
 
 const StatusBoardName = styled.div`
   width: 75px;
-  border-right: '1px solid #ccc';
-`
-
-const Trophy = styled.div`
-  position: absolute;
-  width: 30px;
-  height: 30px;
-
-  &::after {
-    position: absolute;
-    content: '';
-    background-image: ${(props) =>
-      props.$king === 'goal'
-        ? `url(${goal})`
-        : props.$king === 'assist'
-          ? `url(${assist})`
-          : props.$king === 'attendance'
-          ? `url(${attendance})` : `url(${point})`};
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    width: 100%;
-    height: 100%;
-    left: 0;
-    top: -40%;
-  }
+  text-align: center;
 `

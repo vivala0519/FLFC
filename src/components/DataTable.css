@@ -4,22 +4,10 @@
 
 @keyframes moveUpDown {
     0% {
-        top: 22px;
+        transform: translateY(-2px);
     }
     100% {
-        top: 26px;
+        transform: translateY(2px);
     }
 }
 
-.trophy {
-    animation: rotateLeftRight 0.5s infinite alternate;
-}
-
-@keyframes rotateLeftRight {
-    0% {
-        transform: rotate(5deg);
-    }
-    100% {
-        transform: rotate(-5deg);
-    }
-}

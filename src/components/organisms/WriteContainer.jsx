@@ -612,7 +612,7 @@ const WriteContainer = (props) => {
       ) : (
         <div className="relative flex justify-center">
           {!requestUpdateMode ? (
-            <div className={'w-[80%]'}>
+            <div className={'w-[98%]'}>
               <InfoMessageBox open={open} />
               {/*{showRequestUpdateButton && (*/}
               {/*  <ShowRequestButton setRequestUpdateMode={setRequestUpdateMode} />*/}
