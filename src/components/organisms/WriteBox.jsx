@@ -6,7 +6,7 @@ import { uid } from 'uid'
 import { getDatabase, set, onValue, ref } from 'firebase/database'
 
 const WriteBox = (props) => {
-  const { registerRef, registerHandler, data, isWriting } = props
+  const { registerRef, registerHandler, data, isWriting, editingRecordKey } = props
   const [isTyping, setIsTyping] = useState(false)
   const [otherUsersTyping, setOtherUsersTyping] = useState([])
   const itemStyle = `w-[20px] h-[20px] bg-[length:100%_100%] transform rotate-[11deg] relative bottom-[2px] right-[2px] `
@@ -54,6 +54,18 @@ const WriteBox = (props) => {
   const typingTimeoutRef = useRef(null)
 
   useEffect(() => {
+    if (!editingRecordKey) return
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+      typingTimeoutRef.current = null
+    }
+    if (isTyping) {
+      setIsTyping(false)
+      set(ref(getDatabase(), `typing/users/${userId}`), false)
+    }
+  }, [editingRecordKey, isTyping, userId])
+
+  useEffect(() => {
     updateTypingStatus(false)
     return () => {
       if (typingTimeoutRef.current) {
@@ -83,7 +95,12 @@ const WriteBox = (props) => {
     }
   }, [userId])
 
-  return isWriting ? (
+  return editingRecordKey ? (
+    <div className="py-3 text-center text-sm" role="status">
+      <p className="text-xl font-semibold text-black dark:text-white">수정중..</p>
+      <p className="mt-1 text-gray-400 dark:text-gray-400">수정중인 기록을 완료해주세요</p>
+    </div>
+  ) : isWriting ? (
     <div className={'w-full'}>
       <span className={'animate-pulse'}>등록 중...</span>
       <div className={'flex gap-10 justify-center mt-2'}>

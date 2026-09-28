@@ -27,6 +27,7 @@ const LetsRecord = (props) => {
   const [weeklyTeamData, setWeeklyTeamData] = useState(null)
   const [todayRecord, setTodayRecord] = useState([])
   const [displayRecord, setDisplayRecord] = useState([])
+  const [editingRecordKey, setEditingRecordKey] = useState(null)
   const [dynamicHeight, setDynamicHeight] = useState(0)
   const [writtenData, setWrittenData] = useState(null)
   const [writtenDataLoaded, setWrittenDataLoaded] = useState(false)
@@ -133,6 +134,14 @@ const LetsRecord = (props) => {
     setLoadingFlag(false)
   }, [todaysRealtimeRound, totalWeeklyTeamData])
 
+  useEffect(() => {
+    if (!editingRecordKey || !realtimeRoundLoaded) return
+    const stillExists = displayRecord.some((round, roundIndex) =>
+      round.goals?.some((goal) => `${roundIndex}:${goal.id}` === editingRecordKey),
+    )
+    if (!stillExists) setEditingRecordKey(null)
+  }, [displayRecord, editingRecordKey, realtimeRoundLoaded])
+
   // request list
   useEffect(() => {
     if (requestList) {
@@ -152,11 +161,11 @@ const LetsRecord = (props) => {
       const height = window.innerHeight - (headerHeight + registerHeight + 150)
       setDynamicHeight(height)
     }
-    setHeight()
-    window.addEventListener('resize', setHeight)
+    // setHeight()
+    // window.addEventListener('resize', setHeight)
 
     return () => {
-      window.removeEventListener('resize', setHeight)
+      // window.removeEventListener('resize', setHeight)
     }
   }, [headerHeight, registerHeight])
 
@@ -599,7 +608,7 @@ const LetsRecord = (props) => {
 
   useEffect(() => {
     function setHeight() {
-      const additionalHeight = requestUpdateMode ? 300 : 200
+      const additionalHeight = requestUpdateMode ? 300 : 100
       const height =
         window.innerHeight -
         (headerHeight + registerHeight + feverTimeHeight + additionalHeight)
@@ -652,6 +661,8 @@ const LetsRecord = (props) => {
             setPopupType={setPopupType}
             playingTeams={playingTeams}
             dynamicHeight={dynamicHeight}
+            editingRecordKey={editingRecordKey}
+            setEditingRecordKey={setEditingRecordKey}
             displayRecord={displayRecord}
             weeklyTeamData={weeklyTeamData}
             recordsLoaded={realtimeRoundLoaded}
@@ -677,6 +688,7 @@ const LetsRecord = (props) => {
             scorerTeam={scorerTeam}
             requestList={requestList}
             registerRef={registerRef}
+            editingRecordKey={editingRecordKey}
             canRegister={canRegister}
             playingTeams={playingTeams}
             weeklyTeamData={weeklyTeamData}

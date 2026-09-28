@@ -9,10 +9,10 @@ const RecordEntryForm = ({ data, registerRef, registerHandler, handleKeyDown, ha
 
   return (
     <div ref={registerRef} className="record-entry-form">
-      <div className="record-entry-form__fields relative left-[20px]">
+      <div className="record-entry-form__fields relative left-[40px]">
         {[0, 1].map((index) => (
           <div key={index} className="record-entry-form__field">
-            <RecordTypeText type={index === 0 ? 'GOAL' : 'ASSIST'} fontSize="12px" customStyle="" />
+            <RecordTypeText type={index === 0 ? 'Goal :' : 'Assist :'} fontSize="16px" customStyle="" />
             <RecordInput
               type={index === 0 ? scorer : assistant}
               setData={index === 0 ? setScorer : setAssistant}

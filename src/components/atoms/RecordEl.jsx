@@ -2,12 +2,12 @@ import RecordTypeText from "./Text/RecordTypeText.jsx";
 
 const RecordEl = (props) => {
     const { type, text, isEditing, onChange } = props
-    const textStyle = `font-bold text-black dark:text-gray-100 text-[20px]`
-    const inputStyle = `font-bold text-black dark:text-gray-100 text-[20px] bg-transparent border-b-2 border-blue-300 focus:outline-none w-[50px] ml-1`
+    const textStyle = `relative left-6 font-bold text-black dark:text-gray-100 text-[20px]`
+    const inputStyle = `font-bold text-black dark:text-gray-100 text-[20px] bg-transparent border-b-2 border-blue-300 focus:outline-none w-[50px] ml-1 text-center`
 
     return (
         <div className={'flex flex-row items-center'}>
-            <RecordTypeText type={type} fontSize={'20px'} customStyle={`relative top-[-5px]`} sliceText={1} />
+            <RecordTypeText type={type} fontSize={'12px'} customStyle={`absolute -top-[5px] opacity-70 ` + (isEditing && ' relative left-[8px]')}/>
 
             {isEditing ? (
                 <input
@@ -15,7 +15,7 @@ const RecordEl = (props) => {
                     value={text}
                     onChange={onChange}
                     className={inputStyle}
-                    autoFocus={type === 'GOAL'}
+                    autoFocus={type === 'Goal'}
                 />
             ) : (
                 <span className={textStyle}>{text}</span>

@@ -6,11 +6,11 @@ import RecordRow from '@/components/molecules/RecordRow.jsx'
 import RoundRow from '@/components/molecules/RoundRow.jsx'
 
 const RecordContainer = (props) => {
-  const { formatRecordByName, recordsLoaded, open, isFeverTime, dynamicHeight, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams } = props
+  const { formatRecordByName, recordsLoaded, open, isFeverTime, dynamicHeight, editingRecordKey, setEditingRecordKey, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams } = props
   const { time: { today, thisYear } } = getTimes()
   const [openRounds, setOpenRounds] = useState(new Set())
   const [closedRounds, setClosedRounds] = useState(new Set())
-  const containerStyle = `w-[96%] relative overflow-auto flex flex-col items-center p-2 border border-transparent overflow-x-hidden `
+  const containerStyle = `w-[96%] relative overscroll-y-contain flex flex-col items-center p-2 border border-transparent overflow-x-hidden `
   const dynamicStyle = `${open ? 'flex' : 'hidden'} ${showMVP ? 'opacity-10' : 'opacity-100'}`
 
   const hasInitOpenRounds = useRef(false)
@@ -192,9 +192,11 @@ const RecordContainer = (props) => {
           >
             {record.goals?.map((goal, goalIndex) => (
               <RecordRow
-                key={'goal-' + goalIndex}
+                key={goal.id ?? `goal-${goalIndex}`}
                 roundIndex={index}
                 index={goalIndex}
+                editingRecordKey={editingRecordKey}
+                setEditingRecordKey={setEditingRecordKey}
                 getGoalTeam={displayRecord[index]['getGoalTeam'][goalIndex]}
                 effect={goal.id === lastRecord}
                 record={goal}

@@ -65,6 +65,7 @@ const WriteContainer = (props) => {
   const {
     weeklyTeamData,
     registerRef,
+    editingRecordKey,
     open,
     canRegister,
     setLastRecord,
@@ -404,6 +405,7 @@ const WriteContainer = (props) => {
   // ---------------------- 골 등록 핸들러 ----------------------
 
   const registerHandler = async () => {
+    if (editingRecordKey) return
     const day = currentTime.getDay()
 
     if (
@@ -602,6 +604,7 @@ const WriteContainer = (props) => {
       {canRegister ? (
         <WriteBox
           isWriting={isWriting}
+          editingRecordKey={editingRecordKey}
           registerRef={registerRef}
           registerHandler={registerHandler}
           data={writeBoxPropsData}

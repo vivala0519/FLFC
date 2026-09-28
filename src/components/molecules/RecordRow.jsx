@@ -2,6 +2,7 @@ import TimeText from '@/components/atoms/Text/TimeText.jsx'
 import RecordEl from '@/components/atoms/RecordEl.jsx'
 import DeleteButton from '@/components/atoms/Button/DeleteButton.jsx'
 import FeverTimeBar from '@/components/organisms/FeverTimeBar.jsx'
+import EditingBadge from '@/components/atoms/EditingBadge.jsx'
 import getRecords from '@/hooks/getRecords.js'
 import getTimes from '@/hooks/getTimes.js'
 import { getDatabase, ref, update } from 'firebase/database'
@@ -10,7 +11,7 @@ import { useEffect, useState } from 'react'
 import {db} from "../../../firebase.js";
 
 const RecordRow = (props) => {
-  const { record, index, roundIndex, deleteRecord, useDelete, effect, isLastRound, isFeverTime, formatRecordByName, getGoalTeam } = props
+  const { record, index, roundIndex, deleteRecord, useDelete, effect, isLastRound, isFeverTime, formatRecordByName, getGoalTeam, editingRecordKey, setEditingRecordKey } = props
   const {
     time: { thisYear, today, thisDay, currentTime, gameStartTime, gameEndTime },
   } = getTimes()
@@ -18,16 +19,18 @@ const RecordRow = (props) => {
 
   const [randomInt, setRandomInt] = useState(1)
 
-  const [isEditing, setIsEditing] = useState(false)
   const [goalText, setGoalText] = useState(record.goal)
   const [assistText, setAssistText] = useState(record.assist || '')
+  const recordKey = `${roundIndex}:${record.id}`
+  const isEditing = editingRecordKey === recordKey
   const canWriteFirestoreRecord =
     thisDay === 0 &&
     currentTime >= gameStartTime &&
     currentTime <= gameEndTime
 
-  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 pl-3 ${effect ? 'bg-effect' : ''}`
-  const recordAreaStyle = 'flex items-center pl-5 pr-2 gap-3 relative bottom-[2px] cursor-pointer'
+  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 ${effect ? 'bg-effect' : ''}`
+  const recordAreaStyle = 'flex items-center pr-2 relative bottom-[2px] '
+  const recordCursorStyle = editingRecordKey && !isEditing ? 'cursor-not-allowed' : useDelete ? 'cursor-pointer' : 'cursor-default'
   const itemStyle = `w-[20px] h-[20px] bg-[length:100%_100%] transform rotate-[11deg] relative bottom-[2px] right-[2px] `
   const goalIconStyle = 'bg-[url("@/assets/circle-ball.png")]'
   const rollClassMap = {
@@ -43,7 +46,13 @@ const RecordRow = (props) => {
   }, [])
 
   const handleAreaClick = () => {
-    if (!isEditing && useDelete) setIsEditing(true)
+    if (useDelete && !editingRecordKey) setEditingRecordKey(recordKey)
+  }
+
+  const cancelEditing = () => {
+    setGoalText(record.goal)
+    setAssistText(record.assist || '')
+    setEditingRecordKey(null)
   }
 
 
@@ -71,7 +80,6 @@ const RecordRow = (props) => {
     const goalRef = ref(db, `${thisYear}/${today}_rounds/${roundId}/goal/${targetId}`);
     const updates = {goal: goalText, assist: assistText}
     await update(goalRef, updates);
-    setIsEditing(false)
 
     const data = todaysRealtimeRound
     if (Object.keys(data).length > 0) {
@@ -95,6 +103,7 @@ const RecordRow = (props) => {
       const stats = formatRecordByName(goalRecord, roundRecord)
       await registerRecord(stats)
     }
+    setEditingRecordKey(null)
   }
 
   if (record.id === 'fever-time-bar') {
@@ -105,24 +114,25 @@ const RecordRow = (props) => {
     )
   } else {
     return (
-        <div className={rawStyle} key={index}>
-          <span className={'absolute -left-1 text-[8px]'}>{getGoalTeam}팀</span>
-          <div className={`${itemStyle} ${goalIconStyle} ${rollClassMap[randomInt]}`}></div>
+        <div className={rawStyle + (!isEditing ? 'pl-3' : 'pl-0')} key={index}>
+          {isEditing && <EditingBadge />}
+          {!isEditing && <span className={'absolute -left-1 text-[8px]'}>{getGoalTeam}팀</span>}
+          {!isEditing && <div className={`${itemStyle} ${goalIconStyle} ${rollClassMap[randomInt]}`}></div>}
           {!isEditing && <TimeText text={record.time.slice(0, 5)}/>}
 
           <div
-              className={recordAreaStyle}
+              className={`${recordAreaStyle} ${recordCursorStyle} ${!isEditing ? 'pl-5 gap-8' : 'pl-0'}`}
               onClick={handleAreaClick}
           >
             <RecordEl
-                type={'GOAL'}
+                type={'Goal'}
                 text={goalText}
                 isEditing={isEditing}
                 onChange={(e) => setGoalText(e.target.value)}
             />
             {(record.assist || isEditing) && (
                 <RecordEl
-                    type={'ASSIST'}
+                    type={'Assist'}
                     text={assistText}
                     isEditing={isEditing}
                     onChange={(e) => setAssistText(e.target.value)}
@@ -130,10 +140,13 @@ const RecordRow = (props) => {
             )}
           </div>
 
-          { !isEditing && useDelete && isLastRound && (
+          { !editingRecordKey && useDelete && isLastRound && (
               <DeleteButton clickHandler={() => deleteRecord(record.id, index)} />
           )}
-          {isEditing && (<div className={'text-green-500 mb-1.5'} onClick={closeEditing}>확인</div>)}
+          {isEditing && <div className={'flex gap-2 justify-around w-full'}>
+            <div className={'text-green-600 dark:text-green-500 mb-1.5'} onClick={closeEditing}>확인</div>
+            <div className={'text-red-400 mb-1.5'} onClick={cancelEditing}>취소</div>
+          </div>}
         </div>
     )
   }
