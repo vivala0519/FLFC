@@ -793,11 +793,7 @@ const TableRowOther = styled.div`
 const FirstColumn = styled.div`
   position: sticky;
   left: 0;
-  background: white;
   z-index: 1;
-  @media (prefers-color-scheme: dark) {
-    background: black;
-  }
 
   &::after {
     content: '';

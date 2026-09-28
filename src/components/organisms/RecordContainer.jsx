@@ -147,7 +147,7 @@ const RecordContainer = (props) => {
     >
       {displayRecord.length === 0 && (
         <div className={'w-full flex flex-col items-center'}>
-          <div className={`border-t-2 mb-2 w-[85%] border-blue-300`}></div>
+          <div className={`border-t-2 mb-2 w-[85%] border-blue-400`}></div>
           <RoundRow
             index={0}
             fakeRow={true}
@@ -165,7 +165,7 @@ const RecordContainer = (props) => {
         <div className={'w-full flex flex-col items-center'} key={index}>
           {/*{index !== 0 && (*/}
           <div
-            className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mb-2 w-[85%]`}
+            className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-400'} mb-2 w-[85%]`}
           ></div>
           {/*)}*/}
           <RoundRow
@@ -195,6 +195,7 @@ const RecordContainer = (props) => {
                 key={'goal-' + goalIndex}
                 roundIndex={index}
                 index={goalIndex}
+                getGoalTeam={displayRecord[index]['getGoalTeam'][goalIndex]}
                 effect={goal.id === lastRecord}
                 record={goal}
                 isFeverTime={isFeverTime}

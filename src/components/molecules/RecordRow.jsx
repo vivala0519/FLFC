@@ -10,7 +10,7 @@ import { useEffect, useState } from 'react'
 import {db} from "../../../firebase.js";
 
 const RecordRow = (props) => {
-  const { record, index, roundIndex, deleteRecord, useDelete, effect, isLastRound, isFeverTime, formatRecordByName } = props
+  const { record, index, roundIndex, deleteRecord, useDelete, effect, isLastRound, isFeverTime, formatRecordByName, getGoalTeam } = props
   const {
     time: { thisYear, today, thisDay, currentTime, gameStartTime, gameEndTime },
   } = getTimes()
@@ -26,7 +26,7 @@ const RecordRow = (props) => {
     currentTime >= gameStartTime &&
     currentTime <= gameEndTime
 
-  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] border-b-2 border-blue-100 pt-1 pl-3 ${effect ? 'bg-effect' : ''}`
+  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 pl-3 ${effect ? 'bg-effect' : ''}`
   const recordAreaStyle = 'flex items-center pl-5 pr-2 gap-3 relative bottom-[2px] cursor-pointer'
   const itemStyle = `w-[20px] h-[20px] bg-[length:100%_100%] transform rotate-[11deg] relative bottom-[2px] right-[2px] `
   const goalIconStyle = 'bg-[url("@/assets/circle-ball.png")]'
@@ -106,6 +106,7 @@ const RecordRow = (props) => {
   } else {
     return (
         <div className={rawStyle} key={index}>
+          <span className={'absolute -left-1 text-[8px]'}>{getGoalTeam}팀</span>
           <div className={`${itemStyle} ${goalIconStyle} ${rollClassMap[randomInt]}`}></div>
           {!isEditing && <TimeText text={record.time.slice(0, 5)}/>}
 
