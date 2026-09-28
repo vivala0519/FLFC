@@ -16,7 +16,7 @@ import getTimes from '@/hooks/getTimes.js'
 
 const formatQuarterPointsPerGame = (stats) =>
   stats['경기'] > 0
-    ? `${Number((stats['승점'] / stats['경기']).toFixed(2))}점`
+    ? `${Number((stats['승점'] / stats['경기']).toFixed(2))}`
     : '-'
 
 const DataTable = (props) => {
@@ -526,7 +526,7 @@ const DataTable = (props) => {
                   {tap !== '현황판' && quarterData?.totalData.get(name) && (
                     tap === '승점' ? (
                       <QuarterPointsCell>
-                        <span>{quarterData.totalData.get(name)['승점']}점</span>
+                        <span>{quarterData.totalData.get(name)['승점']}</span>
                         <small>
                           경기당 {formatQuarterPointsPerGame(quarterData.totalData.get(name))}
                         </small>
