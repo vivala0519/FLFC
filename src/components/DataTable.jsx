@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 
 import './DataTable.css'
@@ -12,6 +12,14 @@ const formatQuarterPointsPerGame = (stats) =>
   stats['경기'] > 0
     ? `${Number((stats['승점'] / stats['경기']).toFixed(2))}`
     : '-'
+
+const closeDialogOnBackdropClick = (event) => {
+  if (event.target !== event.currentTarget) return
+  const { left, right, top, bottom } = event.currentTarget.getBoundingClientRect()
+  if (event.clientX < left || event.clientX > right || event.clientY < top || event.clientY > bottom) {
+    event.currentTarget.close()
+  }
+}
 
 const getKingTitles = (kings, name) => {
   const awards = [
@@ -63,6 +71,7 @@ const DataTable = (props) => {
   const [winnerList, setWinnerList] = useState([])
   const [arrowState, setArrowState] = useState('이름')
   const [sortDirection, setSortDirection] = useState('asc')
+  const statusBoardInfoDialogRef = useRef(null)
   const selectedStatusColumnIndex = STATUS_BOARD_SORT_KEYS.indexOf(arrowState) + 1
   const startYear = tap === '승점' ? 2026 : 2021
 
@@ -251,7 +260,7 @@ const DataTable = (props) => {
     return (
       <SortArrow
         $ascending={isAscending}
-        className={`${isSelected ? 'arrow' : 'opacity-50'} ${isSelected ? (isAscending ? 'ascending' : 'descending') : ''}`}
+        className={`${isSelected ? 'arrow' : 'opacity-30'} ${isSelected ? (isAscending ? 'ascending' : 'descending') : ''}`}
         aria-hidden="true"
       />
     )
@@ -269,17 +278,9 @@ const DataTable = (props) => {
             ))}
           </YearContainer>
           <MonthContainer className="">
-            <PageButton
-              onClick={() => pageMoveHandler(true)}
-              $direction="left"
-              $show={page !== 0}
-            />
+            <PageButton onClick={() => pageMoveHandler(true)} $direction="left" $show={page !== 0} />
             <Month className="">{tableData.month}월</Month>
-            <PageButton
-              onClick={() => pageMoveHandler(false)}
-              $direction="right"
-              $show={page !== month.length - 1}
-            />
+            <PageButton onClick={() => pageMoveHandler(false)} $direction="right" $show={page !== month.length - 1} />
           </MonthContainer>
         </div>
       )}
@@ -300,22 +301,26 @@ const DataTable = (props) => {
                 <span
                   style={{ fontSize: '13px' }}
                   className={
-                    analyzedData?.lastFourWeeksAttendance &&
-                    analyzedData.lastFourWeeksAttendance.size < 25
+                    analyzedData?.lastFourWeeksAttendance && analyzedData.lastFourWeeksAttendance.size < 25
                       ? 'text-goal dark:text-yellow-400'
                       : 'text-blue-600'
                   }
                 >
-                  {analyzedData?.lastFourWeeksAttendance &&
-                    analyzedData.lastFourWeeksAttendance.size}
+                  {analyzedData?.lastFourWeeksAttendance && analyzedData.lastFourWeeksAttendance.size}
                 </span>
+                <button
+                  type="button"
+                  className="ml-2 rounded px-1 py-0.5 text-xs font-medium text-blue-700 underline underline-offset-2 hover:text-blue-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 dark:text-yellow-400 dark:hover:text-yellow-300"
+                  aria-label="현황판 정보 자세히 보기"
+                  aria-haspopup="dialog"
+                  aria-controls="status-board-info-dialog"
+                  onClick={() => statusBoardInfoDialogRef.current?.showModal()}
+                >
+                  자세히 보기
+                </button>
               </p>
               <TableHeaderStat $sortedIndex={selectedStatusColumnIndex}>
-                <StatTd
-                  id="first_element"
-                  style={{ paddingLeft: '12px', minWidth: '72px', maxWidth: '75px' }}
-                  onClick={() => sortBy('이름')}
-                >
+                <StatTd id="first_element" style={{ paddingLeft: '12px', minWidth: '72px', maxWidth: '75px' }} onClick={() => sortBy('이름')}>
                   <span>이름</span>
                   {renderSortArrow('이름')}
                 </StatTd>
@@ -378,17 +383,11 @@ const DataTable = (props) => {
               ))}
               {year !== '2021' ? (
                 <span style={tap === '승점' ? { minWidth: '82px' } : undefined}>
-                <p
-                  style={{ fontSize: '11px' }}
-                >{`${quarterName}분기`}</p>
-                  <p
-                    style={{ fontSize: '11px' }}
-                  >총합</p>
+                  <p style={{ fontSize: '11px' }}>{`${quarterName}분기`}</p>
+                  <p style={{ fontSize: '11px' }}>총합</p>
                 </span>
               ) : (
-                <span
-                  style={{ fontSize: '9px', whiteSpace: 'pre-line' }}
-                >{`2021\n코로나 시대`}</span>
+                <span style={{ fontSize: '9px', whiteSpace: 'pre-line' }}>{`2021\n코로나 시대`}</span>
               )}
             </TableHeaderOther>
           )}
@@ -397,17 +396,11 @@ const DataTable = (props) => {
             {/*실 출석 인원 먼저*/}
             {sortedNames?.map((name, index) => (
               <div key={'sorted-' + index}>
-                <TableRowStat
-                  key={index}
-                  $tap={tap}
-                  $sortedIndex={tap === '현황판' ? selectedStatusColumnIndex : 0}
-                >
+                <TableRowStat key={index} $tap={tap} $sortedIndex={tap === '현황판' ? selectedStatusColumnIndex : 0}>
                   {tap === '현황판' ? (
                     <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)} $isDark={isDark}>
                       <KingLabels titles={getKingTitles(lastSeasonKings, name)} />
-                      <StatusBoardName>
-                        {name}
-                      </StatusBoardName>
+                      <StatusBoardName>{name}</StatusBoardName>
                     </FirstColumn>
                   ) : (
                     <div
@@ -424,119 +417,62 @@ const DataTable = (props) => {
                   )}
                   {/* 경기  승점 골	골순위	일평균 득점	어시	어시순위	일평균 어시	공격포인트	순위	출석	출석순위	포인트 총합(출석,어시,골)	포인트 총합순위*/}
                   {tap === '현황판' && (
-                      <>
-                        <span>
-                        {analyzedData?.active?.totalData?.get(name)?.['승점'] ?? '-'}
-                      </span>
-                        <span>
-                        {analyzedData?.active?.totalData?.get(name)?.['경기'] ?? '-'}
-                      </span>
-                        <span>
-                        {analyzedData?.active?.totalData?.get(name)?.['승점률'] ?? '-'}
-                      </span>
-                        <span>
-                        {analyzedData.active.totalData.get(name)['골']}
-                      </span>
-                        <span>
-                        {analyzedData.active.totalData.get(name)['일평균득점']}
-                      </span>
-                        <span>
-                        {analyzedData.active.totalData.get(name)['어시']}
-                      </span>
-                        <span>
-                        {analyzedData.active.totalData.get(name)['일평균어시']}
-                      </span>
-                        <CustomMinWidthSpan $propsWidth="14%">
-                          {analyzedData.active.totalData.get(name)['공격포인트']}
-                        </CustomMinWidthSpan>
-                        <span>
-                          {analyzedData.active.totalData.get(name)['일평균공격포인트']}
-                        </span>
-                        <span>
-                        {analyzedData.active.totalData.get(name)['출석']}
-                      </span>
-                        {/*<CustomMinWidthSpan $propsWidth="14%" $propsMax="10%">*/}
-                        {/*  {analyzedData.active.totalData.get(name)['포인트총합']}*/}
-                        {/*</CustomMinWidthSpan>*/}
-                      </>
+                    <>
+                      <span>{analyzedData?.active?.totalData?.get(name)?.['승점'] ?? '-'}</span>
+                      <span>{analyzedData?.active?.totalData?.get(name)?.['경기'] ?? '-'}</span>
+                      <span>{analyzedData?.active?.totalData?.get(name)?.['승점률'] ?? '-'}</span>
+                      <span>{analyzedData.active.totalData.get(name)['골']}</span>
+                      <span>{analyzedData.active.totalData.get(name)['일평균득점']}</span>
+                      <span>{analyzedData.active.totalData.get(name)['어시']}</span>
+                      <span>{analyzedData.active.totalData.get(name)['일평균어시']}</span>
+                      <CustomMinWidthSpan $propsWidth="14%">{analyzedData.active.totalData.get(name)['공격포인트']}</CustomMinWidthSpan>
+                      <span>{analyzedData.active.totalData.get(name)['일평균공격포인트']}</span>
+                      <span>{analyzedData.active.totalData.get(name)['출석']}</span>
+                      {/*<CustomMinWidthSpan $propsWidth="14%" $propsMax="10%">*/}
+                      {/*  {analyzedData.active.totalData.get(name)['포인트총합']}*/}
+                      {/*</CustomMinWidthSpan>*/}
+                    </>
                   )}
                   {tap === '경기' &&
-                      tableData?.data?.map((data, index) => (
-                          <span
-                              style={{ minWidth: '13% !important' }}
-                              key={name + index}
-                          >
-                        {data.data[name]
-                            ? Number(data.data[name][tap]) === 0
-                                ? '-'
-                                : data.data[name][tap]
-                            : '-'}
+                    tableData?.data?.map((data, index) => (
+                      <span style={{ minWidth: '13% !important' }} key={name + index}>
+                        {data.data[name] ? (Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap]) : '-'}
                       </span>
-                      ))}
+                    ))}
                   {tap === '승점' &&
-                      tableData?.data?.map((data, index) => (
-                          <span
-                        style={{ minWidth: '13% !important' }}
-                        key={name + index}
-                      >
-                        {data.data[name]
-                          ? Number(data.data[name][tap]) === 0
-                            ? '-'
-                            : data.data[name][tap]
-                          : '-'}
+                    tableData?.data?.map((data, index) => (
+                      <span style={{ minWidth: '13% !important' }} key={name + index}>
+                        {data.data[name] ? (Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap]) : '-'}
                       </span>
                     ))}
                   {tap === '출석' &&
                     tableData?.data?.map((data, index) => (
-                      <span
-                        style={{ minWidth: '13% !important' }}
-                        key={name + index}
-                      >
-                        {data.data[name]
-                          ? typeof data.data[name][tap] === 'number'
-                            ? data.data[name][tap]
-                            : 1
-                          : '-'}
+                      <span style={{ minWidth: '13% !important' }} key={name + index}>
+                        {data.data[name] ? (typeof data.data[name][tap] === 'number' ? data.data[name][tap] : 1) : '-'}
                       </span>
                     ))}
                   {tap === '골' &&
                     tableData?.data?.map((data, index) => (
-                      <span
-                        style={{ minWidth: '13% !important' }}
-                        key={name + index}
-                      >
-                        {data.data[name]
-                          ? Number(data.data[name][tap]) === 0
-                            ? '-'
-                            : data.data[name][tap]
-                          : '-'}
+                      <span style={{ minWidth: '13% !important' }} key={name + index}>
+                        {data.data[name] ? (Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap]) : '-'}
                       </span>
                     ))}
                   {tap === '어시' &&
                     tableData?.data?.map((data, index) => (
-                      <span
-                        style={{ minWidth: '13% !important' }}
-                        key={name + index}
-                      >
-                        {data.data[name]
-                          ? Number(data.data[name][tap]) === 0
-                            ? '-'
-                            : data.data[name][tap]
-                          : '-'}
+                      <span style={{ minWidth: '13% !important' }} key={name + index}>
+                        {data.data[name] ? (Number(data.data[name][tap]) === 0 ? '-' : data.data[name][tap]) : '-'}
                       </span>
                     ))}
-                  {tap !== '현황판' && quarterData?.totalData.get(name) && (
-                    tap === '승점' ? (
+                  {tap !== '현황판' &&
+                    quarterData?.totalData.get(name) &&
+                    (tap === '승점' ? (
                       <QuarterPointsCell>
                         <span>{quarterData.totalData.get(name)['승점']}</span>
-                        <small>
-                          경기당 {formatQuarterPointsPerGame(quarterData.totalData.get(name))}
-                        </small>
+                        <small>경기당 {formatQuarterPointsPerGame(quarterData.totalData.get(name))}</small>
                       </QuarterPointsCell>
                     ) : (
                       <span>{quarterData.totalData.get(name)[tap]}</span>
-                    )
-                  )}
+                    ))}
                 </TableRowStat>
                 <StyledHR $tap={tap} />
               </div>
@@ -544,17 +480,9 @@ const DataTable = (props) => {
             {/*장기 미출석 인원*/}
             {sortedAbsenteeNames?.map((name, index) => (
               <div key={'sorted-ab-' + index}>
-                <TableRowOther
-                  key={index}
-                  $tap={tap}
-                  $sortedIndex={tap === '현황판' ? selectedStatusColumnIndex : 0}
-                >
+                <TableRowOther key={index} $tap={tap} $sortedIndex={tap === '현황판' ? selectedStatusColumnIndex : 0}>
                   {tap === '현황판' ? (
-                    <FirstColumn
-                      $realActive={analyzedData.lastFourWeeksAttendance.has(
-                        name,
-                      )}
-                    >
+                    <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)}>
                       <KingLabels titles={getKingTitles(lastSeasonKings, name)} />
                       <StatusBoardName>{name}</StatusBoardName>
                     </FirstColumn>
@@ -562,34 +490,16 @@ const DataTable = (props) => {
                     <div style={{ minWidth: '20%', flex: '1' }}>{name}</div>
                   )}
                   {tap === '출석'
-                    ? tableData?.data?.map((data, index) => (
-                        <span key={name + index}>
-                          {data.data[name] ? 'O' : ''}
-                        </span>
-                      ))
+                    ? tableData?.data?.map((data, index) => <span key={name + index}>{data.data[name] ? 'O' : ''}</span>)
                     : tap === '골'
                       ? tableData?.data?.map((data, index) => (
-                          <span key={name + index}>
-                            {data.data[name]
-                              ? Number(data.data[name][tap]) === 0
-                                ? ''
-                                : data.data[name][tap]
-                              : ''}
-                          </span>
+                          <span key={name + index}>{data.data[name] ? (Number(data.data[name][tap]) === 0 ? '' : data.data[name][tap]) : ''}</span>
                         ))
                       : tableData?.data?.map((data, index) => (
-                          <span key={name + index}>
-                            {data.data[name]
-                              ? Number(data.data[name][tap]) === 0
-                                ? ''
-                                : data.data[name][tap]
-                              : ''}
-                          </span>
+                          <span key={name + index}>{data.data[name] ? (Number(data.data[name][tap]) === 0 ? '' : data.data[name][tap]) : ''}</span>
                         ))}
                   {tap === '현황판' ? (
-                    Array.from({ length: STATUS_BOARD_SORT_KEYS.length - 1 }, (_, cellIndex) => (
-                      <span key={cellIndex} aria-hidden="true" />
-                    ))
+                    Array.from({ length: STATUS_BOARD_SORT_KEYS.length - 1 }, (_, cellIndex) => <span key={cellIndex} aria-hidden="true" />)
                   ) : (
                     <span className="flex items-center pre text-xs"></span>
                   )}
@@ -600,6 +510,40 @@ const DataTable = (props) => {
           </TableBody>
         </Table>
       </TableContainer>
+      {tap === '현황판' && (
+        <dialog
+          ref={statusBoardInfoDialogRef}
+          id="status-board-info-dialog"
+          aria-labelledby="status-board-info-title"
+          onClick={closeDialogOnBackdropClick}
+          className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-left text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <h3 id="status-board-info-title" className="text-lg font-bold">
+              현황판 안내
+            </h3>
+            <form method="dialog">
+              <button type="submit" className="rounded px-2 py-1 text-sm text-blue-700 hover:underline dark:text-yellow-400">
+                닫기
+              </button>
+            </form>
+          </div>
+          <div className="mt-4 space-y-4 text-sm leading-relaxed">
+            <section>
+              <p className="mt-1">직전 분기 수상자에게 타이틀이 부여됩니다</p>
+            </section>
+            <section>
+              <p className="mt-1">각 항목을 터치하면 항목을 기준으로 정렬됩니다</p>
+            </section>
+            <section>
+              <p className="mt-1">일요일에 등록되는 기록은 실시간으로 반영됩니다</p>
+            </section>
+            <section>
+              <p className="mt-1">실참여 인원: 지난 4주의 일요일 중 2회 이상 출석한 인원. 일요일 당일은 집계에서 제외</p>
+            </section>
+          </div>
+        </dialog>
+      )}
     </div>
   )
 }
