@@ -3,6 +3,7 @@ import styled from 'styled-components'
 
 import './DataTable.css'
 import boomerang from '@/assets/boomerang.svg'
+import boomerangLight from '@/assets/boomerang-light.svg'
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
 import medal from '@/assets/medal.png'
@@ -741,13 +742,11 @@ const SortArrow = styled.div`
     content: '';
     position: absolute;
     inset: 0;
-    background-color: #1d4ed8;
-    -webkit-mask: url(${boomerang}) center / contain no-repeat;
-    mask: url(${boomerang}) center / contain no-repeat;
+    background: url(${boomerangLight}) center / contain no-repeat;
     transform: rotate(${(props) => (props.$ascending ? '180deg' : '0deg')});
 
     @media (prefers-color-scheme: dark) {
-      background-color: #93c5fd;
+      background-image: url(${boomerang});
     }
   }
 
@@ -788,14 +787,15 @@ const TableBody = styled.div`
 `
 
 const TableRowStat = styled.div`
-  display: ${(props) => props.$tap === '현황판' ? 'grid' : 'flex'};
+  display: ${(props) => (props.$tap === '현황판' ? 'grid' : 'flex')};
   grid-template-columns: ${STATUS_BOARD_COLUMNS};
   align-items: center;
-  min-height: 35px;
+  min-height: ${(props) => (props.$tap === '현황판' ? '35px' : '45px')};
 
   > span {
     flex: 1;
     min-width: 7%;
+    gap: 5px;
     border-right: 1px solid #ccc;
     //border-top: 1px solid #ccc;
     @media (max-width: 812px) {
@@ -803,7 +803,9 @@ const TableRowStat = styled.div`
     }
   }
 
-  ${(props) => props.$tap === '현황판' && `
+  ${(props) =>
+    props.$tap === '현황판' &&
+    `
     > span {
       min-width: 0 !important;
       display: flex;
