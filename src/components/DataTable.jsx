@@ -539,7 +539,7 @@ const DataTable = (props) => {
               <p className="mt-1">일요일에 등록되는 기록은 실시간으로 반영됩니다</p>
             </section>
             <section>
-              <p className="mt-1">실참여 인원: 지난 4주의 일요일 중 2회 이상 출석한 인원. 일요일 당일은 집계에서 제외</p>
+              <p className="mt-1">실참여 인원: 지난 4주 동안 2회 이상 출석한 인원. 일요일 당일은 집계에서 제외</p>
             </section>
           </div>
         </dialog>
