@@ -82,5 +82,5 @@ export default function useScoringStreak(members, asOfDate, activeMembers = memb
     : EMPTY_LONGEST_ABSENT,
   [result.status, result.recordsByYear, activeMembers, asOfDate])
   const { recordsByYear, ...scoringStreak } = result
-  return { ...scoringStreak, longestAbsent }
+  return { ...scoringStreak, longestAbsent, recordsByYear }
 }

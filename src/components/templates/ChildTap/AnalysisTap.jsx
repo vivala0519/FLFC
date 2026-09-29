@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { db } from '../../../../firebase.js'
 import { collection, getDocs } from 'firebase/firestore'
-import { getDatabase, onValue, ref } from 'firebase/database'
+import { get, getDatabase, onValue, ref } from 'firebase/database'
 
 import NewBadge from '@/components/atoms/NewBadge.jsx'
 import BestFiveCard from '@/components/organisms/BestFiveCard.jsx'
@@ -18,6 +18,15 @@ import { analyzeStarterPointRate } from '@/apis/analyzeStarterPointRate.js'
 import { analyzeWinningTrio } from '@/apis/analyzeWinningTrio.js'
 import { analyzeLowScoringDuo } from '@/apis/analyzeLowScoringDuo.js'
 import { analyzePlayerRadar } from '@/apis/analyzePlayerRadar.js'
+import { analyzeCareerRecords } from '@/apis/analyzeCareerRecords.js'
+import { analyzeCareerPartners } from '@/apis/analyzeCareerPartners.js'
+
+const FIRST_RECORD_YEAR = 2021
+const careerNumberFormatter = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 })
+const formatCareerNumber = (value, unit) => `${careerNumberFormatter.format(value)}${unit}`
+const formatCareerHigh = (high, unit) => high?.season
+  ? formatCareerNumber(high.value, unit)
+  : '기록 없음'
 
 const analysisIconPaths = {
   bestFive: <path d="m12 2 2.8 6 6.6.8-4.8 4.5 1.2 6.5L12 17l-5.8 2.8 1.2-6.5-4.8-4.5 6.6-.8L12 2Z" />,
@@ -109,11 +118,13 @@ const AnalysisTap = (props) => {
   const { totalWeeklyTeamData } = getRecords()
   const recentFormDialogRef = useRef(null)
   const bestFiveDialogRef = useRef(null)
+  const playerDetailDialogRef = useRef(null)
   const asOfDate = test ? '2024-12-31' : `${thisYear}-${String(currentMonth).padStart(2, '0')}-${String(thisDate).padStart(2, '0')}`
   const recentForm = useRecentForm(existingMembers, asOfDate)
   const scoringStreakResult = useScoringStreak(totalMembers, asOfDate, existingMembers)
+  const { recordsByYear, ...scoringStreakStats } = scoringStreakResult
   const scoringStreak = {
-    ...scoringStreakResult,
+    ...scoringStreakStats,
     count: scoringStreakResult.count > 0 ? `${scoringStreakResult.count}일 연속` : '',
   }
   const longestAbsent = {
@@ -128,8 +139,14 @@ const AnalysisTap = (props) => {
     bestFive.records, existingMembers, thisMonth,
   ), [bestFive.records, existingMembers, thisMonth])
   const quarter = Math.ceil(thisMonth / 3)
+  const attendedWeeks = useMemo(() => (bestFive.records || []).filter((record) =>
+    /^\d{4}$/.test(record?.id) &&
+    Math.ceil(Number(record.id.slice(0, 2)) / 3) === quarter &&
+    Object.values(record.data || {}).some((stats) => Number(stats?.['출석']) > 0),
+  ).length, [bestFive.records, quarter])
   const [needMoreData, setNeedMoreData] = useState(false)
   const [thisQuarterData, setThisQuarterData] = useState([])
+  const availableWeeks = Math.max(attendedWeeks, thisQuarterData.length)
   const [yearRoundData, setYearRoundData] = useState(null)
   const [roundLoadError, setRoundLoadError] = useState(false)
   const [processedQuarterSource, setProcessedQuarterSource] = useState(null)
@@ -290,6 +307,10 @@ const AnalysisTap = (props) => {
 
   // 개인별 데이터
   const [thisQuarterMVP, setThisQuarterMVP] = useState([])
+  const [allTimeMVP, setAllTimeMVP] = useState([])
+  const [careerRoundRequest, setCareerRoundRequest] = useState(0)
+  const [historicalRoundData, setHistoricalRoundData] = useState(null)
+  const [careerRoundStatus, setCareerRoundStatus] = useState('idle')
   const [thisQuarterPointData, setThisQuarterPointData] = useState(null)
   const [thisQuarterDataByTime, setThisQuarterDataByTime] = useState(null)
   const [thisQuarterMostPartners, setThisQuarterMostPartners] = useState(null)
@@ -311,12 +332,58 @@ const AnalysisTap = (props) => {
     return integratedMap
   }, [thisQuarterPointData, thisQuarterDataByTime, thisQuarterMostPartners, mercenaryBring])
   const [playerDetail, setPlayerDetail] = useState(null)
-  const [showDetail, setShowDetail] = useState(false)
+  const playerName = playerDetail?.name
+  const careerRecord = useMemo(() =>
+    playerName && scoringStreakResult.status === 'ready'
+      ? analyzeCareerRecords(recordsByYear, playerName, asOfDate)
+      : null,
+  [recordsByYear, playerName, scoringStreakResult.status, asOfDate])
+  const careerRoundRoots = useMemo(() =>
+    historicalRoundData && yearRoundData
+      ? { ...historicalRoundData, [test ? '2024' : thisYear]: yearRoundData }
+      : null,
+  [historicalRoundData, yearRoundData, test, thisYear])
+  const careerPartners = useMemo(() =>
+    playerName && Array.isArray(totalWeeklyTeamData)
+      ? analyzeCareerPartners(totalWeeklyTeamData, careerRoundRoots || {}, playerName, totalMembers, asOfDate)
+      : null,
+  [totalWeeklyTeamData, careerRoundRoots, playerName, totalMembers, asOfDate])
+  const careerMVPCount = allTimeMVP.filter((name) => name === playerName).length
+  const careerHighRows = careerRecord ? [
+    ['골', formatCareerHigh(careerRecord.careerHigh.goals, '골')],
+    ['어시', formatCareerHigh(careerRecord.careerHigh.assists, '어시')],
+    ['승점', formatCareerHigh(careerRecord.careerHigh.points, '점')],
+    ['승점생산률', formatCareerHigh(careerRecord.careerHigh.pointRate, '점/경기')],
+  ] : []
+  const careerTotalRows = careerRecord ? [
+    ['출석', formatCareerNumber(careerRecord.totals.attendance, '회')],
+    ['골', formatCareerNumber(careerRecord.totals.goals, '골')],
+    ['어시', formatCareerNumber(careerRecord.totals.assists, '어시')],
+    ['승점', careerRecord.careerHigh.points.season
+      ? formatCareerNumber(careerRecord.totals.points, '점') : '기록 없음'],
+    ['MVP', `${careerMVPCount}회`],
+    ['최다 같은 팀', careerPartners?.sameTeam.partners.length
+      ? `${careerPartners.sameTeam.partners.join(', ')} · ${careerPartners.sameTeam.count}회`
+      : '기록 없음'],
+  ] : []
+  const careerGoalPartner = careerRoundStatus === 'error'
+    ? '골 합작 기록을 불러오지 못했습니다.'
+    : careerRoundStatus !== 'ready'
+      ? '골 합작 기록을 불러오는 중입니다.'
+      : careerPartners?.goalCombination.partners.length
+        ? `${careerPartners.goalCombination.partners.join(', ')} · 합작 ${careerPartners.goalCombination.goals}골`
+        : '기록 없음'
   const selectedFoot = bestFive.memberInfo?.[playerDetail?.name]?.preferredFoot
   const preferredFootLabel = selectedFoot === 'L' ? '왼발'
     : selectedFoot === 'R' ? '오른발'
       : bestFive.memberInfo ? '정보 없음'
         : bestFive.status === 'error' ? '정보를 불러오지 못했습니다' : '불러오는 중'
+
+  useEffect(() => {
+    if (playerDetail && !playerDetailDialogRef.current?.open) {
+      playerDetailDialogRef.current?.showModal()
+    }
+  }, [playerDetail])
 
   useEffect(() => {
     getDailyMVPData().catch(() => setMvpStatus('error'))
@@ -333,8 +400,34 @@ const AnalysisTap = (props) => {
   }, [test, thisYear, thisMonth])
 
   useEffect(() => {
-    // 4주 이상 진행됐을 시
-    if (thisQuarterData.length > 2) {
+    if (careerRoundRequest === 0) return undefined
+
+    let cancelled = false
+    const currentYear = Number(test ? '2024' : thisYear)
+    const olderYears = Array.from(
+      { length: Math.max(0, currentYear - FIRST_RECORD_YEAR) },
+      (_, index) => FIRST_RECORD_YEAR + index,
+    )
+    const database = getDatabase()
+    setCareerRoundStatus('loading')
+
+    Promise.all(olderYears.map(async (year) => {
+      const snapshot = await get(ref(database, String(year)))
+      return [year, snapshot.val() || {}]
+    })).then((entries) => {
+      if (cancelled) return
+      setHistoricalRoundData(Object.fromEntries(entries))
+      setCareerRoundStatus('ready')
+    }).catch(() => {
+      if (!cancelled) setCareerRoundStatus('error')
+    })
+
+    return () => { cancelled = true }
+  }, [careerRoundRequest, test, thisYear])
+
+  useEffect(() => {
+    // 이번 분기에 한 주라도 경기 기록이 있으면 분석을 표시한다.
+    if (availableWeeks >= 1) {
       setNeedMoreData(false)
       const totalData = []
       thisQuarterData.forEach((data) => {
@@ -409,7 +502,7 @@ const AnalysisTap = (props) => {
       setThisQuarterPlayersCombination(new Map())
     }
     setProcessedQuarterSource({ data: thisQuarterData, members: existingMembers })
-  }, [thisQuarterData, existingMembers])
+  }, [thisQuarterData, existingMembers, availableWeeks])
 
   const getFullName = (name) => {
     for (let i = 0; i < existingMembers.length; i++) {
@@ -425,6 +518,14 @@ const AnalysisTap = (props) => {
     const fetchedData = mvpSnapshot.docs.map((doc) => ({
       id: doc.id,
       data: doc.data(),
+    }))
+
+    const lastDateId = asOfDate.slice(2).replaceAll('-', '')
+    setAllTimeMVP(fetchedData.flatMap(({ id, data }) => {
+      if (!/^\d{6}$/.test(id) || id > lastDateId) return []
+      return Array.isArray(data.bestPlayers)
+        ? data.bestPlayers.map((player) => player?.name).filter(Boolean)
+        : typeof data.name === 'string' ? [data.name] : []
     }))
 
     const filteredData = []
@@ -842,6 +943,9 @@ const AnalysisTap = (props) => {
     const rates = starterPointRates.playerRates.get(name)
     const style = rates?.early > rates?.late ? ['얼리스타터']
       : rates?.late > rates?.early ? ['슬로우스타터'] : []
+    const goals = Number(detailMap.goal ?? 0)
+    const assists = Number(detailMap.assist ?? 0)
+    style.push(goals > assists ? '득점 선호' : assists > goals ? '도움 선호' : '밸런스')
     const detail = {
       name,
       mostPartner: detailMap.name || [],
@@ -863,7 +967,9 @@ const AnalysisTap = (props) => {
     detail.combi = combi.filter((item) => item[1] === maxPoint).map((item) => item[0])
     detail.combiCount = maxPoint
     setPlayerDetail(detail)
-    setShowDetail(true)
+    if (careerRoundStatus === 'idle' || careerRoundStatus === 'error') {
+      setCareerRoundRequest((request) => request + 1)
+    }
   }
 
   const hasLoadError = roundLoadError || mvpStatus === 'error'
@@ -901,8 +1007,12 @@ const AnalysisTap = (props) => {
         </div>
       ) : isDataLoading ? (
         <div className="py-8 text-center" role="status">
-          <p>데이터를 모으는 중 입니다</p>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">4주 이상의 데이터 필요.. ({thisQuarterData.length}/4)</p>
+          <p>{needMoreData ? '데이터를 모으는 중입니다' : '분석 데이터를 불러오는 중입니다'}</p>
+          {needMoreData && (
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              이번 분기 경기 기록이 1주 이상 필요합니다. ({availableWeeks}/1)
+            </p>
+          )}
         </div>
       ) : (
         <>
@@ -913,44 +1023,52 @@ const AnalysisTap = (props) => {
                 className="bg-transparent py-1 text-sm w-40 h-12 text-blue-700 dark:text-yellow-400 border-2 border-blue-500 dark:border-yellow-400"
                 aria-expanded={showIndividual}
                 aria-controls="individual-analysis"
-                onClick={() => {
-                  setShowIndividual(!showIndividual)
-                  setShowDetail(false)
-                }}
+                onClick={() => setShowIndividual((current) => !current)}
               >
                 {showIndividual ? '접기' : '개인별 기록 보기'}
               </button>
             </div>
             <div id="individual-analysis" hidden={!showIndividual}>
-              {!showDetail ? (
-                <div className="mt-3 flex flex-wrap gap-2 justify-center items-center">
-                  {thisQuarterPlayers.length > 0 ? (
-                    thisQuarterPlayers.map((player) => (
-                      <button
-                        type="button"
-                        key={player}
-                        className="bg-transparent px-2 py-1 text-sm text-blueSignature dark:text-yellow-400"
-                        onClick={() => playerDetailHandler(player)}
-                      >
-                        {player}
-                      </button>
-                    ))
-                  ) : (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">기록이 없습니다.</p>
-                  )}
-                </div>
-              ) : (
-                <div className="mt-4">
-                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <h4 className="font-semibold text-blue-700 dark:text-blue-400">{playerDetail.name}</h4>
+              <div className="mt-3 flex flex-wrap gap-2 justify-center items-center">
+                {thisQuarterPlayers.length > 0 ? (
+                  thisQuarterPlayers.map((player) => (
                     <button
                       type="button"
-                      className="bg-transparent px-2 py-1 text-sm text-gray-500 dark:text-gray-400"
-                      onClick={() => setShowDetail(false)}
+                      key={player}
+                      className="bg-transparent px-2 py-1 text-sm text-blueSignature dark:text-yellow-400"
+                      aria-haspopup="dialog"
+                      aria-controls="player-detail-dialog"
+                      onClick={() => playerDetailHandler(player)}
                     >
-                      플레이어 목록으로
+                      {player}
                     </button>
-                  </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">기록이 없습니다.</p>
+                )}
+              </div>
+            </div>
+          </section>
+          <dialog
+            ref={playerDetailDialogRef}
+            id="player-detail-dialog"
+            aria-labelledby="player-detail-title"
+            onClick={closeDialogOnBackdropClick}
+            onClose={() => setPlayerDetail(null)}
+            className="m-auto max-h-[85vh] w-[min(92vw,36rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-left text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          >
+            {playerDetail && (
+              <>
+                <div className="flex items-start justify-between gap-4">
+                  <h3 id="player-detail-title" className="text-lg font-bold text-blue-700 dark:text-blue-400">
+                    {playerDetail.name}
+                  </h3>
+                  <form method="dialog">
+                    <button type="submit" className="rounded px-2 py-1 text-sm text-blue-700 hover:underline dark:text-yellow-400">닫기</button>
+                  </form>
+                </div>
+                <div className="mt-4">
+                  <h4 className="mb-3 font-semibold">이번 분기</h4>
                   {bestFive.status === 'ready' ? (
                     <PlayerRadarChart name={playerDetail.name} comparison={playerComparison} />
                   ) : (
@@ -981,176 +1099,212 @@ const AnalysisTap = (props) => {
                     ].map(([label, value]) => (
                       <div key={label} className="flex gap-4">
                         <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
-                        <dd className="min-w-0 break-words">{value}</dd>
+                        <dd className={'min-w-0 break-words ' + (label === '스타일' && '[word-spacing:6px]')}>{value}</dd>
                       </div>
                     ))}
                   </dl>
                 </div>
-              )}
-            </div>
-          </section>
-        <dl className="divide-y divide-gray-200 dark:divide-gray-700">
-          {analysisItems.map(({ type, isNew, icon, title, description, data }) => {
-            const players = data.name?.filter(Boolean) ?? []
-            const almostPlayers = data.additional?.filter(Boolean) ?? []
-            const trendPlayers = type === 'recent-fall' ? recentForm.decliners : recentForm.leaders
+                <hr className="my-5 border-gray-200 dark:border-gray-700" />
+                <section aria-labelledby="career-record-title">
+                  <h4 id="career-record-title" className="text-base font-bold">통산 성적</h4>
+                  {careerRecord ? (
+                    <>
+                      <h5 className="mb-2 mt-4 text-sm font-semibold">커리어 하이</h5>
+                      <dl className="space-y-2 text-sm">
+                        {careerHighRows.map(([label, value]) => (
+                          <div key={label} className="flex gap-4">
+                            <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
+                            <dd className="min-w-0 break-words">{value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                      <h5 className="mb-2 mt-5 text-sm font-semibold">통산 기록</h5>
+                      <dl className="space-y-2 text-sm">
+                        {careerTotalRows.map(([label, value]) => (
+                          <div key={label} className="flex gap-4">
+                            <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
+                            <dd className="min-w-0 break-words">{value}</dd>
+                          </div>
+                        ))}
+                        <div className="flex gap-4">
+                          <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">최다 골 합작</dt>
+                          <dd className="min-w-0 break-words" role={careerRoundStatus === 'loading' ? 'status' : undefined}>
+                            {careerGoalPartner}
+                          </dd>
+                        </div>
+                      </dl>
+                    </>
+                  ) : (
+                    <p className="mt-3 text-sm text-gray-500 dark:text-gray-400" role="status">
+                      {scoringStreakResult.status === 'error' ? '통산 기록을 불러오지 못했습니다.' : '통산 기록을 불러오는 중입니다.'}
+                    </p>
+                  )}
+                </section>
+              </>
+            )}
+          </dialog>
+          <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+            {analysisItems.map(({ type, isNew, icon, title, description, data }) => {
+              const players = data.name?.filter(Boolean) ?? []
+              const almostPlayers = data.additional?.filter(Boolean) ?? []
+              const trendPlayers = type === 'recent-fall' ? recentForm.decliners : recentForm.leaders
 
-            return (
-              <div key={title} className="py-5 first:pt-0">
-                <dt className="flex items-center gap-2 font-bold text-lg">
-                  <AnalysisIcon name={icon} />
-                  <span className="relative inline-block">
-                    {title}
-                    {isNew && <NewBadge />}
-                  </span>
-                  {type === 'best-five' && (
-                    <button
-                      type="button"
-                      className={detailsButtonClass}
-                      aria-label="BEST Ⅴ 선정 기준 자세히 보기"
-                      aria-haspopup="dialog"
-                      aria-controls="best-five-method-dialog"
-                      onClick={() => bestFiveDialogRef.current?.showModal()}
-                    >
-                      자세히 보기
-                    </button>
-                  )}
-                  {(type === 'recent-form' || type === 'recent-fall') && (
-                    <button
-                      type="button"
-                      className={detailsButtonClass}
-                      aria-label={`${title} 계산 방식 자세히 보기`}
-                      aria-haspopup="dialog"
-                      aria-controls="recent-form-method-dialog"
-                      onClick={() => recentFormDialogRef.current?.showModal()}
-                    >
-                      자세히 보기
-                    </button>
-                  )}
-                </dt>
-                {description && <dd className="mt-1 text-sm text-gray-500 dark:text-gray-400">{description}</dd>}
-                {type === 'best-five' ? (
-                  <dd className="mt-4" aria-live="polite">
-                    {data.status === 'loading' ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">플레이어 기록을 불러오는 중입니다.</p>
-                    ) : data.status === 'error' ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">플레이어 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.</p>
-                    ) : data.positions ? (
-                      <BestFiveCard positions={data.positions} />
-                    ) : (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">이번 분기 출석률 50% 이상인 플레이어가 없습니다.</p>
+              return (
+                <div key={title} className="py-5 first:pt-0">
+                  <dt className="flex items-center gap-2 font-bold text-lg">
+                    <AnalysisIcon name={icon} />
+                    <span className="relative inline-block">
+                      {title}
+                      {isNew && <NewBadge />}
+                    </span>
+                    {type === 'best-five' && (
+                      <button
+                        type="button"
+                        className={detailsButtonClass}
+                        aria-label="BEST Ⅴ 선정 기준 자세히 보기"
+                        aria-haspopup="dialog"
+                        aria-controls="best-five-method-dialog"
+                        onClick={() => bestFiveDialogRef.current?.showModal()}
+                      >
+                        자세히 보기
+                      </button>
                     )}
-                  </dd>
-                ) : (type === 'scoring-streak' || type === 'longest-absent') && data.status !== 'ready' ? (
-                  <dd className="mt-2 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
-                    {data.status === 'loading'
-                      ? '전체 출석 기록을 불러오는 중입니다.'
-                      : '전체 출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'}
-                  </dd>
-                ) : type === 'recent-form' || type === 'recent-fall' ? (
-                  <>
-                    <dd className="mt-2" aria-live="polite">
-                      {recentForm.status === 'ready' && trendPlayers.length > 0 ? (
-                        <ul className="space-y-1">
-                          {trendPlayers.map((player) => (
-                            <li key={player.name} className="flex flex-wrap items-baseline gap-x-2">
-                              <span className="font-semibold text-blueSignature dark:text-yellow-400">{player.name}</span>
-                              <span className="text-xs text-gray-500 dark:text-gray-400">
-                                공포 {trendChangeFormatter.format(player.increase)} · 승점{' '}
-                                {trendChangeFormatter.format(player.winPointIncrease)}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
+                    {(type === 'recent-form' || type === 'recent-fall') && (
+                      <button
+                        type="button"
+                        className={detailsButtonClass}
+                        aria-label={`${title} 계산 방식 자세히 보기`}
+                        aria-haspopup="dialog"
+                        aria-controls="recent-form-method-dialog"
+                        onClick={() => recentFormDialogRef.current?.showModal()}
+                      >
+                        자세히 보기
+                      </button>
+                    )}
+                  </dt>
+                  {description && <dd className="mt-1 text-sm text-gray-500 dark:text-gray-400">{description}</dd>}
+                  {type === 'best-five' ? (
+                    <dd className="mt-4" aria-live="polite">
+                      {data.status === 'loading' ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">플레이어 기록을 불러오는 중입니다.</p>
+                      ) : data.status === 'error' ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">플레이어 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.</p>
+                      ) : data.positions ? (
+                        <BestFiveCard positions={data.positions} />
                       ) : (
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {recentForm.status === 'loading'
-                            ? '출석 기록을 불러오는 중입니다.'
-                            : recentForm.status === 'error'
-                              ? '출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'
-                              : recentForm.eligibleCount === 0
-                                ? '이번 분기 2회 이상, 총 4회 이상 출석하고 이전 2회가 최근 8주 안에 있어야 비교할 수 있습니다.'
-                                : `최근 공격포인트와 승점 합계의 ${type === 'recent-fall' ? '하락' : '상승'} 조건에 맞는 플레이어가 없습니다.`}
-                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">이번 분기 출석률 50% 이상인 플레이어가 없습니다.</p>
                       )}
                     </dd>
-                  </>
-                ) : (
-                  <>
-                    <dd className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <span className="min-w-0 break-words font-semibold text-blueSignature dark:text-yellow-400">
-                        {players.length > 0 ? players.join(type === 'duo' || type === 'low-scoring-duo' || type === 'starter' ? ', ' : ' ') : '-'}
-                      </span>
-                      {players.length > 0 && data.count && <span className="text-sm">{data.count}</span>}
+                  ) : (type === 'scoring-streak' || type === 'longest-absent') && data.status !== 'ready' ? (
+                    <dd className="mt-2 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
+                      {data.status === 'loading'
+                        ? '전체 출석 기록을 불러오는 중입니다.'
+                        : '전체 출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'}
                     </dd>
-                    {almostPlayers.length > 0 && (
-                        <dd className="mt-2 break-words text-sm text-gray-500 dark:text-gray-400">
-                          <p className="mr-2 font-medium text-goal dark:text-rose-400">
-                            {type === 'duo' ? '추격 듀오' : '달성 임박'}
+                  ) : type === 'recent-form' || type === 'recent-fall' ? (
+                    <>
+                      <dd className="mt-2" aria-live="polite">
+                        {recentForm.status === 'ready' && trendPlayers.length > 0 ? (
+                          <ul className="space-y-1">
+                            {trendPlayers.map((player) => (
+                              <li key={player.name} className="flex flex-wrap items-baseline gap-x-2">
+                                <span className="font-semibold text-blueSignature dark:text-yellow-400">{player.name}</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                  공포 {trendChangeFormatter.format(player.increase)} · 승점 {trendChangeFormatter.format(player.winPointIncrease)}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {recentForm.status === 'loading'
+                              ? '출석 기록을 불러오는 중입니다.'
+                              : recentForm.status === 'error'
+                                ? '출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'
+                                : recentForm.eligibleCount === 0
+                                  ? '이번 분기 2회 이상, 총 4회 이상 출석하고 이전 2회가 최근 8주 안에 있어야 비교할 수 있습니다.'
+                                  : `최근 공격포인트와 승점 합계의 ${type === 'recent-fall' ? '하락' : '상승'} 조건에 맞는 플레이어가 없습니다.`}
                           </p>
+                        )}
+                      </dd>
+                    </>
+                  ) : (
+                    <>
+                      <dd className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <span className="min-w-0 break-words font-semibold text-blueSignature dark:text-yellow-400">
+                          {players.length > 0 ? players.join(type === 'duo' || type === 'low-scoring-duo' || type === 'starter' ? ', ' : ' ') : '-'}
+                        </span>
+                        {players.length > 0 && data.count && <span className="text-sm">{data.count}</span>}
+                      </dd>
+                      {almostPlayers.length > 0 && (
+                        <dd className="mt-2 break-words text-sm text-gray-500 dark:text-gray-400">
+                          <p className="mr-2 font-medium text-goal dark:text-rose-400">{type === 'duo' ? '추격 듀오' : '달성 임박'}</p>
                           {almostPlayers.join(', ')}
                           <p>{type === 'duo' && data.additionalCount && `${data.additionalCount}`}</p>
                         </dd>
-                    )}
-                  </>
-                )}
-              </div>
-            )
-          })}
-        </dl>
+                      )}
+                    </>
+                  )}
+                </div>
+              )
+            })}
+          </dl>
 
-        <dialog
-          ref={bestFiveDialogRef}
-          id="best-five-method-dialog"
-          aria-labelledby="best-five-method-title"
-          onClick={closeDialogOnBackdropClick}
-          className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-left text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <h3 id="best-five-method-title" className="text-lg font-bold">BEST Ⅴ</h3>
-            <form method="dialog">
-              <button type="submit" className="rounded px-2 py-1 text-sm text-blue-700 hover:underline dark:text-yellow-400">닫기</button>
-            </form>
-          </div>
-          <div className="mt-4 space-y-3 text-sm leading-relaxed">
-            <p>이번 분기 출석일의 50% 이상 참석한 플레이어 중</p>
-            <ul className="list-disc space-y-2 pl-5">
-              <li>ST: 골이 가장 많은 플레이어</li>
-              <li>LM: 왼발잡이 중 어시가 가장 많은 플레이어</li>
-              <li>RM: 오른발잡이 중 어시가 가장 많은 플레이어</li>
-              <li>DF: 승점생산률이 가장 높은 플레이어</li>
-              <li>GK: 키퍼만 참여 플레이어 중 승점생산률 가장 높은 플레이어 (없을 시 승점생산률 2위)</li>
-            </ul>
-          </div>
-        </dialog>
+          <dialog
+            ref={bestFiveDialogRef}
+            id="best-five-method-dialog"
+            aria-labelledby="best-five-method-title"
+            onClick={closeDialogOnBackdropClick}
+            className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-left text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <h3 id="best-five-method-title" className="text-lg font-bold">
+                BEST Ⅴ
+              </h3>
+              <form method="dialog">
+                <button type="submit" className="rounded px-2 py-1 text-sm text-blue-700 hover:underline dark:text-yellow-400">
+                  닫기
+                </button>
+              </form>
+            </div>
+            <div className="mt-4 space-y-3 text-sm leading-relaxed">
+              <p>이번 분기 출석일의 50% 이상 참석한 플레이어 중</p>
+              <ul className="list-disc space-y-2 pl-5">
+                <li>ST: 골이 가장 많은 플레이어</li>
+                <li>LM: 왼발잡이 중 어시가 가장 많은 플레이어</li>
+                <li>RM: 오른발잡이 중 어시가 가장 많은 플레이어</li>
+                <li>DF: 승점생산률이 가장 높은 플레이어</li>
+                <li>GK: 키퍼만 참여 플레이어 중 승점생산률 가장 높은 플레이어 (없을 시 승점생산률 2위)</li>
+              </ul>
+            </div>
+          </dialog>
 
-        <dialog
-          ref={recentFormDialogRef}
-          id="recent-form-method-dialog"
-          aria-labelledby="recent-form-method-title"
-          onClick={closeDialogOnBackdropClick}
-          className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-left text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <h3 id="recent-form-method-title" className="text-lg font-bold">
-              최근 상승세·하락세 계산 방식
-            </h3>
-            <form method="dialog">
-              <button type="submit" className="rounded px-2 py-1 text-sm text-blue-700 hover:underline dark:text-yellow-400">
-                닫기
-              </button>
-            </form>
-          </div>
-          <div className="mt-4 space-y-3 text-sm leading-relaxed">
-            <p>플레이어별 최근 출석 2회와 그 직전 출석 2회를 비교합니다.</p>
-            <ul className="list-disc space-y-2 pl-5">
-              <li>상승세: 두 지표 중 하나 이상 증가하고, 다른 지표는 감소하지 않은 플레이어</li>
-              <li>하락세: 두 지표 중 하나 이상 감소하고, 다른 지표는 증가하지 않은 플레이어</li>
-            </ul>
-            <p className="text-gray-600 dark:text-gray-400">이번 분기 2회 이상, 8주 이내에 총 4회 이상 출석해야 합니다.</p>
-          </div>
-        </dialog>
-
+          <dialog
+            ref={recentFormDialogRef}
+            id="recent-form-method-dialog"
+            aria-labelledby="recent-form-method-title"
+            onClick={closeDialogOnBackdropClick}
+            className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-left text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          >
+            <div className="flex items-start justify-between gap-4">
+              <h3 id="recent-form-method-title" className="text-lg font-bold">
+                최근 상승세·하락세 계산 방식
+              </h3>
+              <form method="dialog">
+                <button type="submit" className="rounded px-2 py-1 text-sm text-blue-700 hover:underline dark:text-yellow-400">
+                  닫기
+                </button>
+              </form>
+            </div>
+            <div className="mt-4 space-y-3 text-sm leading-relaxed">
+              <p>플레이어별 최근 출석 2회와 그 직전 출석 2회를 비교합니다.</p>
+              <ul className="list-disc space-y-2 pl-5">
+                <li>상승세: 두 지표 중 하나 이상 증가하고, 다른 지표는 감소하지 않은 플레이어</li>
+                <li>하락세: 두 지표 중 하나 이상 감소하고, 다른 지표는 증가하지 않은 플레이어</li>
+              </ul>
+              <p className="text-gray-600 dark:text-gray-400">이번 분기 2회 이상, 8주 이내에 총 4회 이상 출석해야 합니다.</p>
+            </div>
+          </dialog>
         </>
       )}
     </div>
