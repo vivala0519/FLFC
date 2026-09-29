@@ -51,6 +51,7 @@ export const analyzeCareerPartners = (
   playerName,
   totalMembers,
   asOfDate,
+  oneCharacterMembers = [],
 ) => {
   if (typeof playerName !== 'string' || !playerName.trim() || playerName.includes('용병')) {
     return emptyResult()
@@ -60,12 +61,18 @@ export const analyzeCareerPartners = (
   const members = [...new Set((Array.isArray(totalMembers) ? totalMembers : [])
     .filter((name) => typeof name === 'string' && name.trim() && !name.includes('용병'))
     .map((name) => name.trim()))]
+  const singleNameMembers = (Array.isArray(oneCharacterMembers) ? oneCharacterMembers : [])
+    .filter((name) => members.includes(name))
   const resolveMember = (rawName) => {
     if (typeof rawName !== 'string') return null
     const name = rawName.trim()
     if (!name || name.includes('용병')) return null
     if (name === player) return player
     if (members.includes(name)) return name
+    if (name.length === 1) {
+      const matches = singleNameMembers.filter((member) => member.endsWith(name))
+      if (matches.length === 1) return matches[0]
+    }
     const matches = members.filter((member) => member.includes(name))
     return matches.length === 1 ? matches[0] : name
   }

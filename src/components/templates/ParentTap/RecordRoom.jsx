@@ -75,14 +75,14 @@ const RecordRoom = (props) => {
       acc[key] ? acc[key]++ : (acc[key] = 1)
       return acc
     }, {})
-    // 진행된 월 set
-    setMonth([...monthSet])
+    const availableMonths = [...monthSet].sort((a, b) => a - b)
+    setMonth(availableMonths)
     // 초기 월 설정
     if (!blockSetPage) {
       if (year === '2021') {
-        setPage(2)
+        setPage(Math.min(2, Math.max(0, availableMonths.length - 1)))
       } else {
-        setPage([...monthSet][monthSet.size - 1] - 1)
+        setPage(Math.max(0, availableMonths.length - 1))
       }
     }
     setWeeksPerMonth(weeksByMonth)

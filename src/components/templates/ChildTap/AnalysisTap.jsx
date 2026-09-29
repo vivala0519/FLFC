@@ -6,6 +6,7 @@ import { get, getDatabase, onValue, ref } from 'firebase/database'
 import NewBadge from '@/components/atoms/NewBadge.jsx'
 import BestFiveCard from '@/components/organisms/BestFiveCard.jsx'
 import PlayerRadarChart from '@/components/organisms/PlayerRadarChart.jsx'
+import QuarterlyRecordChart from '@/components/organisms/QuarterlyRecordChart.jsx'
 import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
@@ -20,6 +21,7 @@ import { analyzeLowScoringDuo } from '@/apis/analyzeLowScoringDuo.js'
 import { analyzePlayerRadar } from '@/apis/analyzePlayerRadar.js'
 import { analyzeCareerRecords } from '@/apis/analyzeCareerRecords.js'
 import { analyzeCareerPartners } from '@/apis/analyzeCareerPartners.js'
+import { analyzeCareerAwards } from '@/apis/analyzeCareerAwards.js'
 
 const FIRST_RECORD_YEAR = 2021
 const careerNumberFormatter = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 })
@@ -27,6 +29,19 @@ const formatCareerNumber = (value, unit) => `${careerNumberFormatter.format(valu
 const formatCareerHigh = (high, unit) => high?.season
   ? formatCareerNumber(high.value, unit)
   : '기록 없음'
+
+let historyRecordsPromise
+const loadHistoryRecords = () => {
+  if (!historyRecordsPromise) {
+    historyRecordsPromise = getDocs(collection(db, 'history'))
+      .then((snapshot) => snapshot.docs.map((document) => ({ id: document.id, data: document.data() })))
+      .catch((error) => {
+        historyRecordsPromise = null
+        throw error
+      })
+  }
+  return historyRecordsPromise
+}
 
 const analysisIconPaths = {
   bestFive: <path d="m12 2 2.8 6 6.6.8-4.8 4.5 1.2 6.5L12 17l-5.8 2.8 1.2-6.5-4.8-4.5 6.6-.8L12 2Z" />,
@@ -113,7 +128,7 @@ const bestFiveRoles = [
 
 const AnalysisTap = (props) => {
   const { test } = props
-  const { existingMembers, totalMembers } = getMembers()
+  const { existingMembers, totalMembers, oneCharacterMembers } = getMembers()
   const { time: { thisYear, thisMonth: currentMonth, thisDate } } = getTimes()
   const { totalWeeklyTeamData } = getRecords()
   const recentFormDialogRef = useRef(null)
@@ -153,7 +168,7 @@ const AnalysisTap = (props) => {
   const [processedWeeklyTeamSource, setProcessedWeeklyTeamSource] = useState(null)
   const [processedPartnerData, setProcessedPartnerData] = useState(null)
   const [mvpStatus, setMvpStatus] = useState('loading')
-  const [thisQuarterPlayers, setThisQuarterPlayers] = useState([])
+  const activePlayers = useMemo(() => [...existingMembers].sort((a, b) => a.localeCompare(b, 'ko')), [existingMembers])
   const [sonKaeDuo, setSonKaeDuo] = useState({})
   const [mostMvpPlayer, setMostMvpPlayer] = useState({})
   const [weeklyTeamData, setWeeklyTeamData] = useState(null)
@@ -333,11 +348,21 @@ const AnalysisTap = (props) => {
   }, [thisQuarterPointData, thisQuarterDataByTime, thisQuarterMostPartners, mercenaryBring])
   const [playerDetail, setPlayerDetail] = useState(null)
   const playerName = playerDetail?.name
+  const [careerAwardHistory, setCareerAwardHistory] = useState({ status: 'idle', records: [] })
+  const careerAwards = useMemo(() =>
+    careerAwardHistory.status === 'ready' && playerName
+      ? analyzeCareerAwards(careerAwardHistory.records, playerName, asOfDate)
+      : [],
+  [careerAwardHistory, playerName, asOfDate])
+  const hasQuarterRecord = playerName ? playerComparison.players.has(playerName) : false
   const careerRecord = useMemo(() =>
     playerName && scoringStreakResult.status === 'ready'
       ? analyzeCareerRecords(recordsByYear, playerName, asOfDate)
       : null,
   [recordsByYear, playerName, scoringStreakResult.status, asOfDate])
+  const chartQuarters = useMemo(() =>
+    careerRecord?.quarters.filter(({ year }) => year >= 2026) || [],
+  [careerRecord])
   const careerRoundRoots = useMemo(() =>
     historicalRoundData && yearRoundData
       ? { ...historicalRoundData, [test ? '2024' : thisYear]: yearRoundData }
@@ -345,15 +370,15 @@ const AnalysisTap = (props) => {
   [historicalRoundData, yearRoundData, test, thisYear])
   const careerPartners = useMemo(() =>
     playerName && Array.isArray(totalWeeklyTeamData)
-      ? analyzeCareerPartners(totalWeeklyTeamData, careerRoundRoots || {}, playerName, totalMembers, asOfDate)
+      ? analyzeCareerPartners(totalWeeklyTeamData, careerRoundRoots || {}, playerName, totalMembers, asOfDate, oneCharacterMembers)
       : null,
-  [totalWeeklyTeamData, careerRoundRoots, playerName, totalMembers, asOfDate])
+  [totalWeeklyTeamData, careerRoundRoots, playerName, totalMembers, asOfDate, oneCharacterMembers])
   const careerMVPCount = allTimeMVP.filter((name) => name === playerName).length
   const careerHighRows = careerRecord ? [
     ['골', formatCareerHigh(careerRecord.careerHigh.goals, '골')],
     ['어시', formatCareerHigh(careerRecord.careerHigh.assists, '어시')],
     ['승점', formatCareerHigh(careerRecord.careerHigh.points, '점')],
-    ['승점생산률', formatCareerHigh(careerRecord.careerHigh.pointRate, '점/경기')],
+    ['승점생산률', formatCareerHigh(careerRecord.careerHigh.pointRate, '점')],
   ] : []
   const careerTotalRows = careerRecord ? [
     ['출석', formatCareerNumber(careerRecord.totals.attendance, '회')],
@@ -384,6 +409,17 @@ const AnalysisTap = (props) => {
       playerDetailDialogRef.current?.showModal()
     }
   }, [playerDetail])
+
+  useEffect(() => {
+    if (!playerName || careerAwardHistory.status !== 'idle') return undefined
+    let cancelled = false
+    loadHistoryRecords().then((records) => {
+      if (!cancelled) setCareerAwardHistory({ status: 'ready', records })
+    }).catch(() => {
+      if (!cancelled) setCareerAwardHistory({ status: 'error', records: [] })
+    })
+    return () => { cancelled = true }
+  }, [playerName, careerAwardHistory.status])
 
   useEffect(() => {
     getDailyMVPData().catch(() => setMvpStatus('error'))
@@ -705,19 +741,6 @@ const AnalysisTap = (props) => {
     setMercenaryBring(mercenaryMap)
     setWeeklyTeamData(playerData)
 
-    // 이번 분기 플레이어 set
-    const members = []
-    Object.keys(playerData).forEach((player) => {
-      for (let i = 0; i < existingMembers.length; i++) {
-        if (existingMembers[i].includes(player)) {
-          members.push(existingMembers[i])
-          break
-        }
-      }
-    })
-    members.sort()
-    setThisQuarterPlayers(members)
-
     // 용병 최다 횟수 인원 1명이면 set
     const temp = []
     delete mercenary['용병']
@@ -945,7 +968,7 @@ const AnalysisTap = (props) => {
       : rates?.late > rates?.early ? ['슬로우스타터'] : []
     const goals = Number(detailMap.goal ?? 0)
     const assists = Number(detailMap.assist ?? 0)
-    style.push(goals > assists ? '득점 선호' : assists > goals ? '도움 선호' : '밸런스')
+    style.push(goals > assists ? '득점선호' : assists > goals ? '도움선호' : '밸런스')
     const detail = {
       name,
       mostPartner: detailMap.name || [],
@@ -1030,8 +1053,8 @@ const AnalysisTap = (props) => {
             </div>
             <div id="individual-analysis" hidden={!showIndividual}>
               <div className="mt-3 flex flex-wrap gap-2 justify-center items-center">
-                {thisQuarterPlayers.length > 0 ? (
-                  thisQuarterPlayers.map((player) => (
+                {activePlayers.length > 0 ? (
+                  activePlayers.map((player) => (
                     <button
                       type="button"
                       key={player}
@@ -1044,7 +1067,7 @@ const AnalysisTap = (props) => {
                     </button>
                   ))
                 ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">기록이 없습니다.</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">등록된 플레이어가 없습니다.</p>
                 )}
               </div>
             </div>
@@ -1068,21 +1091,26 @@ const AnalysisTap = (props) => {
                   </form>
                 </div>
                 <div className="mt-4">
-                  <h4 className="mb-3 font-semibold">이번 분기</h4>
-                  {bestFive.status === 'ready' ? (
-                    <PlayerRadarChart name={playerDetail.name} comparison={playerComparison} />
-                  ) : (
-                    <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">
-                      {bestFive.status === 'error' ? '비교 기록을 불러오지 못했습니다.' : '비교 기록을 불러오는 중입니다.'}
-                    </p>
-                  )}
                   <dl className="mb-2 text-sm">
                     <div className="flex gap-4">
                       <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">주발</dt>
                       <dd className="min-w-0 break-words">{preferredFootLabel}</dd>
                     </div>
                   </dl>
-                  <dl className="space-y-2 text-sm">
+                  <hr className="my-5 border-gray-200 dark:border-gray-700"/>
+                  <h4 className="mb-3 font-semibold">이번 분기</h4>
+                  {bestFive.status === 'ready' ? (
+                      hasQuarterRecord ? (
+                          <PlayerRadarChart name={playerDetail.name} comparison={playerComparison}/>
+                      ) : (
+                          <p className="text-sm text-gray-500 dark:text-gray-400">이번 분기 기록이 없습니다</p>
+                      )
+                  ) : (
+                      <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">
+                        {bestFive.status === 'error' ? '비교 기록을 불러오지 못했습니다.' : '비교 기록을 불러오는 중입니다.'}
+                      </p>
+                  )}
+                  {bestFive.status === 'ready' && hasQuarterRecord && <dl className="space-y-2 text-sm">
                     {[
                       ['MVP', `${playerDetail.mvp}회`],
                       [
@@ -1092,54 +1120,77 @@ const AnalysisTap = (props) => {
                       [
                         '최다 같은 팀',
                         playerDetail.mostPartner.length > 0
-                          ? `${playerDetail.mostPartner.join(', ')} · ${playerDetail.mostPartnerCount}회`
-                          : '기록 없음',
+                            ? `${playerDetail.mostPartner.join(', ')} · ${playerDetail.mostPartnerCount}회`
+                            : '기록 없음',
                       ],
                       ['스타일', playerDetail.style.length > 0 ? playerDetail.style.map((style) => `#${style}`).join(' ') : '기록 없음'],
                     ].map(([label, value]) => (
-                      <div key={label} className="flex gap-4">
-                        <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
-                        <dd className={'min-w-0 break-words ' + (label === '스타일' && '[word-spacing:6px]')}>{value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </div>
-                <hr className="my-5 border-gray-200 dark:border-gray-700" />
-                <section aria-labelledby="career-record-title">
-                  <h4 id="career-record-title" className="text-base font-bold">통산 성적</h4>
-                  {careerRecord ? (
-                    <>
-                      <h5 className="mb-2 mt-4 text-sm font-semibold">커리어 하이</h5>
-                      <dl className="space-y-2 text-sm">
-                        {careerHighRows.map(([label, value]) => (
-                          <div key={label} className="flex gap-4">
-                            <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
-                            <dd className="min-w-0 break-words">{value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                      <h5 className="mb-2 mt-5 text-sm font-semibold">통산 기록</h5>
-                      <dl className="space-y-2 text-sm">
-                        {careerTotalRows.map(([label, value]) => (
-                          <div key={label} className="flex gap-4">
-                            <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
-                            <dd className="min-w-0 break-words">{value}</dd>
-                          </div>
-                        ))}
-                        <div className="flex gap-4">
-                          <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">최다 골 합작</dt>
-                          <dd className="min-w-0 break-words" role={careerRoundStatus === 'loading' ? 'status' : undefined}>
-                            {careerGoalPartner}
-                          </dd>
+                        <div key={label} className="flex gap-4">
+                          <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
+                          <dd className={'min-w-0 break-words ' + (label === '스타일' && '[word-spacing:6px]')}>{value}</dd>
                         </div>
-                      </dl>
-                    </>
+                    ))}
+                  </dl>}
+                </div>
+                <hr className="my-5 border-gray-200 dark:border-gray-700"/>
+                <section aria-labelledby="career-record-title">
+                  {careerRecord ? (
+                      <>
+                        <h4 className="mb-2 mt-4 font-semibold">커리어 하이</h4>
+                        <dl className="space-y-2 text-sm">
+                          {careerHighRows.map(([label, value]) => (
+                              <div key={label} className="flex gap-4">
+                                <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
+                                <dd className="min-w-0 break-words">{value}</dd>
+                              </div>
+                          ))}
+                        </dl>
+                        <hr className="my-5 border-gray-200 dark:border-gray-700"/>
+                        <h4 className="mb-2 mt-5 font-semibold">통산 기록</h4>
+                        <dl className="space-y-2 text-sm">
+                          {careerTotalRows.map(([label, value]) => (
+                              <div key={label} className="flex gap-4">
+                                <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
+                                <dd className="min-w-0 break-words">{value}</dd>
+                              </div>
+                          ))}
+                          <div className="flex gap-4">
+                            <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">최다 골 합작</dt>
+                            <dd className="min-w-0 break-words"
+                                role={careerRoundStatus === 'loading' ? 'status' : undefined}>
+                              {careerGoalPartner}
+                            </dd>
+                          </div>
+                          {(careerAwardHistory.status !== 'ready' || careerAwards.length > 0) && (
+                            <div className="flex gap-4">
+                              <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">개인 수상</dt>
+                              <dd className="min-w-0 break-words" role={careerAwardHistory.status === 'idle' ? 'status' : undefined}>
+                                {careerAwardHistory.status === 'error'
+                                  ? '수상 기록을 불러오지 못했습니다.'
+                                  : careerAwardHistory.status === 'idle'
+                                    ? '수상 기록을 불러오는 중입니다.'
+                                    : careerAwards.join(' · ')}
+                              </dd>
+                            </div>
+                          )}
+                        </dl>
+                      </>
                   ) : (
-                    <p className="mt-3 text-sm text-gray-500 dark:text-gray-400" role="status">
+                      <p className="mt-3 text-sm text-gray-500 dark:text-gray-400" role="status">
                       {scoringStreakResult.status === 'error' ? '통산 기록을 불러오지 못했습니다.' : '통산 기록을 불러오는 중입니다.'}
                     </p>
                   )}
                 </section>
+                {careerRecord && (
+                  <section className="mt-5 border-t border-gray-200 pt-5 dark:border-gray-700" aria-labelledby="quarterly-record-title">
+                    <h4 id="quarterly-record-title" className="mb-3 font-semibold">분기별 추세</h4>
+                    {chartQuarters.length > 0 ? (
+                      <QuarterlyRecordChart quarters={chartQuarters} />
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">2026년 1분기 이후 기록이 없습니다.</p>
+                    )}
+                  </section>
+                )}
               </>
             )}
           </dialog>

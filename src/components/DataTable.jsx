@@ -2,8 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 
 import './DataTable.css'
-import left from '@/assets/left.png'
-import right from '@/assets/right.png'
 import medal from '@/assets/medal.png'
 
 import getTimes from '@/hooks/getTimes.js'
@@ -232,15 +230,11 @@ const DataTable = (props) => {
     }
   }, [month, page])
 
-  const pageMoveHandler = (left) => {
+  const selectMonth = (selectedMonth) => {
+    const nextPage = month.indexOf(Number(selectedMonth))
+    if (nextPage < 0) return
     setBlockSetPage(true)
-    if (left && page > 0) {
-      setPage(page - 1)
-      return
-    }
-    if (!left && page < month.length - 1) {
-      setPage(page + 1)
-    }
+    setPage(nextPage)
   }
 
   // th에 따른 정렬
@@ -269,9 +263,9 @@ const DataTable = (props) => {
   return (
     <div>
       {tap !== '현황판' && (
-        <div className="flex flex-row items-center justify-between border-t-2 border-t-gray-200 px-4 mb-2 border-b-2 border-b-gray-200">
-          <YearSelectWrapper>
-            <YearContainer
+        <div className="flex flex-row items-center justify-center gap-2 border-t-2 border-t-gray-200 px-4 mb-2 border-b-2 border-b-gray-200">
+          <DateSelectWrapper>
+            <DateSelect
               aria-label="기록 연도 선택"
               value={year}
               onChange={(e) => setYear(e.target.value)}
@@ -281,13 +275,27 @@ const DataTable = (props) => {
                   {startYear + i}년
                 </option>
               ))}
-            </YearContainer>
-          </YearSelectWrapper>
-          <MonthContainer className="">
-            <PageButton onClick={() => pageMoveHandler(true)} $direction="left" $show={page !== 0} />
-            <Month className="">{tableData.month}월</Month>
-            <PageButton onClick={() => pageMoveHandler(false)} $direction="right" $show={page !== month.length - 1} />
-          </MonthContainer>
+            </DateSelect>
+            <DateSelectValue aria-hidden="true">{year}년</DateSelectValue>
+          </DateSelectWrapper>
+          <DateSelectWrapper $disabled={month.length === 0}>
+            <DateSelect
+              aria-label="기록 월 선택"
+              value={month[page] ?? ''}
+              onChange={(e) => selectMonth(e.target.value)}
+              disabled={month.length === 0}
+            >
+              <option value="" disabled>월</option>
+              {month.map((availableMonth) => (
+                <option key={availableMonth} value={availableMonth}>
+                  {availableMonth}월
+                </option>
+              ))}
+            </DateSelect>
+            <DateSelectValue aria-hidden="true">
+              {month[page] ? `${month[page]}월` : '월'}
+            </DateSelectValue>
+          </DateSelectWrapper>
         </div>
       )}
       <TableContainer>
@@ -573,24 +581,28 @@ const selectedColumnStyle = (index) => index > 0 && `
   }
 `
 
-const MonthContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  gap: 15px;
-  font-size: 30px;
-  padding-top: 7px;
-  padding-bottom: 7px;
-  @media (max-width: 812px) {
-    font-size: 15px;
-  }
-`
-const YearSelectWrapper = styled.div`
+const DateSelectWrapper = styled.div`
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  box-sizing: border-box;
+  width: 106px;
+  height: 40px;
+  margin: 8px 0;
+  border: 1px solid #93c5fd;
+  border-radius: 10px;
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  font-size: 16px;
+  font-weight: 700;
+  opacity: ${(props) => props.$disabled ? 0.5 : 1};
+
+  &:focus-within {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+  }
 
   &::after {
     content: '';
@@ -606,67 +618,36 @@ const YearSelectWrapper = styled.div`
   }
 
   @media (prefers-color-scheme: dark) {
+    border-color: #475569;
+    background-color: #1f2937;
+    color: #facc15;
+
     &::after {
       border-color: #facc15;
     }
   }
 `
 
-const YearContainer = styled.select`
+const DateSelect = styled.select`
   -webkit-appearance: none;
   appearance: none;
-  display: block;
-  box-sizing: border-box;
-  width: 106px;
-  height: 40px;
-  margin: 0;
-  padding: 0 36px 0 12px;
-  border: 1px solid #93c5fd;
-  border-radius: 10px;
-  background-color: #eff6ff;
-  color: #1d4ed8;
-  font: inherit;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: normal;
-  text-align: left;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
   cursor: pointer;
+  text-align: center;
 
-  &:focus-visible {
-    outline: 2px solid #1d4ed8;
-    outline-offset: 2px;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    border-color: #475569;
-    background-color: #1f2937;
-    color: #facc15;
+  &:disabled {
+    cursor: default;
   }
 `
 
-const PageButton = styled.div`
-  visibility: ${(props) => (props.$show ? 'visible' : 'hidden')};
-  background: ${(props) =>
-    props.$direction === 'right'
-      ? `url(${right}) no-repeat center center`
-      : `url(${left}) no-repeat center center`};
-  background-size: 100% 100%;
-  width: 25px;
-  height: 25px;
-  cursor: pointer;
-  @media (max-width: 812px) {
-    width: 20px;
-    height: 20px;
-  }
-  @media (prefers-color-scheme: dark) {
-    filter: invert(1);
-  }
-`
-
-const Month = styled.div`
-  position: relative;
-  top: -1px;
-  left: -4px;
+const DateSelectValue = styled.span`
+  pointer-events: none;
+  white-space: nowrap;
 `
 
 const TableContainer = styled.div`
