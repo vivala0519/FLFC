@@ -269,14 +269,20 @@ const DataTable = (props) => {
   return (
     <div>
       {tap !== '현황판' && (
-        <div className="flex flex-row gap-14 items-center justify-start border-t-2 border-t-gray-200 pl-4 mb-2 border-b-2 border-b-gray-200">
-          <YearContainer value={year} onChange={(e) => setYear(e.target.value)}>
-            {Array.from({ length: thisYear - startYear + 1 }, (_, i) => (
-              <option key={i} value={startYear + i}>
-                {startYear + i}년
-              </option>
-            ))}
-          </YearContainer>
+        <div className="flex flex-row items-center justify-between border-t-2 border-t-gray-200 px-4 mb-2 border-b-2 border-b-gray-200">
+          <YearSelectWrapper>
+            <YearContainer
+              aria-label="기록 연도 선택"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+            >
+              {Array.from({ length: thisYear - startYear + 1 }, (_, i) => (
+                <option key={i} value={startYear + i}>
+                  {startYear + i}년
+                </option>
+              ))}
+            </YearContainer>
+          </YearSelectWrapper>
           <MonthContainer className="">
             <PageButton onClick={() => pageMoveHandler(true)} $direction="left" $show={page !== 0} />
             <Month className="">{tableData.month}월</Month>
@@ -580,8 +586,62 @@ const MonthContainer = styled.div`
     font-size: 15px;
   }
 `
+const YearSelectWrapper = styled.div`
+  position: relative;
+  flex: 0 0 auto;
+  padding-top: 8px;
+  padding-bottom: 8px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 16px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid #1d4ed8;
+    border-bottom: 2px solid #1d4ed8;
+    transform: translateY(-70%) rotate(45deg);
+    pointer-events: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    &::after {
+      border-color: #facc15;
+    }
+  }
+`
+
 const YearContainer = styled.select`
-  font-size: 13px;
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  box-sizing: border-box;
+  width: 106px;
+  height: 40px;
+  margin: 0;
+  padding: 0 36px 0 12px;
+  border: 1px solid #93c5fd;
+  border-radius: 10px;
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: normal;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid #1d4ed8;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    border-color: #475569;
+    background-color: #1f2937;
+    color: #facc15;
+  }
 `
 
 const PageButton = styled.div`
