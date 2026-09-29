@@ -740,11 +740,11 @@ const SortArrow = styled.div`
     content: '';
     position: absolute;
     inset: 0;
-    background: url("/boomerang-light.svg") center / contain no-repeat;
-    transform: rotate(${(props) => (props.$ascending ? '180deg' : '0deg')});
+    background: url("/sort-arrow.svg") center / contain no-repeat;
+    transform: rotate(${(props) => (!props.$ascending && '180deg')});
 
     @media (prefers-color-scheme: dark) {
-      background-image: url("/boomerang.svg");
+      background-image: url("/sort-arrow-light.svg");
     }
   }
 

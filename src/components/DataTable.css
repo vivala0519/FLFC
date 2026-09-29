@@ -11,11 +11,11 @@
 }
 
 @keyframes moveUpAscending {
-    from { transform: translateY(-1px); }
+    from { transform: translateY(-5px); }
     to   { transform: translateY(5px); }
 }
 
 @keyframes moveDownDescending {
     from { transform: translateY(-5px); }
-    to   { transform: translateY(1px); }
+    to   { transform: translateY(5px); }
 }
