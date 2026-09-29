@@ -8,9 +8,6 @@ import medal from '@/assets/medal.png'
 
 import getTimes from '@/hooks/getTimes.js'
 
-// Source: Rpg-Awesome boomerang by nagoshiashumari (GPL).
-const BOOMERANG_PATH = 'M27.756 4.662c-1.975-2.059-9.897-1.999-16.256-0.917l0.403 4.411c3.741-0.279 7.739-0.201 9.991 2.092 2.182 2.36 2.067 6.357 1.607 10.080l4.387 0.616c1.388-6.299 1.83-14.209-0.131-16.282v0zM10.238 3.978c-0.343 0.068-0.681 0.14-1.010 0.213l0.381 4.168c0.334-0.033 0.674-0.065 1.019-0.097l-0.39-4.285zM27.594 22.193l-4.261-0.596c-0.048 0.343-0.097 0.681-0.146 1.013l4.145 0.582c0.090-0.325 0.177-0.659 0.262-0.999v0zM7.975 4.497c-3.014 0.798-5.098 1.843-4.977 2.948 0.153 1.391 2.39 1.313 5.34 1.037 0 0-0.363-3.985-0.363-3.985zM26.966 24.428l-3.963-0.555c-0.418 2.933-0.604 5.164 0.778 5.384 1.097 0.174 2.242-1.856 3.185-4.828v0z'
-
 const formatQuarterPointsPerGame = (stats) =>
   stats['경기'] > 0
     ? `${Number((stats['승점'] / stats['경기']).toFixed(2))}`
@@ -253,14 +250,10 @@ const DataTable = (props) => {
 
     return (
       <SortArrow
+        $ascending={isAscending}
         className={`${isSelected ? 'arrow' : 'opacity-50'} ${isSelected ? (isAscending ? 'ascending' : 'descending') : ''}`}
         aria-hidden="true"
-        viewBox="0 0 32 32"
-      >
-        <g transform={`rotate(${isAscending ? 315 : 135} 16 16)`}>
-          <path d={BOOMERANG_PATH} />
-        </g>
-      </SortArrow>
+      />
     )
   }
 
@@ -737,14 +730,22 @@ const CustomMinWidthSpan = styled.span`
   }
 `
 
-const SortArrow = styled.svg`
+const SortArrow = styled.div`
   flex: 0 0 14px;
   width: 14px;
   height: 14px;
-  fill: #1d4ed8;
+  position: relative;
 
-  @media (prefers-color-scheme: dark) {
-    fill: #93c5fd;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("/boomerang-light.svg") center / contain no-repeat;
+    transform: rotate(${(props) => (props.$ascending ? '180deg' : '0deg')});
+
+    @media (prefers-color-scheme: dark) {
+      background-image: url("/boomerang.svg");
+    }
   }
 
   @media (max-width: 812px) {
