@@ -31,7 +31,6 @@ const useUpdateMembers = () => {
       const oneCharacterMembers = fetchedMembersData['oneCharacter']
       const membersNickName = fetchedMembersData['nickName']
       const calculatedExisting = totalMembers.filter((member) => !retiredMembers.includes(member))
-      console.log('Firebase 연산 결과:', calculatedExisting)
       setTotalMembers(totalMembers)
       setExistingMembers(calculatedExisting)
       setRetiredMembers(retiredMembers)

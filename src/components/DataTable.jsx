@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 import './DataTable.css'
-import up from '@/assets/up2.png'
-import down from '@/assets/down2.png'
+import boomerang from '@/assets/boomerang.svg'
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
 import medal from '@/assets/medal.png'
@@ -247,10 +246,16 @@ const DataTable = (props) => {
   }
 
   const renderSortArrow = (column) => {
-    const Arrow = column === arrowState && sortDirection === 'asc'
-      ? UpArrow
-      : DownArrow
-    return <Arrow className={arrowState === column ? 'arrow' : 'opacity-50'} aria-hidden="true" />
+    const isSelected = column === arrowState
+    const isAscending = isSelected && sortDirection === 'asc'
+
+    return (
+      <SortArrow
+        $ascending={isAscending}
+        className={`${isSelected ? 'arrow' : 'opacity-50'} ${isSelected ? (isAscending ? 'ascending' : 'descending') : ''}`}
+        aria-hidden="true"
+      />
+    )
   }
 
   return (
@@ -681,7 +686,7 @@ const TableHeaderStat = styled.div`
     min-width: 0;
     min-height: 36px;
     display: flex;
-    gap: 2px;
+    gap: 6px;
     padding: 0 2px;
     white-space: pre-line;
     border-right: 1px solid #ccc;
@@ -726,29 +731,26 @@ const CustomMinWidthSpan = styled.span`
   }
 `
 
-const UpArrow = styled.div`
+const SortArrow = styled.div`
   flex: 0 0 14px;
   width: 14px;
   height: 14px;
-  background-image: url(${up});
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
-  @media (max-width: 812px) {
-    flex-basis: 10px;
-    width: 10px;
-    height: 10px;
-  }
-`
+  position: relative;
 
-const DownArrow = styled.div`
-  flex: 0 0 14px;
-  width: 14px;
-  height: 14px;
-  background-image: url(${down});
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 100% 100%;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-color: #1d4ed8;
+    -webkit-mask: url(${boomerang}) center / contain no-repeat;
+    mask: url(${boomerang}) center / contain no-repeat;
+    transform: rotate(${(props) => (props.$ascending ? '180deg' : '0deg')});
+
+    @media (prefers-color-scheme: dark) {
+      background-color: #93c5fd;
+    }
+  }
+
   @media (max-width: 812px) {
     flex-basis: 10px;
     width: 10px;

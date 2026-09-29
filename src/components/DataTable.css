@@ -2,12 +2,20 @@
     animation: moveUpDown 0.5s infinite alternate;
 }
 
-@keyframes moveUpDown {
-    0% {
-        transform: translateY(-2px);
-    }
-    100% {
-        transform: translateY(2px);
-    }
+.arrow.ascending {
+    animation-name: moveUpAscending;
 }
 
+.arrow.descending {
+    animation-name: moveDownDescending;
+}
+
+@keyframes moveUpAscending {
+    from { transform: translateY(-1px); }
+    to   { transform: translateY(5px); }
+}
+
+@keyframes moveDownDescending {
+    from { transform: translateY(-5px); }
+    to   { transform: translateY(1px); }
+}
