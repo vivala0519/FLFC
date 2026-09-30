@@ -16,6 +16,7 @@ const pointVertex = /* glsl */ `
   uniform float uTime;
   uniform float uScale;
   uniform float uExpand;
+  uniform float uDissolve;
   uniform float uCompact;
   uniform float uPixelRatio;
   uniform float uPulseTime;
@@ -47,10 +48,15 @@ const pointVertex = /* glsl */ `
     );
     vec3 p = position + radial * (spread + wave * 0.09 + hover * 0.035)
       + drift * uExpand * mix(0.20, 0.24, uCompact);
+    vec3 burstDirection = normalize(radial + vec3(
+      sin(aSeed * 83.0), cos(aSeed * 47.0), sin(aSeed * 61.0)
+    ) * 0.35);
+    p += burstDirection * uDissolve * (1.4 + aSeed * 1.8);
     vec4 view = modelViewMatrix * vec4(p, 1.0);
     vec3 viewNormal = normalize(normalMatrix * radial);
     float facing = dot(viewNormal, normalize(-view.xyz));
     vFront = mix(smoothstep(-0.045, 0.2, facing), 1.0, uCompact * uExpand * 0.62);
+    vFront = mix(vFront, 1.0, uDissolve);
     vRim = pow(1.0 - max(0.0, facing), 2.0);
     vLight = 0.55 + 0.45 * max(0.0, dot(viewNormal, normalize(vec3(-0.5, 0.8, 1.2))));
     vWave = clamp(scan * 0.65 + wave * 1.3 + hover * 0.65, 0.0, 1.0);
@@ -62,6 +68,7 @@ const pointVertex = /* glsl */ `
     float projectedSize = pointSize * uScale / -view.z * (1.0 + vWave * 0.28);
     float compactSize = mix(1.40, 1.25, aInk) * (0.94 + 0.12 * aSeed) * uPixelRatio;
     gl_PointSize = clamp(mix(projectedSize, compactSize * (1.0 - uExpand * 0.24), uCompact), 1.0, 7.5);
+    gl_PointSize *= 1.0 - uDissolve * 0.4;
     gl_Position = projectionMatrix * view;
   }
 `
@@ -69,6 +76,7 @@ const pointVertex = /* glsl */ `
 const pointFragment = /* glsl */ `
   uniform vec3 uAccent;
   uniform float uExpand;
+  uniform float uDissolve;
   uniform float uCompact;
   varying vec3 vPrinted;
   varying float vInk;
@@ -93,6 +101,7 @@ const pointFragment = /* glsl */ `
     float alpha = mix(mix(0.44, 0.94, uCompact), 0.98, vInk) * (0.86 + vSeed * 0.14);
     alpha *= mix(1.0, 0.38, seam);
     alpha = min(1.0, alpha + vWave * 0.13 + vRim * 0.13);
+    alpha *= 1.0 - smoothstep(0.3 + vSeed * 0.25, 1.0, uDissolve);
     gl_FragColor = vec4(color, dotAlpha * alpha * vFront * (1.0 - uExpand * mix(0.18, 0.45, uCompact)));
     #include <colorspace_fragment>
   }
@@ -179,7 +188,7 @@ export function createFootballScene(canvas, { onReady, onError, onPausedChange, 
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' })
   } catch (error) {
     onError?.(error)
-    return { setPaused() {}, setAccent() {}, setExpanded() {}, showFront() {}, showBack() {}, pulse() {}, reset() {}, destroy() {} }
+    return { setPaused() {}, setAccent() {}, setExpanded() {}, setRollRotation() {}, setDissolve() {}, showFront() {}, showBack() {}, pulse() {}, reset() {}, destroy() {} }
   }
 
   renderer.setClearColor(0xffffff, 0)
@@ -213,6 +222,7 @@ export function createFootballScene(canvas, { onReady, onError, onPausedChange, 
     uTime: { value: 0 },
     uScale: { value: 1 },
     uExpand: { value: initialExpanded ? 1 : 0 },
+    uDissolve: { value: 0 },
     uCompact: { value: compact ? 1 : 0 },
     uPixelRatio: { value: 1 },
     uAccent: { value: new THREE.Color(DEFAULT_ACCENT) },
@@ -241,7 +251,7 @@ export function createFootballScene(canvas, { onReady, onError, onPausedChange, 
   seamGeometry.setAttribute('position', makeAttribute(model.edges, 3))
   seamGeometry.applyMatrix4(panelOrientation)
   const seamMaterial = new THREE.ShaderMaterial({
-    uniforms: { uExpand: common.uExpand, uAccent: common.uAccent },
+    uniforms: { uExpand: common.uExpand, uAccent: common.uAccent, uDissolve: common.uDissolve },
     transparent: true,
     depthWrite: false,
     vertexShader: /* glsl */ `
@@ -257,12 +267,14 @@ export function createFootballScene(canvas, { onReady, onError, onPausedChange, 
     `,
     fragmentShader: /* glsl */ `
       uniform float uExpand;
+      uniform float uDissolve;
       uniform vec3 uAccent;
       varying float vFront;
       varying float vObserved;
       void main() {
         gl_FragColor = vec4(mix(vec3(0.30, 0.32, 0.31), uAccent, 0.13),
-          vFront * 0.12 * (1.0 - vObserved) * (1.0 - smoothstep(0.0, 0.18, uExpand)));
+          vFront * 0.12 * (1.0 - vObserved) * (1.0 - smoothstep(0.0, 0.18, uExpand))
+          * (1.0 - smoothstep(0.0, 0.4, uDissolve)));
         #include <colorspace_fragment>
       }
     `,
@@ -326,6 +338,7 @@ export function createFootballScene(canvas, { onReady, onError, onPausedChange, 
   let expanded = initialExpanded ? 1 : 0
   let rotationX = INITIAL_ROTATION.x
   let rotationY = INITIAL_ROTATION.y
+  let rollRotation = null
   let hovered = false
   let dragging = false
   let pointerId = null
@@ -492,7 +505,7 @@ export function createFootballScene(canvas, { onReady, onError, onPausedChange, 
     const previousExpansion = common.uExpand.value
     common.uExpand.value += (expanded - common.uExpand.value) * damping
     camera.position.z = restingCameraZ + common.uExpand.value * expansionCameraOffset
-    if (motionAllowed && !paused && !dragging && now > introUntil) {
+    if (motionAllowed && !paused && !dragging && now > introUntil && rollRotation === null) {
       rotationX += dt * 2
       rotationY += dt * 2
       if (selectedView !== null) {
@@ -502,6 +515,7 @@ export function createFootballScene(canvas, { onReady, onError, onPausedChange, 
     }
     group.rotation.x += (rotationX - group.rotation.x) * damping
     group.rotation.y += (rotationY - group.rotation.y) * damping
+    group.rotation.z = rollRotation ?? 0
     const age = elapsed - kickTime
     const kick = reducedMotion.matches ? 0 : Math.sin(age * 5.3) * Math.exp(-age * 2.3) * 0.11
     group.position.y = (reducedMotion.matches ? 0 : Math.sin(elapsed * 0.85) * 0.035) + kick
@@ -576,6 +590,8 @@ export function createFootballScene(canvas, { onReady, onError, onPausedChange, 
       requestRender()
     },
     setAccent(value) { common.uAccent.value.set(value); wake() },
+    setRollRotation(value) { rollRotation = value; requestRender() },
+    setDissolve(value) { common.uDissolve.value = THREE.MathUtils.clamp(value, 0, 1); requestRender() },
     setExpanded(value) {
       expanded = value ? 1 : 0
       if (compact && reducedMotion.matches) common.uExpand.value = expanded
@@ -587,6 +603,8 @@ export function createFootballScene(canvas, { onReady, onError, onPausedChange, 
     reset() {
       rotationX = INITIAL_ROTATION.x
       rotationY = INITIAL_ROTATION.y
+      rollRotation = null
+      common.uDissolve.value = 0
       expanded = 0
       common.uAccent.value.set(DEFAULT_ACCENT)
       hovered = false

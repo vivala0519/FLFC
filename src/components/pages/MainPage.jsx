@@ -10,6 +10,7 @@ import { db } from '../../../firebase.js'
 import Header from '@/components/organisms/Header.jsx'
 import Footer from '@/components/organisms/Footer.jsx'
 import TapTemplate from '@/components/templates/TapTemplate.jsx'
+import { recordUiTestMode } from '@/config/recordUiTestMode.js'
 
 const makeWeeklyTeamId = (date = new Date()) => {
   const yy = String(date.getFullYear()).slice(-2)
@@ -68,6 +69,7 @@ const MainPage = (props) => {
 
   useEffect(() => {
     if (!Array.isArray(totalWeeklyTeamData)) return
+    if (recordUiTestMode) return
     if (currentTime.getDay() !== 0) return
 
     const weeklyTeamId = makeWeeklyTeamId(currentTime)
@@ -100,7 +102,7 @@ const MainPage = (props) => {
 
   return (
     <div className={pageStyle}>
-      {testFlag && (
+      { testFlag && (
         <div className="absolute z-20 bg-white dark:bg-black w-full h-full flex flex-col items-center justify-center">
           <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
           <span>점검중 이따 만나요~</span>

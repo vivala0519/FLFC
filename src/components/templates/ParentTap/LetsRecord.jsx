@@ -605,7 +605,7 @@ const LetsRecord = (props) => {
     function setHeight() {
       const height = Math.max(120,
         window.innerHeight -
-        (headerHeight + registerHeight + feverTimeHeight))
+        (headerHeight + registerHeight + feverTimeHeight + 50))
       setDynamicHeight(height)
     }
     setHeight()

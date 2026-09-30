@@ -158,7 +158,7 @@ const RecordContainer = (props) => {
             setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
             setSelectTeamPopupMessage={setSelectTeamPopupMessage}
           />
-          <div className={'text-black dark:text-gray-100'}>득점 없당</div>
+          <div className={'text-black dark:text-gray-100 pt-4'}>득점 없당</div>
         </div>
       )}
       {displayRecord?.map((record, index) => (
@@ -207,7 +207,7 @@ const RecordContainer = (props) => {
                 formatRecordByName={formatRecordByName}
               />
             ))}
-            {record.goals.length === 0 && <div className={'text-black dark:text-gray-100'}>득점 없당</div>}
+            {record.goals.length === 0 && <div className={'text-black dark:text-gray-100 pt-4'}>득점 없당</div>}
           </div>
         </div>
       ))}

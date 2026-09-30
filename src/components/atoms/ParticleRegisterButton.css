@@ -46,6 +46,18 @@
 .particle-register[data-state='assembled'] .particle-register__label { opacity: 1; transform: translateY(0); }
 .particle-register__fallback { position: absolute; inset: 0 0 14px; pointer-events: none; }
 .particle-register__fallback img { position: absolute; width: 46px; height: 46px; top: 17px; left: calc(50% - 23px); }
+.particle-register[data-state='rolling'] { pointer-events: none; will-change: transform, opacity; }
+.particle-register[data-state='rolling'] .particle-register__fallback img { transform: rotate(var(--roll-angle, 0rad)); }
+.particle-register[data-phase='dispersing'] .particle-register__canvas {
+  position: absolute;
+  left: -50px;
+  top: -40px;
+  width: 200px;
+  height: 160px;
+}
+.particle-register__burst { display: none; }
+.particle-register[data-phase='dispersing'] .particle-register__fallback img { opacity: calc(1 - var(--dissolve, 0) * 4); }
+.particle-register[data-phase='dispersing'] .particle-register__burst { display: block; opacity: calc(1 - var(--dissolve, 0)); }
 .particle-register__fallback i {
   position: absolute;
   top: calc(50% + var(--y));
@@ -56,6 +68,11 @@
   background: #079ccc;
 }
 .particle-register__fallback i:nth-child(3n) { background: #c99730; }
+.particle-register__burst i {
+  top: 50%;
+  left: 50%;
+  transform: translate(calc(var(--x) * var(--dissolve, 0)), calc(var(--y) * var(--dissolve, 0)));
+}
 
 @media (prefers-reduced-motion: reduce) {
   .particle-register__label { transition: none; }

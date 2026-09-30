@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import LetsRecord from './ParentTap/LetsRecord.jsx'
+import RecordEntryPreview from './ParentTap/RecordEntryPreview.jsx'
+import { recordUiTestMode } from '@/config/recordUiTestMode.js'
 import StatusBoard from './ParentTap/StatusBoard.jsx'
 import RecordRoom from './ParentTap/RecordRoom.jsx'
 import WeeklyTeam from './ParentTap/WeeklyTeam.jsx'
@@ -67,7 +69,8 @@ const TapTemplate = (props) => {
       // onTouchMove={handleTouchMove}
       // onTouchEnd={handleTouchEnd}
     >
-      {tap === 0 && (
+      {tap === 0 && recordUiTestMode && <RecordEntryPreview />}
+      {tap === 0 && !recordUiTestMode && (
         <LetsRecord
           headerHeight={headerHeight}
           setOpen={setOpen}
