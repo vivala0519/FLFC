@@ -22,6 +22,7 @@ import { analyzePlayerRadar } from '@/apis/analyzePlayerRadar.js'
 import { analyzeCareerRecords } from '@/apis/analyzeCareerRecords.js'
 import { analyzeCareerGoalDuos, analyzeCareerPartners } from '@/apis/analyzeCareerPartners.js'
 import { analyzeCareerAwards } from '@/apis/analyzeCareerAwards.js'
+import { getAnalysisHistoryRecords } from '@/apis/analysisHistoryRecords.js'
 import { getAnalysisCachePeriod, getCachedAnalysisData, setCachedAnalysisData } from '@/apis/analysisDataCache.js'
 import goldenBoot from '@/assets/golden-boot.png'
 import ballonDor from '@/assets/ballon-dor.png'
@@ -134,11 +135,6 @@ const analyzeScoringRecords = (recordsByYear, asOfDate) => {
   )
   return { ...daily, totalGoals: getTotalLeaders('골', '골'), totalAssists: getTotalLeaders('어시', '어시') }
 }
-
-const loadHistoryRecords = () => getCachedAnalysisData('firestore:history', async () => {
-  const snapshot = await getDocsFromServer(collection(db, 'history'))
-  return snapshot.docs.map((document) => ({ id: document.id, data: document.data() }))
-})
 
 const analysisIconPaths = {
   bestFive: <path d="m12 2 2.8 6 6.6.8-4.8 4.5 1.2 6.5L12 17l-5.8 2.8 1.2-6.5-4.8-4.5 6.6-.8L12 2Z" />,
@@ -599,7 +595,7 @@ const AnalysisTap = (props) => {
     historyLoadedDay.current = cacheDay
     let cancelled = false
     let completed = false
-    loadHistoryRecords().then((records) => {
+    getAnalysisHistoryRecords().then((records) => {
       if (!cancelled) {
         completed = true
         setCareerAwardHistory({ status: 'ready', records })
