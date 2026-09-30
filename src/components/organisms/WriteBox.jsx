@@ -1,97 +1,119 @@
-import { useEffect, useState, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 
 import RecordEntryForm from '@/components/molecules/RecordEntryForm.jsx'
 
 import { uid } from 'uid'
-import { getDatabase, set, onValue, ref } from 'firebase/database'
+import { getDatabase, set, onDisconnect, onValue, ref } from 'firebase/database'
+
+const getUserId = () => {
+  let userId = localStorage.getItem('userId')
+  if (!userId) {
+    userId = uid()
+    localStorage.setItem('userId', userId)
+  }
+  return userId
+}
+
+const reportTypingError = (error) => console.error('Failed to update typing status:', error)
 
 const WriteBox = (props) => {
   const { registerHandler, data, isWriting, editingRecordKey } = props
-  const [isTyping, setIsTyping] = useState(false)
   const [otherUsersTyping, setOtherUsersTyping] = useState([])
+  const [userId] = useState(getUserId)
+  const db = useMemo(() => getDatabase(), [])
+  const typingRef = useMemo(() => ref(db, `typing/users/${userId}`), [db, userId])
+  const isTypingRef = useRef(false)
+  const connectionReadyRef = useRef(false)
+  const typingTimeoutRef = useRef(null)
 
-  const getUserId = () => {
-    let userId = localStorage.getItem('userId')
-    if (!userId) {
-      userId = uid()
-      localStorage.setItem('userId', userId)
+  const updateTypingStatus = useCallback((status) => {
+    if (isTypingRef.current === status) return
+    isTypingRef.current = status
+    if (connectionReadyRef.current) {
+      void set(typingRef, status).catch(reportTypingError)
     }
-    return userId
-  }
-  const userId = getUserId()
+  }, [typingRef])
 
-  const updateTypingStatus = (status) => {
-    if (isTyping !== status) {
-      const db = getDatabase()
-      const typingRef = ref(db, `typing/users/${userId}`)
-      set(typingRef, status)
+  const stopTyping = useCallback(() => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+      typingTimeoutRef.current = null
     }
-  }
-
-  const handleBlur = () => {
-    setIsTyping(false)
     updateTypingStatus(false)
-  }
+  }, [updateTypingStatus])
 
   const handleKeyDown = () => {
-    if (!isTyping) {
-      setIsTyping(true)
-      updateTypingStatus(true)
-    }
+    if (editingRecordKey || isWriting) return
+    updateTypingStatus(true)
 
     // 타이머 초기화
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current)
     }
 
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false)
-      updateTypingStatus(false)
-    }, 2000)
+    typingTimeoutRef.current = setTimeout(stopTyping, 2000)
   }
-  const typingTimeoutRef = useRef(null)
 
   useEffect(() => {
-    if (!editingRecordKey) return
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current)
-      typingTimeoutRef.current = null
-    }
-    if (isTyping) {
-      setIsTyping(false)
-      set(ref(getDatabase(), `typing/users/${userId}`), false)
-    }
-  }, [editingRecordKey, isTyping, userId])
+    if (editingRecordKey || isWriting) stopTyping()
+  }, [editingRecordKey, isWriting, stopTyping])
 
   useEffect(() => {
-    updateTypingStatus(false)
+    let active = true
+    let revision = 0
+    const unsubscribe = onValue(ref(db, '.info/connected'), (snapshot) => {
+      const currentRevision = ++revision
+      connectionReadyRef.current = false
+      if (snapshot.val() !== true) return
+
+      // Register server-side cleanup before publishing, including after reconnection.
+      onDisconnect(typingRef).set(false).then(() => {
+        if (!active || currentRevision !== revision) return
+        connectionReadyRef.current = true
+        return set(typingRef, isTypingRef.current)
+      }).catch(reportTypingError)
+    }, reportTypingError)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') stopTyping()
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    window.addEventListener('pagehide', stopTyping)
+
     return () => {
+      active = false
+      revision++
+      connectionReadyRef.current = false
+      isTypingRef.current = false
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
+        typingTimeoutRef.current = null
       }
+      unsubscribe()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      window.removeEventListener('pagehide', stopTyping)
+      void set(typingRef, false).catch(reportTypingError)
     }
-  }, [])
+  }, [db, typingRef, stopTyping])
 
   // 다른 사용자의 타이핑 상태 감지
   useEffect(() => {
-    const db = getDatabase()
     const typingRef = ref(db, 'typing/users')
     const unsubscribe = onValue(typingRef, (snapshot) => {
       const data = snapshot.val()
       if (data) {
         const typingUsers = Object.keys(data).filter(
-          (user) => user !== userId && data[user],
+          (user) => user !== userId && data[user] === true,
         )
         setOtherUsersTyping(typingUsers)
       } else {
         setOtherUsersTyping([])
       }
-    })
+    }, reportTypingError)
 
     return () => {
       unsubscribe()
     }
-  }, [userId])
+  }, [db, userId])
 
   return editingRecordKey ? (
     <div className="py-3 text-center text-sm" role="status">
@@ -104,7 +126,7 @@ const WriteBox = (props) => {
         data={data}
         registerHandler={registerHandler}
         handleKeyDown={handleKeyDown}
-        handleBlur={handleBlur}
+        handleBlur={stopTyping}
         busy={isWriting}
       />
       {!isWriting && otherUsersTyping.length > 0 && <div className="text-sm">누군가 입력 중입니다..</div>}
