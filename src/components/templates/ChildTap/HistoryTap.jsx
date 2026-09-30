@@ -4,6 +4,19 @@ import { collection, getDocs } from 'firebase/firestore'
 import getMembers from '@/hooks/getMembers.js'
 import styled from 'styled-components'
 import trophy from '@/assets/trophy.png'
+import goldenBoot from '@/assets/golden-boot.png'
+import ballonDor from '@/assets/ballon-dor.png'
+import ligueOne from '@/assets/ligue-1.png'
+import coppaItalia from '@/assets/coppa-italia.png'
+
+const careerAwardIcons = {
+  득점왕: goldenBoot,
+  승점왕: ballonDor,
+  어시왕: ligueOne,
+  출석왕: coppaItalia,
+}
+
+const historyRowClass = 'grid w-full grid-cols-[44px_repeat(4,minmax(0,1fr))] items-center text-center'
 
 const HistoryTap = () => {
   const [historyData, setHistoryData] = useState([])
@@ -44,47 +57,48 @@ const HistoryTap = () => {
 
   return (
     <>
-      <div className="sticky top-0 z-20 w-full flex justify-around mt-3 border-t-2 border-t-gray-200 pt-2 pb-2 border-b-2 border-b-gray-200 bg-white dark:bg-gray-900">
-        <Trophy style={{ width: '40px' }}></Trophy>
-        <span className="flex items-center">승점왕</span>
-        <span className="flex items-center">출석왕</span>
-        <span className="flex items-center">득점왕</span>
-        <span className="flex items-center">어시왕</span>
+      <div
+        className={`${historyRowClass} sticky top-0 z-20 mt-3 border-t-2 border-t-gray-200 pt-2 pb-2 border-b-2 border-b-gray-200 bg-white text-sm dark:bg-gray-900 sm:text-base`}
+      >
+        <span></span>
+        {['승점왕', '출석왕', '득점왕', '어시왕'].map((title) => (
+          <div key={title} className="relative">
+            <span className="absolute left-0 top-0.5">
+              <img src={careerAwardIcons[title]} alt="" className="h-4 w-4 shrink-0 object-contain sm:h-5 sm:w-5" />
+            </span>
+            <span key={title} className="flex min-w-0 items-center justify-center gap-1 whitespace-nowrap">
+              {title}
+            </span>
+          </div>
+        ))}
       </div>
       {historyData.map((data, index) => (
-        <div
-          key={index}
-          className="w-full flex justify-around mt-2 pb-2 items-center border-b-2 border-b-gray-200"
-        >
+        <div key={index} className={`${historyRowClass} mt-2 pb-2 border-b-2 border-b-gray-200 text-sm sm:text-base`}>
           <div className={'w-[44px] text-xs'}>
             <p>{data.id.slice(0, 4)}</p>
             <p>{data.id.split('_')[1].slice(0, 1)}분기</p>
           </div>
           <span
-            className={`min-w-[44px] ${blurMode && retiredMembers.includes(data.data['point_king']) ? 'blur-sm' : ''}`}
+            className={`min-w-0 break-words ${blurMode && retiredMembers.includes(data.data['point_king']) ? 'blur-sm' : ''}`}
             onClick={blurModeHandler}
           >
             {data.data['point_king']}
           </span>
-          <span className="flex flex-col">
+          <span className="flex min-w-0 flex-col break-words">
             {data.data['attendance_king'].map((name, idx) => (
-              <span
-                key={idx}
-                className={`${blurMode && retiredMembers.includes(name) ? 'blur-sm' : ''}`}
-                onClick={blurModeHandler}
-              >
+              <span key={idx} className={`${blurMode && retiredMembers.includes(name) ? 'blur-sm' : ''}`} onClick={blurModeHandler}>
                 {name}
               </span>
             ))}
           </span>
           <span
-            className={`${blurMode && retiredMembers.includes(data.data['goal_king']) ? 'blur-sm' : ''}`}
+            className={`min-w-0 break-words ${blurMode && retiredMembers.includes(data.data['goal_king']) ? 'blur-sm' : ''}`}
             onClick={blurModeHandler}
           >
             {data.data['goal_king']}
           </span>
           <span
-            className={`${blurMode && retiredMembers.includes(data.data['assist_king']) ? 'blur-sm' : ''}`}
+            className={`min-w-0 break-words ${blurMode && retiredMembers.includes(data.data['assist_king']) ? 'blur-sm' : ''}`}
             onClick={blurModeHandler}
           >
             {data.data['assist_king']}
