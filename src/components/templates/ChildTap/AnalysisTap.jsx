@@ -1229,7 +1229,8 @@ const AnalysisTap = (props) => {
     }
   }
 
-  const hasLoadError = roundLoadError || mvpStatus === 'error'
+  const hasLoadError = roundLoadError || bestFive.status === 'error' || mvpStatus === 'error'
+  const isQuarterDataLoading = yearRoundData === null || bestFive.status === 'loading'
   const isDataLoading =
     yearRoundData === null ||
     !Array.isArray(totalWeeklyTeamData) ||
@@ -1620,29 +1621,31 @@ const AnalysisTap = (props) => {
               </div>
             )}
           </dialog>
-          {availableWeeks >= 1 && (
-            <section aria-labelledby="analysis-season-title">
-              <div className="sticky top-0 z-20 mb-4 bg-white py-4 border-b-2 border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-center flex items-center justify-center flex-col">
-                <h2 id="analysis-season-title" className="relative inline-block font-dnf-forged text-center">
-                  이번 시즌
-                </h2>
-                <span className="text-gray-500 text-xs">
-                  {thisYear} - 제 {quarter} 시즌
-                </span>
+          <section aria-labelledby="analysis-season-title">
+            <div className="sticky top-0 z-20 mb-4 bg-white py-4 border-b-2 border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-center flex items-center justify-center flex-col">
+              <h2 id="analysis-season-title" className="relative inline-block font-dnf-forged text-center">
+                이번 시즌
+              </h2>
+              <span className="text-gray-500 text-xs">
+                {thisYear} - 제 {quarter} 시즌
+              </span>
+            </div>
+            {hasLoadError ? (
+              <div className="py-8 text-center" role="alert">
+                이번 시즌 데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.
               </div>
-              {hasLoadError ? (
-                <div className="py-8 text-center" role="alert">
-                  이번 시즌 데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.
-                </div>
-              ) : isDataLoading ? (
-                <div className="py-8 text-center" role="status">
-                  이번 시즌 데이터를 불러오는 중입니다.
-                </div>
-              ) : (
-                <dl className="divide-y divide-gray-200 dark:divide-gray-700">{seasonAnalysisItems.map(renderAnalysisItem)}</dl>
-              )}
-            </section>
-          )}
+            ) : isQuarterDataLoading || (availableWeeks >= 1 && isDataLoading) ? (
+              <div className="py-8 text-center" role="status">
+                이번 시즌 데이터를 불러오는 중입니다.
+              </div>
+            ) : availableWeeks === 0 ? (
+              <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-400" role="status">
+                이번 분기 데이터가 없습니다.
+              </div>
+            ) : (
+              <dl className="divide-y divide-gray-200 dark:divide-gray-700">{seasonAnalysisItems.map(renderAnalysisItem)}</dl>
+            )}
+          </section>
           <section aria-labelledby="analysis-career-title">
             <div className="sticky top-0 z-20 mb-4 bg-white py-4 border-y-2 border-gray-200 dark:border-gray-700 dark:bg-gray-900 text-center flex items-center justify-center flex-col">
               <h2 id="analysis-career-title" className="relative inline-block font-dnf-forged text-center">
