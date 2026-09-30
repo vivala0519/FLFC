@@ -615,7 +615,7 @@ const LetsRecord = (props) => {
 
   useEffect(() => {
     if (feverTimeRef.current) {
-      setFeverTimeHeight(feverTimeRef.current.clientHeight)
+      setFeverTimeHeight(feverTimeRef.current.clientHeight + 50)
     } else {
       setFeverTimeHeight(0)
     }
