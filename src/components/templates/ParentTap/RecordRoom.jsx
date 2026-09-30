@@ -12,15 +12,13 @@ import AnalysisTap from '../ChildTap/AnalysisTap.jsx'
 
 const RecordRoom = (props) => {
   const { test, setSelectedYear, recordRoomLoadingFlag } = props
-  const {
-    time: { thisYear },
-  } = getTimes()
+  const { time: { thisYear } } = getTimes()
   const { firestoreRecord } = getRecords()
   const { totalMembers } = getMembers()
   const [fetchData, setFetchData] = useState([])
   const [analyzedData, setAnalyzedData] = useState({})
-  const tapName = ['승점', '출석', '골', '어시', '분석', '히스토리']
-  const [tap, setTap] = useState('승점')
+  const tapName = ['분석', '승점', '출석', '골', '어시', '히스토리']
+  const [tap, setTap] = useState('분석')
   const [year, setYear] = useState(thisYear)
   const [yearData, setYearData] = useState({})
   const [analyedYearData, setAnalyzedYearData] = useState({})
@@ -123,11 +121,11 @@ const RecordRoom = (props) => {
     setQuarterData(quarterData)
   }, [tableData, analyzedData])
 
-  const setTapHandler = (tapNumber) => {
-    if (tapNumber === 0 && year <= 2025) {
+  const setTapHandler = (tapName) => {
+    if (tapName === '승점' && year <= 2025) {
       setYear(thisYear)
     }
-    setTap(tapName[tapNumber])
+    setTap(tapName)
   }
 
   return (
@@ -139,48 +137,16 @@ const RecordRoom = (props) => {
       )}
       <div className="flex flex-row w-full mb-2 p-1" style={{ fontFamily: 'DNFForgedBlade' }}>
         <div className="flex flex-row w-full justify-center" style={{ gap: '8%' }}>
-          <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '승점' && 'text-goal dark:text-yellow-400'}`}
-            style={{ width: 'fit-content' }}
-            onClick={() => setTapHandler(0)}
-          >
-            승점
-          </div>
-          <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '출석' && 'text-goal dark:text-yellow-400'}`}
-            style={{ width: 'fit-content' }}
-            onClick={() => setTapHandler(1)}
-          >
-            출석
-          </div>
-          <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '골' && 'text-goal dark:text-yellow-400'}`}
-            style={{ width: 'fit-content' }}
-            onClick={() => setTapHandler(2)}
-          >
-            골
-          </div>
-          <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '어시' && 'text-goal dark:text-yellow-400'}`}
-            style={{ width: 'fit-content' }}
-            onClick={() => setTapHandler(3)}
-          >
-            어시
-          </div>
-          <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '분석' && 'text-goal dark:text-yellow-400'}`}
-            style={{ width: 'fit-content' }}
-            onClick={() => setTapHandler(4)}
-          >
-            분석
-          </div>
-          <div
-            className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === '히스토리' && 'text-goal dark:text-yellow-400'}`}
-            style={{ width: 'fit-content' }}
-            onClick={() => setTapHandler(5)}
-          >
-            히스토리
-          </div>
+          {tapName.map((name) => (
+            <div
+              key={name}
+              className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === name && 'text-goal dark:text-yellow-400'}`}
+              style={{ width: 'fit-content' }}
+              onClick={() => setTapHandler(name)}
+            >
+              {name}
+            </div>
+          ))}
         </div>
       </div>
       <div>

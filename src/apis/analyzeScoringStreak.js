@@ -8,7 +8,7 @@ const recordDate = (year, id) => {
   return `${year}-${id.slice(0, 2)}-${id.slice(2, 4)}`
 }
 
-// A missed team game does not interrupt a player's run of scoring appearances.
+// A missed team game does not interrupt a player's run; an attended scoreless game does.
 export const analyzeScoringStreak = (recordsByYear, members, asOfDate) => {
   const players = [...new Set(members || [])].filter((name) =>
     typeof name === 'string' && name.trim() && !name.includes('용병'),
@@ -32,13 +32,31 @@ export const analyzeScoringStreak = (recordsByYear, members, asOfDate) => {
     }
   }
 
-  const count = Math.max(0, ...[...streaks.values()].map((streak) => streak.best))
+  const count = Math.max(0, ...[...streaks.values()].map((streak) => streak.current))
+  const nextCount = Math.max(0, ...[...streaks.values()]
+    .filter((streak) => streak.current < count)
+    .map((streak) => streak.current))
+  const chasing = nextCount > 0
+    ? [...streaks].filter(([, streak]) => streak.current === nextCount)
+      .map(([name]) => name).sort((a, b) => a.localeCompare(b, 'ko'))
+    : []
+  const additional = chasing.length <= 2 ? chasing : []
+  const allTimeCount = Math.max(0, ...[...streaks.values()].map((streak) => streak.best))
   return {
     name: count > 0
-      ? [...streaks].filter(([, streak]) => streak.best === count)
+      ? [...streaks].filter(([, streak]) => streak.current === count)
         .map(([name]) => name).sort((a, b) => a.localeCompare(b, 'ko'))
       : [],
     count,
+    additional,
+    additionalCount: additional.length > 0 ? nextCount : 0,
+    allTimeRecord: {
+      name: allTimeCount > 0
+        ? [...streaks].filter(([, streak]) => streak.best === allTimeCount)
+          .map(([name]) => name).sort((a, b) => a.localeCompare(b, 'ko'))
+        : [],
+      count: allTimeCount,
+    },
   }
 }
 

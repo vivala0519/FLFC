@@ -1,14 +1,12 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { collection, getDocs, onSnapshot } from 'firebase/firestore'
-import { db } from '../../firebase.js'
+import { useEffect, useMemo, useState } from 'react'
 import { analyzeLongestAbsent, analyzeScoringStreak } from '../apis/analyzeScoringStreak.js'
+import { getAnalysisYearRecords, subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
 
 const FIRST_RECORD_YEAR = 2021
 const EMPTY_RESULT = { name: [], count: 0, recordsByYear: null }
 const EMPTY_LONGEST_ABSENT = { name: [], lastDate: null }
 
-export default function useScoringStreak(members, asOfDate, activeMembers = members) {
-  const historyCache = useRef(new Map())
+export default function useScoringStreak(members, asOfDate, activeMembers = members, cacheDayKey) {
   const [result, setResult] = useState({ status: 'loading', ...EMPTY_RESULT })
 
   useEffect(() => {
@@ -18,26 +16,9 @@ export default function useScoringStreak(members, asOfDate, activeMembers = memb
     setResult({ status: 'loading', ...EMPTY_RESULT })
     if (members.length === 0) return undefined
 
-    const loadYear = (year) => {
-      const cache = historyCache.current
-      if (!cache.has(year)) {
-        const pending = getDocs(collection(db, String(year)))
-          .then((snapshot) => snapshot.docs.map((document) => ({
-            id: document.id,
-            data: document.data(),
-          })))
-          .catch((error) => {
-            cache.delete(year)
-            throw error
-          })
-        cache.set(year, pending)
-      }
-      return cache.get(year)
-    }
-
-    const unsubscribe = onSnapshot(
-      collection(db, String(currentYear)),
-      async (snapshot) => {
+    const unsubscribe = subscribeAnalysisYearRecords(
+      currentYear,
+      async (currentRecords) => {
         const currentRevision = ++revision
         setResult({ status: 'loading', ...EMPTY_RESULT })
         try {
@@ -46,13 +27,9 @@ export default function useScoringStreak(members, asOfDate, activeMembers = memb
             (_, index) => FIRST_RECORD_YEAR + index,
           )
           const olderRecords = await Promise.all(olderYears.map(async (year) => [
-            year, await loadYear(year),
+            year, await getAnalysisYearRecords(year),
           ]))
           if (cancelled || currentRevision !== revision) return
-          const currentRecords = snapshot.docs.map((document) => ({
-            id: document.id,
-            data: document.data(),
-          }))
           const recordsByYear = {
             ...Object.fromEntries(olderRecords),
             [currentYear]: currentRecords,
@@ -75,7 +52,7 @@ export default function useScoringStreak(members, asOfDate, activeMembers = memb
       cancelled = true
       unsubscribe()
     }
-  }, [members, asOfDate])
+  }, [members, asOfDate, cacheDayKey])
 
   const longestAbsent = useMemo(() => result.status === 'ready'
     ? analyzeLongestAbsent(result.recordsByYear, activeMembers, asOfDate)

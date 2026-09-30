@@ -43,21 +43,7 @@ const getLeaders = (counts, amount) => {
   }
 }
 
-// Firestore team rosters and RTDB goal events use short names; member history also
-// contains retired members, so resolve against the full roster before comparing.
-export const analyzeCareerPartners = (
-  weeklyTeams,
-  roundYears,
-  playerName,
-  totalMembers,
-  asOfDate,
-  oneCharacterMembers = [],
-) => {
-  if (typeof playerName !== 'string' || !playerName.trim() || playerName.includes('용병')) {
-    return emptyResult()
-  }
-
-  const player = playerName.trim()
+const createMemberResolver = (totalMembers, oneCharacterMembers, player = null) => {
   const members = [...new Set((Array.isArray(totalMembers) ? totalMembers : [])
     .filter((name) => typeof name === 'string' && name.trim() && !name.includes('용병'))
     .map((name) => name.trim()))]
@@ -76,6 +62,54 @@ export const analyzeCareerPartners = (
     const matches = members.filter((member) => member.includes(name))
     return matches.length === 1 ? matches[0] : name
   }
+
+  return resolveMember
+}
+
+function* careerGoalPairs(roundYears, resolveMember, cutoff) {
+  for (const [year, yearData] of Object.entries(roundYears || {})) {
+    if (!/^20\d{2}$/.test(year)) continue
+    const dateKeys = new Set(Object.keys(yearData || {})
+      .filter((key) => /^\d{4}(?:_rounds)?$/.test(key))
+      .map((key) => key.slice(0, 4)))
+    for (const dateKey of dateKeys) {
+      const date = dateFromParts(year, dateKey)
+      if (!date || date > cutoff) continue
+
+      // Older dates store goals directly under MMDD. Where both formats exist,
+      // rounds are authoritative: the legacy copy may retain edited/deleted goals.
+      const roundKey = `${dateKey}_rounds`
+      const goals = Object.hasOwn(yearData, roundKey)
+        ? Object.values(yearData[roundKey] || {}).flatMap((round) => Object.entries(round?.goal || {}))
+        : Object.entries(yearData[dateKey] || {})
+      for (const [id, goal] of goals) {
+        if (id === 'fever-time-bar' || goal?.id === 'fever-time-bar' ||
+          typeof goal?.time !== 'string' || !VALID_GOAL_TIME.test(goal.time)) continue
+        const scorer = resolveMember(goal?.goal)
+        const assistant = resolveMember(goal?.assist)
+        if (!scorer || !assistant || scorer === assistant) continue
+        yield [scorer, assistant]
+      }
+    }
+  }
+}
+
+// Firestore team rosters and RTDB goal events use short names; member history also
+// contains retired members, so resolve against the full roster before comparing.
+export const analyzeCareerPartners = (
+  weeklyTeams,
+  roundYears,
+  playerName,
+  totalMembers,
+  asOfDate,
+  oneCharacterMembers = [],
+) => {
+  if (typeof playerName !== 'string' || !playerName.trim() || playerName.includes('용병')) {
+    return emptyResult()
+  }
+
+  const player = playerName.trim()
+  const resolveMember = createMemberResolver(totalMembers, oneCharacterMembers, player)
 
   const cutoff = cutoffDate(asOfDate)
   const sameTeamCounts = new Map()
@@ -101,31 +135,9 @@ export const analyzeCareerPartners = (
   }
 
   const combinationCounts = new Map()
-  for (const [year, yearData] of Object.entries(roundYears || {})) {
-    if (!/^20\d{2}$/.test(year)) continue
-    const dateKeys = new Set(Object.keys(yearData || {})
-      .filter((key) => /^\d{4}(?:_rounds)?$/.test(key))
-      .map((key) => key.slice(0, 4)))
-    for (const dateKey of dateKeys) {
-      const date = dateFromParts(year, dateKey)
-      if (!date || date > cutoff) continue
-
-      // Older dates store goals directly under MMDD. Where both formats exist,
-      // rounds are authoritative: the legacy copy may retain edited/deleted goals.
-      const roundKey = `${dateKey}_rounds`
-      const goals = Object.hasOwn(yearData, roundKey)
-        ? Object.values(yearData[roundKey] || {}).flatMap((round) => Object.entries(round?.goal || {}))
-        : Object.entries(yearData[dateKey] || {})
-      for (const [id, goal] of goals) {
-        if (id === 'fever-time-bar' || goal?.id === 'fever-time-bar' ||
-          typeof goal?.time !== 'string' || !VALID_GOAL_TIME.test(goal.time)) continue
-        const scorer = resolveMember(goal?.goal)
-        const assistant = resolveMember(goal?.assist)
-        if (!scorer || !assistant || scorer === assistant) continue
-        const partner = scorer === player ? assistant : assistant === player ? scorer : null
-        if (partner) combinationCounts.set(partner, (combinationCounts.get(partner) || 0) + 1)
-      }
-    }
+  for (const [scorer, assistant] of careerGoalPairs(roundYears, resolveMember, cutoff)) {
+    const partner = scorer === player ? assistant : assistant === player ? scorer : null
+    if (partner) combinationCounts.set(partner, (combinationCounts.get(partner) || 0) + 1)
   }
 
   const sameTeam = getLeaders(sameTeamCounts, 'count')
@@ -136,6 +148,28 @@ export const analyzeCareerPartners = (
       ...goalCombination,
       attackPoints: goalCombination.goals * 2,
     },
+  }
+}
+
+export const analyzeCareerGoalDuos = (roundYears, totalMembers, asOfDate, oneCharacterMembers = []) => {
+  const resolveMember = createMemberResolver(totalMembers, oneCharacterMembers)
+  const counts = new Map()
+  for (const pair of careerGoalPairs(roundYears, resolveMember, cutoffDate(asOfDate))) {
+    const key = pair.sort((first, second) => first.localeCompare(second, 'ko')).join('\u0000')
+    counts.set(key, (counts.get(key) || 0) + 1)
+  }
+  const maximum = Math.max(0, ...counts.values())
+  const nextCount = Math.max(0, ...[...counts.values()].filter((count) => count < maximum))
+  const pairsAt = (value) => value > 0 ? [...counts].filter(([, count]) => count === value)
+    .map(([pair]) => pair.split('\u0000').join(' - '))
+    .sort((first, second) => first.localeCompare(second, 'ko')) : []
+  const chasing = pairsAt(nextCount)
+  const additional = chasing.length <= 2 ? chasing : []
+  return {
+    name: pairsAt(maximum),
+    count: maximum,
+    additional,
+    additionalCount: additional.length > 0 ? nextCount : 0,
   }
 }
 

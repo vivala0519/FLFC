@@ -44,7 +44,7 @@ const HistoryTap = () => {
 
   return (
     <>
-      <div className="w-full flex justify-around mt-3 border-t-2 border-t-gray-200 pt-2 pb-2 border-b-2 border-b-gray-200">
+      <div className="sticky top-0 z-20 w-full flex justify-around mt-3 border-t-2 border-t-gray-200 pt-2 pb-2 border-b-2 border-b-gray-200 bg-white dark:bg-gray-900">
         <Trophy style={{ width: '40px' }}></Trophy>
         <span className="flex items-center">승점왕</span>
         <span className="flex items-center">출석왕</span>

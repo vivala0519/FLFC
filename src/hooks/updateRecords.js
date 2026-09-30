@@ -10,9 +10,11 @@ import {
   existingMembersAtom,
   timeAtom,
 } from '@/store/atoms'
-import { collection, getDocs, onSnapshot } from 'firebase/firestore'
+import { collection, onSnapshot } from 'firebase/firestore'
 import { db as firestoreDb } from '../../firebase.js'
 import { analyzeForStatusBoard } from '../apis/analyzeData.js'
+import { getAnalysisCachePeriod } from '../apis/analysisDataCache.js'
+import { getAnalysisYearRecords, subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
 
 export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag) {
   const [, setTodaysRealtimeRound] = useAtom(todaysRealtimeRoundAtom)
@@ -25,26 +27,19 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
   const [existingMembers] = useAtom(existingMembersAtom)
   const [time] = useAtom(timeAtom)
 
-  const { thisYear, thisMonth, thisDay, today, currentTime } = time
+  const { thisYear, thisMonth, currentTime } = time
+  const cacheDayKey = getAnalysisCachePeriod(currentTime).dayKey
   // 1) RTDB subscribe: 구독만 담당
   useEffect(() => {
     const rtdb = getDatabase()
-
-    const dateToId = (d) =>
-      `${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
-
-    const getTargetId = (date) => {
-      if (thisDay === 0 || thisDay === 6) return today
-      const sunday = new Date(date)
-      sunday.setDate(date.getDate() - thisDay)
-      return dateToId(sunday)
+    const [year, month, day] = cacheDayKey.split('-').map(Number)
+    const targetDate = new Date(Date.UTC(year, month - 1, day))
+    const weekday = targetDate.getUTCDay()
+    if (weekday !== 0 && weekday !== 6) {
+      targetDate.setUTCDate(targetDate.getUTCDate() - weekday)
     }
-
-    const targetId = getTargetId(currentTime)
-    const useLastYear =
-      targetId.slice(0, 2) === '12' && today.slice(0, 2) === '01'
-
-    const targetYear = useLastYear ? String(Number(thisYear) - 1) : thisYear
+    const targetId = `${String(targetDate.getUTCMonth() + 1).padStart(2, '0')}${String(targetDate.getUTCDate()).padStart(2, '0')}`
+    const targetYear = String(targetDate.getUTCFullYear())
     const unsubscribeRounds = onValue(
       ref(rtdb, `${targetYear}/${targetId}_rounds`),
       (snapshot) => {
@@ -62,13 +57,7 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
       unsubscribeRounds()
       unsubscribeRequests()
     }
-  }, [
-    thisYear,
-    today,
-    thisDay,
-    setTodaysRealtimeRound,
-    setRequestList,
-  ])
+  }, [cacheDayKey, setTodaysRealtimeRound, setRequestList])
 
   // 2) Firestore year fetch: year별 데이터만 담당
 
@@ -78,15 +67,7 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
     // 로딩 시작
     setRecordRoomLoadingFlag(true)
 
-    const colRef = collection(firestoreDb, year)
-
-    // onSnapshot은 리스너(구독)를 등록합니다. 데이터가 변할 때마다 실행됩니다.
-    const unsubscribe = onSnapshot(colRef, (snapshot) => {
-      const fetched = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        data: doc.data(),
-      }))
-
+    const unsubscribe = subscribeAnalysisYearRecords(year, (fetched) => {
       setFirestoreRecord((prev) => ({ ...prev, [year]: fetched }))
       setRecordRoomLoadingFlag(false)
     }, (error) => {
@@ -101,6 +82,7 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
   }, [
     thisYear,
     yearParameter,
+    cacheDayKey,
     // firestoreRecord는 의존성 배열에서 빼야 합니다! (무한 루프 방지 및 로직상 불필요)
     setFirestoreRecord,
     setRecordRoomLoadingFlag
@@ -118,9 +100,7 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
     ;(async () => {
       if (thisMonth === 1) {
         const lastYear = String(thisYear - 1)
-        const snapshot = await getDocs(collection(firestoreDb, lastYear))
-        const lastDec = snapshot.docs
-          .map((doc) => ({ id: doc.id, data: doc.data() }))
+        const lastDec = (await getAnalysisYearRecords(lastYear))
           .filter((d) => d.id.slice(0, 2) === '12')
 
         setStatusBoardStat(

@@ -63,8 +63,8 @@ export default {
           '100%': { transform: 'rotateY(180deg)' },
         },
         bounceUpDown: {
-          '25%': { transform: 'translateY(-2px)' },
-          '75%': { transform: 'translateY(2px)' },
+          '25%': { transform: 'translateY(-1px)' },
+          '75%': { transform: 'translateY(1px)' },
           '0%, 50%, 100%': { transform: 'translateY(0)' },
         },
         spinSlow: {

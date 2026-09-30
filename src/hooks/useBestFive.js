@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { collection, doc, onSnapshot } from 'firebase/firestore'
+import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase.js'
 import { analyzeBestFive } from '../apis/analyzeBestFive.js'
+import { subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
 
-export default function useBestFive(year, month) {
+export default function useBestFive(year, month, cacheDayKey) {
   const [result, setResult] = useState({ status: 'loading', positions: null, records: null })
   const [memberInfo, setMemberInfo] = useState(null)
 
@@ -24,8 +25,8 @@ export default function useBestFive(year, month) {
       if (!cancelled) setResult({ status: 'error', positions: null, records: null })
     }
 
-    const unsubscribeRecords = onSnapshot(collection(db, String(year)), (snapshot) => {
-      records = snapshot.docs.map((document) => ({ id: document.id, data: document.data() }))
+    const unsubscribeRecords = subscribeAnalysisYearRecords(year, (fetched) => {
+      records = fetched
       update()
     }, fail)
     const unsubscribeInfo = onSnapshot(doc(db, 'members', 'info'), (snapshot) => {
@@ -39,7 +40,7 @@ export default function useBestFive(year, month) {
       unsubscribeRecords()
       unsubscribeInfo()
     }
-  }, [year, month])
+  }, [year, month, cacheDayKey])
 
   return { ...result, memberInfo }
 }

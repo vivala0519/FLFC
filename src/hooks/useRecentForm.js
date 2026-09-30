@@ -1,13 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
-import { collection, getDocs, onSnapshot } from 'firebase/firestore'
-import { db } from '../../firebase.js'
+import { useEffect, useState } from 'react'
 import { analyzeRecentForm, getRecentFormCutoff } from '../apis/analyzeRecentForm.js'
+import { getAnalysisYearRecords, subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
 
 const EMPTY_RESULT = { leaders: [], decliners: [], eligibleCount: 0 }
 const FIRST_RECORD_YEAR = 2021
 
-export default function useRecentForm(members, asOfDate) {
-  const historyCache = useRef(new Map())
+export default function useRecentForm(members, asOfDate, cacheDayKey) {
   const [result, setResult] = useState({ status: 'loading', ...EMPTY_RESULT })
 
   useEffect(() => {
@@ -19,37 +17,15 @@ export default function useRecentForm(members, asOfDate) {
     setResult({ status: 'loading', ...EMPTY_RESULT })
     if (members.length === 0) return undefined
 
-    const loadYear = (year) => {
-      const cache = historyCache.current
-      if (!cache.has(year)) {
-        const pending = getDocs(collection(db, String(year)))
-          .then((snapshot) => snapshot.docs.map((document) => ({
-            id: document.id,
-            data: document.data(),
-          })))
-          .catch((error) => {
-            cache.delete(year)
-            throw error
-          })
-        cache.set(year, pending)
-      }
-      return cache.get(year)
-    }
-
-    const unsubscribe = onSnapshot(
-      collection(db, String(currentYear)),
-      async (snapshot) => {
+    const unsubscribe = subscribeAnalysisYearRecords(
+      currentYear,
+      async (currentRecords) => {
         const currentRevision = ++revision
         const isCurrent = () => !cancelled && currentRevision === revision
         setResult({ status: 'loading', ...EMPTY_RESULT })
 
         try {
-          const recordsByYear = {
-            [currentYear]: snapshot.docs.map((document) => ({
-              id: document.id,
-              data: document.data(),
-            })),
-          }
+          const recordsByYear = { [currentYear]: currentRecords }
           let analysis = analyzeRecentForm(recordsByYear, members, asOfDate)
 
           for (
@@ -57,7 +33,7 @@ export default function useRecentForm(members, asOfDate) {
             year >= earliestRelevantYear && analysis.missingMembers.length > 0;
             year--
           ) {
-            recordsByYear[year] = await loadYear(year)
+            recordsByYear[year] = await getAnalysisYearRecords(year)
             if (!isCurrent()) return
             analysis = analyzeRecentForm(recordsByYear, members, asOfDate)
           }
@@ -84,7 +60,7 @@ export default function useRecentForm(members, asOfDate) {
       cancelled = true
       unsubscribe()
     }
-  }, [members, asOfDate])
+  }, [members, asOfDate, cacheDayKey])
 
   return result
 }

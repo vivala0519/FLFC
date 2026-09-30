@@ -588,8 +588,8 @@ const DateSelectWrapper = styled.div`
   justify-content: center;
   flex: 0 0 auto;
   box-sizing: border-box;
-  width: 106px;
-  height: 40px;
+  width: 50%;
+  height: 30px;
   margin: 8px 0;
   border: 1px solid #93c5fd;
   border-radius: 10px;

@@ -21,7 +21,7 @@ const positionStats = [
 const cardFrameClass = 'relative h-[200px] shrink-0 p-1 text-left'
 
 const BestFiveCard = ({ positions }) => (
-    <div className="flex w-full gap-4 overflow-x-auto pb-4 desktop:justify-center">
+    <div className="flex w-full gap-2 overflow-x-auto desktop:justify-center">
       <figure className={cardFrameClass}>
         <div className="relative flex h-full w-full flex-col justify-center gap-3 overflow-hidden rounded-md">
           {positionStats.map(({key, label}) => {
@@ -29,7 +29,7 @@ const BestFiveCard = ({ positions }) => (
             return (
                 <span key={key} className="relative z-10 flex items-baseline gap-2 whitespace-nowrap text-sm font-bold">
               <span className="w-6 shrink-0">{label}</span>
-              <span className="min-w-0 flex-1 truncate text-blueSignature dark:text-yellow-400">{player?.name || '-'}</span>
+              <span className="min-w-0 flex-1 truncate text-blueSignature dark:text-yellow-400 font-dnf-forged">{player?.name || '-'}</span>
                   {player && (
                       <span className="text-xs">
                   {key === 'pivo' ? `${player.골}골`
@@ -53,12 +53,15 @@ const BestFiveCard = ({ positions }) => (
             const player = positions[key]
             const footImage = player?.preferredFoot === 'R' ? rightFoot : player?.preferredFoot === 'L' ? leftFoot : null
             return (
-                <span key={key}
-                      className={`absolute animate-pulse whitespace-nowrap text-sm font-bold text-white drop-shadow-md ${className}`}>
-              {player?.name || '-'}
-                  {footImage &&
-                      <img src={footImage} alt="" className="absolute -right-4 -top-4 h-6 w-6 -rotate-[20deg]"/>}
-            </span>
+              <span key={key} className={`absolute animate-pulse whitespace-nowrap text-sm font-bold text-white drop-shadow-md ${className}`}>
+                {player?.name || '-'}
+                {footImage && player?.preferredFoot === 'R' && (
+                  <img src={footImage} alt="" className="absolute -right-4 -top-4 h-6 w-6 -rotate-[20deg]" />
+                )}
+                {footImage && player?.preferredFoot === 'L' && (
+                  <img src={footImage} alt="" className="absolute -left-4 -top-4 h-6 w-6 rotate-[20deg]" />
+                )}
+              </span>
             )
           })}
         </div>
