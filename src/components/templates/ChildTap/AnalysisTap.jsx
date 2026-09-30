@@ -59,6 +59,14 @@ const formatCareerHigh = (high, unit) => high?.season
   ? formatCareerNumber(high.value, unit)
   : '기록 없음'
 
+const formatAttendanceStreak = ({ count, additionalCount, ...stats }, status) => ({
+  ...stats,
+  status,
+  currentCount: count,
+  count: count > 0 ? `${count}일 연속` : '',
+  additionalCount: additionalCount > 0 ? `${additionalCount}일 연속` : '',
+})
+
 const rankCareerCounts = (counts, unit, includeChasers = false) => {
   const values = [...counts.values()]
   const maximum = Math.max(0, ...values)
@@ -164,6 +172,10 @@ const analysisIconPaths = {
     <path d="M2.5 20v-2a5.5 5.5 0 0 1 11 0v2m0 0v-2a5.5 5.5 0 0 1 8 0v2" />
   </>,
   streak: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></>,
+  playmaker: <>
+    <path d="m14.5 6.5 3 3L6 21l-3-3L14.5 6.5ZM11.5 9.5l3 3" />
+    <path d="M5 3v4M3 5h4M19 2v4M17 4h4M20 14v4M18 16h4" />
+  </>,
   partners: <><path d="M10 7H8a4 4 0 0 0 0 8h3m3-8h2a4 4 0 0 1 0 8h-3M8 11h8" /></>,
   handshake: <>
     <path d="m11 17 2 2a1 1 0 1 0 3-3" />
@@ -238,13 +250,9 @@ const AnalysisTap = (props) => {
   const asOfDate = test ? '2024-12-31' : cacheDay
   const recentForm = useRecentForm(existingMembers, asOfDate, cacheDay)
   const scoringStreakResult = useScoringStreak(totalMembers, asOfDate, existingMembers, cacheDay)
-  const { recordsByYear, ...scoringStreakStats } = scoringStreakResult
-  const scoringStreak = {
-    ...scoringStreakStats,
-    count: scoringStreakResult.count > 0 ? `${scoringStreakResult.count}일 연속` : '',
-    additionalCount: scoringStreakResult.additionalCount > 0
-      ? `${scoringStreakResult.additionalCount}일 연속` : '',
-  }
+  const { recordsByYear, assistStreak: assistStreakStats, ...scoringStreakStats } = scoringStreakResult
+  const scoringStreak = formatAttendanceStreak(scoringStreakStats, scoringStreakResult.status)
+  const assistStreak = formatAttendanceStreak(assistStreakStats, scoringStreakResult.status)
   const longestAbsent = {
     ...scoringStreakResult.longestAbsent,
     status: scoringStreakResult.status,
@@ -400,9 +408,16 @@ const AnalysisTap = (props) => {
       type: 'scoring-streak',
       // isNew: true,
       icon: 'streak',
-      title: '꾸준한 해결사',
+      title: '꾸준한 피니셔',
       description: '출석할 때마다 골을 기록한 연속 횟수 Top 플레이어',
       data: scoringStreak,
+    },
+    {
+      type: 'assist-streak',
+      icon: 'playmaker',
+      title: '꾸준한 플레이메이커',
+      description: '출석할 때마다 어시를 기록한 연속 횟수 Top 플레이어',
+      data: assistStreak,
     },
     {
       type: 'partners',
@@ -443,7 +458,7 @@ const AnalysisTap = (props) => {
     },
   ]
 
-  const careerTypes = ['daily-record', 'scoring-streak', 'longest-absent']
+  const careerTypes = ['daily-record', 'scoring-streak', 'assist-streak', 'longest-absent']
   const seasonAnalysisItems = analysisItems.filter(({ type }) => !careerTypes.includes(type))
 
   // 개인별 데이터
@@ -1245,7 +1260,8 @@ const AnalysisTap = (props) => {
     const players = data.name?.filter(Boolean) ?? []
     const almostPlayers = data.additional?.filter(Boolean) ?? []
     const isChasingDuo = type === 'duo' || type === 'partners' || type === 'career-duo'
-    const hasChaserCount = isChasingDuo || type === 'scoring-streak' || type === 'career-total' || type === 'career-mvp'
+    const isAttendanceStreak = type === 'scoring-streak' || type === 'assist-streak'
+    const hasChaserCount = isChasingDuo || isAttendanceStreak || type === 'career-total' || type === 'career-mvp'
     const trendPlayers = type === 'recent-fall' ? recentForm.decliners : recentForm.leaders
 
     return (
@@ -1294,7 +1310,7 @@ const AnalysisTap = (props) => {
               <p className="text-sm text-gray-500 dark:text-gray-400">이번 시즌 출석률 50% 이상인 플레이어가 없습니다.</p>
             )}
           </dd>
-        ) : (type === 'scoring-streak' || type === 'longest-absent' || type === 'daily-record' || type?.startsWith('career-')) &&
+        ) : (isAttendanceStreak || type === 'longest-absent' || type === 'daily-record' || type?.startsWith('career-')) &&
           data.status !== 'ready' ? (
           <dd className="mt-2 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
             {data.status === 'loading'
@@ -1367,7 +1383,7 @@ const AnalysisTap = (props) => {
                 </div>
               </dd>
             )}
-            {type === 'scoring-streak' && data.allTimeRecord?.count > scoringStreakResult.count && (
+            {isAttendanceStreak && data.allTimeRecord?.count > data.currentCount && (
               <dd className="pl-7 mt-2 text-xs text-gray-400 dark:text-gray-400">
                 <p className="mr-2 font-medium text-green-800 dark:text-green-500">통산 최장기록</p>
                 <div className="flex flex-wrap gap-1">

@@ -8,8 +8,8 @@ const recordDate = (year, id) => {
   return `${year}-${id.slice(0, 2)}-${id.slice(2, 4)}`
 }
 
-// A missed team game does not interrupt a player's run; an attended scoreless game does.
-export const analyzeScoringStreak = (recordsByYear, members, asOfDate) => {
+// Missing a game preserves the run; attending without the selected stat resets it.
+const analyzeAttendanceStreak = (recordsByYear, members, asOfDate, statKey) => {
   const players = [...new Set(members || [])].filter((name) =>
     typeof name === 'string' && name.trim() && !name.includes('용병'),
   )
@@ -27,7 +27,7 @@ export const analyzeScoringStreak = (recordsByYear, members, asOfDate) => {
     for (const [name, streak] of streaks) {
       const stats = data?.[name]
       if (!(Number(stats?.['출석']) > 0)) continue
-      streak.current = Number(stats['골']) > 0 ? streak.current + 1 : 0
+      streak.current = Number(stats[statKey]) > 0 ? streak.current + 1 : 0
       streak.best = Math.max(streak.best, streak.current)
     }
   }
@@ -59,6 +59,12 @@ export const analyzeScoringStreak = (recordsByYear, members, asOfDate) => {
     },
   }
 }
+
+export const analyzeScoringStreak = (recordsByYear, members, asOfDate) =>
+  analyzeAttendanceStreak(recordsByYear, members, asOfDate, '골')
+
+export const analyzeAssistStreak = (recordsByYear, members, asOfDate) =>
+  analyzeAttendanceStreak(recordsByYear, members, asOfDate, '어시')
 
 export const analyzeLongestAbsent = (recordsByYear, members, asOfDate) => {
   const candidates = new Set([...new Set(members || [])].filter((name) =>

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { analyzeLongestAbsent, analyzeScoringStreak } from '../apis/analyzeScoringStreak.js'
+import { analyzeAssistStreak, analyzeLongestAbsent, analyzeScoringStreak } from '../apis/analyzeScoringStreak.js'
 import { getAnalysisYearRecords, subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
 
 const FIRST_RECORD_YEAR = 2021
-const EMPTY_RESULT = { name: [], count: 0, recordsByYear: null }
+const EMPTY_STREAK = { name: [], count: 0 }
+const EMPTY_RESULT = { ...EMPTY_STREAK, recordsByYear: null }
 const EMPTY_LONGEST_ABSENT = { name: [], lastDate: null }
 
 export default function useScoringStreak(members, asOfDate, activeMembers = members, cacheDayKey) {
@@ -54,10 +55,14 @@ export default function useScoringStreak(members, asOfDate, activeMembers = memb
     }
   }, [members, asOfDate, cacheDayKey])
 
+  const assistStreak = useMemo(() => result.status === 'ready'
+    ? analyzeAssistStreak(result.recordsByYear, members, asOfDate)
+    : EMPTY_STREAK,
+  [result.status, result.recordsByYear, members, asOfDate])
   const longestAbsent = useMemo(() => result.status === 'ready'
     ? analyzeLongestAbsent(result.recordsByYear, activeMembers, asOfDate)
     : EMPTY_LONGEST_ABSENT,
   [result.status, result.recordsByYear, activeMembers, asOfDate])
   const { recordsByYear, ...scoringStreak } = result
-  return { ...scoringStreak, longestAbsent, recordsByYear }
+  return { ...scoringStreak, assistStreak, longestAbsent, recordsByYear }
 }
