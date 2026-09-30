@@ -22,8 +22,36 @@ import { analyzePlayerRadar } from '@/apis/analyzePlayerRadar.js'
 import { analyzeCareerRecords } from '@/apis/analyzeCareerRecords.js'
 import { analyzeCareerPartners } from '@/apis/analyzeCareerPartners.js'
 import { analyzeCareerAwards } from '@/apis/analyzeCareerAwards.js'
+import goldenBoot from '@/assets/golden-boot.png'
+import ballonDor from '@/assets/ballon-dor.png'
+import ligueOne from '@/assets/ligue-1.png'
+import coppaItalia from '@/assets/coppa-italia.png'
 
 const FIRST_RECORD_YEAR = 2021
+const careerAwardIcons = {
+  득점왕: goldenBoot,
+  승점왕: ballonDor,
+  어시왕: ligueOne,
+  출석왕: coppaItalia,
+}
+const AwardIconStack = ({ title, count }) => {
+  const iconCount = Math.max(1, Math.floor(Number(count) || 1))
+  const offset = iconCount > 1 ? Math.min(8, 56 / (iconCount - 1)) : 0
+
+  return (
+    <span aria-hidden="true" className="relative inline-block h-5 shrink-0" style={{ width: 20 + offset * (iconCount - 1) }}>
+      {Array.from({ length: iconCount }, (_, index) => (
+        <img
+          key={index}
+          src={careerAwardIcons[title]}
+          alt=""
+          className="absolute top-0 h-5 w-5 object-contain drop-shadow-sm"
+          style={{ left: index * offset }}
+        />
+      ))}
+    </span>
+  )
+}
 const careerNumberFormatter = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 })
 const formatCareerNumber = (value, unit) => `${careerNumberFormatter.format(value)}${unit}`
 const formatCareerHigh = (high, unit) => high?.season
@@ -968,7 +996,7 @@ const AnalysisTap = (props) => {
       : rates?.late > rates?.early ? ['슬로우스타터'] : []
     const goals = Number(detailMap.goal ?? 0)
     const assists = Number(detailMap.assist ?? 0)
-    style.push(goals > assists ? '득점선호' : assists > goals ? '도움선호' : '밸런스')
+    style.push(Math.abs(goals - assists) <= 3 ? '밸런스' : goals > assists ? '득점선호' : '도움선호')
     const detail = {
       name,
       mostPartner: detailMap.name || [],
@@ -1040,7 +1068,7 @@ const AnalysisTap = (props) => {
       ) : (
         <>
           <section className="mb-5 border-y-2 border-gray-200 dark:border-gray-700 py-4" aria-label="개인별 기록">
-            <div className="flex justify-center">
+            <div className={"flex justify-center " + (!showIndividual && 'animate-pulse')}>
               <button
                 type="button"
                 className="bg-transparent py-1 text-sm w-40 h-12 text-blue-700 dark:text-yellow-400 border-2 border-blue-500 dark:border-yellow-400"
@@ -1103,7 +1131,7 @@ const AnalysisTap = (props) => {
                       hasQuarterRecord ? (
                           <PlayerRadarChart name={playerDetail.name} comparison={playerComparison}/>
                       ) : (
-                          <p className="text-sm text-gray-500 dark:text-gray-400">이번 분기 기록이 없습니다</p>
+                          <p className="text-sm text-center text-gray-500 dark:text-gray-400">이번 분기 기록이 없습니다</p>
                       )
                   ) : (
                       <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">
@@ -1169,7 +1197,17 @@ const AnalysisTap = (props) => {
                                   ? '수상 기록을 불러오지 못했습니다.'
                                   : careerAwardHistory.status === 'idle'
                                     ? '수상 기록을 불러오는 중입니다.'
-                                    : careerAwards.join(' · ')}
+                                    : <ul className="flex flex-col gap-1">
+                                      {careerAwards.map((award) => {
+                                        const [title, count] = award.split('x')
+                                        return (
+                                          <li key={award} className="flex items-center gap-1 whitespace-nowrap">
+                                            <AwardIconStack title={title} count={count} />
+                                            <span>{title}<span className="ml-0.5 text-[10px]">x{count}</span></span>
+                                          </li>
+                                        )
+                                      })}
+                                    </ul>}
                               </dd>
                             </div>
                           )}
@@ -1183,7 +1221,7 @@ const AnalysisTap = (props) => {
                 </section>
                 {careerRecord && (
                   <section className="mt-5 border-t border-gray-200 pt-5 dark:border-gray-700" aria-labelledby="quarterly-record-title">
-                    <h4 id="quarterly-record-title" className="mb-3 font-semibold">분기별 추세</h4>
+                    <h4 id="quarterly-record-title" className="mb-3 font-semibold">분기 추세</h4>
                     {chartQuarters.length > 0 ? (
                       <QuarterlyRecordChart quarters={chartQuarters} />
                     ) : (

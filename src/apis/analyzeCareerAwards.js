@@ -1,8 +1,8 @@
 const AWARDS = [
-  ['attendance_king', '출석왕'],
   ['point_king', '승점왕'],
   ['goal_king', '득점왕'],
   ['assist_king', '어시왕'],
+  ['attendance_king', '출석왕'],
 ]
 
 const QUARTERS = { '1st': 1, '2nd': 2, '3rd': 3, '4th': 4 }
