@@ -139,12 +139,7 @@ const RecordContainer = (props) => {
   }
 
   return (
-    <div
-      ref={scrollContainerRef}
-      onScroll={handleScroll}
-      className={containerStyle + dynamicStyle}
-      style={{ height: open ? dynamicHeight : '' }}
-    >
+    <div ref={scrollContainerRef} onScroll={handleScroll} className={containerStyle + dynamicStyle} style={{ height: open ? dynamicHeight : '' }}>
       {displayRecord.length === 0 && (
         <div className={'w-full flex flex-col items-center'}>
           <div className={`border-t-2 mb-2 w-[85%] border-blue-400`}></div>
@@ -158,15 +153,13 @@ const RecordContainer = (props) => {
             setShowSelectScorerTeamPopup={setShowSelectScorerTeamPopup}
             setSelectTeamPopupMessage={setSelectTeamPopupMessage}
           />
-          <div className={'text-black dark:text-gray-100 pt-4'}>득점 없당</div>
+          <div className={'font-dnf-forged text-gray-400'}>득점 없당</div>
         </div>
       )}
       {displayRecord?.map((record, index) => (
         <div className={'w-full flex flex-col items-center'} key={index}>
           {/*{index !== 0 && (*/}
-          <div
-            className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-400'} mb-2 w-[85%]`}
-          ></div>
+          <div className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-400'} mb-2 w-[85%]`}></div>
           {/*)}*/}
           <RoundRow
             key={index}
@@ -187,27 +180,29 @@ const RecordContainer = (props) => {
           {/*<div*/}
           {/*  className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mt-1 w-[85%]`}*/}
           {/*></div>*/}
-          <div
-            className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center gap-5 w-full p-4`}
-          >
+          <div className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center gap-0.5 w-full p-4 relative left-2`}>
             {record.goals?.map((goal, goalIndex) => (
-              <RecordRow
-                key={goal.id ?? `goal-${goalIndex}`}
-                roundIndex={index}
-                index={goalIndex}
-                editingRecordKey={editingRecordKey}
-                setEditingRecordKey={setEditingRecordKey}
-                getGoalTeam={displayRecord[index]['getGoalTeam'][goalIndex]}
-                effect={goal.id === lastRecord}
-                record={goal}
-                isFeverTime={isFeverTime}
-                useDelete={canRegister}
-                isLastRound={displayRecord.length - 1 === index}
-                deleteRecord={deleteRecord}
-                formatRecordByName={formatRecordByName}
-              />
+              <>
+                <RecordRow
+                  key={goal.id ?? `goal-${goalIndex}`}
+                  roundIndex={index}
+                  index={goalIndex}
+                  editingRecordKey={editingRecordKey}
+                  setEditingRecordKey={setEditingRecordKey}
+                  getGoalTeam={displayRecord[index]['getGoalTeam'][goalIndex]}
+                  effect={goal.id === lastRecord}
+                  record={goal}
+                  isFeverTime={isFeverTime}
+                  useDelete={canRegister}
+                  isLastRound={displayRecord.length - 1 === index}
+                  deleteRecord={deleteRecord}
+                  formatRecordByName={formatRecordByName}
+                />
+                {/*<hr className={'relative -left-2 w-5/6 border-gray-100 dark:border-gray-700 ' + (goalIndex !== record.goals.length - 1 && 'mb-2')} />*/}
+                <hr className={'relative left-1 w-7/12 border-gray-100 dark:border-gray-700 ' + (goalIndex !== record.goals.length - 1 && 'mb-2')} />
+              </>
             ))}
-            {record.goals.length === 0 && <div className={'text-black dark:text-gray-100 pt-4'}>득점 없당</div>}
+            {record.goals.length === 0 && <div className={'font-dnf-forged text-gray-400'}>득점 없당</div>}
           </div>
         </div>
       ))}

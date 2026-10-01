@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import footballIcon from '@/assets/circle-ball.png'
 import './ParticleRegisterButton.css'
 
 // Keep one canvas alive while the input changes so the same particles morph.

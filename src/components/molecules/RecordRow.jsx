@@ -18,6 +18,7 @@ const RecordRow = (props) => {
   const { todaysRealtimeRound } = getRecords()
 
   const [randomInt, setRandomInt] = useState(1)
+  const [goalRotation] = useState(() => Math.floor(Math.random() * 8) * 45)
 
   const [goalText, setGoalText] = useState(record.goal)
   const [assistText, setAssistText] = useState(record.assist || '')
@@ -28,11 +29,11 @@ const RecordRow = (props) => {
     currentTime >= gameStartTime &&
     currentTime <= gameEndTime
 
-  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 ${effect ? 'bg-effect' : ''}`
+  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 ${effect ? 'bg-effect' : ''} ${isEditing ? '-left-4 pl-0' : 'left-7'}`
   const recordAreaStyle = 'flex items-center pr-2 relative bottom-[2px] '
   const recordCursorStyle = editingRecordKey && !isEditing ? 'cursor-not-allowed' : useDelete ? 'cursor-pointer' : 'cursor-default'
-  const itemStyle = `w-[20px] h-[20px] bg-[length:100%_100%] transform rotate-[11deg] relative bottom-[2px] right-[2px] `
-  const goalIconStyle = 'bg-[url("@/assets/circle-ball.png")]'
+  const itemStyle = `w-[15px] h-[15px] relative bottom-[1px] right-[3px] `
+  const goalIconStyle = 'bg-[url("@/assets/futsal-ball4.png")] dark:bg-[url("@/assets/futsal-ball-yellow.png")]'
   const rollClassMap = {
     1: 'animate-goal-roll-1',
     2: 'animate-goal-roll-2',
@@ -114,10 +115,17 @@ const RecordRow = (props) => {
     )
   } else {
     return (
-        <div className={rawStyle + (!isEditing ? 'pl-3' : 'pl-0')} key={index}>
+        <div className={rawStyle} key={index}>
           {isEditing && <EditingBadge />}
-          {!isEditing && <span className={'absolute -left-1 text-[8px]'}>{getGoalTeam}팀</span>}
-          {!isEditing && <div className={`${itemStyle} ${goalIconStyle} ${rollClassMap[randomInt]}`}></div>}
+          {!isEditing && <span className={'absolute -left-5 text-[8px] bottom-1.5'}>{getGoalTeam}팀</span>}
+          {!isEditing && (
+            <div className={`${itemStyle} ${rollClassMap[randomInt]}`}>
+              <div
+                className={`h-full w-full bg-[length:100%_100%] ${goalIconStyle}`}
+                style={{ transform: `rotate(${goalRotation}deg)` }}
+              />
+            </div>
+          )}
           {!isEditing && <TimeText text={record.time.slice(0, 5)}/>}
 
           <div

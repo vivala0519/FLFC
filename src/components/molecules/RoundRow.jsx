@@ -31,7 +31,7 @@ const RecordRow = (props) => {
   const recordAreaStyle = 'flex flex-wrap min-w-0 items-center font-dnf-forged gap-x-2 gap-y-1 w-full pl-3'
   const roundTextStyle = 'whitespace-nowrap text-[10px] text-black dark:text-gray-100'
   const winnerDivStyle = 'flex flex-wrap min-w-0 items-center relative bottom-[2px]'
-  const teamStyle = 'relative font-dnf-forged text-teamWin dark:text-blue-300 mr-1 text-[12px] top-[2px]'
+  const teamStyle = 'relative font-dnf-forged text-teamWin dark:text-blue-300 mr-1 text-[12px] top-[1px]'
   const opponentStyle = 'font-dnf-forged text-gray-400 text-[12px] ml-1 mt-1'
   const winStyle = 'font-hahmlet text-goal dark:text-yellow-400 text-[12px] relative top-[1px]'
   const scoreStyle = 'relative top-[2px] shrink-0 whitespace-nowrap text-xs font-semibold tabular-nums text-gray-700 dark:text-gray-200'
