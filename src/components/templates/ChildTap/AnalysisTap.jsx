@@ -1639,7 +1639,7 @@ const AnalysisTap = (props) => {
                 이번 시즌 데이터를 불러오는 중입니다.
               </div>
             ) : availableWeeks === 0 ? (
-              <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-400" role="status">
+              <div className="pb-8 pt-4 h-40 flex items-center justify-center text-center text-sm text-gray-500 dark:text-gray-400" role="status">
                 이번 분기 데이터가 없습니다.
               </div>
             ) : (
