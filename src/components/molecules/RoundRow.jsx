@@ -34,10 +34,10 @@ const RecordRow = (props) => {
   const teamStyle = 'relative font-dnf-forged text-blueSignature dark:text-yellow-400 text-[12px] top-[1px]'
   const opponentStyle = 'font-dnf-forged text-gray-400 text-[12px] ml-1 relative top-[1px]'
   const winStyle = 'font-dnf-forged text-[12px] relative top-[1px] mr-1'
-  const scoreStyle = 'font-dnf-forged text-[12px] relative top-[1px] shrink-0 whitespace-nowrap tabular-nums text-gray-700 dark:text-gray-200'
+  const scoreStyle = 'font-dnf-forged text-[12px] relative top-[1px] shrink-0 whitespace-nowrap tabular-nums text-gray-700 dark:text-gray-200 ml-1'
   // const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
   // const arrowIcon = 'bg-[url("@/assets/up2.png")] '
-  const roundExitButtonStyle = 'text-goal dark:text-yellow-500 animate-pulse'
+  const roundExitButtonStyle = 'text-goal dark:text-red-300 animate-pulse'
 
 
   const optionsForA = ALL_TEAMS.filter((opt) => opt !== teamB)
@@ -404,7 +404,7 @@ const RecordRow = (props) => {
                 )}
                 {!editTeamMode && (
                   <div className={roundExitButtonStyle + ' shrink-0 whitespace-nowrap'} onClick={() => exitRoundHandler(record.id)}>
-                    <div className={''}>
+                    <div className={'relative left-2 text-[16px] border-2 border-red-600 rounded px-2'}>
                       <span>종료</span>
                     </div>
                   </div>
