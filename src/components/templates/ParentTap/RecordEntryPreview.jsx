@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import RecordEntryForm from '@/components/molecules/RecordEntryForm.jsx'
 
 const RecordEntryPreview = () => {
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
   const [records, setRecords] = useState([])
+  const burstTargetRef = useRef(null)
 
   const registerHandler = () => {
     const goal = scorer.trim()
@@ -21,7 +22,7 @@ const RecordEntryPreview = () => {
   return (
     <section className="flex w-full flex-col items-center px-4 pt-6 text-gray-900 dark:text-gray-100">
       <div className="w-full max-w-md">
-        <div className="mb-5 border-b border-gray-300 pb-3 dark:border-gray-700">
+        <div ref={burstTargetRef} className="mb-5 border-b border-gray-300 pb-3 dark:border-gray-700">
           <h1 className="text-lg font-semibold">골 · 어시 등록</h1>
           <p className="mt-1 text-sm text-red-600 dark:text-red-400">
             테스트 모드 · Firebase에 저장되지 않습니다
@@ -30,6 +31,7 @@ const RecordEntryPreview = () => {
         <RecordEntryForm
           data={{ scorer, setScorer, assistant, setAssistant }}
           registerHandler={registerHandler}
+          burstTargetRef={burstTargetRef}
         />
         <div className="mt-8 border-t border-gray-300 pt-4 dark:border-gray-700">
           <div className="flex items-center justify-between">

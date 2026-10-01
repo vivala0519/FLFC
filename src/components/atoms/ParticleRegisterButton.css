@@ -50,8 +50,8 @@
 .particle-register[data-state='rolling'] .particle-register__fallback img { transform: rotate(var(--roll-angle, 0rad)); }
 .particle-register[data-phase='dispersing'] .particle-register__canvas {
   position: absolute;
-  left: -50px;
-  top: -40px;
+  left: var(--burst-canvas-left, -50px);
+  top: var(--burst-canvas-top, -40px);
   width: 200px;
   height: 160px;
 }

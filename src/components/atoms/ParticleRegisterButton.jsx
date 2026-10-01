@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import footballIcon from '@/assets/futsal-ball4.png'
 import './ParticleRegisterButton.css'
 
 // Keep one canvas alive while the input changes so the same particles morph.
-const ParticleRegisterButton = ({ hasScorer, onRegister, disabled = false, buttonType = 'button', rolling = false, onRollComplete }) => {
+const ParticleRegisterButton = ({ hasScorer, onRegister, disabled = false, buttonType = 'button', rolling = false, onRollComplete, burstTargetRef }) => {
   const buttonRef = useRef(null)
   const canvasRef = useRef(null)
   const sceneRef = useRef(null)
@@ -52,10 +53,26 @@ const ParticleRegisterButton = ({ hasScorer, onRegister, disabled = false, butto
     const button = buttonRef.current
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const bounds = button.getBoundingClientRect()
+    const canvasBounds = canvasRef.current.getBoundingClientRect()
+    const returnToBorder = Boolean(burstTargetRef?.current) && !reducedMotion
+    const ballCenter = { x: canvasBounds.left + canvasBounds.width / 2, y: canvasBounds.top + canvasBounds.height / 2 }
     const distance = bounds.left + bounds.width / 2
     const rollDuration = 700
+    const hiddenDuration = 140
+    const returnDuration = 800
     const dissolveDuration = 500
-    const duration = reducedMotion ? 160 : rollDuration + dissolveDuration
+    const arrivalTime = returnToBorder ? rollDuration + hiddenDuration + returnDuration : rollDuration
+    const duration = reducedMotion ? 160 : arrivalTime + dissolveDuration
+    const exitDistance = bounds.right + 24
+    const savedStyle = button.getAttribute('style')
+    if (returnToBorder) {
+      // Fixed coordinates let the ball travel past the viewport without growing the form.
+      Object.assign(button.style, {
+        position: 'fixed', left: `${bounds.left}px`, top: `${bounds.top}px`, zIndex: '80',
+      })
+      button.style.setProperty('--burst-canvas-left', `${canvasBounds.left - bounds.left - canvasBounds.width / 2}px`)
+      button.style.setProperty('--burst-canvas-top', `${canvasBounds.top - bounds.top - canvasBounds.height / 2}px`)
+    }
     const started = performance.now()
     let frame
 
@@ -63,17 +80,48 @@ const ParticleRegisterButton = ({ hasScorer, onRegister, disabled = false, butto
       const elapsed = now - started
       const progress = Math.min(elapsed / duration, 1)
       const rollProgress = Math.min(elapsed / rollDuration, 1)
-      const dissolveProgress = reducedMotion ? 0 : Math.min(Math.max((elapsed - rollDuration) / dissolveDuration, 0), 1)
+      const dissolveProgress = reducedMotion ? 0 : Math.min(Math.max((elapsed - arrivalTime) / dissolveDuration, 0), 1)
       const dissolve = dissolveProgress * dissolveProgress * (3 - 2 * dissolveProgress)
       const travelled = reducedMotion ? 0 : distance * (1 - (1 - rollProgress) ** 3)
-      const angle = travelled / 24
+      let translateX = -travelled
+      let translateY = 0
+      let opacity = reducedMotion ? 1 - progress : 1
+      let angle = travelled / 24
+      let phase = dissolveProgress > 0 ? 'dispersing' : 'rolling'
+
+      if (returnToBorder) {
+        const targetBounds = burstTargetRef.current.getBoundingClientRect()
+        const borderWidth = parseFloat(getComputedStyle(burstTargetRef.current).borderBottomWidth) || 0
+        const targetX = targetBounds.left + targetBounds.width / 2 - ballCenter.x
+        const targetY = targetBounds.bottom - borderWidth / 2 - ballCenter.y
+        const viewport = window.visualViewport
+        const viewportBottom = viewport ? viewport.offsetTop + viewport.height : window.innerHeight
+        const belowScreenY = viewportBottom + canvasBounds.height / 2 + 24 - ballCenter.y
+
+        if (elapsed < rollDuration) {
+          translateX = -exitDistance * rollProgress ** 2
+          angle = -translateX / 24
+          phase = 'exiting'
+        } else if (elapsed < rollDuration + hiddenDuration) {
+          translateX = -exitDistance
+          opacity = 0
+          phase = 'hidden'
+        } else {
+          const returnProgress = Math.min((elapsed - rollDuration - hiddenDuration) / returnDuration, 1)
+          const returnEase = 1 - (1 - returnProgress) ** 3
+          translateX = targetX
+          translateY = belowScreenY + (targetY - belowScreenY) * returnEase
+          angle = (exitDistance + belowScreenY - translateY) / 24
+          phase = dissolveProgress > 0 ? 'dispersing' : 'returning'
+        }
+      }
       rollAngleRef.current = angle
       dissolveRef.current = dissolve
-      button.style.transform = `translateX(${-travelled}px)`
-      button.style.opacity = String(reducedMotion ? 1 - progress : 1)
+      button.style.transform = `translate(${translateX}px, ${translateY}px)`
+      button.style.opacity = String(opacity)
       button.style.setProperty('--roll-angle', `${-angle}rad`)
       button.style.setProperty('--dissolve', String(dissolve))
-      button.dataset.phase = dissolveProgress > 0 ? 'dispersing' : 'rolling'
+      button.dataset.phase = phase
       sceneRef.current?.setRollRotation(angle)
       sceneRef.current?.setDissolve(dissolve)
 
@@ -91,13 +139,11 @@ const ParticleRegisterButton = ({ hasScorer, onRegister, disabled = false, butto
       dissolveRef.current = 0
       sceneRef.current?.setRollRotation(null)
       sceneRef.current?.setDissolve(0)
-      button.style.removeProperty('transform')
-      button.style.removeProperty('opacity')
-      button.style.removeProperty('--roll-angle')
-      button.style.removeProperty('--dissolve')
+      if (savedStyle === null) button.removeAttribute('style')
+      else button.setAttribute('style', savedStyle)
       delete button.dataset.phase
     }
-  }, [rolling])
+  }, [rolling, burstTargetRef])
 
   const rendered = ready && !failed
 

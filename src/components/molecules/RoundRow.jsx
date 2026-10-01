@@ -413,7 +413,7 @@ const RecordRow = (props) => {
             )}
           </div>
           {!editTeamMode && (
-            <div className={'flex relative shrink-0 right-3'}>
+            <div className={'flex relative shrink-0'}>
               <TimeText text={record.time.slice(0, 5)} />
             </div>
           )}

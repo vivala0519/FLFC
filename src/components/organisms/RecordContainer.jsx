@@ -180,7 +180,7 @@ const RecordContainer = (props) => {
           {/*<div*/}
           {/*  className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mt-1 w-[85%]`}*/}
           {/*></div>*/}
-          <div className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center gap-2 w-full p-4 relative left-2`}>
+          <div className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center w-full p-4 relative left-4`}>
             {record.goals?.map((goal, goalIndex) => (
               <>
                 <RecordRow
@@ -199,7 +199,7 @@ const RecordContainer = (props) => {
                   formatRecordByName={formatRecordByName}
                 />
                 {/*<hr className={'relative -left-2 w-5/6 border-gray-100 dark:border-gray-700 ' + (goalIndex !== record.goals.length - 1 && 'mb-2')} />*/}
-                <hr className={'relative left-1 w-7/12 border-gray-100 dark:border-gray-700 ' + (goalIndex !== record.goals.length - 1 && 'mb-2')} />
+                <hr className={'relative left-1 w-7/12 border-gray-100 dark:border-gray-700 ' + (goalIndex !== record.goals.length - 1 && 'mb-4')} />
               </>
             ))}
             {record.goals.length === 0 && <div className={'font-dnf-forged text-gray-400'}>득점 없당</div>}
