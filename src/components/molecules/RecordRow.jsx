@@ -3,6 +3,7 @@ import RecordEl from '@/components/atoms/RecordEl.jsx'
 import DeleteButton from '@/components/atoms/Button/DeleteButton.jsx'
 import FeverTimeBar from '@/components/organisms/FeverTimeBar.jsx'
 import EditingBadge from '@/components/atoms/EditingBadge.jsx'
+import './RecordRow.css'
 import getRecords from '@/hooks/getRecords.js'
 import getTimes from '@/hooks/getTimes.js'
 import { getDatabase, ref, update } from 'firebase/database'
@@ -29,7 +30,7 @@ const RecordRow = (props) => {
     currentTime >= gameStartTime &&
     currentTime <= gameEndTime
 
-  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 ${effect ? 'bg-effect' : ''} ${isEditing ? '-left-4 pl-0' : 'left-7'}`
+  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 transition-[left] duration-300 ease-out motion-reduce:transition-none ${effect ? 'bg-effect' : ''} ${isEditing ? '-left-4 pl-0' : 'left-7'}`
   const recordAreaStyle = 'flex items-center pr-2 relative bottom-[2px] '
   const recordCursorStyle = editingRecordKey && !isEditing ? 'cursor-not-allowed' : useDelete ? 'cursor-pointer' : 'cursor-default'
   const itemStyle = `w-[15px] h-[15px] relative bottom-[1px] right-[3px] `
@@ -129,7 +130,7 @@ const RecordRow = (props) => {
           {!isEditing && <TimeText text={record.time.slice(0, 5)}/>}
 
           <div
-              className={`${recordAreaStyle} ${recordCursorStyle} ${!isEditing ? 'pl-5 gap-8' : 'pl-0'}`}
+              className={`${recordAreaStyle} ${recordCursorStyle} ${!isEditing ? 'pl-5 gap-8' : 'pl-0 record-row-edit-enter'}`}
               onClick={handleAreaClick}
           >
             <RecordEl
@@ -151,7 +152,7 @@ const RecordRow = (props) => {
           { !editingRecordKey && useDelete && isLastRound && (
               <DeleteButton clickHandler={() => deleteRecord(record.id, index)} />
           )}
-          {isEditing && <div className={'flex gap-2 justify-around w-full'}>
+          {isEditing && <div className={'record-row-edit-enter flex gap-2 justify-around w-full'}>
             <div className={'text-green-600 dark:text-green-500 mb-1.5'} onClick={closeEditing}>확인</div>
             <div className={'text-red-400 mb-1.5'} onClick={cancelEditing}>취소</div>
           </div>}
