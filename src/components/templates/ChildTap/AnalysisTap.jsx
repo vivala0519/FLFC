@@ -544,7 +544,7 @@ const AnalysisTap = (props) => {
     },
     {
       type: 'career-mvp', icon: 'trophy', title: '최다 누적 MVP',
-      description: '통산 데일리 MVP 최다 플레이어',
+      // description: '통산 데일리 MVP 최다 플레이어',
       data: careerMostMVP,
     },
     {
