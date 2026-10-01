@@ -174,7 +174,7 @@ const RecordContainer = (props) => {
       {displayRecord?.map((record, index) => (
         <div className={'w-full flex flex-col items-center'} key={index}>
           {/*{index !== 0 && (*/}
-          <div className={`${!closedRounds.has(index) && 'border-blue-400'}w-[85%]`}></div>
+          <div className={`${!closedRounds.has(index) && 'border-blue-400'} w-[85%] `}></div>
           {/*)}*/}
           <RoundRow
             key={index}
@@ -195,7 +195,7 @@ const RecordContainer = (props) => {
           {/*<div*/}
           {/*  className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mt-1 w-[85%]`}*/}
           {/*></div>*/}
-          <div className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center w-full p-4 relative left-4`}>
+          <div className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center w-full py-4 px-6`}>
             {record.goals?.map((goal, goalIndex) => (
               <>
                 <RecordRow
@@ -217,7 +217,7 @@ const RecordContainer = (props) => {
                 <hr className={'relative left-1 w-7/12 border-gray-100 dark:border-gray-700 ' + (goalIndex !== record.goals.length - 1 && 'mb-4')} />
               </>
             ))}
-            {record.goals.length === 0 && <div className={'font-dnf-forged text-gray-400 relative -left-4'}>득점 없당</div>}
+            {record.goals.length === 0 && <div className={'font-dnf-forged text-gray-400'}>득점 없당</div>}
           </div>
         </div>
       ))}

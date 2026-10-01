@@ -30,10 +30,10 @@ const RecordRow = (props) => {
     currentTime >= gameStartTime &&
     currentTime <= gameEndTime
 
-  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 transition-[left] duration-300 ease-out motion-reduce:transition-none ${effect ? 'bg-effect' : ''} ${isEditing ? '-left-4 pl-0 gap-0' : 'left-7 gap-3.5'}`
-  const recordAreaStyle = 'flex items-center pr-2 relative bottom-[2px] -left-4'
+  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 transition-[left] duration-300 ease-out motion-reduce:transition-none ${effect ? 'bg-effect' : ''} ${isEditing ? '-left-4 pl-0 gap-0' : 'gap-1.5'}`
+  const recordAreaStyle = 'flex items-center pr-2 relative bottom-[2px]'
   const recordCursorStyle = editingRecordKey && !isEditing ? 'cursor-not-allowed' : useDelete ? 'cursor-pointer' : 'cursor-default'
-  const itemStyle = `w-[15px] h-[15px] relative bottom-[1px] right-[3px] `
+  const itemStyle = `w-[15px] h-[15px] relative bottom-[1px] `
   const goalIconStyle = 'bg-[url("@/assets/futsal-ball4.png")] dark:bg-[url("@/assets/futsal-ball-yellow.png")]'
   const rollClassMap = {
     1: 'animate-goal-roll-1',
@@ -118,7 +118,7 @@ const RecordRow = (props) => {
     return (
       <div className={rawStyle} key={index}>
         {isEditing && <EditingBadge />}
-        {!isEditing && <span className={'absolute -left-5 text-[8px] bottom-1.5'}>{getGoalTeam}팀</span>}
+        {!isEditing && <span className={'text-[8px] bottom-1.5'}>{getGoalTeam}팀</span>}
         {!isEditing && (
           <div className={`${itemStyle} ${rollClassMap[randomInt]}`}>
             <div className={`h-full w-full bg-[length:100%_100%] ${goalIconStyle}`} style={{ transform: `rotate(${goalRotation}deg)` }} />
@@ -135,7 +135,7 @@ const RecordRow = (props) => {
 
         {!editingRecordKey && useDelete && isLastRound && <DeleteButton clickHandler={() => deleteRecord(record.id, index)} />}
         {isEditing && (
-          <div className={'record-row-edit-enter flex gap-3 whitespace-pre items-center justify-around w-full relative -left-2 bottom-1'}>
+          <div className={'record-row-edit-enter flex gap-3 whitespace-pre items-center justify-around w-full relative left-2 bottom-1'}>
             <div className={'text-green-600 dark:text-green-500 w-full'} onClick={closeEditing}>
               확인
             </div>
