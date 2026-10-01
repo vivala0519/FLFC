@@ -12,6 +12,7 @@ import WriteContainer from '@/components/organisms/WriteContainer.jsx'
 import SelectTeamPopup from '@/components/organisms/SelectTeamPopup.jsx'
 import SelectScorerTeamPopup from '@/components/organisms/SelectScorerTeamPopup.jsx'
 import FeverTimeBar from '@/components/organisms/FeverTimeBar.jsx'
+import ParticleFootballLoader from '@/components/atoms/ParticleFootballLoader.jsx'
 import './LetsRecord.css'
 import Swal from 'sweetalert2'
 import { get, getDatabase, ref, remove, set, update } from 'firebase/database'
@@ -630,7 +631,9 @@ const LetsRecord = (props) => {
     <div className={tapContainerStyle}>
       {loadingFlag && (
         <div className="fixed z-20 bg-white dark:bg-gray-950 w-full h-[80%] flex items-center justify-center">
-          <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
+          {/*<div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />*/}
+
+          <ParticleFootballLoader />
         </div>
       )}
       {/*<TapTitleText active={open} title={"Today's Record"} />*/}

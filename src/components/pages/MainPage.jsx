@@ -10,6 +10,7 @@ import { db } from '../../../firebase.js'
 import Header from '@/components/organisms/Header.jsx'
 import Footer from '@/components/organisms/Footer.jsx'
 import TapTemplate from '@/components/templates/TapTemplate.jsx'
+import ParticleFootballLoader from '@/components/atoms/ParticleFootballLoader.jsx'
 import { recordUiTestMode } from '@/config/recordUiTestMode.js'
 
 const makeWeeklyTeamId = (date = new Date()) => {
@@ -103,30 +104,29 @@ const MainPage = (props) => {
   return (
     <div className={pageStyle}>
       {testFlag && (
-        <div className="absolute z-20 bg-white dark:bg-black w-full h-full flex flex-col items-center justify-center">
-          <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
-          <span>점검중 이따 만나요~</span>
+        <div className="absolute z-20 bg-white dark:bg-black w-full h-full flex flex-col items-center justify-center" role="status">
+          <div className="animate-bounceUpDownMore">
+            <ParticleFootballLoader />
+          </div>
+          <span className="animate-bounceUpDown">점검중 이따 만나요~</span>
         </div>
       )}
       <Analytics />
-      <Header
-        tap={tap}
-        setTap={setTap}
-        lastDate={lastWeeklyTeamId}
-        setHeaderHeight={setHeaderHeight}
-      />
-      {!testFlag && <TapTemplate
-        tap={tap}
-        open={open}
-        test={test}
-        setTap={setTap}
-        setOpen={setOpen}
-        headerHeight={headerHeight}
-        setShowFooter={setShowFooter}
-        recordRoomLoadingFlag={recordRoomLoadingFlag}
-        setSelectedYear={setSelectedYear}
-        setRegisteredTeam={setRegisteredTeam}
-      />}
+      <Header tap={tap} setTap={setTap} lastDate={lastWeeklyTeamId} setHeaderHeight={setHeaderHeight} />
+      {!testFlag && (
+        <TapTemplate
+          tap={tap}
+          open={open}
+          test={test}
+          setTap={setTap}
+          setOpen={setOpen}
+          headerHeight={headerHeight}
+          setShowFooter={setShowFooter}
+          recordRoomLoadingFlag={recordRoomLoadingFlag}
+          setSelectedYear={setSelectedYear}
+          setRegisteredTeam={setRegisteredTeam}
+        />
+      )}
       {[0].includes(tap) && !open && showFooter && <Footer />}
     </div>
   )

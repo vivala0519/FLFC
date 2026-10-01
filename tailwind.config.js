@@ -67,6 +67,11 @@ export default {
           '75%': { transform: 'translateY(1px)' },
           '0%, 50%, 100%': { transform: 'translateY(0)' },
         },
+        bounceUpDownMore: {
+          '25%': { transform: 'translateY(-50px)' },
+          '75%': { transform: 'translateY(50px)' },
+          '0%, 50%, 100%': { transform: 'translateY(0)' },
+        },
         spinSlow: {
           '0%': { transform: 'rotate(0deg)' },
           '100%': { transform: 'rotate(360deg)' },
@@ -115,6 +120,7 @@ export default {
         flipY: 'flipY 0.9s ease-in-out infinite',
         spinVertical: 'spinVertical 0.3s linear infinite',
         bounceUpDown: 'bounceUpDown 1s ease-in-out infinite',
+        bounceUpDownMore: 'bounceUpDownMore 1s ease-in-out infinite',
         'goal-roll-1': 'goal-roll-1 1s ease-out forwards',
         'goal-roll-2': 'goal-roll-2 1s ease-out forwards',
         'goal-roll-3': 'goal-roll-3 1s ease-out forwards',
@@ -132,8 +138,7 @@ export default {
   },
   safelist: [
     {
-      pattern:
-        /bg-(salah|myTeam|ground|palmer|ronaldo|rodrigo|DeBruyne|CJamChul|sonKaeDuo|slowStarter|earlyStarter|laurel)/,
+      pattern: /bg-(salah|myTeam|ground|palmer|ronaldo|rodrigo|DeBruyne|CJamChul|sonKaeDuo|slowStarter|earlyStarter|laurel)/,
     },
   ],
   plugins: [

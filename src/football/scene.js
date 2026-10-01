@@ -182,7 +182,7 @@ function makeAttribute(array, itemSize = 1) {
  * compact draws only the ball, fitting an approximately 48px ball in a small
  * transparent canvas. initialExpanded is applied before the first frame.
  */
-export function createFootballScene(canvas, { onReady, onError, onPausedChange, onViewChange, compact = false, initialExpanded = false, interactive = !compact } = {}) {
+export function createFootballScene(canvas, { onReady, onError, onPausedChange, onViewChange, compact = false, compactDiameter = 48, initialExpanded = false, interactive = !compact } = {}) {
   let renderer
   try {
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: 'high-performance' })
@@ -378,7 +378,7 @@ export function createFootballScene(canvas, { onReady, onError, onPausedChange, 
     if (compact) {
       // Fit the spherical silhouette rather than its flat equatorial plane.
       // Leave room for the dispersed state, including on narrow canvases.
-      const diameter = Math.max(1, Math.min(48, width * 0.62, height * 0.60))
+      const diameter = Math.max(1, Math.min(compactDiameter, width * 0.62, height * 0.60))
       const halfFovTangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2))
       restingCameraZ = BALL_RADIUS * Math.sqrt(1 + (height / (diameter * halfFovTangent)) ** 2)
     } else {
