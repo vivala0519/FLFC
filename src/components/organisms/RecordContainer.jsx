@@ -221,9 +221,11 @@ const RecordContainer = (props) => {
           </div>
         </div>
       ))}
-      <div className="w-full shrink-0 pt-6 pb-8" aria-hidden="true">
-        <div ref={burstTargetRef} className="record-burst-target h-px w-full" />
-      </div>
+      {canRegister && (
+        <div className="w-full shrink-0 pt-6 pb-8" aria-hidden="true">
+          <div ref={burstTargetRef} className="record-burst-target h-px w-full" />
+        </div>
+      )}
     </div>
   )
 }
