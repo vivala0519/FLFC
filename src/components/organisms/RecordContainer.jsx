@@ -142,7 +142,7 @@ const RecordContainer = (props) => {
     <div ref={scrollContainerRef} onScroll={handleScroll} className={containerStyle + dynamicStyle} style={{ height: open ? dynamicHeight : '' }}>
       {displayRecord.length === 0 && (
         <div className={'w-full flex flex-col items-center'}>
-          <div className={`border-t-2 mb-2 w-[85%] border-blue-400`}></div>
+          <div className={`w-[85%] border-blue-400`}></div>
           <RoundRow
             index={0}
             fakeRow={true}
@@ -159,7 +159,7 @@ const RecordContainer = (props) => {
       {displayRecord?.map((record, index) => (
         <div className={'w-full flex flex-col items-center'} key={index}>
           {/*{index !== 0 && (*/}
-          <div className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-400'} mb-2 w-[85%]`}></div>
+          <div className={`${!closedRounds.has(index) && 'border-blue-400'}w-[85%]`}></div>
           {/*)}*/}
           <RoundRow
             key={index}
@@ -180,7 +180,7 @@ const RecordContainer = (props) => {
           {/*<div*/}
           {/*  className={`border-t-2 ${!closedRounds.has(index) && 'border-blue-300'} mt-1 w-[85%]`}*/}
           {/*></div>*/}
-          <div className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center gap-0.5 w-full p-4 relative left-2`}>
+          <div className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center gap-2 w-full p-4 relative left-2`}>
             {record.goals?.map((goal, goalIndex) => (
               <>
                 <RecordRow

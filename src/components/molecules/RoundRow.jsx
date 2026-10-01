@@ -27,14 +27,14 @@ const RecordRow = (props) => {
   const [editTeamMode, setEditTeamMode] = useState(false)
   const [teamA, setTeamA] = useState("");
   const [teamB, setTeamB] = useState("");
-  const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 mobile:gap-2 py-1 border-b-2 border-b-blue-400 dark:border-b-blue-400 pb-[12px]`
-  const recordAreaStyle = 'flex flex-wrap min-w-0 items-center font-dnf-forged gap-x-2 gap-y-1 w-full pl-3'
+  const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 mobile:gap-2 py-1 border-y-2 border-y-blue-400 dark:border-b-blue-400 py-[10px]`
+  const recordAreaStyle = 'flex flex-wrap min-w-0 items-center font-dnf-forged gap-x-2 gap-y-1 w-full pl-3 relative top-[1px]'
   const roundTextStyle = 'whitespace-nowrap text-[10px] text-black dark:text-gray-100'
   const winnerDivStyle = 'flex flex-wrap min-w-0 items-center relative bottom-[2px]'
-  const teamStyle = 'relative font-dnf-forged text-blueSignature dark:text-blue-300 text-[12px] top-[1px]'
+  const teamStyle = 'relative font-dnf-forged text-blueSignature dark:text-yellow-400 text-[12px] top-[1px]'
   const opponentStyle = 'font-dnf-forged text-gray-400 text-[12px] ml-1 relative top-[1px]'
-  const winStyle = 'font-dnf-forged text-goal dark:text-yellow-400 text-[12px] relative top-[1px] mr-1'
-  const scoreStyle = 'relative top-[1px] shrink-0 whitespace-nowrap text-[12px] font-semibold tabular-nums text-gray-700 dark:text-gray-200'
+  const winStyle = 'font-dnf-forged text-[12px] relative top-[1px] mr-1'
+  const scoreStyle = 'font-dnf-forged text-[12px] relative top-[1px] shrink-0 whitespace-nowrap tabular-nums text-gray-700 dark:text-gray-200'
   // const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
   // const arrowIcon = 'bg-[url("@/assets/up2.png")] '
   const roundExitButtonStyle = 'text-goal dark:text-yellow-500 animate-pulse'
@@ -327,7 +327,7 @@ const RecordRow = (props) => {
             {/*<span className={roundTextStyle}>{index + 1} Round</span>*/}
             <span className={teamStyle}>{renderMembers(record.winnerTeam?.member)}</span>
             {/*<span className={teamStyle + ' text-[14px]'}>{record.winnerTeam?.member.join(' ')}</span>*/}
-            <span className={winStyle + ' top-[0px]'}>{record.winnerTeam.number.length === 1 ? '+ 3' : '+ 1'}</span>
+            <span className={winStyle + ' top-[0px] text-goal dark:text-blue-300'}>{record.winnerTeam.number.length === 1 ? '+ 3' : '+ 1'}</span>
           </div>
         </div>
       ) : (
@@ -342,7 +342,7 @@ const RecordRow = (props) => {
             {record.winnerTeam ? (
               <div className={winnerDivStyle}>
                 {endedRoundDisplay.winner && <span className={teamStyle}>{endedRoundDisplay.winner}팀</span>}
-                {record.winnerTeam.number.length !== 1 && <span className={winStyle}>무승부</span>}
+                {record.winnerTeam.number.length !== 1 && <span className={winStyle + ' text-blueSignature dark:text-yellow-400'}>무승부</span>}
                 {endedRoundDisplay.opponents.length > 0 && (
                   <span className={opponentStyle}>vs {endedRoundDisplay.opponents.map((team) => `${team}팀`).join(', ')}</span>
                 )}
@@ -413,7 +413,7 @@ const RecordRow = (props) => {
             )}
           </div>
           {!editTeamMode && (
-            <div className={'flex relative shrink-0 bottom-[2px] right-3'}>
+            <div className={'flex relative shrink-0 right-3'}>
               <TimeText text={record.time.slice(0, 5)} />
             </div>
           )}
