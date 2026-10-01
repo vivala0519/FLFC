@@ -335,13 +335,13 @@ const RecordRow = (props) => {
           <div className={recordAreaStyle}>
             {!editTeamMode && (
               <div className={'flex gap-2'}>
-                <span className={roundTextStyle}>{index + 1} Round</span>
+                <span className={roundTextStyle}>{index + 1} 라운드</span>
                 {/*{record.winnerTeam && <div className={'flex gap-1 relative bottom-[3px]'}><span className={'text-blue-800'}>{record.winnerTeam}팀</span><span className={'text-goal'}>Win</span></div>}*/}
               </div>
             )}
             {record.winnerTeam ? (
               <div className={winnerDivStyle}>
-                {endedRoundDisplay.winner && <span className={teamStyle}>{endedRoundDisplay.winner}팀</span>}
+                {endedRoundDisplay.winner && <span className={teamStyle}>{endedRoundDisplay.winner}팀 승</span>}
                 {record.winnerTeam.number.length !== 1 && <span className={winStyle + ' text-blueSignature dark:text-yellow-400'}>무승부</span>}
                 {endedRoundDisplay.opponents.length > 0 && (
                   <span className={opponentStyle}>vs {endedRoundDisplay.opponents.map((team) => `${team}팀`).join(', ')}</span>
