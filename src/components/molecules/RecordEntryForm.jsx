@@ -5,7 +5,7 @@ import ParticleRegisterButton from '@/components/atoms/ParticleRegisterButton.js
 import './RecordEntryForm.css'
 
 // Presentational controls shared by the live WriteBox and the offline /test page.
-const RecordEntryForm = ({ data, registerHandler, handleKeyDown, handleBlur, disabled = false, busy = false, buttonType = 'button', burstTargetRef }) => {
+const RecordEntryForm = ({ data, registerHandler, handleKeyDown, handleBlur, disabled = false, busy = false, buttonType = 'button', burstTargetRef, onPrepareBurst }) => {
   const { scorer, setScorer, assistant, setAssistant } = data
   const [rolling, setRolling] = useState(false)
   const registering = useRef(false)
@@ -63,6 +63,7 @@ const RecordEntryForm = ({ data, registerHandler, handleKeyDown, handleBlur, dis
         rolling={submitting}
         onRollComplete={completeRoll}
         burstTargetRef={burstTargetRef}
+        onPrepareBurst={onPrepareBurst}
       />
       {submitting && <span className="sr-only" role="status">등록 중...</span>}
     </div>

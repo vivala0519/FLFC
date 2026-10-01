@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import Swal from 'sweetalert2'
 import { get, getDatabase, ref, remove, set} from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
@@ -6,7 +6,7 @@ import RecordRow from '@/components/molecules/RecordRow.jsx'
 import RoundRow from '@/components/molecules/RoundRow.jsx'
 
 const RecordContainer = (props) => {
-  const { formatRecordByName, recordsLoaded, open, isFeverTime, dynamicHeight, editingRecordKey, setEditingRecordKey, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams } = props
+  const { formatRecordByName, recordsLoaded, open, isFeverTime, dynamicHeight, editingRecordKey, setEditingRecordKey, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams, burstTargetRef, burstControllerRef } = props
   const { time: { today, thisYear } } = getTimes()
   const [openRounds, setOpenRounds] = useState(new Set())
   const [closedRounds, setClosedRounds] = useState(new Set())
@@ -17,6 +17,21 @@ const RecordContainer = (props) => {
   const scrollContainerRef = useRef(null)
   const hasScrolledOnEntryRef = useRef(false)
   const shouldFollowLatestRef = useRef(true)
+  const [burstScrollRequest, setBurstScrollRequest] = useState(0)
+
+  useImperativeHandle(burstControllerRef, () => ({
+    scrollToLatest() {
+      shouldFollowLatestRef.current = true
+      setClosedRounds((current) => {
+        const lastRoundIndex = displayRecord.length - 1
+        if (!current.has(lastRoundIndex)) return current
+        const next = new Set(current)
+        next.delete(lastRoundIndex)
+        return next
+      })
+      setBurstScrollRequest((request) => request + 1)
+    },
+  }), [displayRecord.length])
 
   useLayoutEffect(() => {
     const container = scrollContainerRef.current
@@ -28,7 +43,7 @@ const RecordContainer = (props) => {
       hasScrolledOnEntryRef.current = true
       shouldFollowLatestRef.current = true
     }
-  }, [displayRecord, dynamicHeight, open, recordsLoaded])
+  }, [displayRecord, dynamicHeight, open, recordsLoaded, burstScrollRequest])
 
   const handleScroll = (event) => {
     if (!hasScrolledOnEntryRef.current) return
@@ -206,6 +221,9 @@ const RecordContainer = (props) => {
           </div>
         </div>
       ))}
+      <div className="w-full shrink-0 pt-6 pb-8" aria-hidden="true">
+        <div ref={burstTargetRef} className="record-burst-target h-px w-full" />
+      </div>
     </div>
   )
 }

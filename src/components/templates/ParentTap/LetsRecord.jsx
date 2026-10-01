@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useCallback, useEffect, useState, useRef, useMemo } from 'react'
 import { doc, setDoc } from 'firebase/firestore'
 import { db } from '../../../../firebase.js'
 import getTimes from '@/hooks/getTimes.js'
@@ -23,6 +23,11 @@ const LetsRecord = (props) => {
   const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
   const { open, setOpen, headerHeight } = props
   const writeContainerRef = useRef(null)
+  const recordBurstTargetRef = useRef(null)
+  const recordBurstControllerRef = useRef(null)
+  const prepareRecordBurst = useCallback(() => {
+    recordBurstControllerRef.current?.scrollToLatest()
+  }, [])
   const feverTimeRef = useRef(null)
   const [weeklyTeamData, setWeeklyTeamData] = useState(null)
   const [todayRecord, setTodayRecord] = useState([])
@@ -649,6 +654,8 @@ const LetsRecord = (props) => {
             </div>
           )}
           <RecordContainer
+            burstTargetRef={recordBurstTargetRef}
+            burstControllerRef={recordBurstControllerRef}
             open={open}
             showMVP={showMVP}
             lastRecord={lastRecord}
@@ -679,6 +686,8 @@ const LetsRecord = (props) => {
             </div>
           )}
           <WriteContainer
+            burstTargetRef={recordBurstTargetRef}
+            onPrepareBurst={prepareRecordBurst}
             open={open}
             popupType={popupType}
             scorerTeam={scorerTeam}
