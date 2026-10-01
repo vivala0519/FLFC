@@ -10,7 +10,7 @@ const updateCurrentTime = () => {
   }
   useEffect(() => {
     const interval = setInterval(() => {
-      // setCurrentTime(new Date())
+      setCurrentTime(new Date())
     }, 1000);
 
     return () => clearInterval(interval)
