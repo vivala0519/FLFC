@@ -30,7 +30,7 @@ const RecordRow = (props) => {
     currentTime >= gameStartTime &&
     currentTime <= gameEndTime
 
-  const rawStyle = `relative gap-3.5 flex items-center justify-center mobile:justify-normal w-[85%] pt-1 transition-[left] duration-300 ease-out motion-reduce:transition-none ${effect ? 'bg-effect' : ''} ${isEditing ? '-left-4 pl-0' : 'left-7'}`
+  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 transition-[left] duration-300 ease-out motion-reduce:transition-none ${effect ? 'bg-effect' : ''} ${isEditing ? '-left-4 pl-0 gap-0' : 'left-7 gap-3.5'}`
   const recordAreaStyle = 'flex items-center pr-2 relative bottom-[2px] -left-4'
   const recordCursorStyle = editingRecordKey && !isEditing ? 'cursor-not-allowed' : useDelete ? 'cursor-pointer' : 'cursor-default'
   const itemStyle = `w-[15px] h-[15px] relative bottom-[1px] right-[3px] `
@@ -116,47 +116,35 @@ const RecordRow = (props) => {
     )
   } else {
     return (
-        <div className={rawStyle} key={index}>
-          {isEditing && <EditingBadge />}
-          {!isEditing && <span className={'absolute -left-5 text-[8px] bottom-1.5'}>{getGoalTeam}팀</span>}
-          {!isEditing && (
-            <div className={`${itemStyle} ${rollClassMap[randomInt]}`}>
-              <div
-                className={`h-full w-full bg-[length:100%_100%] ${goalIconStyle}`}
-                style={{ transform: `rotate(${goalRotation}deg)` }}
-              />
-            </div>
-          )}
-          {!isEditing && <TimeText text={record.time.slice(0, 5)}/>}
-
-          <div
-              className={`${recordAreaStyle} ${recordCursorStyle} ${!isEditing ? 'gap-8' : 'record-row-edit-enter'}`}
-              onClick={handleAreaClick}
-          >
-            <RecordEl
-                type={'Goal'}
-                text={goalText}
-                isEditing={isEditing}
-                onChange={(e) => setGoalText(e.target.value)}
-            />
-            {(record.assist || isEditing) && (
-                <RecordEl
-                    type={'Assist'}
-                    text={assistText}
-                    isEditing={isEditing}
-                    onChange={(e) => setAssistText(e.target.value)}
-                />
-            )}
+      <div className={rawStyle} key={index}>
+        {isEditing && <EditingBadge />}
+        {!isEditing && <span className={'absolute -left-5 text-[8px] bottom-1.5'}>{getGoalTeam}팀</span>}
+        {!isEditing && (
+          <div className={`${itemStyle} ${rollClassMap[randomInt]}`}>
+            <div className={`h-full w-full bg-[length:100%_100%] ${goalIconStyle}`} style={{ transform: `rotate(${goalRotation}deg)` }} />
           </div>
+        )}
+        {!isEditing && <TimeText text={record.time.slice(0, 5)} />}
 
-          { !editingRecordKey && useDelete && isLastRound && (
-              <DeleteButton clickHandler={() => deleteRecord(record.id, index)} />
+        <div className={`${recordAreaStyle} ${recordCursorStyle} ${!isEditing ? 'gap-8' : 'record-row-edit-enter'}`} onClick={handleAreaClick}>
+          <RecordEl type={'Goal'} text={goalText} isEditing={isEditing} onChange={(e) => setGoalText(e.target.value)} />
+          {(record.assist || isEditing) && (
+            <RecordEl type={'Assist'} text={assistText} isEditing={isEditing} onChange={(e) => setAssistText(e.target.value)} />
           )}
-          {isEditing && <div className={'record-row-edit-enter flex gap-2 justify-around w-full'}>
-            <div className={'text-green-600 dark:text-green-500 mb-1.5'} onClick={closeEditing}>확인</div>
-            <div className={'text-red-400 mb-1.5'} onClick={cancelEditing}>취소</div>
-          </div>}
         </div>
+
+        {!editingRecordKey && useDelete && isLastRound && <DeleteButton clickHandler={() => deleteRecord(record.id, index)} />}
+        {isEditing && (
+          <div className={'record-row-edit-enter flex gap-3 whitespace-pre items-center justify-around w-full relative -left-2 bottom-1'}>
+            <div className={'text-green-600 dark:text-green-500 w-full'} onClick={closeEditing}>
+              확인
+            </div>
+            <div className={'text-red-400 w-full'} onClick={cancelEditing}>
+              취소
+            </div>
+          </div>
+        )}
+      </div>
     )
   }
 }
