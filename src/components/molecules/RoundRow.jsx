@@ -32,9 +32,9 @@ const RecordRow = (props) => {
   const roundTextStyle = 'whitespace-nowrap text-[10px] text-black dark:text-gray-100'
   const winnerDivStyle = 'flex flex-wrap min-w-0 items-center relative bottom-[2px]'
   const teamStyle = 'relative font-dnf-forged text-blueSignature dark:text-blue-300 text-[12px] top-[1px]'
-  const opponentStyle = 'font-dnf-forged text-gray-400 text-[11px] ml-1 relative top-[1px]'
+  const opponentStyle = 'font-dnf-forged text-gray-400 text-[12px] ml-1 relative top-[1px]'
   const winStyle = 'font-dnf-forged text-goal dark:text-yellow-400 text-[12px] relative top-[1px] mr-1'
-  const scoreStyle = 'relative top-[1.5px] shrink-0 whitespace-nowrap text-xs font-semibold tabular-nums text-gray-700 dark:text-gray-200'
+  const scoreStyle = 'relative top-[1px] shrink-0 whitespace-nowrap text-[12px] font-semibold tabular-nums text-gray-700 dark:text-gray-200'
   // const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
   // const arrowIcon = 'bg-[url("@/assets/up2.png")] '
   const roundExitButtonStyle = 'text-goal dark:text-yellow-500 animate-pulse'
