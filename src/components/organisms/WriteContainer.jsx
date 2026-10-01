@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Swal from 'sweetalert2'
 import { getDatabase, ref, get, set, update } from 'firebase/database'
 import { uid } from 'uid'
@@ -62,6 +62,7 @@ const ensureRoundTeamList = async (db, thisYear, today, roundId, playingTeams) =
 // ---------------------- 컴포넌트 ----------------------
 
 const WriteContainer = (props) => {
+  const burstTargetRef = useRef(null)
   const {
     weeklyTeamData,
     containerRef,
@@ -600,7 +601,7 @@ const WriteContainer = (props) => {
         !canRegister ? 'w-full' : 'flex flex-col items-center mt-4 w-[80%]'
       }
     >
-      {canRegister && <Separator fullWidth={true} />}
+      {canRegister && <Separator fullWidth={true} elementRef={burstTargetRef} />}
 
       {canRegister ? (
         <WriteBox
@@ -608,6 +609,7 @@ const WriteContainer = (props) => {
           editingRecordKey={editingRecordKey}
           registerHandler={registerHandler}
           data={writeBoxPropsData}
+          burstTargetRef={burstTargetRef}
         />
       ) : (
         <div className="relative flex justify-center">

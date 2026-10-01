@@ -533,17 +533,17 @@ const AnalysisTap = (props) => {
   }, [careerRoundRoots, totalMembers, asOfDate, oneCharacterMembers, careerRoundStatus, roundLoadError])
   const careerAnalysisItems = [
     {
-      type: 'career-total', icon: 'dailyGoal', title: '최다 골',
+      type: 'career-total', icon: 'dailyGoal', title: '최다 누적 골',
       // description: '통산 최다 골',
       data: { ...dailyMaximums.totalGoals, status: scoringStreakResult.status },
     },
     {
-      type: 'career-total', icon: 'dailyAssist', title: '최다 어시',
+      type: 'career-total', icon: 'dailyAssist', title: '최다 누적 어시',
       // description: '통산 최다 어시',
       data: { ...dailyMaximums.totalAssists, status: scoringStreakResult.status },
     },
     {
-      type: 'career-mvp', icon: 'trophy', title: '최다 MVP',
+      type: 'career-mvp', icon: 'trophy', title: '최다 누적 MVP',
       description: '통산 데일리 MVP 최다 플레이어',
       data: careerMostMVP,
     },
