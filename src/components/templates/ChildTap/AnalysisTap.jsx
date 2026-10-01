@@ -1470,7 +1470,7 @@ const AnalysisTap = (props) => {
                       hasQuarterRecord ? (
                         <PlayerRadarChart name={playerDetail.name} comparison={playerComparison} />
                       ) : (
-                        <p className="text-sm text-center text-gray-500 dark:text-gray-400">이번 시즌 기록이 없습니다</p>
+                        <p className="flex items-center justify-center mt-6 h-40 text-sm text-center text-gray-500 dark:text-gray-400">이번 시즌 기록이 없습니다</p>
                       )
                     ) : (
                       <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">
@@ -1640,7 +1640,7 @@ const AnalysisTap = (props) => {
               </div>
             ) : availableWeeks === 0 ? (
               <div className="pb-8 pt-4 h-40 flex items-center justify-center text-center text-sm text-gray-500 dark:text-gray-400" role="status">
-                이번 분기 데이터가 없습니다.
+                이번 시즌 데이터가 없습니다.
               </div>
             ) : (
               <dl className="divide-y divide-gray-200 dark:divide-gray-700">{seasonAnalysisItems.map(renderAnalysisItem)}</dl>
