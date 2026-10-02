@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { db } from '../../../../firebase.js'
 import { collection, getDocsFromServer, onSnapshot } from 'firebase/firestore'
-import { get, getDatabase, onValue, ref } from 'firebase/database'
+import { get, getDatabase, ref } from 'firebase/database'
 
 import NewBadge from '@/components/atoms/NewBadge.jsx'
 import BestFiveCard from '@/components/organisms/BestFiveCard.jsx'
@@ -13,6 +13,7 @@ import getRecords from '@/hooks/getRecords.js'
 import useRecentForm from '@/hooks/useRecentForm.js'
 import useScoringStreak from '@/hooks/useScoringStreak.js'
 import useBestFive from '@/hooks/useBestFive.js'
+import useAnalysisSeason from '@/hooks/useAnalysisSeason.js'
 import { getQuarterRoundGoals } from '@/apis/roundGoals.js'
 import { analyzeStarterStats } from '@/apis/analyzeStarterStats.js'
 import { analyzeStarterPointRate } from '@/apis/analyzeStarterPointRate.js'
@@ -237,14 +238,17 @@ const AnalysisTap = (props) => {
   const { existingMembers, totalMembers, oneCharacterMembers } = getMembers()
   const { time: { currentTime } } = getTimes()
   const cacheDay = getAnalysisCachePeriod(currentTime).dayKey
-  const thisYear = cacheDay.slice(0, 4)
+  const calendarYear = test ? '2024' : cacheDay.slice(0, 4)
   const currentMonth = Number(cacheDay.slice(5, 7))
   const { totalWeeklyTeamData } = getRecords()
   const recentFormDialogRef = useRef(null)
   const bestFiveDialogRef = useRef(null)
   const playerDetailDialogRef = useRef(null)
   const asOfDate = test ? '2024-12-31' : cacheDay
-  const recentForm = useRecentForm(existingMembers, asOfDate, cacheDay)
+  const analysisSeason = useAnalysisSeason(calendarYear, test ? 12 : currentMonth, cacheDay)
+  const { year: thisYear, month: thisMonth, quarter, yearRoundData, availableWeeks } = analysisSeason
+  const roundLoadError = analysisSeason.status === 'error'
+  const recentForm = useRecentForm(existingMembers, asOfDate, cacheDay, { year: thisYear, quarter })
   const scoringStreakResult = useScoringStreak(totalMembers, asOfDate, existingMembers, cacheDay)
   const { recordsByYear, assistStreak: assistStreakStats, ...scoringStreakStats } = scoringStreakResult
   const scoringStreak = formatAttendanceStreak(scoringStreakStats, scoringStreakResult.status)
@@ -261,21 +265,11 @@ const AnalysisTap = (props) => {
   )
   const dailyGoalRecord = { ...dailyMaximums.goals, status: scoringStreakResult.status }
   const dailyAssistRecord = { ...dailyMaximums.assists, status: scoringStreakResult.status }
-  const thisMonth = test ? 12 : currentMonth
-  const bestFive = useBestFive(test ? '2024' : thisYear, thisMonth, cacheDay)
+  const bestFive = useBestFive(thisYear, thisMonth, cacheDay, analysisSeason.records)
   const playerComparison = useMemo(() => analyzePlayerRadar(
     bestFive.records, existingMembers, thisMonth,
   ), [bestFive.records, existingMembers, thisMonth])
-  const quarter = Math.ceil(thisMonth / 3)
-  const attendedWeeks = useMemo(() => (bestFive.records || []).filter((record) =>
-    /^\d{4}$/.test(record?.id) &&
-    Math.ceil(Number(record.id.slice(0, 2)) / 3) === quarter &&
-    Object.values(record.data || {}).some((stats) => Number(stats?.['출석']) > 0),
-  ).length, [bestFive.records, quarter])
-  const [thisQuarterData, setThisQuarterData] = useState([])
-  const availableWeeks = Math.max(attendedWeeks, thisQuarterData.length)
-  const [yearRoundData, setYearRoundData] = useState(null)
-  const [roundLoadError, setRoundLoadError] = useState(false)
+  const thisQuarterData = useMemo(() => getQuarterRoundGoals(yearRoundData, thisMonth), [yearRoundData, thisMonth])
   const [processedQuarterSource, setProcessedQuarterSource] = useState(null)
   const [processedWeeklyTeamSource, setProcessedWeeklyTeamSource] = useState(null)
   const [processedPartnerData, setProcessedPartnerData] = useState(null)
@@ -295,9 +289,9 @@ const AnalysisTap = (props) => {
     yearRoundData,
     totalWeeklyTeamData,
     totalMembers,
-    test ? '2024' : thisYear,
+    thisYear,
     thisMonth,
-  ), [yearRoundData, totalWeeklyTeamData, totalMembers, test, thisYear, thisMonth])
+  ), [yearRoundData, totalWeeklyTeamData, totalMembers, thisYear, thisMonth])
   const formatStarter = (players, period) => ({
     name: players.map((player) => {
       const { name } = player
@@ -310,9 +304,9 @@ const AnalysisTap = (props) => {
     yearRoundData,
     totalWeeklyTeamData,
     existingMembers,
-    test ? '2024' : thisYear,
+    thisYear,
     thisMonth,
-  ), [yearRoundData, totalWeeklyTeamData, existingMembers, test, thisYear, thisMonth])
+  ), [yearRoundData, totalWeeklyTeamData, existingMembers, thisYear, thisMonth])
   const winningTrio = winningTrioStats ? {
     name: [winningTrioStats.players.join(' - ')],
     count: `승률 ${Math.round(winningTrioStats.winRate * 100)}%`,
@@ -321,9 +315,9 @@ const AnalysisTap = (props) => {
     thisQuarterData,
     totalWeeklyTeamData,
     totalMembers,
-    test ? '2024' : thisYear,
+    thisYear,
     thisMonth,
-  ), [thisQuarterData, totalWeeklyTeamData, totalMembers, test, thisYear, thisMonth])
+  ), [thisQuarterData, totalWeeklyTeamData, totalMembers, thisYear, thisMonth])
   const lowScoringDuo = lowScoringDuoStats ? {
     name: lowScoringDuoStats.pairs.map(({ players }) => players.join(' - ')),
     count: `같은 팀 ${lowScoringDuoStats.pairs[0].sharedDays}회 · 합작 ${lowScoringDuoStats.pairs[0].points}골`,
@@ -483,7 +477,42 @@ const AnalysisTap = (props) => {
     })
     return integratedMap
   }, [thisQuarterPointData, thisQuarterDataByTime, thisQuarterMostPartners, mercenaryBring])
-  const [playerDetail, setPlayerDetail] = useState(null)
+  const [selectedPlayerName, setSelectedPlayerName] = useState(null)
+  const playerDetail = useMemo(() => {
+    if (!selectedPlayerName) return null
+    const shortName = selectedPlayerName.slice(1, 3)
+    const detailMap = integratedData?.get(shortName) || {
+      ...thisQuarterMostPartners?.[shortName],
+      ...mercenaryBring?.get(shortName),
+    }
+    const rates = starterPointRates.playerRates.get(selectedPlayerName)
+    const style = rates?.early > rates?.late ? ['얼리스타터']
+      : rates?.late > rates?.early ? ['슬로우스타터'] : []
+    const goals = Number(detailMap.goal ?? 0)
+    const assists = Number(detailMap.assist ?? 0)
+    style.push(Math.abs(goals - assists) <= 3 ? '밸런스' : goals > assists ? '득점선호' : '도움선호')
+    const combi = []
+    let maxPoint = 0
+    thisQuarterPlayersCombination?.forEach((value, key) => {
+      if (key.includes(shortName)) {
+        const temp = key.split('_')
+        if (temp[0] !== shortName) combi.push([temp[0], value])
+        if (temp[1] !== shortName) combi.push([temp[1], value])
+        if (value > maxPoint) maxPoint = value
+      }
+    })
+    return {
+      name: selectedPlayerName,
+      mostPartner: detailMap.name || [],
+      mostPartnerCount: detailMap.count || 0,
+      style,
+      mvp: thisQuarterMVP.filter((mvp) => mvp?.includes(selectedPlayerName)).length,
+      mercenary: detailMap.mercenary || 0,
+      combi: combi.filter((item) => item[1] === maxPoint).map((item) => item[0]),
+      combiCount: maxPoint,
+    }
+  }, [selectedPlayerName, integratedData, thisQuarterMostPartners, mercenaryBring,
+    starterPointRates, thisQuarterMVP, thisQuarterPlayersCombination])
   const playerName = playerDetail?.name
   const [careerAwardHistory, setCareerAwardHistory] = useState({ status: 'idle', records: [] })
   const historyLoadedDay = useRef(null)
@@ -503,10 +532,10 @@ const AnalysisTap = (props) => {
     careerRecord?.quarters.filter(({ year }) => year >= 2026) || [],
   [careerRecord])
   const careerRoundRoots = useMemo(() =>
-    historicalRoundData && yearRoundData
-      ? { ...historicalRoundData, [test ? '2024' : thisYear]: yearRoundData }
+    historicalRoundData && yearRoundData && analysisSeason.calendarYearRoundData
+      ? { ...historicalRoundData, [thisYear]: yearRoundData, [calendarYear]: analysisSeason.calendarYearRoundData }
       : null,
-  [historicalRoundData, yearRoundData, test, thisYear])
+  [historicalRoundData, yearRoundData, thisYear, calendarYear, analysisSeason.calendarYearRoundData])
   const careerPartners = useMemo(() =>
     playerName && Array.isArray(totalWeeklyTeamData)
       ? analyzeCareerPartners(totalWeeklyTeamData, careerRoundRoots || {}, playerName, totalMembers, asOfDate, oneCharacterMembers)
@@ -591,6 +620,11 @@ const AnalysisTap = (props) => {
   }, [playerDetail])
 
   useEffect(() => {
+    playerDetailDialogRef.current?.close()
+    setSelectedPlayerName(null)
+  }, [thisYear, quarter])
+
+  useEffect(() => {
     if (!playerName || historyLoadedDay.current === cacheDay) return undefined
     historyLoadedDay.current = cacheDay
     let cancelled = false
@@ -614,43 +648,10 @@ const AnalysisTap = (props) => {
   }, [playerName, cacheDay])
 
   useEffect(() => {
-    let active = true
-    const year = test ? '2024' : thisYear
-    const yearRef = ref(getDatabase(), year)
-    const applyRoundData = (value) => {
-      if (!active) return
-      setYearRoundData(value)
-      setThisQuarterData(getQuarterRoundGoals(value, thisMonth))
-    }
-    setRoundLoadError(false)
-    if (getAnalysisCachePeriod().isSunday) {
-      const unsubscribe = onValue(yearRef, (snapshot) => {
-        const value = snapshot.val() || {}
-        applyRoundData(value)
-        void setCachedAnalysisData(`rtdb:${year}`, value)
-      }, () => {
-        if (active) setRoundLoadError(true)
-      })
-      return () => {
-        active = false
-        unsubscribe()
-      }
-    }
-
-    getCachedAnalysisData(`rtdb:${year}`, async () => {
-      const snapshot = await get(yearRef)
-      return snapshot.val() || {}
-    }).then(applyRoundData).catch(() => {
-      if (active) setRoundLoadError(true)
-    })
-    return () => { active = false }
-  }, [test, thisYear, thisMonth, cacheDay])
-
-  useEffect(() => {
     if (careerRoundRequest === 0) return undefined
 
     let cancelled = false
-    const currentYear = Number(test ? '2024' : thisYear)
+    const currentYear = Number(calendarYear)
     const olderYears = Array.from(
       { length: Math.max(0, currentYear - FIRST_RECORD_YEAR) },
       (_, index) => FIRST_RECORD_YEAR + index,
@@ -673,7 +674,7 @@ const AnalysisTap = (props) => {
     })
 
     return () => { cancelled = true }
-  }, [careerRoundRequest, test, thisYear, cacheDay])
+  }, [careerRoundRequest, calendarYear, cacheDay])
 
   useEffect(() => {
     // 이번 시즌 기록은 한 주 이상의 경기 데이터가 있을 때 계산한다.
@@ -994,8 +995,10 @@ const AnalysisTap = (props) => {
         name: [fullName],
         count: maxMercenaryCount + '회',
       })
+    } else {
+      setMostMercenaryPlayer({})
     }
-    setProcessedWeeklyTeamSource({ data: totalWeeklyTeamData, members: existingMembers })
+    setProcessedWeeklyTeamSource({ data: totalWeeklyTeamData, members: existingMembers, year: thisYear, month: thisMonth })
   }, [totalWeeklyTeamData, thisYear, thisMonth, existingMembers])
 
   useEffect(() => {
@@ -1192,45 +1195,14 @@ const AnalysisTap = (props) => {
   }, [weeklyTeamData])
 
   const playerDetailHandler = (name) => {
-    const shortName = name.slice(1, 3)
-    const detailMap = integratedData?.get(shortName) || {
-      ...thisQuarterMostPartners?.[shortName],
-      ...mercenaryBring?.get(shortName),
-    }
-    const rates = starterPointRates.playerRates.get(name)
-    const style = rates?.early > rates?.late ? ['얼리스타터']
-      : rates?.late > rates?.early ? ['슬로우스타터'] : []
-    const goals = Number(detailMap.goal ?? 0)
-    const assists = Number(detailMap.assist ?? 0)
-    style.push(Math.abs(goals - assists) <= 3 ? '밸런스' : goals > assists ? '득점선호' : '도움선호')
-    const detail = {
-      name,
-      mostPartner: detailMap.name || [],
-      mostPartnerCount: detailMap.count || 0,
-      style,
-      mvp: thisQuarterMVP.filter((mvp) => mvp?.includes(name)).length,
-      mercenary: detailMap.mercenary || 0,
-    }
-    const combi = []
-    let maxPoint = 0
-    thisQuarterPlayersCombination?.forEach((value, key) => {
-      if (key.includes(shortName)) {
-        const temp = key.split('_')
-        if (temp[0] !== shortName) combi.push([temp[0], value])
-        if (temp[1] !== shortName) combi.push([temp[1], value])
-        if (value > maxPoint) maxPoint = value
-      }
-    })
-    detail.combi = combi.filter((item) => item[1] === maxPoint).map((item) => item[0])
-    detail.combiCount = maxPoint
-    setPlayerDetail(detail)
+    setSelectedPlayerName(name)
     if (careerRoundStatus === 'idle' || careerRoundStatus === 'error') {
       setCareerRoundRequest((request) => request + 1)
     }
   }
 
-  const hasLoadError = roundLoadError || bestFive.status === 'error' || mvpStatus === 'error'
-  const isQuarterDataLoading = yearRoundData === null || bestFive.status === 'loading'
+  const hasLoadError = analysisSeason.status === 'error' || bestFive.status === 'error' || mvpStatus === 'error'
+  const isQuarterDataLoading = analysisSeason.status === 'loading' || bestFive.status === 'loading'
   const isDataLoading =
     yearRoundData === null ||
     !Array.isArray(totalWeeklyTeamData) ||
@@ -1244,6 +1216,8 @@ const AnalysisTap = (props) => {
     processedQuarterSource?.members !== existingMembers ||
     processedWeeklyTeamSource?.data !== totalWeeklyTeamData ||
     processedWeeklyTeamSource?.members !== existingMembers ||
+    processedWeeklyTeamSource?.year !== thisYear ||
+    processedWeeklyTeamSource?.month !== thisMonth ||
     weeklyTeamData === null ||
     processedPartnerData !== weeklyTeamData ||
     thisQuarterMostPartners === null ||
@@ -1440,7 +1414,7 @@ const AnalysisTap = (props) => {
             id="player-detail-dialog"
             aria-labelledby="player-detail-title"
             onClick={closeDialogOnBackdropClick}
-            onClose={() => setPlayerDetail(null)}
+            onClose={() => setSelectedPlayerName(null)}
             className="m-auto max-h-[85vh] w-[min(92vw,36rem)] overflow-hidden rounded-xl border border-gray-200 bg-white p-0 text-left text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
           >
             {playerDetail && (
@@ -1465,12 +1439,13 @@ const AnalysisTap = (props) => {
                   <div className="mt-4">
                     <h4 className="sticky top-0 z-10 -mx-7 mb-3 border-b border-gray-100 bg-white px-7 py-2 font-semibold font-dnf-forged dark:border-gray-700 dark:bg-gray-900">
                       이번 시즌
+                      <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">{thisYear}년 {quarter}분기</span>
                     </h4>
                     {bestFive.status === 'ready' ? (
                       hasQuarterRecord ? (
                         <PlayerRadarChart name={playerDetail.name} comparison={playerComparison} />
                       ) : (
-                        <p className="flex items-center justify-center mt-6 h-40 text-sm text-center text-gray-500 dark:text-gray-400">이번 시즌 기록이 없습니다</p>
+                        <p className="flex items-center justify-center mt-6 h-40 text-sm text-center text-gray-500 dark:text-gray-400">표시 중인 시즌 기록이 없습니다</p>
                       )
                     ) : (
                       <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">

@@ -28,7 +28,7 @@ const PlayerRadarChart = ({ name, comparison }) => {
   const id = useId()
   const player = comparison.players.get(name)
   if (!player) {
-    return <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">이번 분기 비교할 출석 기록이 없습니다.</p>
+    return <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">비교할 출석 기록이 없습니다.</p>
   }
 
   const { axes, players } = comparison
@@ -53,7 +53,7 @@ const PlayerRadarChart = ({ name, comparison }) => {
         role="img"
         aria-labelledby={`${id}-title ${id}-description`}
       >
-        <title id={`${id}-title`}>{name}의 이번 분기 기록 비교</title>
+        <title id={`${id}-title`}>{name}의 분기 기록 비교</title>
         <desc id={`${id}-description`}>
           {axes.map(({ key, label, unit, max, average }) =>
             `${label}: ${formatValue(player[key], unit)}, 전체 평균 ${formatValue(average, unit)}, 최고 ${formatValue(max, unit)}`,
@@ -114,7 +114,7 @@ const PlayerRadarChart = ({ name, comparison }) => {
         })}
       </svg>
       <figcaption id={`${id}-caption`} className="mt-1 text-center text-xs text-gray-500 dark:text-gray-400">
-        이번 분기 출석자 {players.size}명 기준
+        분기 출석자 {players.size}명 기준
       </figcaption>
     </figure>
   )
