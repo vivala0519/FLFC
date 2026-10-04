@@ -1177,12 +1177,13 @@ const AnalysisTap = (props) => {
     const ranked = [...pairCounts].map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'ko'))
     const topCount = ranked[0]?.count
+    const leaders = ranked.filter(({ count }) => count === topCount)
     const nextCount = ranked.find(({ count }) => count < topCount)?.count
     const chasing = nextCount === undefined ? [] : ranked.filter(({ count }) => count === nextCount)
     const additional = chasing.length <= 2 ? chasing : []
     setMostPartnerPlayers(topCount === undefined ? {} : {
-      name: ranked.filter(({ count }) => count === topCount).map(({ name }) => name),
-      count: `${topCount}회`,
+      name: leaders.length === 1 ? [leaders[0].name] : [],
+      count: leaders.length === 1 ? `${topCount}회` : '',
       additional: additional.map(({ name }) => name),
       additionalCount: additional.length > 0 ? `${nextCount}회` : '',
     })
