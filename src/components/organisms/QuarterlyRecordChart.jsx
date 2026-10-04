@@ -8,14 +8,14 @@ const SERIES = [
 
 const LEFT = 18
 const RIGHT = 18
-const TOP = 16
+const TOP = 32
 const PLOT_HEIGHT = 176
 const BOTTOM = 42
 const AXIS_MAX = 100
 const TICK_STEP = 25
 const displayValue = (value) => value === null ? '기록 없음' : value
 
-const QuarterlyRecordChart = ({ quarters }) => {
+const QuarterlyRecordChart = ({ quarters, currentQuarterKey }) => {
   const scrollRef = useRef(null)
   const initialScrollDone = useRef(false)
   const [selectedSeries, setSelectedSeries] = useState(() => new Set())
@@ -68,6 +68,7 @@ const QuarterlyRecordChart = ({ quarters }) => {
   const yAt = (value) => TOP + PLOT_HEIGHT * (1 - value / AXIS_MAX)
   const selectedQuarter = quarters.find(({ key }) => key === selectedQuarterKey) || quarters[quarters.length - 1]
   const selectedIndex = quarters.indexOf(selectedQuarter)
+  const currentQuarterIndex = quarters.findIndex(({ key }) => key === currentQuarterKey)
   const cellWidth = quarters.length === 1 ? plotWidth : plotWidth / (quarters.length - 1)
 
   const linePath = (key) => {
@@ -122,6 +123,18 @@ const QuarterlyRecordChart = ({ quarters }) => {
             role="group"
             aria-label="분기별 골, 어시, 승점 추이. 항목별 최고 분기 대비 백분율"
           >
+            {currentQuarterIndex >= 0 && (
+              <text
+                x={xAt(currentQuarterIndex)}
+                y={TOP - 20}
+                textAnchor="middle"
+                fontSize="12"
+                fill="currentColor"
+                className="font-semibold text-gray-500 dark:text-gray-400 animate-bounceUpDown"
+              >
+                진행중
+              </text>
+            )}
             {[0, 1, 2, 3, 4].map((tick) => {
               const y = yAt(tick * TICK_STEP)
               return <line key={tick} x1={LEFT} y1={y} x2={width - RIGHT} y2={y} stroke="currentColor" className="text-gray-200 dark:text-gray-700" />

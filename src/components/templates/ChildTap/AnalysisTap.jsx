@@ -608,11 +608,16 @@ const AnalysisTap = (props) => {
       : careerPartners?.goalCombination.partners.length
         ? `${careerPartners.goalCombination.partners.join(', ')} · 합작 ${careerPartners.goalCombination.goals}골`
         : '기록 없음'
-  const selectedFoot = bestFive.memberInfo?.[playerDetail?.name]?.preferredFoot
+  const selectedMemberInfo = bestFive.memberInfo?.[playerDetail?.name]
+  const selectedFoot = selectedMemberInfo?.preferredFoot
   const preferredFootLabel = selectedFoot === 'L' ? '왼발'
     : selectedFoot === 'R' ? '오른발'
       : bestFive.memberInfo ? '정보 없음'
         : bestFive.status === 'error' ? '정보를 불러오지 못했습니다' : '불러오는 중'
+  const startDate = selectedMemberInfo?.startDate
+  const startDateParts = typeof startDate === 'string'
+    ? /^(\d{4})-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.exec(startDate) : null
+  const startDateLabel = startDateParts ? `since ${startDateParts[1]}.${startDateParts[2]}` : null
 
   useEffect(() => {
     if (playerDetail && !playerDetailDialogRef.current?.open) {
@@ -1422,14 +1427,22 @@ const AnalysisTap = (props) => {
             {playerDetail && (
               <div className="flex max-h-[85vh] flex-col">
                 <div className="flex shrink-0 items-center justify-between gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-500">
-                  <div className="min-w-0 flex gap-1 items-center">
-                    <h3 id="player-detail-title" className="text-lg font-bold font-dnf-forged text-blue-700 dark:text-blue-400">
+                  <div className="min-w-0">
+                    <h3 id="player-detail-title" className="break-words text-lg font-bold font-dnf-forged text-blue-700 dark:text-blue-400">
                       {playerDetail.name}
                     </h3>
-                    <span>·</span>
-                    <dl className="text-xs text-gray-500 dark:text-gray-400">
-                      <dd className="break-words">{preferredFootLabel}</dd>
-                    </dl>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                      <span>{preferredFootLabel}</span>
+                      {startDateLabel && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <span className="whitespace-nowrap">
+                            <span className="sr-only">가입일 </span>
+                            <time dateTime={startDate} title="가입일">{startDateLabel}</time>
+                          </span>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <form method="dialog" className="shrink-0">
                     <button type="submit" className="rounded px-2 py-1 text-xl">
@@ -1586,7 +1599,10 @@ const AnalysisTap = (props) => {
                         <span className="relative top-1 text-[11px] text-gray-500 dark:text-gray-400">항목별 최고 분기 대비 (승점제 도입 이후)</span>
                       </div>
                       {chartQuarters.length > 0 ? (
-                        <QuarterlyRecordChart quarters={chartQuarters} />
+                        <QuarterlyRecordChart
+                          quarters={chartQuarters}
+                          currentQuarterKey={`${asOfDate.slice(0, 4)}-${Math.ceil(Number(asOfDate.slice(5, 7)) / 3)}`}
+                        />
                       ) : (
                         <p className="text-sm text-gray-500 dark:text-gray-400">2026년 1분기 이후 기록이 없습니다.</p>
                       )}
