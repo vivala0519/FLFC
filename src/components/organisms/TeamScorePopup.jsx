@@ -6,7 +6,23 @@ import { finalizeRound } from '@/apis/finalizeRound.js'
 const TeamScorePopup = (props) => {
   const { time: { today, thisYear } } = getTimes()
   const { setShowMVP, recordData, weeklyTeamData, showMVP } = props
-  const [teamScore, setTeamScore] = useState({'1': {}, '2': {}, '3': {}})
+  const [teamScore, setTeamScore] = useState({
+    '1': { win: 0, draw: 0, lost: 0 },
+    '2': { win: 0, draw: 0, lost: 0 },
+    '3': { win: 0, draw: 0, lost: 0 },
+  })
+  const thirdTeamRoster = weeklyTeamData?.data?.['3']
+  const hasThirdTeamRoster = Array.isArray(thirdTeamRoster)
+    && thirdTeamRoster.some((member) => typeof member === 'string' && member.trim() !== '')
+  const hasThirdTeamRounds = recordData.some((round) => {
+    const teams = [
+      ...(Array.isArray(round.teamList) ? round.teamList : []),
+      ...(Array.isArray(round.winnerTeam?.number) ? round.winnerTeam.number : []),
+      round.lostTeam,
+    ]
+    return teams.some((team) => String(team) === '3')
+  })
+  const showThirdTeam = hasThirdTeamRoster || hasThirdTeamRounds
 
   const popupContainerStyle =
     'w-[100%] h-[150px] bg-white dark:text-black cursor-pointer border-gray-200 border-4 flex flex-col desktop:w-[30%] flex gap-2 items-center justify-center'
@@ -92,7 +108,7 @@ const TeamScorePopup = (props) => {
           }
         </span>
       </div>
-      {weeklyTeamData?.data['3'][0] && (
+      {showThirdTeam && (
         <div className={'flex gap-2'}>
           <span>3팀:</span>
           <span>
