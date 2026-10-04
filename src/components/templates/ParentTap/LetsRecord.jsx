@@ -17,6 +17,8 @@ import './LetsRecord.css'
 import Swal from 'sweetalert2'
 import { get, getDatabase, ref, remove, set, update } from 'firebase/database'
 import { getRoundParticipants } from '@/apis/roundParticipants.js'
+import { createRecordMemberResolver } from '@/apis/recordMembers.js'
+import { formatDailyRecordStats } from '@/apis/formatDailyRecordStats.js'
 
 const LetsRecord = (props) => {
   const { time: { today, thisDay, thisYear, currentTime, gameEndTime, gameStartTime, recordTapCloseTime } } = getTimes()
@@ -298,223 +300,18 @@ const LetsRecord = (props) => {
     return new Date(0, 0, 0, hours, minutes, seconds)
   }
 
-  const formatRecordByName = (goalRecord, roundRecord) => {
-    const stats = {}
+  const resolveMember = useMemo(() =>
+    createRecordMemberResolver(existingMembers, oneCharacterMembers, membersNickName),
+  [existingMembers, oneCharacterMembers, membersNickName])
+
+  const formatRecordByName = useCallback((goalRecord, roundRecord) => {
     if (
       weeklyTeamData?.data &&
-      weeklyTeamData?.id === thisYear.slice(2, 4) + today
+      weeklyTeamData.id === thisYear.slice(2, 4) + today
     ) {
-      const data = weeklyTeamData.data
-      const thisWeekMembers = data[1].concat(data[2], data[3])
-      thisWeekMembers.forEach((member) => {
-        // 외자 출석처리
-        if (member.length === 1) {
-          oneCharacterMembers.forEach((player) => {
-            if (player.includes(member)) {
-              stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0, 경기: 0 }
-            }
-          })
-          // Object.entries(membersNickName).forEach(([nick, name]) => {
-          //   if (nick.includes(member)) {
-          //     stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-          //   }
-          // })
-        } else {
-          // 나머지 출석처리
-          const others = existingMembers.filter(
-            (existing) => !oneCharacterMembers.includes(existing),
-          )
-          others.forEach((player) => {
-            if (member && player.includes(member)) {
-              stats[player] = { 출석: 1, 골: 0, 어시: 0, 승점: 0, 경기: 0 }
-            }
-          })
-          // Object.entries(membersNickName).forEach(([nick, name]) => {
-          //   if (nick.includes(member)) {
-          //     stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-          //   }
-          // })
-        }
-      })
-
-      goalRecord.forEach((item) => {
-        const { assist, goal } = item
-        if (item.id === 'fever-time-bar') {
-          return
-        }
-
-        if (goal !== '') {
-          // 외자 골 처리
-          if (goal?.length === 1) {
-            oneCharacterMembers.forEach((player) => {
-              if (player.includes(goal) && stats[player]) {
-                stats[player]['골']++
-              }
-            })
-            Object.entries(membersNickName).forEach(([nick, name]) => {
-              if (nick.includes(goal) && stats[name]) {
-                stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0, 경기: 0 }
-              }
-            })
-          } else {
-            // 나머지 골 처리
-            const others = existingMembers.filter(
-              (existing) => !oneCharacterMembers.includes(existing),
-            )
-            others.forEach((player) => {
-              if (player.includes(goal) && stats[player]) {
-                stats[player]['골']++
-              }
-            })
-            // Object.entries(membersNickName).forEach(([nick, name]) => {
-            //   if (nick.includes(goal) && stats[name]) {
-            //     stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-            //   }
-            // })
-          }
-        }
-
-        if (assist !== '') {
-          // 외자 어시 처리
-          if (assist?.length === 1) {
-            oneCharacterMembers.forEach((player) => {
-              if (player.includes(assist) && stats[player]) {
-                stats[player]['어시']++
-              }
-            })
-            // Object.entries(membersNickName).forEach(([nick, name]) => {
-            //   if (nick.includes(assist) && stats[name]) {
-            //     stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-            //   }
-            // })
-          } else {
-            // 나머지 어시 처리
-            const others = existingMembers.filter(
-              (existing) => !oneCharacterMembers.includes(existing),
-            )
-            others.forEach((player) => {
-              if (player.includes(assist) && stats[player]) {
-                stats[player]['어시']++
-              }
-            })
-            // Object.entries(membersNickName).forEach(([nick, name]) => {
-            //   if (nick.includes(assist) && stats[name]) {
-            //     stats[name] = { 출석: 1, 골: 0, 어시: 0, 승점: 0 }
-            //   }
-            // })
-          }
-        }
-      })
-
-      const formattedMatchRecord = formatMatchRecord(roundRecord)
-      Object.entries(formattedMatchRecord).forEach(([key, value]) => {
-        if (!key) return;
-
-        if (key.length === 1) {
-          oneCharacterMembers.forEach((player) => {
-            if (player.includes(key) && stats[player]) {
-              stats[player]['경기'] = value;
-            }
-          });
-        } else {
-          const others = existingMembers.filter(
-              (existing) => !oneCharacterMembers.includes(existing)
-          );
-
-          others.forEach((player) => {
-            if ((player === key || player.includes(key)) && stats[player]) {
-              stats[player]['경기'] = value;
-            }
-          });
-        }
-      });
-
-
-      const formattedRoundRecord = formatRoundRecord(roundRecord)
-      Object.entries(formattedRoundRecord).forEach(([key, value]) => {
-        if (!key) return;
-
-        if (key.length === 1) {
-          oneCharacterMembers.forEach((player) => {
-            if (player.includes(key) && stats[player]) {
-              stats[player]['승점'] = value;
-            }
-          });
-        } else {
-          const others = existingMembers.filter((existing) => !oneCharacterMembers.includes(existing));
-          others.forEach((player) => {
-            if ((player === key || player.includes(key)) && stats[player]) {
-              stats[player]['승점'] = value;
-            }
-          });
-        }
-
-        // Object.entries(membersNickName).forEach(([nick, name]) => {
-        //   if (nick.includes(key) && stats[name]) {
-        //     stats[name]['승점'] = value;
-        //   }
-        // });
-      });
-      return stats
+      return formatDailyRecordStats(weeklyTeamData, goalRecord, roundRecord, resolveMember)
     }
-  }
-
-  const formatMatchRecord = (records) => {
-    return records.reduce((acc, rec) => {
-      if (!Array.isArray(rec.participant)) {
-        return acc
-      }
-
-      // 빈 문자열 제거 + '용병' 포함 제거 + 한 경기 내 중복 제거
-      const uniqueParticipants = [
-        ...new Set(
-            rec.participant.filter(
-                (name) =>
-                    name &&
-                    name.trim() !== '' &&
-                    !name.includes('용병')
-            )
-        )
-      ]
-
-      uniqueParticipants.forEach((name) => {
-        acc[name] = (acc[name] || 0) + 1
-      })
-
-      return acc
-    }, {})
-  }
-
-  const formatRoundRecord = (records) => {
-    return records.reduce((acc, rec) => {
-      const winnerTeam = rec.winnerTeam
-
-      if (
-        !winnerTeam ||
-        !Array.isArray(winnerTeam.member) ||
-        !Array.isArray(winnerTeam.number)
-      ) {
-        return acc
-      }
-
-      const len = winnerTeam.number.length
-      const scorePerMember =
-        len === 2 ? 1 :
-          len === 1 ? 3 :
-            0
-
-      if (scorePerMember === 0) return acc
-
-      // 한 라운드 안에서 중복 제거
-      const uniqueMembers = [...new Set(winnerTeam.member)]
-
-      uniqueMembers.forEach((name) => {
-        acc[name] = (acc[name] || 0) + scorePerMember
-      })
-
-      return acc
-    }, {})
-  }
+  }, [weeklyTeamData, thisYear, today, resolveMember])
 
   function compareObjects(objA, objB) {
     const keysA = Object.keys(objA)
@@ -547,10 +344,9 @@ const LetsRecord = (props) => {
   }
 
   // Firestore 데이터 등록
-  // const stats = formatRecordByName(todayRecord, displayRecord)
   const stats = useMemo(() => {
     return formatRecordByName(todayRecord, displayRecord)
-  }, [todayRecord, displayRecord, weeklyTeamData, existingMembers])
+  }, [todayRecord, displayRecord, formatRecordByName])
 
   const registerRecord = async () => {
     if (!canWriteFirestoreStats) {

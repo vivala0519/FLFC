@@ -10,6 +10,7 @@ import ShowRequestButton from '@/components/atoms/Button/ShowRequestButton.jsx'
 import RequestBox from '@/components/organisms/RequestBox.jsx'
 import Separator from '@/components/atoms/Separator.jsx'
 import { getRoundParticipants } from '@/apis/roundParticipants.js'
+import { createRecordMemberResolver, findWeeklyMemberTeam } from '@/apis/recordMembers.js'
 
 const ALL_TEAMS = ['1', '2', '3']
 
@@ -96,7 +97,8 @@ const WriteContainer = (props) => {
   const {
     time: { today, thisYear, currentTime, gameStartTime, gameEndTime },
   } = getTimes()
-  const { membersNickName } = getMembers()
+  const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
+  const resolveMember = createRecordMemberResolver(existingMembers, oneCharacterMembers, membersNickName)
 
   const [scorer, setScorer] = useState('')
   const [assistant, setAssistant] = useState('')
@@ -114,15 +116,16 @@ const WriteContainer = (props) => {
   const db = getDatabase()
 
   const getMemberTeam = (name) => {
-    if (!name || ['용병', '자책'].includes(name)) return null
+    return findWeeklyMemberTeam(weeklyTeamData, name, resolveMember)
+  }
 
-    const normalizedName = Object.keys(membersNickName).includes(name)
-      ? membersNickName[name].slice(1)
-      : name
+  const getRecordName = (input) => {
+    const name = input.trim()
+    const member = resolveMember(name)
+    if (!member || member === name || !Object.prototype.hasOwnProperty.call(membersNickName, name)) return name
 
-    return Object.keys(weeklyTeamData.data).find((teamNumber) =>
-      weeklyTeamData.data[teamNumber].includes(normalizedName),
-    )
+    const shortName = oneCharacterMembers.includes(member) ? member.slice(-1) : member.slice(1)
+    return resolveMember(shortName) === member ? shortName : member
   }
 
   const openScorerTeamPopup = (roundData, record) => {
@@ -436,19 +439,8 @@ const WriteContainer = (props) => {
     const goalId = uid()
     const roundId = await createRound()
 
-    let scorerName = scorer
-    let assistantName = assistant
-
-    if (Object.keys(membersNickName).includes(scorer)) {
-      const replacedName = membersNickName[scorer].slice(1)
-      setScorer(replacedName)
-      scorerName = replacedName
-    }
-    if (Object.keys(membersNickName).includes(assistant)) {
-      const replacedName = membersNickName[assistant].slice(1)
-      setAssistant(replacedName)
-      assistantName = replacedName
-    }
+    const scorerName = getRecordName(scorer)
+    const assistantName = getRecordName(assistant)
 
     const checkMemberHandler = (roundData) => {
       const roundTeamList = (roundData.teamList || []).map(String)

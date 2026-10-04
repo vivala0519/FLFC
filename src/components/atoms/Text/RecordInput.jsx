@@ -16,7 +16,6 @@ const RecordInput = (props) => {
       onChange={onChangeHandler}
       onKeyDown={handleKeyDown}
       onBlur={handleBlur}
-      maxLength={2}
     />
   )
 }
