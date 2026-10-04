@@ -321,7 +321,7 @@ const RecordRow = (props) => {
 
   return (
     <>
-      {showTeamMembers ? (
+      {showTeamMembers && record.winnerTeam ? (
         <div className={rawStyle} onClick={() => setShowTeamMembers(false)}>
           <div className={recordAreaStyle + ' justify-center'}>
             {/*<span className={roundTextStyle}>{index + 1} Round</span>*/}
@@ -331,7 +331,9 @@ const RecordRow = (props) => {
           </div>
         </div>
       ) : (
-        <div className={rawStyle} key={index} onClick={() => setShowTeamMembers(true)}>
+        <div className={rawStyle} key={index} onClick={() => {
+          if (record.winnerTeam) setShowTeamMembers(true)
+        }}>
           <div className={recordAreaStyle}>
             {!editTeamMode && (
               <div className={'flex gap-2'}>
@@ -359,11 +361,14 @@ const RecordRow = (props) => {
               <div className="flex items-center gap-1">
                 {record?.teamList?.length === 2 &&
                   (!editTeamMode ? (
-                    <div className={teamStyle + ' whitespace-nowrap'} onClick={() => setEditTeamMode(true)}>
+                    <div className={teamStyle + ' whitespace-nowrap'} onClick={(event) => {
+                      event.stopPropagation()
+                      setEditTeamMode(true)
+                    }}>
                       {record.teamList[0]}팀 <span className={'text-assist'}>vs</span> {record.teamList[1]}팀
                     </div>
                   ) : (
-                    <div className={'flex items-center gap-2'}>
+                    <div className={'flex items-center gap-2'} onClick={(event) => event.stopPropagation()}>
                       <select className={'border-2 border-gray-400 rounded-md px-2 py-1'} value={teamA} onChange={(e) => setTeamA(e.target.value)}>
                         {optionsForA.map((opt) => (
                           <option key={opt} value={opt}>
@@ -403,7 +408,10 @@ const RecordRow = (props) => {
                   </span>
                 )}
                 {!editTeamMode && (
-                  <div className={roundExitButtonStyle + ' shrink-0 whitespace-nowrap'} onClick={() => exitRoundHandler(record.id)}>
+                  <div className={roundExitButtonStyle + ' shrink-0 whitespace-nowrap'} onClick={(event) => {
+                    event.stopPropagation()
+                    exitRoundHandler(record.id)
+                  }}>
                     <div className={'relative left-2 text-[16px] border-2 border-red-600 rounded px-2'}>
                       <span>종료</span>
                     </div>
