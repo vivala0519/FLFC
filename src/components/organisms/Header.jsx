@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import HomeButton from '@/components/atoms/Button/HomeButton'
 import GoToVoteButton from '@/components/atoms/Button/GoToVoteButton.jsx'
 import ParentTapContainer from '@/components/molecules/ParentTapContainer.jsx'
+import HeaderPullToRefresh from '@/components/molecules/HeaderPullToRefresh.jsx'
 import plabFootballLogo from '@/assets/plab-football-logo.png'
 
 const Header = (props) => {
@@ -57,24 +58,26 @@ const Header = (props) => {
 
   return (
     <header ref={headerRef} className={headerStyle}>
-      <div className="relative flex w-full flex-col items-center">
-        <HomeButton />
-        <a
-          href="https://www.plabfootball.com/team/0810"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="PLAB 풋볼 FLFC 팀 페이지 새 창에서 열기"
-          className="absolute bottom-2 right-3 inline-flex min-h-11 min-w-11 items-center justify-center rounded p-1 transition-opacity hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
-        >
-          <img
-            src={plabFootballLogo}
-            alt="PLAB Football"
-            width="455"
-            height="317"
-            className="h-auto w-7 dark:brightness-0 dark:invert sm:w-8"
-          />
-        </a>
-      </div>
+      <HeaderPullToRefresh>
+        <div className="relative flex w-full flex-col items-center">
+          <HomeButton />
+          <a
+            href="https://www.plabfootball.com/team/0810"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="PLAB 풋볼 FLFC 팀 페이지 새 창에서 열기"
+            className="absolute bottom-2 right-3 inline-flex min-h-11 min-w-11 items-center justify-center rounded p-1 transition-opacity hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700"
+          >
+            <img
+              src={plabFootballLogo}
+              alt="PLAB Football"
+              width="455"
+              height="317"
+              className="h-auto w-7 dark:brightness-0 dark:invert sm:w-8"
+            />
+          </a>
+        </div>
+      </HeaderPullToRefresh>
       {/*<GoToVoteButton />*/}
       <ParentTapContainer tapInfo={tapInfo} liveBadgeInfo={liveBadgeInfo} />
     </header>

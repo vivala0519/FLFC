@@ -1,0 +1,28 @@
+.header-refresh-area {
+  touch-action: pan-x pinch-zoom;
+  user-select: none;
+  transition: padding-top 180ms ease-out;
+}
+
+.header-refresh-area[data-pull-state='pulling'],
+.header-refresh-area[data-pull-state='ready'] {
+  transition: none;
+}
+
+.header-refresh-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header-refresh-area {
+    transition: none;
+  }
+}

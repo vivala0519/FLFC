@@ -598,6 +598,7 @@ const WriteContainer = (props) => {
   return (
     <div
       ref={containerRef}
+      data-refresh-blocked={Boolean(editingRecordKey || isWriting || scorer.trim() || assistant.trim())}
       className={
         !canRegister ? 'w-full' : 'flex flex-col items-center mt-4 w-[80%]'
       }
