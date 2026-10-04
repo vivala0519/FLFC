@@ -1446,7 +1446,7 @@ const AnalysisTap = (props) => {
                       hasQuarterRecord ? (
                         <PlayerRadarChart name={playerDetail.name} comparison={playerComparison} />
                       ) : (
-                        <p className="flex items-center justify-center mt-6 h-40 text-sm text-center text-gray-500 dark:text-gray-400">표시 중인 시즌 기록이 없습니다</p>
+                        <p className="flex items-center justify-center mt-6 h-40 text-sm text-center text-gray-500 dark:text-gray-400">이번 시즌 기록이 없습니다</p>
                       )
                     ) : (
                       <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">
