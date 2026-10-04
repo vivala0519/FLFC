@@ -2,7 +2,7 @@ import './FeverTimeBar.css'
 
 const FeverTimeBar = (props) => {
   const { isFeverTime, clickHandler } = props
-  const containerStyle = `${isFeverTime ? 'box2 h-[45px] mt-0 mb-0' : 'border-2 h-[35px] border-red-200 animate-pulse'} text-goal cursor-pointer text-lg flex flex-col justify-center items-center`
+  const containerStyle = `${isFeverTime ? 'border-y-4 border-red-200 h-[45px] mt-0 mb-0 animate-pulse' : 'border-2 h-[35px] border-red-200 animate-pulse'} text-goal cursor-pointer text-lg flex flex-col justify-center items-center`
 
 
   return (
