@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 import {db} from "../../../firebase.js";
 
 const RecordRow = (props) => {
-  const { record, index, roundIndex, deleteRecord, useDelete, effect, isLastRound, isFeverTime, isFeverGoal = false, formatRecordByName, getGoalTeam, editingRecordKey, setEditingRecordKey } = props
+  const { record, index, roundIndex, deleteRecord, useDelete, isLastRound, isFeverTime, isFeverGoal = false, formatRecordByName, getGoalTeam, editingRecordKey, setEditingRecordKey } = props
   const {
     time: { thisYear, today, thisDay, currentTime, gameStartTime, gameEndTime },
   } = getTimes()
@@ -30,7 +30,7 @@ const RecordRow = (props) => {
     currentTime >= gameStartTime &&
     currentTime <= gameEndTime
 
-  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 transition-[left] duration-300 ease-out motion-reduce:transition-none ${effect ? 'bg-effect' : ''} ${isEditing ? '-left-4 pl-0 gap-0' : 'gap-1.5'}`
+  const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 transition-[left] duration-300 ease-out motion-reduce:transition-none ${isEditing ? '-left-4 pl-0 gap-0' : 'gap-1.5'}`
   const recordAreaStyle = 'flex items-center pr-2 relative bottom-[2px]'
   const recordCursorStyle = editingRecordKey && !isEditing ? 'cursor-not-allowed' : useDelete ? 'cursor-pointer' : 'cursor-default'
   const itemStyle = `w-[15px] h-[15px] relative bottom-[1px] `

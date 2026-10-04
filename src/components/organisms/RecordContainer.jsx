@@ -204,7 +204,6 @@ const RecordContainer = (props) => {
                   editingRecordKey={editingRecordKey}
                   setEditingRecordKey={setEditingRecordKey}
                   getGoalTeam={record.getGoalTeam?.[goalIndex]}
-                  effect={goal.id === lastRecord}
                   record={goal}
                   isFeverTime={isFeverTime}
                   isFeverGoal={record.goals.some((entry, entryIndex) =>
