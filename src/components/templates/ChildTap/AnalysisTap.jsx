@@ -1343,7 +1343,7 @@ const AnalysisTap = (props) => {
                     : recentForm.status === 'error'
                       ? '출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'
                       : recentForm.eligibleCount === 0
-                        ? '이번 시즌 2회 이상, 총 4회 이상 출석하고 이전 2회가 최근 8주 안에 있어야 비교할 수 있습니다.'
+                        ? '-'
                         : `최근 공격포인트와 승점 합계의 ${type === 'recent-fall' ? '하락' : '상승'} 조건에 맞는 플레이어가 없습니다.`}
                 </p>
               )}
