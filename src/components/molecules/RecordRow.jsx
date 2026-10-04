@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 import {db} from "../../../firebase.js";
 
 const RecordRow = (props) => {
-  const { record, index, roundIndex, deleteRecord, useDelete, effect, isLastRound, isFeverTime, formatRecordByName, getGoalTeam, editingRecordKey, setEditingRecordKey } = props
+  const { record, index, roundIndex, deleteRecord, useDelete, effect, isLastRound, isFeverTime, isFeverGoal = false, formatRecordByName, getGoalTeam, editingRecordKey, setEditingRecordKey } = props
   const {
     time: { thisYear, today, thisDay, currentTime, gameStartTime, gameEndTime },
   } = getTimes()
@@ -118,7 +118,11 @@ const RecordRow = (props) => {
     return (
       <div className={rawStyle} key={index}>
         {isEditing && <EditingBadge />}
-        {!isEditing && <span className={'text-[8px] bottom-1.5'}>{getGoalTeam}팀</span>}
+        {!isEditing && (
+          <span className="w-4 shrink-0 text-[8px] bottom-1.5" aria-hidden={isFeverGoal}>
+            {!isFeverGoal && <>{getGoalTeam}팀</>}
+          </span>
+        )}
         {!isEditing && (
           <div className={`${itemStyle} ${rollClassMap[randomInt]}`}>
             <div className={`h-full w-full bg-[length:100%_100%] ${goalIconStyle}`} style={{ transform: `rotate(${goalRotation}deg)` }} />

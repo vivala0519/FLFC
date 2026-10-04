@@ -204,10 +204,13 @@ const RecordContainer = (props) => {
                   index={goalIndex}
                   editingRecordKey={editingRecordKey}
                   setEditingRecordKey={setEditingRecordKey}
-                  getGoalTeam={displayRecord[index]['getGoalTeam'][goalIndex]}
+                  getGoalTeam={record.getGoalTeam?.[goalIndex]}
                   effect={goal.id === lastRecord}
                   record={goal}
                   isFeverTime={isFeverTime}
+                  isFeverGoal={record.goals.some((entry, entryIndex) =>
+                    entry.id === 'fever-time-bar' && entryIndex < goalIndex
+                  )}
                   useDelete={canRegister}
                   isLastRound={displayRecord.length - 1 === index}
                   deleteRecord={deleteRecord}
