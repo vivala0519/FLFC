@@ -1,6 +1,6 @@
 const InfoMessageBox = (props) => {
   const {open} = props
-  const boxStyle = `relative font-dnf-forged text-xs text-gray-400 bg-blue-50 dark:bg-gray-700 pb-6 ${open ? 'pt-6' : 'bottom-[5px]'}`
+  const boxStyle = `relative font-dnf-forged text-xs text-gray-400 bg-blue-50 dark:bg-gray-700 pb-6 pt-6 ${open ? 'pt-6' : 'bottom-[5px]'}`
 
   return (
     <div className={boxStyle}>
