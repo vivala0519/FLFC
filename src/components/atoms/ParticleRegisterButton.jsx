@@ -60,9 +60,9 @@ const ParticleRegisterButton = ({ hasScorer, onRegister, disabled = false, butto
     const returnToTarget = Boolean(burstTargetRef?.current) && !reducedMotion
     const ballCenter = { x: canvasBounds.left + canvasBounds.width / 2, y: canvasBounds.top + canvasBounds.height / 2 }
     const distance = bounds.left + bounds.width / 2
-    const rollDuration = 700
-    const hiddenDuration = 140
-    const returnDuration = 800
+    const rollDuration = 500
+    const hiddenDuration = 100
+    const returnDuration = 500
     const dissolveDuration = 500
     const arrivalTime = returnToTarget ? rollDuration + hiddenDuration + returnDuration : rollDuration
     const duration = reducedMotion ? 160 : arrivalTime + dissolveDuration
