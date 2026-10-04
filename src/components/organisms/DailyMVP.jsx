@@ -14,7 +14,7 @@ const DailyMVP = (props) => {
   const mvpTextStyle = 'relative top-[1px] font-kbo text-[25px]'
   const closeMessageStyle = 'mt-3 relative text-sm text-gray-300 -bottom-[12%]'
   const chickenTextStyle =
-    'absolute -top-6 right-1 text-assist desktop:text-[15px]'
+    'absolute -top-2 right-1 text-assist desktop:text-[15px]'
   const playerListStyle = `flex flex-row mt-3 gap-3 justify-center z-10 h-[35%] ${bestPlayers.length > 2 ? 'text-[20px]' : 'text-[27px]'}`
   const dayTextStyle =
     'text-[10px] font-dnf text-vivaMagenta relative top-[1px] underline decoration-2 decoration-solid decoration-yellow-400'
