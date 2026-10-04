@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 
 import updateVotes from '@/hooks/updateVotes.js'
@@ -9,6 +9,7 @@ import AdminPage from '@/components/pages/AdminPage.jsx'
 import VotingPage from '@/components/pages/VotingPage.jsx'
 import DevPage from '@/components/pages/DevPage.jsx'
 import updateCurrentTime from '@/hooks/updateCurrentTime.js'
+import useTheme from '@/hooks/useTheme.js'
 
 import './App.css'
 
@@ -20,22 +21,7 @@ const App = () => {
   useUpdateMembers()
   updateVotes()
 
-  const [isDarkMode, setIsDarkMode] = useState(false)
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-    setIsDarkMode(mediaQuery.matches)
-
-    const handleChange = (e) => {
-      setIsDarkMode(e.matches)
-    }
-
-    mediaQuery.addEventListener('change', handleChange)
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange)
-    }
-  }, [])
+  const { isDarkMode, toggleTheme } = useTheme()
 
   return (
     <BrowserRouter>
@@ -45,6 +31,7 @@ const App = () => {
           element={
             <MainPage
               isDarkMode={isDarkMode}
+              onToggleTheme={toggleTheme}
               setSelectedYear={setSelectedYear}
               recordRoomLoadingFlag={recordRoomLoadingFlag}
               test={false}
@@ -57,12 +44,13 @@ const App = () => {
             <MainPage
               weeklyTeamUrl={true}
               isDarkMode={isDarkMode}
+              onToggleTheme={toggleTheme}
               setSelectedYear={setSelectedYear}
               recordRoomLoadingFlag={recordRoomLoadingFlag}
             />
           }
         />
-        <Route path="/vote" element={<VotingPage />} isDarkMode={isDarkMode} />
+        <Route path="/vote" element={<VotingPage isDarkMode={isDarkMode} />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/dev" element={<DevPage />} />
       </Routes>

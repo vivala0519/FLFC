@@ -207,12 +207,14 @@ export function createParticleText(element, canvas, text) {
   function fontsChanged() { sampleKey = ''; build() }
 
   const resizeObserver = new ResizeObserver(build)
+  const themeObserver = new MutationObserver(build)
   const visibilityObserver = new IntersectionObserver(([entry]) => {
     inView = entry.isIntersecting
     if (inView) { previousTime = 0; requestRender() }
     else { cancelAnimationFrame(frame); frame = 0 }
   })
   resizeObserver.observe(element)
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
   visibilityObserver.observe(element)
   document.addEventListener('visibilitychange', visibilityChanged)
   motion.addEventListener('change', motionChanged)
@@ -229,6 +231,7 @@ export function createParticleText(element, canvas, text) {
       destroyed = true
       cancelAnimationFrame(frame)
       resizeObserver.disconnect()
+      themeObserver.disconnect()
       visibilityObserver.disconnect()
       document.removeEventListener('visibilitychange', visibilityChanged)
       motion.removeEventListener('change', motionChanged)

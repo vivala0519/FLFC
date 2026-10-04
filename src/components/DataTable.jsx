@@ -57,8 +57,6 @@ const DataTable = (props) => {
   const selectedStatusColumnIndex = STATUS_BOARD_SORT_KEYS.indexOf(arrowState) + 1
   const startYear = tap === '승점' ? 2026 : 2021
 
-  const [isDark, setIsDark] = useState(window.matchMedia('(prefers-color-scheme: dark)').matches)
-
   useEffect(() => {
     if (tableData?.data?.length > 0) {
       // console.log('tableData.data', tableData.data)
@@ -395,7 +393,7 @@ const DataTable = (props) => {
               <div key={'sorted-' + index}>
                 <TableRowStat key={index} $tap={tap} $sortedIndex={tap === '현황판' ? selectedStatusColumnIndex : 0}>
                   {tap === '현황판' ? (
-                    <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)} $isDark={isDark}>
+                    <FirstColumn $realActive={analyzedData.lastFourWeeksAttendance.has(name)}>
                       <KingLabels titles={getKingTitles(lastSeasonKings, name)} />
                       <StatusBoardName>{name}</StatusBoardName>
                     </FirstColumn>
@@ -556,7 +554,7 @@ const selectedColumnStyle = (index) => index > 0 && `
     color: #111827;
   }
 
-  @media (prefers-color-scheme: dark) {
+  html.dark & {
     > :nth-child(${index}) {
       background-color: #374151;
       color: #f9fafb;
@@ -600,7 +598,7 @@ const DateSelectWrapper = styled.div`
     pointer-events: none;
   }
 
-  @media (prefers-color-scheme: dark) {
+  html.dark & {
     border-color: #475569;
     background-color: #1f2937;
     color: #facc15;
@@ -711,9 +709,10 @@ const SortArrow = styled.div`
     background: url("/sort-arrow.svg") center / contain no-repeat;
     transform: rotate(${(props) => (!props.$ascending && '180deg')});
 
-    @media (prefers-color-scheme: dark) {
-      background-image: url("/sort-arrow-light.svg");
-    }
+  }
+
+  html.dark &::after {
+    background-image: url("/sort-arrow-light.svg");
   }
 
   @media (max-width: 812px) {
@@ -833,7 +832,7 @@ const FirstColumn = styled.div`
   z-index: 1;
   background-color: #fff;
 
-  @media (prefers-color-scheme: dark) {
+  html.dark & {
     background-color: #242424;
   }
 
@@ -845,7 +844,7 @@ const FirstColumn = styled.div`
     right: 0;
     position: absolute;
     border-right: ${(props) =>
-      props.$realActive ? props.$isDark ? '5px double #93c5fd' : '5px double #1d4ed8' : '1px solid #ccc'};
+      props.$realActive ? '5px double var(--active-player-border-color)' : '1px solid #ccc'};
   }
 `
 

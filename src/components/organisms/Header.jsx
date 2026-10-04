@@ -4,12 +4,14 @@ import GoToVoteButton from '@/components/atoms/Button/GoToVoteButton.jsx'
 import ParentTapContainer from '@/components/molecules/ParentTapContainer.jsx'
 import HeaderPullToRefresh from '@/components/molecules/HeaderPullToRefresh.jsx'
 import plabFootballLogo from '@/assets/plab-football-logo.png'
+import MoonIcon from '@/assets/lucide/moon.svg?react'
+import SunIcon from '@/assets/lucide/sun.svg?react'
 
 const Header = (props) => {
   const headerRef = useRef(null)
   const headerStyle = 'flex flex-col items-center w-full top-5'
 
-  const { tap, setTap, lastDate, setHeaderHeight } = props
+  const { tap, setTap, lastDate, setHeaderHeight, isDarkMode, onToggleTheme } = props
   const [isLive, setIsLive] = useState(false)
   const [weeklyTeamIsLive, setWeeklyTeamIsLive] = useState(false)
   const tapInfo = { tap: tap, setTap: setTap }
@@ -60,6 +62,16 @@ const Header = (props) => {
     <header ref={headerRef} className={headerStyle}>
       <HeaderPullToRefresh>
         <div className="relative flex w-full flex-col items-center">
+          <button
+            type="button"
+            aria-label="다크모드"
+            aria-pressed={Boolean(isDarkMode)}
+            title={isDarkMode ? '일반모드로 전환' : '다크모드로 전환'}
+            onClick={onToggleTheme}
+            className="absolute bottom-2 left-3 inline-flex h-11 w-11 items-center justify-center rounded border-0 bg-transparent p-1 text-gray-900 transition-opacity hover:opacity-70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 dark:text-white"
+          >
+            {isDarkMode ? <SunIcon className="h-7 w-7" aria-hidden="true" /> : <MoonIcon className="h-7 w-7" aria-hidden="true" />}
+          </button>
           <HomeButton />
           <a
             href="https://www.plabfootball.com/team/0810"

@@ -28,7 +28,7 @@ const makeBlankWeeklyTeamData = () => ({
 })
 
 const MainPage = (props) => {
-  const { isDarkMode, test, weeklyTeamUrl, setSelectedYear, recordRoomLoadingFlag } = props
+  const { isDarkMode, onToggleTheme, test, weeklyTeamUrl, setSelectedYear, recordRoomLoadingFlag } = props
   const { totalWeeklyTeamData } = getRecords()
   const { time: { currentTime } } = getTimes()
   const [tap, setTap] = useState(0)
@@ -112,7 +112,7 @@ const MainPage = (props) => {
         </div>
       )}
       <Analytics />
-      <Header tap={tap} setTap={setTap} lastDate={lastWeeklyTeamId} setHeaderHeight={setHeaderHeight} />
+      <Header tap={tap} setTap={setTap} lastDate={lastWeeklyTeamId} setHeaderHeight={setHeaderHeight} isDarkMode={isDarkMode} onToggleTheme={onToggleTheme} />
       {!testFlag && (
         <TapTemplate
           tap={tap}

@@ -425,7 +425,7 @@ const LeftButton = styled.div`
     width: 15px;
     height: 15px;
   }
-  @media (prefers-color-scheme: dark) {
+  html.dark & {
     filter: invert(1);
   }
 `
@@ -445,7 +445,7 @@ const RightButton = styled.div`
     width: 15px;
     height: 15px;
   }
-  @media (prefers-color-scheme: dark) {
+  html.dark & {
     filter: invert(1);
   }
 `
