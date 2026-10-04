@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import Swal from 'sweetalert2'
 import { get, getDatabase, ref, remove, set} from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
@@ -197,9 +197,8 @@ const RecordContainer = (props) => {
           {/*></div>*/}
           <div className={`${closedRounds.has(index) && 'hidden'} flex flex-col items-center w-full py-4 px-6`}>
             {record.goals?.map((goal, goalIndex) => (
-              <>
+              <Fragment key={goal.id ?? `goal-${goalIndex}`}>
                 <RecordRow
-                  key={goal.id ?? `goal-${goalIndex}`}
                   roundIndex={index}
                   index={goalIndex}
                   editingRecordKey={editingRecordKey}
@@ -218,7 +217,7 @@ const RecordContainer = (props) => {
                 />
                 {/*<hr className={'relative -left-2 w-5/6 border-gray-100 dark:border-gray-700 ' + (goalIndex !== record.goals.length - 1 && 'mb-2')} />*/}
                 <hr className={'relative left-1 w-7/12 border-gray-100 dark:border-gray-700 ' + (goalIndex !== record.goals.length - 1 && 'mb-4')} />
-              </>
+              </Fragment>
             ))}
             {record.goals.length === 0 && <div className={'font-dnf-forged text-gray-400'}>득점 없당</div>}
           </div>

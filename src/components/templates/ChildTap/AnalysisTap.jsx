@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { db } from '../../../../firebase.js'
 import { collection, getDocsFromServer, onSnapshot } from 'firebase/firestore'
 import { get, getDatabase, ref } from 'firebase/database'
@@ -1473,13 +1473,13 @@ const AnalysisTap = (props) => {
                           ],
                           ['스타일', playerDetail.style.length > 0 ? playerDetail.style.map((style) => `#${style}`).join(' ') : '기록 없음'],
                         ].map(([label, value]) => (
-                          <>
-                            <div key={label} className="flex gap-4">
+                          <Fragment key={label}>
+                            <div className="flex gap-4">
                               <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
                               <dd className={'min-w-0 break-words ' + (label === '스타일' && '[word-spacing:6px]')}>{value}</dd>
                             </div>
                             <hr className="border-gray-100 dark:border-gray-700" />
-                          </>
+                          </Fragment>
                         ))}
                       </dl>
                     )}
@@ -1497,13 +1497,13 @@ const AnalysisTap = (props) => {
                           </h4>
                           <dl className="space-y-2 text-sm">
                             {careerTotalRows.map(([label, value]) => (
-                              <>
-                                <div key={label} className="flex gap-4">
+                              <Fragment key={label}>
+                                <div className="flex gap-4">
                                   <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
                                   <dd className="min-w-0 break-words">{value}</dd>
                                 </div>
                                 <hr className="border-gray-100 dark:border-gray-700" />
-                              </>
+                              </Fragment>
                             ))}
                             <div className="flex gap-4">
                               <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">최다 골 합작</dt>
@@ -1526,21 +1526,19 @@ const AnalysisTap = (props) => {
                                         {careerAwards.map((award) => {
                                           const [title, count] = award.split('x')
                                           return (
-                                            <>
-                                              <li
-                                                key={award}
-                                                className={
-                                                  'flex items-center gap-1 whitespace-nowrap relative ' +
-                                                  (!['득점왕', '승점왕'].includes(title) && 'left-[-4px]')
-                                                }
-                                              >
-                                                <AwardIconStack title={title} count={count} />
-                                                <span>
-                                                  {title}
-                                                  <span className="ml-0.5 text-[10px]">x{count}</span>
-                                                </span>
-                                              </li>
-                                            </>
+                                            <li
+                                              key={award}
+                                              className={
+                                                'flex items-center gap-1 whitespace-nowrap relative ' +
+                                                (!['득점왕', '승점왕'].includes(title) && 'left-[-4px]')
+                                              }
+                                            >
+                                              <AwardIconStack title={title} count={count} />
+                                              <span>
+                                                {title}
+                                                <span className="ml-0.5 text-[10px]">x{count}</span>
+                                              </span>
+                                            </li>
                                           )
                                         })}
                                       </ul>
@@ -1562,13 +1560,13 @@ const AnalysisTap = (props) => {
                           </div>
                           <dl className="space-y-2 text-sm">
                             {careerHighRows.map(([label, value]) => (
-                              <>
-                                <div key={label} className="flex gap-4">
+                              <Fragment key={label}>
+                                <div className="flex gap-4">
                                   <dt className="w-24 shrink-0 text-gray-500 dark:text-gray-400">{label}</dt>
                                   <dd className="min-w-0 break-words">{value}</dd>
                                 </div>
                                 <hr className="border-gray-100 dark:border-gray-700" />
-                              </>
+                              </Fragment>
                             ))}
                           </dl>
                         </div>
@@ -1679,7 +1677,7 @@ const AnalysisTap = (props) => {
               </form>
             </div>
             <div className="mt-4 space-y-3 text-sm leading-relaxed">
-              <p>플레이어별 최근 출석 2회와 그 직전 출석 2회를 비교합니다.</p>
+              <p>플레이어별 최근 출석 2회와 그 직전 출석 2회의 승점생산률과 공격포인트를 비교합니다.</p>
               <ul className="list-disc space-y-2 pl-5">
                 <li>상승세: 두 지표 중 하나 이상 증가하고, 다른 지표는 감소하지 않은 플레이어</li>
                 <li>하락세: 두 지표 중 하나 이상 감소하고, 다른 지표는 증가하지 않은 플레이어</li>
