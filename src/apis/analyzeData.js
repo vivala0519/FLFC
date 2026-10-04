@@ -29,6 +29,7 @@ export const analyzeForStatusBoard = (
   existingMembers = [],
   quarter,
   yearParameter,
+  recentAttendanceRecords = fetchedData,
 ) => {
   const thisYear = new Date().getFullYear()
   const year = yearParameter ? yearParameter : String(thisYear)
@@ -36,7 +37,7 @@ export const analyzeForStatusBoard = (
   let keyCounts = new Map()
 
   lastFourSundays.forEach((sunday) => {
-    const dayData = fetchedData.find((data) => data.id === sunday)
+    const dayData = recentAttendanceRecords.find((data) => data.id === sunday)
     if (dayData) {
       Object.keys(dayData.data).forEach((key) => {
         keyCounts.set(key, (keyCounts.get(key) || 0) + 1)
@@ -91,7 +92,7 @@ export const analyzeForStatusBoard = (
     })
   }
 
-  const lastSeasonKings = fetchedData.find((data) => data.id === 'last_season_kings')?.data
+  const lastSeasonKings = fetchedData.find((data) => data.id === 'last_season_kings')?.data || {}
 
   // 1분기 이름별 통계 취합
   const firstQuarter = fetchedData.filter(
@@ -151,6 +152,7 @@ export const analyzeForStatusBoard = (
 
   // 현재 월이 포함된 분기 찾기
   if (quarter) {
+    lastKings = [firstQuarterData, secondQuarterData, thirdQuarterData, fourthQuarterData][quarter - 1]?.lastSeasonKings
     if (quarter === 1) {
       activeQuarterStats = firstQuarterStats
     } else if (quarter === 2) {

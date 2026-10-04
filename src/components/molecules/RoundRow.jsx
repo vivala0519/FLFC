@@ -27,17 +27,17 @@ const RecordRow = (props) => {
   const [editTeamMode, setEditTeamMode] = useState(false)
   const [teamA, setTeamA] = useState("");
   const [teamB, setTeamB] = useState("");
-  const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 mobile:gap-2 py-1 border-b-2 border-b-blue-400 dark:border-b-blue-400 pb-[12px]`
-  const recordAreaStyle = 'flex flex-wrap min-w-0 items-center font-dnf-forged gap-x-2 gap-y-1 w-full pl-3'
+  const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 mobile:gap-2 py-1 border-y-2 border-y-blue-400 dark:border-b-blue-400 py-[10px]`
+  const recordAreaStyle = 'flex flex-wrap min-w-0 items-center font-dnf-forged gap-x-2 gap-y-1 w-full pl-3 relative top-[1px]'
   const roundTextStyle = 'whitespace-nowrap text-[10px] text-black dark:text-gray-100'
   const winnerDivStyle = 'flex flex-wrap min-w-0 items-center relative bottom-[2px]'
-  const teamStyle = 'relative font-dnf-forged text-teamWin dark:text-blue-300 mr-1 text-[12px] top-[2px]'
-  const opponentStyle = 'font-dnf-forged text-gray-400 text-[12px] ml-1 mt-1'
-  const winStyle = 'font-hahmlet text-goal dark:text-yellow-400 text-[12px] relative top-[1px]'
-  const scoreStyle = 'relative top-[2px] shrink-0 whitespace-nowrap text-xs font-semibold tabular-nums text-gray-700 dark:text-gray-200'
+  const teamStyle = 'relative font-dnf-forged text-blueSignature dark:text-yellow-400 text-[12px] top-[1px]'
+  const opponentStyle = 'font-dnf-forged text-gray-400 text-[12px] ml-1 relative top-[1px]'
+  const winStyle = 'font-dnf-forged text-[12px] relative top-[1px] mr-1'
+  const scoreStyle = 'font-dnf-forged text-[12px] relative top-[1px] shrink-0 whitespace-nowrap tabular-nums text-gray-700 dark:text-gray-200 ml-1'
   // const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
   // const arrowIcon = 'bg-[url("@/assets/up2.png")] '
-  const roundExitButtonStyle = 'text-goal dark:text-yellow-500 animate-pulse'
+  const roundExitButtonStyle = 'text-goal dark:text-red-300 animate-pulse'
 
 
   const optionsForA = ALL_TEAMS.filter((opt) => opt !== teamB)
@@ -325,78 +325,46 @@ const RecordRow = (props) => {
         <div className={rawStyle} onClick={() => setShowTeamMembers(false)}>
           <div className={recordAreaStyle + ' justify-center'}>
             {/*<span className={roundTextStyle}>{index + 1} Round</span>*/}
-            <span className={teamStyle + ' text-[14px]'}>
-              {renderMembers(record.winnerTeam?.member)}
-            </span>
+            <span className={teamStyle}>{renderMembers(record.winnerTeam?.member)}</span>
             {/*<span className={teamStyle + ' text-[14px]'}>{record.winnerTeam?.member.join(' ')}</span>*/}
-            <span className={winStyle + ' relative bottom-[2px]'}>
-              {record.winnerTeam.number.length === 1 ? '+ 3' : '+ 1'}
-            </span>
+            <span className={winStyle + ' top-[0px] text-goal dark:text-blue-300'}>{record.winnerTeam.number.length === 1 ? '+ 3' : '+ 1'}</span>
           </div>
         </div>
       ) : (
-        <div className={rawStyle} key={index}>
+        <div className={rawStyle} key={index} onClick={() => setShowTeamMembers(true)}>
           <div className={recordAreaStyle}>
             {!editTeamMode && (
               <div className={'flex gap-2'}>
-                <span className={roundTextStyle}>{index + 1} Round</span>
+                <span className={roundTextStyle}>{index + 1} 라운드</span>
                 {/*{record.winnerTeam && <div className={'flex gap-1 relative bottom-[3px]'}><span className={'text-blue-800'}>{record.winnerTeam}팀</span><span className={'text-goal'}>Win</span></div>}*/}
               </div>
             )}
             {record.winnerTeam ? (
-              <div
-                className={winnerDivStyle}
-                onClick={() => setShowTeamMembers(true)}
-              >
-                {endedRoundDisplay.winner && (
-                  <span className={teamStyle}>{endedRoundDisplay.winner}팀</span>
-                )}
-                <span className={winStyle}>
-                  {record.winnerTeam.number.length === 1 ? 'Win' : 'Draw'}
-                </span>
+              <div className={winnerDivStyle}>
+                {endedRoundDisplay.winner && <span className={teamStyle}>{endedRoundDisplay.winner}팀 승</span>}
+                {record.winnerTeam.number.length !== 1 && <span className={winStyle + ' text-blueSignature dark:text-yellow-400'}>무승부</span>}
                 {endedRoundDisplay.opponents.length > 0 && (
-                  <span className={opponentStyle}>
-                    vs{' '}
-                    {endedRoundDisplay.opponents
-                      .map((team) => `${team}팀`)
-                      .join(', ')}
-                  </span>
+                  <span className={opponentStyle}>vs {endedRoundDisplay.opponents.map((team) => `${team}팀`).join(', ')}</span>
                 )}
-                {!endedRoundDisplay.winner &&
-                  endedRoundDisplay.teamList.length > 0 && (
-                    <span className={opponentStyle}>
-                      {endedRoundDisplay.teamList
-                        .map((team) => `${team}팀`)
-                        .join(' vs ')}
-                    </span>
-                  )}
+                {!endedRoundDisplay.winner && endedRoundDisplay.teamList.length > 0 && (
+                  <span className={opponentStyle}>{endedRoundDisplay.teamList.map((team) => `${team}팀`).join(' vs ')}</span>
+                )}
                 {scoreText && (
                   <span className={scoreStyle + ' ml-2'} aria-label={scoreLabel}>
                     {scoreText}
                   </span>
                 )}
               </div>
-              ) :
+            ) : (
               <div className="flex items-center gap-1">
                 {record?.teamList?.length === 2 &&
                   (!editTeamMode ? (
-                    <div
-                      className={teamStyle + ' whitespace-nowrap'}
-                      onClick={() => setEditTeamMode(true)}
-                    >
-                      {record.teamList[0]}팀{' '}
-                      <span className={'text-assist'}>vs</span>{' '}
-                      {record.teamList[1]}팀
+                    <div className={teamStyle + ' whitespace-nowrap'} onClick={() => setEditTeamMode(true)}>
+                      {record.teamList[0]}팀 <span className={'text-assist'}>vs</span> {record.teamList[1]}팀
                     </div>
                   ) : (
                     <div className={'flex items-center gap-2'}>
-                      <select
-                        className={
-                          'border-2 border-gray-400 rounded-md px-2 py-1'
-                        }
-                        value={teamA}
-                        onChange={(e) => setTeamA(e.target.value)}
-                      >
+                      <select className={'border-2 border-gray-400 rounded-md px-2 py-1'} value={teamA} onChange={(e) => setTeamA(e.target.value)}>
                         {optionsForA.map((opt) => (
                           <option key={opt} value={opt}>
                             {opt}팀
@@ -406,13 +374,7 @@ const RecordRow = (props) => {
 
                       <span>vs</span>
 
-                      <select
-                        className={
-                          'border-2 border-gray-400 rounded-md px-2 py-1'
-                        }
-                        value={teamB}
-                        onChange={(e) => setTeamB(e.target.value)}
-                      >
+                      <select className={'border-2 border-gray-400 rounded-md px-2 py-1'} value={teamB} onChange={(e) => setTeamB(e.target.value)}>
                         {optionsForB.map((opt) => (
                           <option key={opt} value={opt}>
                             {opt}팀
@@ -420,18 +382,14 @@ const RecordRow = (props) => {
                         ))}
                       </select>
                       <button
-                        className={
-                          'border-2 border-red-400 flex items-center text-sm whitespace-nowrap px-3 py-2'
-                        }
+                        className={'border-2 border-red-400 flex items-center text-sm whitespace-nowrap px-3 py-2'}
                         type="button"
                         onClick={cancelEditTeamMode}
                       >
                         취소
                       </button>
                       <button
-                        className={
-                          'border-2 border-green-400 flex items-center text-sm whitespace-nowrap px-3 py-2'
-                        }
+                        className={'border-2 border-green-400 flex items-center text-sm whitespace-nowrap px-3 py-2'}
                         type="button"
                         onClick={() => updateTeamListHandler(record.id)}
                       >
@@ -445,20 +403,17 @@ const RecordRow = (props) => {
                   </span>
                 )}
                 {!editTeamMode && (
-                  <div
-                    className={roundExitButtonStyle + ' shrink-0 whitespace-nowrap'}
-                    onClick={() => exitRoundHandler(record.id)}
-                  >
-                    <div className={''}>
+                  <div className={roundExitButtonStyle + ' shrink-0 whitespace-nowrap'} onClick={() => exitRoundHandler(record.id)}>
+                    <div className={'relative left-2 text-[16px] border-2 border-red-600 rounded px-2'}>
                       <span>종료</span>
                     </div>
                   </div>
                 )}
               </div>
-            }
+            )}
           </div>
           {!editTeamMode && (
-            <div className={'flex relative shrink-0 bottom-[2px] right-3'}>
+            <div className={'flex relative shrink-0 pr-3'}>
               <TimeText text={record.time.slice(0, 5)} />
             </div>
           )}

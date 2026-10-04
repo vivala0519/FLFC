@@ -1,0 +1,20 @@
+.record-row-edit-enter {
+  animation: record-row-edit-slide 280ms ease-out;
+}
+
+@keyframes record-row-edit-slide {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .record-row-edit-enter {
+    animation: none;
+  }
+}

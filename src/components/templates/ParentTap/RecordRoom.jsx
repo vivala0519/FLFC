@@ -1,5 +1,5 @@
 import './LetsRecord.css'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import getTimes from '@/hooks/getTimes.js'
 import getRecords from '@/hooks/getRecords.js'
@@ -15,112 +15,52 @@ const RecordRoom = (props) => {
   const { time: { thisYear } } = getTimes()
   const { firestoreRecord } = getRecords()
   const { totalMembers } = getMembers()
-  const [fetchData, setFetchData] = useState([])
-  const [analyzedData, setAnalyzedData] = useState({})
   const tapName = ['분석', '승점', '출석', '골', '어시', '히스토리']
   const [tap, setTap] = useState('분석')
   const [year, setYear] = useState(thisYear)
-  const [yearData, setYearData] = useState({})
-  const [analyedYearData, setAnalyzedYearData] = useState({})
-  const [month, setMonth] = useState([])
-  const [weeksPerMonth, setWeeksPerMonth] = useState([])
-  const [page, setPage] = useState(0)
+  const [selectedMonth, setSelectedMonth] = useState(null)
   const [quarter, setQuarter] = useState()
-  const [blockSetPage, setBlockSetPage] = useState(false)
-  const [tableData, setTableData] = useState({})
-  const [quarterData, setQuarterData] = useState([])
+  const previousCurrentYear = useRef(thisYear)
+  const yearRecords = firestoreRecord?.[year]
 
-  const getYearData = (year) => {
-    if (firestoreRecord && firestoreRecord[year] && totalMembers.length > 0) {
-      const fetchedData = firestoreRecord[year].filter(
-        (data) => data.id !== 'last_season_kings',
-      )
-      const quarterData = extractQuarterData(year, fetchedData, totalMembers)
+  const fetchData = useMemo(() =>
+    (yearRecords || []).filter((record) => /^\d{4}$/.test(record.id)),
+  [yearRecords])
+  const analyzedData = useMemo(() =>
+    extractQuarterData(year, fetchData, totalMembers),
+  [year, fetchData, totalMembers])
+  const weeksPerMonth = useMemo(() => fetchData.reduce((counts, record) => {
+    const recordMonth = Number(record.id.slice(0, 2))
+    counts[recordMonth] = (counts[recordMonth] || 0) + 1
+    return counts
+  }, {}), [fetchData])
+  const month = useMemo(() => Object.keys(weeksPerMonth).map(Number).sort((a, b) => a - b), [weeksPerMonth])
+  const defaultPage = year === '2021'
+    ? Math.min(2, Math.max(0, month.length - 1))
+    : Math.max(0, month.length - 1)
+  const selectedPage = selectedMonth?.year === year ? month.indexOf(selectedMonth.month) : -1
+  const page = selectedPage >= 0 ? selectedPage : defaultPage
+  const tableData = useMemo(() => ({
+    month: month[page],
+    weeks: weeksPerMonth[month[page]] || 0,
+    data: fetchData.filter((record) => Number(record.id.slice(0, 2)) === month[page]),
+  }), [month, page, weeksPerMonth, fetchData])
+  const selectedQuarter = year === '2021' ? 0 : Math.floor(((month[page] || 1) - 1) / 3)
+  const quarterData = analyzedData.totalQuarterData[selectedQuarter]
 
-      const yearsData = { ...yearData }
-      yearsData[year] = fetchedData
-
-      const analyzedYearsData = { ...analyedYearData }
-      analyzedYearsData[year] = quarterData
-
-      setYearData(yearsData)
-      setAnalyzedYearData(analyzedYearsData)
-      setFetchData(fetchedData)
-      setAnalyzedData(quarterData)
-    }
+  const setPage = (nextPage) => {
+    setSelectedMonth({ year, month: month[nextPage] })
   }
 
-  // 연도 변경
   useEffect(() => {
-    if (totalMembers.length === 0) return
-
-    setBlockSetPage(false)
     setSelectedYear(year)
-    if (!yearData[year] || !analyedYearData[year]) {
-      getYearData(year)
-    } else {
-      setFetchData(yearData[year])
-      setAnalyzedData(analyedYearData[year])
-    }
-  }, [year, firestoreRecord, totalMembers])
+  }, [year, setSelectedYear])
 
   useEffect(() => {
-    // 월별 주차 계산
-    const monthSet = new Set()
-    const weeksByMonth = fetchData?.reduce((acc, cur) => {
-      const key = Number(cur.id.slice(0, 2))
-      monthSet.add(key)
-      acc[key] ? acc[key]++ : (acc[key] = 1)
-      return acc
-    }, {})
-    const availableMonths = [...monthSet].sort((a, b) => a - b)
-    setMonth(availableMonths)
-    // 초기 월 설정
-    if (!blockSetPage) {
-      if (year === '2021') {
-        setPage(Math.min(2, Math.max(0, availableMonths.length - 1)))
-      } else {
-        setPage(Math.max(0, availableMonths.length - 1))
-      }
-    }
-    setWeeksPerMonth(weeksByMonth)
-  }, [fetchData, year])
-
-  useEffect(() => {
-    if (firestoreRecord) {
-      const tableData = firestoreRecord[year]?.filter(
-        (data) => Number(data.id.slice(0, 2)) === month[page],
-      )
-      const obj = {
-        month: month[page],
-        weeks: weeksPerMonth[month[page]],
-        data: tableData,
-      }
-      setTableData(obj)
-    }
-  }, [page, month, weeksPerMonth, firestoreRecord])
-
-  useEffect(() => {
-    const selectedMonth = month[page]
-    let quarterData = []
-    if (analyzedData?.totalQuarterData) {
-      if (year === '2021') {
-        quarterData = analyzedData.totalQuarterData[0]
-      } else {
-        if (selectedMonth <= 3) {
-          quarterData = analyzedData.totalQuarterData[0]
-        } else if (selectedMonth > 3 && selectedMonth <= 6) {
-          quarterData = analyzedData.totalQuarterData[1]
-        } else if (selectedMonth > 6 && selectedMonth <= 9) {
-          quarterData = analyzedData.totalQuarterData[2]
-        } else {
-          quarterData = analyzedData.totalQuarterData[3]
-        }
-      }
-    }
-    setQuarterData(quarterData)
-  }, [tableData, analyzedData])
-
+    const previousYear = previousCurrentYear.current
+    previousCurrentYear.current = thisYear
+    setYear((selectedYear) => selectedYear === previousYear ? thisYear : selectedYear)
+  }, [thisYear])
   const setTapHandler = (tapName) => {
     if (tapName === '승점' && year <= 2025) {
       setYear(thisYear)
@@ -162,7 +102,6 @@ const RecordRoom = (props) => {
             quarterData={quarterData}
             quarter={quarter}
             setQuarter={setQuarter}
-            setBlockSetPage={setBlockSetPage}
           />
         ) : tap === '히스토리' ? (
           <HistoryTap />

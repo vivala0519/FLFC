@@ -16,6 +16,21 @@ export default function useScoringStreak(members, asOfDate, activeMembers = memb
     const currentYear = Number(asOfDate.slice(0, 4))
     setResult({ status: 'loading', ...EMPTY_RESULT })
     if (members.length === 0) return undefined
+    const olderYears = Array.from(
+      { length: Math.max(0, currentYear - FIRST_RECORD_YEAR) },
+      (_, index) => FIRST_RECORD_YEAR + index,
+    )
+    // Past years do not change with today's records; share this load across snapshots.
+    let olderRecordsPromise
+    const loadOlderRecords = () => {
+      olderRecordsPromise ??= Promise.all(olderYears.map(async (year) => [
+        year, await getAnalysisYearRecords(year),
+      ])).catch((error) => {
+        olderRecordsPromise = undefined
+        throw error
+      })
+      return olderRecordsPromise
+    }
 
     const unsubscribe = subscribeAnalysisYearRecords(
       currentYear,
@@ -23,13 +38,7 @@ export default function useScoringStreak(members, asOfDate, activeMembers = memb
         const currentRevision = ++revision
         setResult({ status: 'loading', ...EMPTY_RESULT })
         try {
-          const olderYears = Array.from(
-            { length: Math.max(0, currentYear - FIRST_RECORD_YEAR) },
-            (_, index) => FIRST_RECORD_YEAR + index,
-          )
-          const olderRecords = await Promise.all(olderYears.map(async (year) => [
-            year, await getAnalysisYearRecords(year),
-          ]))
+          const olderRecords = await loadOlderRecords()
           if (cancelled || currentRevision !== revision) return
           const recordsByYear = {
             ...Object.fromEntries(olderRecords),

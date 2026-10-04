@@ -63,6 +63,8 @@ const ensureRoundTeamList = async (db, thisYear, today, roundId, playingTeams) =
 
 const WriteContainer = (props) => {
   const {
+    burstTargetRef,
+    onPrepareBurst,
     weeklyTeamData,
     containerRef,
     editingRecordKey,
@@ -608,6 +610,8 @@ const WriteContainer = (props) => {
           editingRecordKey={editingRecordKey}
           registerHandler={registerHandler}
           data={writeBoxPropsData}
+          burstTargetRef={burstTargetRef}
+          onPrepareBurst={onPrepareBurst}
         />
       ) : (
         <div className="relative flex justify-center">

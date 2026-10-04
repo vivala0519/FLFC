@@ -17,7 +17,7 @@ const getUserId = () => {
 const reportTypingError = (error) => console.error('Failed to update typing status:', error)
 
 const WriteBox = (props) => {
-  const { registerHandler, data, isWriting, editingRecordKey } = props
+  const { registerHandler, data, isWriting, editingRecordKey, burstTargetRef, onPrepareBurst } = props
   const [otherUsersTyping, setOtherUsersTyping] = useState([])
   const [userId] = useState(getUserId)
   const db = useMemo(() => getDatabase(), [])
@@ -128,6 +128,8 @@ const WriteBox = (props) => {
         handleKeyDown={handleKeyDown}
         handleBlur={stopTyping}
         busy={isWriting}
+        burstTargetRef={burstTargetRef}
+        onPrepareBurst={onPrepareBurst}
       />
       {!isWriting && otherUsersTyping.length > 0 && <div className="text-sm">누군가 입력 중입니다..</div>}
     </>

@@ -44,24 +44,8 @@ const KingLabels = ({ titles }) => titles.length > 0 && (
 )
 
 const DataTable = (props) => {
-  const {
-    time: { thisYear },
-  } = getTimes()
-  const {
-    tap,
-    tableData,
-    analyzedData,
-    page,
-    setPage,
-    year,
-    setYear,
-    month,
-    quarterData,
-    lastSeasonKings,
-    quarter,
-    setQuarter,
-    setBlockSetPage,
-  } = props
+  const { time: { thisYear } } = getTimes()
+  const { tap, tableData, analyzedData, page, setPage, year, setYear, month, quarterData, lastSeasonKings, quarter, setQuarter } = props
 
   const [sortedNames, setSortedNames] = useState([])
   const [sortedAbsenteeNames, setSortedAbsenteeNames] = useState([])
@@ -233,7 +217,6 @@ const DataTable = (props) => {
   const selectMonth = (selectedMonth) => {
     const nextPage = month.indexOf(Number(selectedMonth))
     if (nextPage < 0) return
-    setBlockSetPage(true)
     setPage(nextPage)
   }
 

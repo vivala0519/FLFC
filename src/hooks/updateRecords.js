@@ -14,14 +14,14 @@ import { collection, onSnapshot } from 'firebase/firestore'
 import { db as firestoreDb } from '../../firebase.js'
 import { analyzeForStatusBoard } from '../apis/analyzeData.js'
 import { getAnalysisCachePeriod } from '../apis/analysisDataCache.js'
-import { getAnalysisYearRecords, subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
+import { subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
 
 export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag) {
   const [, setTodaysRealtimeRound] = useAtom(todaysRealtimeRoundAtom)
   const [, setRequestList] = useAtom(requestListAtom)
   const [firestoreRecord, setFirestoreRecord] = useAtom(firestoreRecordAtom)
-  const [statusBoardStat, setStatusBoardStat] = useAtom(statusBoardStatAtom)
-  const [totalWeeklyTeamData, setWeeklyTeamData] = useAtom(
+  const [, setStatusBoardStat] = useAtom(statusBoardStatAtom)
+  const [, setWeeklyTeamData] = useAtom(
     totalWeeklyTeamDataAtom,
   )
   const [existingMembers] = useAtom(existingMembersAtom)
@@ -29,6 +29,10 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
 
   const { thisYear, thisMonth, currentTime } = time
   const cacheDayKey = getAnalysisCachePeriod(currentTime).dayKey
+  const selectedYear = String(yearParameter || thisYear)
+  const currentYearRecords = firestoreRecord?.[thisYear]
+  const previousYear = String(Number(thisYear) - 1)
+  const previousYearRecords = firestoreRecord?.[previousYear]
   // 1) RTDB subscribe: 구독만 담당
   useEffect(() => {
     const rtdb = getDatabase()
@@ -62,28 +66,22 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
   // 2) Firestore year fetch: year별 데이터만 담당
 
   useEffect(() => {
-    const year = yearParameter ? String(yearParameter) : String(thisYear)
-
-    // 로딩 시작
     setRecordRoomLoadingFlag(true)
-
-    const unsubscribe = subscribeAnalysisYearRecords(year, (fetched) => {
-      setFirestoreRecord((prev) => ({ ...prev, [year]: fetched }))
-      setRecordRoomLoadingFlag(false)
+    const years = [...new Set([String(thisYear), selectedYear, ...(thisMonth === 1 ? [previousYear] : [])])]
+    const unsubscribers = years.map((year) => subscribeAnalysisYearRecords(year, (fetched) => {
+      setFirestoreRecord((previous) => ({ ...previous, [year]: fetched }))
+      if (year === selectedYear) setRecordRoomLoadingFlag(false)
     }, (error) => {
       console.error(error)
-      setRecordRoomLoadingFlag(false)
-    })
-
-    // 컴포넌트가 언마운트되거나 year가 바뀔 때 리스너를 해제(구독 취소)합니다.
-    return () => {
-      unsubscribe()
-    }
+      if (year === selectedYear) setRecordRoomLoadingFlag(false)
+    }))
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe())
   }, [
     thisYear,
-    yearParameter,
+    thisMonth,
+    previousYear,
+    selectedYear,
     cacheDayKey,
-    // firestoreRecord는 의존성 배열에서 빼야 합니다! (무한 루프 방지 및 로직상 불필요)
     setFirestoreRecord,
     setRecordRoomLoadingFlag
   ])
@@ -92,29 +90,23 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
   useEffect(() => {
     if (existingMembers.length === 0) return
 
-    const year = yearParameter
-      ? String(yearParameter)
-      : String(thisYear)
-    const yearData = firestoreRecord?.[year]
-    if (!yearData) return
-    ;(async () => {
-      if (thisMonth === 1) {
-        const lastYear = String(thisYear - 1)
-        const lastDec = (await getAnalysisYearRecords(lastYear))
-          .filter((d) => d.id.slice(0, 2) === '12')
-
-        setStatusBoardStat(
-          analyzeForStatusBoard([...yearData, ...lastDec], existingMembers),
-        )
-      } else {
-        setStatusBoardStat(analyzeForStatusBoard(yearData, existingMembers))
-      }
-    })().catch(console.error)
+    if (!currentYearRecords) return
+    const lastDecember = thisMonth === 1
+      ? (previousYearRecords || []).filter((record) => record.id.slice(0, 2) === '12')
+      : []
+    const recentAttendanceRecords = [...currentYearRecords, ...lastDecember]
+    let analyzed = analyzeForStatusBoard(currentYearRecords, existingMembers, undefined, thisYear, recentAttendanceRecords)
+    if (thisMonth === 1 && analyzed.active.totalData.size === 0 && previousYearRecords) {
+      analyzed = analyzeForStatusBoard(previousYearRecords, existingMembers, 4, previousYear, recentAttendanceRecords)
+    }
+    setStatusBoardStat(analyzed)
   }, [
-    firestoreRecord,
-    yearParameter,
+    currentYearRecords,
+    previousYearRecords,
+    previousYear,
     thisYear,
     thisMonth,
+    cacheDayKey,
     existingMembers,
     setStatusBoardStat,
   ])

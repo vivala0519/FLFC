@@ -23,13 +23,13 @@ export const getRecentFormCutoff = (asOfDate) => {
 }
 
 // Compare totals from the most recent two appearances with the previous two.
-export const analyzeRecentForm = (recordsByYear, members, asOfDate) => {
+export const analyzeRecentForm = (recordsByYear, members, asOfDate, season = {}) => {
   const appearances = new Map(
     [...new Set(members)].filter((name) => name && !name.includes('용병')).map((name) => [name, []]),
   )
   const quarterAttendances = new Map([...appearances.keys()].map((name) => [name, 0]))
-  const currentYear = asOfDate.slice(0, 4)
-  const currentQuarter = Math.ceil(Number(asOfDate.slice(5, 7)) / 3)
+  const currentYear = String(season.year ?? asOfDate.slice(0, 4))
+  const currentQuarter = season.quarter ?? Math.ceil(Number(asOfDate.slice(5, 7)) / 3)
   const cutoffDate = getRecentFormCutoff(asOfDate)
   const days = new Map()
   for (const [year, records] of Object.entries(recordsByYear || {})) {
