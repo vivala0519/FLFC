@@ -1,0 +1,28 @@
+.player-detail-scroll {
+  --scrollbar-track: #f3f4f6;
+  --scrollbar-thumb: #9ca3af;
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.player-detail-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.player-detail-scroll::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.player-detail-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid var(--scrollbar-track);
+  border-radius: 4px;
+  background: var(--scrollbar-thumb);
+}
+
+@media (prefers-color-scheme: dark) {
+  .player-detail-scroll {
+    --scrollbar-track: #1f2937;
+    --scrollbar-thumb: #6b7280;
+  }
+}

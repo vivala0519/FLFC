@@ -29,6 +29,7 @@ import goldenBoot from '@/assets/golden-boot.png'
 import ballonDor from '@/assets/ballon-dor.png'
 import ligueOne from '@/assets/ligue-1.png'
 import coppaItalia from '@/assets/coppa-italia.png'
+import './AnalysisTap.css'
 
 const FIRST_RECORD_YEAR = 2021
 const careerAwardIcons = {
@@ -1436,7 +1437,7 @@ const AnalysisTap = (props) => {
                     </button>
                   </form>
                 </div>
-                <div className="min-h-0 overflow-y-auto px-7 pb-5">
+                <div className="player-detail-scroll min-h-0 px-7 pb-5">
                   <div className="mt-4">
                     <h4 className="sticky top-0 z-10 -mx-7 mb-3 border-b border-gray-100 bg-white px-7 py-2 font-semibold font-dnf-forged dark:border-gray-700 dark:bg-gray-900">
                       이번 시즌
