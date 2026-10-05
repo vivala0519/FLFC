@@ -12,6 +12,7 @@ backup
 node_modules
 dist
 dist-ssr
+dist-football
 *.local
 
 # Editor directories and files

@@ -5,21 +5,24 @@ import {
   firestoreRecordAtom,
   statusBoardStatAtom,
   totalWeeklyTeamDataAtom,
+  matchSessionAtom,
 } from '@/store/atoms'
 
-const getRecords = () => {
+const useRecords = () => {
   const [todaysRealtimeRound] = useAtom(todaysRealtimeRoundAtom)
   const [todaysRequestList] = useAtom(requestListAtom)
   const [firestoreRecord] = useAtom(firestoreRecordAtom)
   const [statusBoardStat] = useAtom(statusBoardStatAtom)
   const [totalWeeklyTeamData] = useAtom(totalWeeklyTeamDataAtom)
+  const [matchSession] = useAtom(matchSessionAtom)
   return {
     todaysRealtimeRound,
     todaysRequestList,
     firestoreRecord,
     statusBoardStat,
     totalWeeklyTeamData,
+    matchSession,
   }
 };
 
-export default getRecords
+export default useRecords

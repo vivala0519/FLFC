@@ -2,27 +2,15 @@ import TimeText from '@/components/atoms/Text/TimeText.jsx'
 import Swal from 'sweetalert2'
 import { get, getDatabase, ref, set, update } from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getRoundParticipants } from '@/apis/roundParticipants.js'
 
 const RecordRow = (props) => {
   const { time: { today, thisYear, currentTime } } = getTimes()
-  const {
-    record,
-    index,
-    // fakeRow,
-    isOpen,
-    // roundShowHandler,
-    weeklyTeamData,
-    setShowSelectTeamPopup,
-    setPendingRoundId,
-    setSelectTeamPopupMessage,
-    setShowSelectScorerTeamPopup,
-    setSelectScorerTeamPopupMessage,
-    setPopupType,
-    setPlayingTeams,
-  } = props
+  const { record, canRegister, index, isOpen, weeklyTeamData, setShowSelectTeamPopup, setPendingRoundId, setSelectTeamPopupMessage, setShowSelectScorerTeamPopup, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams } = props
   const ALL_TEAMS = ['1', '2', '3']
+  const canRegisterRef = useRef(canRegister)
+  canRegisterRef.current = canRegister
   const [showTeamMembers, setShowTeamMembers] = useState(false)
   const [editTeamMode, setEditTeamMode] = useState(false)
   const [teamA, setTeamA] = useState("");
@@ -49,6 +37,10 @@ const RecordRow = (props) => {
       setTeamB(record.teamList[1])
     }
   }, [record?.teamList])
+
+  useEffect(() => {
+    if (!canRegister) setEditTeamMode(false)
+  }, [canRegister])
 
   const getRoundRef = (db, thisYear, today, roundId) =>
     ref(db, `${thisYear}/${today}_rounds/${roundId}`)
@@ -81,6 +73,7 @@ const RecordRow = (props) => {
   }
 
   const createRound = async () => {
+    if (!canRegisterRef.current) return null
     const db = getDatabase()
     const oneMinuteLater = new Date(currentTime.getTime() + 1 * 60 * 1000)
     const time =
@@ -92,6 +85,7 @@ const RecordRow = (props) => {
 
     const dateRef = ref(db, `${thisYear}/${today}_rounds`)
     const snapshot = await get(dateRef)
+    if (!canRegisterRef.current) return null
 
     let roundIndex
     let startTime
@@ -150,21 +144,25 @@ const RecordRow = (props) => {
       participant: [],
     }
 
+    if (!canRegisterRef.current) return null
     await set(roundRef, roundData)
     return newRoundId
   }
 
   const selectWinnerTeam = async () => {
     const roundId = await createRound()
+    if (!roundId || !canRegisterRef.current) return
     setPendingRoundId(roundId)
     setSelectTeamPopupMessage('첫 라운드 어느 팀이 경기했나요?')
     setShowSelectTeamPopup(true)
   }
 
   const exitRound = async (roundId) => {
+    if (!canRegisterRef.current) return
     const db = getDatabase()
     const roundRef = getRoundRef(db, thisYear, today, roundId)
     const snap = await get(roundRef)
+    if (!canRegisterRef.current) return
     const roundData = snap.val() || {}
     const teamList = roundData['teamList']
     if (roundData.winnerTeam) {
@@ -184,6 +182,7 @@ const RecordRow = (props) => {
         participant: getRoundParticipants(weeklyTeamData, teamList),
       })
       const newRoundId = await createRound()
+      if (!newRoundId || !canRegisterRef.current) return
       const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(String(team)))
       let nextTeamList = [restTeam, String(mostGetGoalTeam[0])]
       const isThirdTeamBlank = weeklyTeamData.data['3'].every((v) => v.trim() === '')
@@ -223,6 +222,7 @@ const RecordRow = (props) => {
           },
         })
         const newRoundId = await createRound()
+        if (!newRoundId || !canRegisterRef.current) return
         const restTeam = ALL_TEAMS.find(
           (team) => !roundData.teamList.includes(String(team)),
         )
@@ -239,6 +239,7 @@ const RecordRow = (props) => {
   }
 
   const exitRoundHandler = async (roundId) => {
+    if (!canRegisterRef.current) return
     Swal.fire({
       title: '최근 라운드 종료',
       icon: 'warning',
@@ -248,7 +249,7 @@ const RecordRow = (props) => {
       confirmButtonText: '종료',
       cancelButtonText: '취소'
     }).then((result) => {
-      if (result.isConfirmed) {
+      if (result.isConfirmed && canRegisterRef.current) {
         exitRound(roundId)
       }
     })
@@ -261,6 +262,7 @@ const RecordRow = (props) => {
   }
 
   const updateTeamListHandler = async (roundId) => {
+    if (!canRegisterRef.current) return
     if (teamA === record.teamList[0] && teamB === record.teamList[1]) {
       setEditTeamMode(false)
       return
@@ -360,10 +362,10 @@ const RecordRow = (props) => {
             ) : (
               <div className="flex items-center gap-1">
                 {record?.teamList?.length === 2 &&
-                  (!editTeamMode ? (
+                  (!editTeamMode || !canRegister ? (
                     <div className={teamStyle + ' whitespace-nowrap'} onClick={(event) => {
                       event.stopPropagation()
-                      setEditTeamMode(true)
+                      if (canRegisterRef.current) setEditTeamMode(true)
                     }}>
                       {record.teamList[0]}팀 <span className={'text-assist'}>vs</span> {record.teamList[1]}팀
                     </div>
@@ -407,7 +409,7 @@ const RecordRow = (props) => {
                     {scoreText}
                   </span>
                 )}
-                {!editTeamMode && (
+                {!editTeamMode && canRegister && (
                   <div className={roundExitButtonStyle + ' shrink-0 whitespace-nowrap'} onClick={(event) => {
                     event.stopPropagation()
                     exitRoundHandler(record.id)

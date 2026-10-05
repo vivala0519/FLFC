@@ -133,12 +133,12 @@ async function readEntry(key) {
 }
 
 // Values should be plain, structured-cloneable objects (not Firestore Snapshot objects).
-export async function setCachedAnalysisData(key, value, { now = new Date() } = {}) {
+export async function setCachedAnalysisData(key, value, { now = new Date(), revision } = {}) {
   const savedAt = new Date(now).getTime();
   if (!Number.isFinite(savedAt)) {
     throw new TypeError('A valid date is required for the analysis cache.');
   }
-  const entry = { key, savedAt, value };
+  const entry = { key, savedAt, value, ...(revision ? { revision } : {}) };
   memoryCache.set(key, entry);
   try {
     await writeStoredEntry(entry);
@@ -152,9 +152,10 @@ export async function setCachedAnalysisData(key, value, { now = new Date() } = {
 export async function getCachedAnalysisData(
   key,
   loader,
-  { now = new Date(), staleOnError = true } = {},
+  { now = new Date(), staleOnError = true, revision } = {},
 ) {
-  if (pendingLoads.has(key)) return pendingLoads.get(key);
+  const pendingKey = revision ? `${key}:${revision}` : key;
+  if (pendingLoads.has(pendingKey)) return pendingLoads.get(pendingKey);
 
   const load = (async () => {
     let previous;
@@ -164,11 +165,11 @@ export async function getCachedAnalysisData(
       // Browsers can deny IndexedDB access; continue with the network loader.
       previous = memoryCache.get(key) ?? null;
     }
-    if (isAnalysisCacheFresh(previous, now)) return previous.value;
+    if (revision ? previous?.revision === revision : isAnalysisCacheFresh(previous, now)) return previous.value;
 
     try {
       const value = await loader();
-      await setCachedAnalysisData(key, value, { now });
+      await setCachedAnalysisData(key, value, { now, revision });
       return value;
     } catch (error) {
       if (staleOnError && previous) return previous.value;
@@ -176,11 +177,11 @@ export async function getCachedAnalysisData(
     }
   })();
 
-  pendingLoads.set(key, load);
+  pendingLoads.set(pendingKey, load);
   try {
     return await load;
   } finally {
-    if (pendingLoads.get(key) === load) pendingLoads.delete(key);
+    if (pendingLoads.get(pendingKey) === load) pendingLoads.delete(pendingKey);
   }
 }
 

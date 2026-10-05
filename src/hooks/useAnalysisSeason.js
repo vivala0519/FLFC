@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
-import { get, getDatabase, onValue, ref } from 'firebase/database'
-import { getAnalysisCachePeriod, getCachedAnalysisData, setCachedAnalysisData } from '../apis/analysisDataCache.js'
 import { getAnalysisYearRecords, subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
+import { getAnalysisYearRounds, subscribeAnalysisYearRounds } from '../apis/analysisYearRounds.js'
 import { countAnalysisSeasonWeeks, getAnalysisSeasonPeriod, getPreviousAnalysisSeason, selectAnalysisSeason } from '../apis/analysisSeason.js'
 
 const emptyResult = (year, month, status = 'loading') => ({
@@ -14,11 +13,6 @@ const emptyResult = (year, month, status = 'loading') => ({
   calendarYearRoundData: null,
   availableWeeks: 0,
   isPreviousSeason: false,
-})
-
-const loadYearRounds = (year) => getCachedAnalysisData(`rtdb:${year}`, async () => {
-  const snapshot = await get(ref(getDatabase(), String(year)))
-  return snapshot.val() || {}
 })
 
 const makeRequestKey = (year, month, cacheDayKey) => `${year}:${month}:${cacheDayKey || ''}`
@@ -62,7 +56,7 @@ export default function useAnalysisSeason(year, month, cacheDayKey) {
             previousData = currentData
           } else {
             const [records, yearRoundData] = await Promise.all([
-              getAnalysisYearRecords(previous.year), loadYearRounds(previous.year),
+              getAnalysisYearRecords(previous.year), getAnalysisYearRounds(previous.year),
             ])
             if (!isCurrent()) return
             previousData = { records, yearRoundData }
@@ -91,20 +85,11 @@ export default function useAnalysisSeason(year, month, cacheDayKey) {
         void update()
       }, fail)
 
-      if (getAnalysisCachePeriod().isSunday) {
-        unsubscribeRounds = onValue(ref(getDatabase(), yearKey), (snapshot) => {
-          if (cancelled || failed) return
-          calendarYearRoundData = snapshot.val() || {}
-          void setCachedAnalysisData(`rtdb:${yearKey}`, calendarYearRoundData)
-          void update()
-        }, fail)
-      } else {
-        loadYearRounds(yearKey).then((rounds) => {
-          if (cancelled || failed) return
-          calendarYearRoundData = rounds
-          void update()
-        }).catch(fail)
-      }
+      unsubscribeRounds = subscribeAnalysisYearRounds(yearKey, (rounds) => {
+        if (cancelled || failed) return
+        calendarYearRoundData = rounds
+        void update()
+      }, fail)
     } catch {
       fail()
     }

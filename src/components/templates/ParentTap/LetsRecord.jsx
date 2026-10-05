@@ -1,6 +1,4 @@
 import { useCallback, useEffect, useState, useRef, useMemo } from 'react'
-import { doc, setDoc } from 'firebase/firestore'
-import { db } from '../../../../firebase.js'
 import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
@@ -19,11 +17,12 @@ import { get, getDatabase, ref, remove, set, update } from 'firebase/database'
 import { getRoundParticipants } from '@/apis/roundParticipants.js'
 import { createRecordMemberResolver } from '@/apis/recordMembers.js'
 import { formatDailyRecordStats } from '@/apis/formatDailyRecordStats.js'
+import { saveLiveRecordStats } from '@/apis/saveLiveRecordStats.js'
 
 const LetsRecord = (props) => {
-  const { time: { today, thisDay, thisYear, currentTime, gameEndTime, gameStartTime, recordTapCloseTime } } = getTimes()
+  const { time: { today, thisDay, thisYear, currentTime, gameEndTime, gameStartTime } } = getTimes()
   const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
-  const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
+  const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRound, matchSession } = getRecords()
   const { open, setOpen, headerHeight } = props
   const writeContainerRef = useRef(null)
   const recordBurstTargetRef = useRef(null)
@@ -46,7 +45,7 @@ const LetsRecord = (props) => {
   const [lastRecord, setLastRecord] = useState('')
   const [showMVP, setShowMVP] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
-  const [requestList, setRequestList] = useState([])
+  const [requestList] = useState([])
   const [playingTeams, setPlayingTeams] = useState(new Set())
   const [scorerTeam, setScorerTeam] = useState(null)
   const [popupType, setPopupType] = useState('')
@@ -56,7 +55,6 @@ const LetsRecord = (props) => {
   const [handleRoundWinnerTrigger, setHandleRoundWinnerTrigger] = useState(null)
   const [selectScorerTeamPopupMessage, setSelectScorerTeamPopupMessage] = useState('')
   const [showSelectScorerTeamPopup, setShowSelectScorerTeamPopup] = useState(false)
-  const [showRequestUpdateButton, setShowRequestUpdateButton] = useState(false)
   const [showFeverTime, setShowFeverTime] = useState(false)
   const [isFeverTime, setIsFeverTime] = useState(false)
   const [loadingFlag, setLoadingFlag] = useState(false)
@@ -66,20 +64,29 @@ const LetsRecord = (props) => {
   const canWriteFirestoreRecord =
     thisDay === 0 &&
     currentTime >= gameStartTime &&
-    currentTime <= gameEndTime
-  const canFinalizeFirestoreRecord =
-    thisDay === 0 &&
-    showMVP &&
-    currentTime >= gameEndTime &&
-    currentTime <= recordTapCloseTime
-  const canWriteFirestoreStats =
-    canWriteFirestoreRecord || canFinalizeFirestoreRecord
+    currentTime < gameEndTime &&
+    matchSession.status === 'live' &&
+    matchSession.key === `${thisYear}${today}`
 
   useEffect(() => {
-    if (totalWeeklyTeamData?.length) {
-      setWeeklyTeamData(totalWeeklyTeamData[totalWeeklyTeamData.length - 1])
+    setTodayRecord([])
+    setDisplayRecord([])
+    setEditingRecordKey(null)
+    setWrittenData(null)
+    setWrittenDataLoaded(false)
+    setRealtimeRoundLoaded(false)
+    setIsFeverTime(false)
+    setShowMVP(false)
+  }, [matchSession.key])
+
+  useEffect(() => {
+    if (matchSession.weeklyTeam) {
+      setWeeklyTeamData(matchSession.weeklyTeam)
+    } else if (totalWeeklyTeamData?.length) {
+      setWeeklyTeamData(totalWeeklyTeamData.find((team) => team.id === matchSession.weeklyTeamId)
+        || totalWeeklyTeamData[totalWeeklyTeamData.length - 1])
     }
-  }, [totalWeeklyTeamData])
+  }, [totalWeeklyTeamData, matchSession.weeklyTeam, matchSession.weeklyTeamId])
 
   useEffect(() => {
     const container = writeContainerRef.current
@@ -98,13 +105,21 @@ const LetsRecord = (props) => {
     }
     setCanRegister(canWriteFirestoreRecord)
 
-    if (thisDay === 0) {
-      if (currentTime >= gameEndTime && currentTime <= recordTapCloseTime) {
-        setShowMVP(true)
-        setShowRequestUpdateButton(true)
-      }
+    if (thisDay === 0 && matchSession.status === 'finalized'
+      && matchSession.key === `${thisYear}${today}` && Object.keys(matchSession.stats || {}).length) {
+      setShowMVP(true)
     }
-  }, [thisDay, weeklyTeamData, canWriteFirestoreRecord])
+  }, [thisDay, thisYear, today, setOpen, canWriteFirestoreRecord, matchSession.status, matchSession.key, matchSession.revision, matchSession.stats])
+
+  useEffect(() => {
+    if (canRegister) return
+    setShowSelectTeamPopup(false)
+    setShowSelectScorerTeamPopup(false)
+    setPendingRoundId(null)
+    setScorerTeam(null)
+    setHandleRoundWinnerTrigger(null)
+    setEditingRecordKey(null)
+  }, [canRegister])
 
   // daily 실시간 record
   useEffect(() => {
@@ -148,7 +163,7 @@ const LetsRecord = (props) => {
     setTodayRecord(goalRecord)
     setDisplayRecord(roundRecord)
     setLoadingFlag(false)
-  }, [todaysRealtimeRound, totalWeeklyTeamData])
+  }, [todaysRealtimeRound, totalWeeklyTeamData, thisDay])
 
   useEffect(() => {
     if (!editingRecordKey || !realtimeRoundLoaded) return
@@ -157,20 +172,6 @@ const LetsRecord = (props) => {
     )
     if (!stillExists) setEditingRecordKey(null)
   }, [displayRecord, editingRecordKey, realtimeRoundLoaded])
-
-  // request list
-  useEffect(() => {
-    if (requestList) {
-      const requestList = Object.values(todaysRequestList)
-      const sortedRequestArray = requestList.sort((a, b) => {
-        const timeA = parseTimeFromString(a.time)
-        const timeB = parseTimeFromString(b.time)
-
-        return timeA - timeB
-      })
-      setRequestList(sortedRequestArray)
-    }
-  }, [todaysRequestList])
 
   // 오늘의 기록된 데이터 가져오기
   useEffect(() => {
@@ -348,29 +349,24 @@ const LetsRecord = (props) => {
     return formatRecordByName(todayRecord, displayRecord)
   }, [todayRecord, displayRecord, formatRecordByName])
 
-  const registerRecord = async () => {
-    if (!canWriteFirestoreStats) {
+  const registerRecord = useCallback(async () => {
+    if (!canWriteFirestoreRecord) {
       console.warn('Firestore record write blocked outside allowed record window')
       return
     }
 
     try {
       console.log('스탯: ', stats)
-      const docRef = doc(db, thisYear, today)
-      await setDoc(docRef, stats)
-      console.log('Document updated with ID: ', docRef.id)
-
-      // [중요] Firestore 저장 후 로컬 상태도 즉시 동기화
-      setWrittenData(stats)
+      if (await saveLiveRecordStats(thisYear, today, stats)) setWrittenData(stats)
 
     } catch (error) {
       console.error("Error writing document: ", error)
     }
-  }
+  }, [canWriteFirestoreRecord, stats, thisYear, today])
 
   useEffect(() => {
     // stats가 유효하고, 기록이 있으며, 등록 가능한 상태일 때
-    const canSaveRecord = canWriteFirestoreStats
+    const canSaveRecord = canWriteFirestoreRecord
     const dataLoaded = writtenDataLoaded && realtimeRoundLoaded
     const shouldSkipInitialAttendanceOnly =
       hasRecordActivity(writtenData) && !hasRecordActivity(stats)
@@ -395,12 +391,14 @@ const LetsRecord = (props) => {
     }
   }, [
     stats,
-    canWriteFirestoreStats,
+    canWriteFirestoreRecord,
     writtenData,
     writtenDataLoaded,
     realtimeRoundLoaded,
     thisYear,
     today,
+    todayRecord,
+    registerRecord,
   ])
 
   useEffect(() => {
@@ -435,12 +433,17 @@ const LetsRecord = (props) => {
       {/*<TapTitleText active={open} title={"Today's Record"} />*/}
       {/*{!showRequestUpdateButton && <Separator fullWidth={false} />}*/}
       <div className={templateContainerStyle}>
+        {thisDay === 0 && currentTime >= gameEndTime && matchSession.status !== 'finalized' && (
+          <p className="py-2 text-sm text-gray-500 dark:text-gray-400" role="status">
+            {matchSession.status === 'error' ? '경기 종료 기록을 불러오지 못했습니다' : '경기 종료 기록 확정을 기다리고 있습니다'}
+          </p>
+        )}
         <>
           {showMVP && (
             <div className={'absolute z-10 flex flex-col items-center top-[10%] w-[90%]'}>
               <DailyMVP
                 setShowMVP={setShowMVP}
-                recordData={firestoreRecord ? firestoreRecord[thisYear] : []}
+                bestPlayers={matchSession.bestPlayers || []}
                 year={thisYear}
                 today={today}
               />
@@ -501,7 +504,7 @@ const LetsRecord = (props) => {
             showSelectTeamPopup={showSelectTeamPopup}
             handleRoundWinnerTrigger={handleRoundWinnerTrigger}
             showSelectScorerTeamPopup={showSelectScorerTeamPopup}
-            showRequestUpdateButton={showRequestUpdateButton}
+            showRequestUpdateButton={false}
             setPopupType={setPopupType}
             setLastRecord={setLastRecord}
             setScorerTeam={setScorerTeam}
@@ -516,7 +519,7 @@ const LetsRecord = (props) => {
           />
         </>
       </div>
-      {showSelectTeamPopup && (
+      {canRegister && showSelectTeamPopup && (
         <SelectTeamPopup
           playingTeams={playingTeams}
           weeklyTeamData={weeklyTeamData}
@@ -526,7 +529,7 @@ const LetsRecord = (props) => {
           setShowSelectTeamPopup={setShowSelectTeamPopup}
         />
       )}
-      {showSelectScorerTeamPopup && (
+      {canRegister && showSelectScorerTeamPopup && (
         <SelectScorerTeamPopup
           scorerTeam={scorerTeam}
           playingTeams={playingTeams}

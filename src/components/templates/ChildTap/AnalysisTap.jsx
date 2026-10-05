@@ -1,7 +1,4 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { db } from '../../../../firebase.js'
-import { collection, getDocsFromServer, onSnapshot } from 'firebase/firestore'
-import { get, getDatabase, ref } from 'firebase/database'
 
 import NewBadge from '@/components/atoms/NewBadge.jsx'
 import BestFiveCard from '@/components/organisms/BestFiveCard.jsx'
@@ -24,7 +21,9 @@ import { analyzeCareerRecords } from '@/apis/analyzeCareerRecords.js'
 import { analyzeCareerGoalDuos, analyzeCareerPartners } from '@/apis/analyzeCareerPartners.js'
 import { analyzeCareerAwards } from '@/apis/analyzeCareerAwards.js'
 import { getAnalysisHistoryRecords } from '@/apis/analysisHistoryRecords.js'
-import { getAnalysisCachePeriod, getCachedAnalysisData, setCachedAnalysisData } from '@/apis/analysisDataCache.js'
+import { getAnalysisCachePeriod } from '@/apis/analysisDataCache.js'
+import { getAnalysisYearRounds } from '@/apis/analysisYearRounds.js'
+import { subscribeAnalysisMvpRecords } from '@/apis/analysisMvpRecords.js'
 import goldenBoot from '@/assets/golden-boot.png'
 import ballonDor from '@/assets/ballon-dor.png'
 import ligueOne from '@/assets/ligue-1.png'
@@ -662,14 +661,10 @@ const AnalysisTap = (props) => {
       { length: Math.max(0, currentYear - FIRST_RECORD_YEAR) },
       (_, index) => FIRST_RECORD_YEAR + index,
     )
-    const database = getDatabase()
     setCareerRoundStatus('loading')
 
     Promise.all(olderYears.map(async (year) => {
-      const value = await getCachedAnalysisData(`rtdb:${year}`, async () => {
-        const snapshot = await get(ref(database, String(year)))
-        return snapshot.val() || {}
-      })
+      const value = await getAnalysisYearRounds(year)
       return [year, value]
     })).then((entries) => {
       if (cancelled) return
@@ -867,7 +862,6 @@ const AnalysisTap = (props) => {
 
   useEffect(() => {
     let active = true
-    const mvpRef = collection(db, 'daily_mvp')
     const apply = (records) => {
       if (active) applyDailyMVPData(records)
     }
@@ -875,29 +869,11 @@ const AnalysisTap = (props) => {
       if (active) setMvpStatus('error')
     }
     setMvpStatus('loading')
-    if (getAnalysisCachePeriod().isSunday) {
-      const unsubscribe = onSnapshot(mvpRef, (snapshot) => {
-        const records = snapshot.docs.map((document) => ({
-          id: document.id,
-          data: document.data(),
-        }))
-        void setCachedAnalysisData('firestore:daily_mvp', records)
-        apply(records)
-      }, fail)
-      return () => {
-        active = false
-        unsubscribe()
-      }
+    const unsubscribe = subscribeAnalysisMvpRecords(apply, fail)
+    return () => {
+      active = false
+      unsubscribe()
     }
-
-    getCachedAnalysisData('firestore:daily_mvp', async () => {
-      const snapshot = await getDocsFromServer(mvpRef)
-      return snapshot.docs.map((document) => ({
-        id: document.id,
-        data: document.data(),
-      }))
-    }).then(apply).catch(fail)
-    return () => { active = false }
   }, [applyDailyMVPData, cacheDay])
 
   const getWeeklyTeamData = useCallback(() => {

@@ -1,11 +1,14 @@
 import Swal from 'sweetalert2'
 import styled from 'styled-components'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { db } from '../../../../firebase.js'
 import getTimes from '../../../hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
-import { collection, getDocs } from 'firebase/firestore'
+import { collection, getDocs, onSnapshot } from 'firebase/firestore'
+import { useAtom } from 'jotai'
+import { totalWeeklyTeamDataAtom } from '@/store/atoms.js'
+import { setCachedAnalysisData } from '@/apis/analysisDataCache.js'
 
 // import Separator from '../../atoms/Separator.jsx'
 // import TestingMark from '../../atoms/Text/TestingMark.jsx'
@@ -20,7 +23,8 @@ import './WeeklyTeam.css'
 
 function WeeklyTeam(props) {
   const { time: { currentTime }} = getTimes()
-  const { totalWeeklyTeamData} = getRecords()
+  const { totalWeeklyTeamData, matchSession } = getRecords()
+  const [, setTotalWeeklyTeamData] = useAtom(totalWeeklyTeamDataAtom)
   // const { thisYear } = getTimes
   const { setRegisteredTeam } = props
   const [weeklyTeamData, setWeeklyTeamData] = useState([])
@@ -53,19 +57,36 @@ function WeeklyTeam(props) {
   const sundayDate = nextSunday.getDate()
   const sundayMonth = nextSunday.getMonth() + 1
 
-  const fetchWeeklyTeamData = async () => {
+  const fetchWeeklyTeamData = useCallback(() => {
+    if (!totalWeeklyTeamData?.length) return
     setWeeklyTeamData(totalWeeklyTeamData)
     setPage(totalWeeklyTeamData.length - 1)
     setLastDate(totalWeeklyTeamData[totalWeeklyTeamData.length - 1].id)
+  }, [totalWeeklyTeamData])
 
-    const balancerRef = collection(db, 'balancer')
-    const balancerSnapshot = await getDocs(balancerRef)
-    const balancerData = balancerSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      data: doc.data(),
-    }))[0]['data']
-    setBalancer(balancerData['name'])
-  }
+  useEffect(() => {
+    let cancelled = false
+    void getDocs(collection(db, 'balancer')).then((snapshot) => {
+      if (!cancelled) setBalancer(snapshot.docs[0]?.data()?.name || '')
+    }).catch(console.error)
+    return () => { cancelled = true }
+  }, [])
+
+  useEffect(() => {
+    if (matchSession.status === 'loading') return
+    if (matchSession.isCurrentSunday) return
+    return onSnapshot(collection(db, 'weeklyTeam'), { includeMetadataChanges: true }, (snapshot) => {
+      if (snapshot.metadata.fromCache) return
+      const records = snapshot.docs.map((document) => ({ id: document.id, data: document.data() }))
+      setTotalWeeklyTeamData(records)
+      const revision = matchSession.status === 'finalized' ? `${matchSession.key}:${matchSession.revision}` : undefined
+      void setCachedAnalysisData('firestore:weeklyTeam', records, { revision })
+    }, console.error)
+  }, [matchSession.key, matchSession.status, matchSession.isCurrentSunday, matchSession.revision, setTotalWeeklyTeamData])
+
+  useEffect(() => {
+    if (!editMode) fetchWeeklyTeamData()
+  }, [editMode, fetchWeeklyTeamData])
 
   useEffect(() => {
     if (window.location.href.includes('localhost:5173')) return
@@ -98,33 +119,14 @@ function WeeklyTeam(props) {
     }
   }
 
+  const latestTeamEndAt = lastDate
+    ? new Date(`20${lastDate.slice(0, 2)}-${lastDate.slice(2, 4)}-${lastDate.slice(4, 6)}T10:00:00+09:00`).getTime() : 0
+  const isLatestTeamUpcoming = latestTeamEndAt > currentTime.getTime()
   useEffect(() => {
-    fetchWeeklyTeamData()
-
-    if (lastDate) {
-      if ([0, 1, 2].includes(currentDay)) {
-        setCanCreate(false)
-      }
-
-      const lastDateYear = parseInt('20' + lastDate.slice(0, 2))
-      const lastDateMonth = parseInt(lastDate.slice(2, 4), 10) - 1
-      const lastDateDay = parseInt(lastDate.slice(4, 6), 10)
-
-      const lastTeamDate = new Date(lastDateYear, lastDateMonth, lastDateDay)
-      lastTeamDate.setHours(10, 0, 0, 0)
-
-      if (lastTeamDate > today) {
-        setCanCreate(false)
-        setActiveBorder(true)
-      }
-    }
-  }, [lastDate])
-
-  useEffect(() => {
-    if (!editMode) {
-      fetchWeeklyTeamData()
-    }
-  }, [editMode])
+    if (!lastDate) return
+    setCanCreate(![0, 1, 2].includes(currentDay) && !isLatestTeamUpcoming)
+    setActiveBorder(isLatestTeamUpcoming)
+  }, [lastDate, currentDay, isLatestTeamUpcoming])
 
   const pageMoveHandler = (left) => {
     if (left && page > 0) {

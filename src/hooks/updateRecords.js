@@ -1,24 +1,26 @@
-import { useEffect } from 'react'
-import { getDatabase, onValue, ref } from 'firebase/database'
+import { useEffect, useMemo, useRef } from 'react'
 import { useAtom } from 'jotai'
 import {
   todaysRealtimeRoundAtom,
-  requestListAtom,
   firestoreRecordAtom,
   statusBoardStatAtom,
   totalWeeklyTeamDataAtom,
   existingMembersAtom,
   timeAtom,
+  matchSessionAtom,
 } from '@/store/atoms'
-import { collection, onSnapshot } from 'firebase/firestore'
+import { collection, getDocsFromServer, onSnapshot } from 'firebase/firestore'
 import { db as firestoreDb } from '../../firebase.js'
 import { analyzeForStatusBoard } from '../apis/analyzeData.js'
-import { getAnalysisCachePeriod } from '../apis/analysisDataCache.js'
+import { getAnalysisCachePeriod, getCachedAnalysisData, setCachedAnalysisData } from '../apis/analysisDataCache.js'
 import { subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
+import { getMatchTarget, subscribeMatchRecords } from '../apis/matchRecords.js'
+import { setRecordReadPolicy } from '../apis/recordReadPolicy.js'
 
 export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag) {
   const [, setTodaysRealtimeRound] = useAtom(todaysRealtimeRoundAtom)
-  const [, setRequestList] = useAtom(requestListAtom)
+  const [matchSession, setMatchSession] = useAtom(matchSessionAtom)
+  const weeklySource = useRef(null)
   const [firestoreRecord, setFirestoreRecord] = useAtom(firestoreRecordAtom)
   const [, setStatusBoardStat] = useAtom(statusBoardStatAtom)
   const [, setWeeklyTeamData] = useAtom(
@@ -29,39 +31,31 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
 
   const { thisYear, thisMonth, currentTime } = time
   const cacheDayKey = getAnalysisCachePeriod(currentTime).dayKey
+  const target = useMemo(() => getMatchTarget(`${cacheDayKey}T12:00:00+09:00`), [cacheDayKey])
   const selectedYear = String(yearParameter || thisYear)
   const currentYearRecords = firestoreRecord?.[thisYear]
   const previousYear = String(Number(thisYear) - 1)
   const previousYearRecords = firestoreRecord?.[previousYear]
-  // 1) RTDB subscribe: 구독만 담당
+  // A server-confirmed archive replaces the live connection after the final commit.
   useEffect(() => {
-    const rtdb = getDatabase()
-    const [year, month, day] = cacheDayKey.split('-').map(Number)
-    const targetDate = new Date(Date.UTC(year, month - 1, day))
-    const weekday = targetDate.getUTCDay()
-    if (weekday !== 0 && weekday !== 6) {
-      targetDate.setUTCDate(targetDate.getUTCDate() - weekday)
-    }
-    const targetId = `${String(targetDate.getUTCMonth() + 1).padStart(2, '0')}${String(targetDate.getUTCDate()).padStart(2, '0')}`
-    const targetYear = String(targetDate.getUTCFullYear())
-    const unsubscribeRounds = onValue(
-      ref(rtdb, `${targetYear}/${targetId}_rounds`),
-      (snapshot) => {
-        setTodaysRealtimeRound(snapshot.val() || {})
-      },
-    )
-    const unsubscribeRequests = onValue(
-      ref(rtdb, `${targetYear}/${targetId}_request`),
-      (snapshot) => {
-        setRequestList(snapshot.val() || {})
-      },
-    )
-
-    return () => {
-      unsubscribeRounds()
-      unsubscribeRequests()
-    }
-  }, [cacheDayKey, setTodaysRealtimeRound, setRequestList])
+    setTodaysRealtimeRound(null)
+    setMatchSession({ ...target, status: 'loading' })
+    setRecordReadPolicy({ ...target, mode: 'loading' })
+    return subscribeMatchRecords(target, (next) => {
+      setMatchSession((previous) => ({ ...previous, ...next }))
+      if (next.rounds !== undefined) setTodaysRealtimeRound(next.rounds)
+      if (next.status) {
+        const mode = next.status === 'finalized' ? 'finalized' : next.status === 'legacy' ? 'legacy' : 'live'
+        setRecordReadPolicy({ ...target, mode, revision: next.revision, stats: next.stats,
+          rounds: next.rounds, bestPlayers: next.bestPlayers, yearRevisions: next.yearRevisions })
+      }
+    }, (error) => {
+      console.error('Failed to load match session:', error)
+      setMatchSession((previous) => ({ ...previous, status: 'error', error: error.message }))
+      setTodaysRealtimeRound((previous) => previous || {})
+      setRecordReadPolicy({ ...target, mode: target.isCurrentSunday ? 'live' : 'legacy' })
+    })
+  }, [target, setTodaysRealtimeRound, setMatchSession])
 
   // 2) Firestore year fetch: year별 데이터만 담당
 
@@ -111,26 +105,35 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
     setStatusBoardStat,
   ])
 
-  // 4) weeklyTeam: 1회 fetch
+  const sessionMode = matchSession.status === 'loading' ? 'loading'
+    : matchSession.status === 'finalized' ? 'finalized' : matchSession.status === 'legacy' ? 'legacy' : 'live'
+
+  // Weekly-team editing has its own listener only while that tab is open.
   useEffect(() => {
-    // 1. onSnapshot을 사용하여 실시간 리스너 설정
-    const unsubscribe = onSnapshot(
-        collection(firestoreDb, 'weeklyTeam'),
-        (snapshot) => {
-          const fetchedWeeklyTeamData = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            data: doc.data(),
-          }))
-
-          // 데이터가 변경될 때마다 state 업데이트
-          setWeeklyTeamData(fetchedWeeklyTeamData)
-        },
-        (error) => {
-          console.error('실시간 데이터를 가져오는 중 에러 발생:', error)
-        }
-    )
-
-    // 2. 컴포넌트가 언마운트될 때 리스너 해제 (메모리 누수 방지)
-    return () => unsubscribe()
-  }, [setWeeklyTeamData])
+    if (sessionMode === 'loading' || matchSession.key !== target.key) return
+    let cancelled = false
+    const toRecords = (snapshot) => snapshot.docs.map((document) => ({ id: document.id, data: document.data() }))
+    if (sessionMode === 'live') {
+      return onSnapshot(collection(firestoreDb, 'weeklyTeam'), { includeMetadataChanges: true }, (snapshot) => {
+        if (snapshot.metadata.fromCache) return
+        const records = toRecords(snapshot)
+        weeklySource.current = { key: target.key, records }
+        setWeeklyTeamData(records)
+        void setCachedAnalysisData('firestore:weeklyTeam', records)
+      }, console.error)
+    }
+    const revision = sessionMode === 'finalized' ? `${target.key}:${matchSession.revision}` : undefined
+    void getCachedAnalysisData('firestore:weeklyTeam', async () => {
+      let records = sessionMode === 'finalized' && weeklySource.current?.key === target.key
+        ? weeklySource.current.records : toRecords(await getDocsFromServer(collection(firestoreDb, 'weeklyTeam')))
+      const weeklyTeam = matchSession.weeklyTeam
+      if (sessionMode === 'finalized' && weeklyTeam && Object.keys(weeklyTeam.data || {}).length) {
+        records = [...records.filter((record) => record.id !== weeklyTeam.id), weeklyTeam].sort((a, b) => a.id.localeCompare(b.id))
+      }
+      return records
+    }, { revision, staleOnError: sessionMode !== 'finalized' }).then((records) => {
+      if (!cancelled) setWeeklyTeamData(records)
+    }).catch(console.error)
+    return () => { cancelled = true }
+  }, [target.key, sessionMode, matchSession.revision, matchSession.key, matchSession.weeklyTeam, setWeeklyTeamData])
 }

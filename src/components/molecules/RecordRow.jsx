@@ -4,19 +4,13 @@ import DeleteButton from '@/components/atoms/Button/DeleteButton.jsx'
 import FeverTimeBar from '@/components/organisms/FeverTimeBar.jsx'
 import EditingBadge from '@/components/atoms/EditingBadge.jsx'
 import './RecordRow.css'
-import getRecords from '@/hooks/getRecords.js'
 import getTimes from '@/hooks/getTimes.js'
 import { getDatabase, ref, update } from 'firebase/database'
-import { doc, setDoc } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
-import {db} from "../../../firebase.js";
 
 const RecordRow = (props) => {
-  const { record, index, roundIndex, deleteRecord, useDelete, isLastRound, isFeverTime, isFeverGoal = false, formatRecordByName, getGoalTeam, editingRecordKey, setEditingRecordKey } = props
-  const {
-    time: { thisYear, today, thisDay, currentTime, gameStartTime, gameEndTime },
-  } = getTimes()
-  const { todaysRealtimeRound } = getRecords()
+  const { record, index, roundIndex, deleteRecord, useDelete, isLastRound, isFeverTime, isFeverGoal = false, getGoalTeam, editingRecordKey, setEditingRecordKey } = props
+  const { time: { thisYear, today } } = getTimes()
 
   const [randomInt, setRandomInt] = useState(1)
   const [goalRotation] = useState(() => Math.floor(Math.random() * 8) * 45)
@@ -25,10 +19,6 @@ const RecordRow = (props) => {
   const [assistText, setAssistText] = useState(record.assist || '')
   const recordKey = `${roundIndex}:${record.id}`
   const isEditing = editingRecordKey === recordKey
-  const canWriteFirestoreRecord =
-    thisDay === 0 &&
-    currentTime >= gameStartTime &&
-    currentTime <= gameEndTime
 
   const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 transition-[left] duration-300 ease-out motion-reduce:transition-none ${isEditing ? '-left-4 pl-0 gap-0' : 'gap-1.5'}`
   const recordAreaStyle = 'flex items-center pr-2 relative bottom-[2px]'
@@ -58,22 +48,6 @@ const RecordRow = (props) => {
   }
 
 
-  const parseTimeFromString = (record) => {
-    const [hours, minutes, seconds] = record.split(':')
-    return new Date(0, 0, 0, hours, minutes, seconds)
-  }
-
-  const registerRecord = async (stats) => {
-    if (!canWriteFirestoreRecord) {
-      console.warn('Firestore record write blocked outside Sunday 08:00-10:00')
-      return
-    }
-
-    const docRef = doc(db, thisYear, today)
-    await setDoc(docRef, stats)
-    console.log('Document updated with ID: ', docRef.id)
-  }
-
   const closeEditing = async () => {
     if (!useDelete) return
     const db = getDatabase();
@@ -83,28 +57,7 @@ const RecordRow = (props) => {
     const updates = {goal: goalText, assist: assistText}
     await update(goalRef, updates);
 
-    const data = todaysRealtimeRound
-    if (Object.keys(data).length > 0) {
-
-      // firestore에 등록하기 위한 전체 골 data
-      const goalRecord = Object.values(data || {}).flatMap(round => {
-        if (!round.goal) return []
-
-        return Object.values(round.goal).map(goal => ({
-          ...goal,
-        })).sort((a, b) => parseTimeFromString(a.time) - parseTimeFromString(b.time))
-      })
-      // display 위한 라운드/골 데이터
-      const roundRecord = Object.entries(data || {})
-          .map(([roundId, round]) => ({
-            ...round,
-            roundId,
-            goals: round.goal ? Object.values(round.goal).sort((a, b) => parseTimeFromString(a.time) - parseTimeFromString(b.time)) : []
-          }))
-          .sort((a, b) => a.index - b.index)
-      const stats = formatRecordByName(goalRecord, roundRecord)
-      await registerRecord(stats)
-    }
+    // LetsRecord persists the updated live snapshot; this row must not save stale totals.
     setEditingRecordKey(null)
   }
 

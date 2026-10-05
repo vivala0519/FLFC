@@ -160,6 +160,7 @@ const RecordContainer = (props) => {
           <div className={`w-[85%] border-blue-400`}></div>
           <RoundRow
             index={0}
+            canRegister={false}
             fakeRow={true}
             record={{ winner: null, time: '08:00:00' }}
             weeklyTeamData={weeklyTeamData}
@@ -178,6 +179,7 @@ const RecordContainer = (props) => {
           {/*)}*/}
           <RoundRow
             key={index}
+            canRegister={canRegister}
             index={index}
             fakeRow={false}
             record={record}
