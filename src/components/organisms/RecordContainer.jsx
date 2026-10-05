@@ -172,7 +172,7 @@ const RecordContainer = (props) => {
         </div>
       )}
       {displayRecord?.map((record, index) => (
-        <div className={'w-full flex flex-col items-center'} key={index}>
+        <div className={'w-full flex flex-col items-center'} key={record.roundId || record.id || index}>
           {/*{index !== 0 && (*/}
           <div className={`${!closedRounds.has(index) && 'border-blue-400'} w-[85%] `}></div>
           {/*)}*/}
@@ -200,13 +200,14 @@ const RecordContainer = (props) => {
               <Fragment key={goal.id ?? `goal-${goalIndex}`}>
                 <RecordRow
                   roundIndex={index}
+                  roundId={record.roundId || record.id}
                   index={goalIndex}
                   editingRecordKey={editingRecordKey}
                   setEditingRecordKey={setEditingRecordKey}
-                  getGoalTeam={record.getGoalTeam?.[goalIndex]}
+                  getGoalTeam={goal.team ?? record.getGoalTeam?.[goalIndex]}
                   record={goal}
                   isFeverTime={isFeverTime}
-                  isFeverGoal={record.goals.some((entry, entryIndex) =>
+                  isFeverGoal={goal.fever ?? record.goals.some((entry, entryIndex) =>
                     entry.id === 'fever-time-bar' && entryIndex < goalIndex
                   )}
                   useDelete={canRegister}

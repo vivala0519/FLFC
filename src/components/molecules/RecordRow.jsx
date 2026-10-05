@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react'
 import {db} from "../../../firebase.js";
 
 const RecordRow = (props) => {
-  const { record, index, roundIndex, deleteRecord, useDelete, isLastRound, isFeverTime, isFeverGoal = false, formatRecordByName, getGoalTeam, editingRecordKey, setEditingRecordKey } = props
+  const { record, index, roundIndex, roundId, deleteRecord, useDelete, isLastRound, isFeverTime, isFeverGoal = false, formatRecordByName, getGoalTeam, editingRecordKey, setEditingRecordKey } = props
   const {
     time: { thisYear, today, thisDay, currentTime, gameStartTime, gameEndTime },
   } = getTimes()
@@ -47,6 +47,12 @@ const RecordRow = (props) => {
     setRandomInt(randomNumber)
   }, [])
 
+  useEffect(() => {
+    if (isEditing) return
+    setGoalText(record.goal)
+    setAssistText(record.assist || '')
+  }, [record.goal, record.assist, isEditing])
+
   const handleAreaClick = () => {
     if (useDelete && !editingRecordKey) setEditingRecordKey(recordKey)
   }
@@ -77,7 +83,7 @@ const RecordRow = (props) => {
   const closeEditing = async () => {
     if (!useDelete) return
     const db = getDatabase();
-    const roundId = String(roundIndex + 1).padStart(2, '0')
+    if (!roundId) return
     const targetId = record['id']
     const goalRef = ref(db, `${thisYear}/${today}_rounds/${roundId}/goal/${targetId}`);
     const updates = {goal: goalText, assist: assistText}

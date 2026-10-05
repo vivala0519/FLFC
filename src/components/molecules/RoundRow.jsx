@@ -337,7 +337,7 @@ const RecordRow = (props) => {
           <div className={recordAreaStyle}>
             {!editTeamMode && (
               <div className={'flex gap-2'}>
-                <span className={roundTextStyle}>{index + 1} 라운드</span>
+                <span className={roundTextStyle}>{(record.index ?? index) + 1} 라운드</span>
                 {/*{record.winnerTeam && <div className={'flex gap-1 relative bottom-[3px]'}><span className={'text-blue-800'}>{record.winnerTeam}팀</span><span className={'text-goal'}>Win</span></div>}*/}
               </div>
             )}
