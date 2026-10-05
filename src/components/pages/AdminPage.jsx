@@ -5,12 +5,12 @@ import { collection, doc, getDocs, setDoc } from 'firebase/firestore'
 
 import { db } from '../../../firebase.js'
 import getTimes from '@/hooks/getTimes.js'
+import AdminRoundManager from '@/components/organisms/AdminRoundManager.jsx'
+import { getAdminMatchContext } from '@/apis/adminRoundDraft.js'
 
-const AdminPage = (props) => {
+const AdminAttendanceList = () => {
   const { existingMembers } = getMembers()
-  const { time: { thisYear, currentTime } } = getTimes()
-  const month = (currentTime.getMonth() + 1).toString().padStart(2, '0')
-  const date = currentTime.getDate().toString().padStart(2, '0')
+  const { time: { thisYear } } = getTimes()
   const [loadingFlag, setLoadingFlag] = useState(false)
 
   const [startDate, setStartDate] = useState('')
@@ -150,16 +150,16 @@ const AdminPage = (props) => {
   }, [])
 
   return (
-    <div>
+    <section className="admin-attendance" aria-labelledby="admin-attendance-title">
       {loadingFlag && (
-        <div className="absolute z-20 bg-white w-full h-full flex flex-col items-center justify-center">
-          <div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />
+        <div className="admin-attendance-loading" role="status">
+          <div className="bg-loading bg-[length:100%_100%] w-[100px] h-[100px]" />
           <span>데이터 불러오는 중</span>
         </div>
       )}
       <div>
         <p>직전 일요일 ({startDate}) 기준</p>
-        <p>3개월 이상 미참여 인원 목록</p>
+        <h2 id="admin-attendance-title">3개월 이상 미참여 인원 목록</h2>
         {threeMonthData.length > 0 ?
           <table className="w-full mt-5">
             <thead>
@@ -182,6 +182,17 @@ const AdminPage = (props) => {
           <span className={'mt-5 text-lg'}>데이터 불러오기 실패했습니다. 새로고침 해주세요</span>
         }
       </div>
+    </section>
+  )
+}
+
+const AdminPage = () => {
+  const { time: { currentTime } } = getTimes()
+  const isMatchTime = getAdminMatchContext(currentTime).canEdit
+
+  return (
+    <div className="admin-page">
+      {isMatchTime ? <AdminRoundManager /> : <AdminAttendanceList />}
     </div>
   )
 }

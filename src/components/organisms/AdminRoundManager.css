@@ -1,0 +1,98 @@
+.admin-page { width: 100%; max-width: 1080px; margin: 0 auto; padding-bottom: 36px; }
+.admin-attendance { position: relative; min-height: 180px; }
+.admin-attendance h2 { font-size: 18px; font-weight: 700; margin-top: 6px; }
+.admin-attendance-loading { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; }
+.dark .admin-attendance-loading { background: #242424; }
+
+.admin-round-manager {
+  --admin-surface: #fff; --admin-soft: #f5f6f8; --admin-border: #e2e5e9;
+  --admin-text: #20252d; --admin-muted: #737b88; --admin-primary: #2563eb; --admin-danger: #be123c;
+  width: 100%; max-width: 820px; margin: 0 auto;
+  color: var(--admin-text); text-align: left;
+}
+.dark .admin-round-manager { --admin-surface: #242424; --admin-soft: #2c2c2c; --admin-border: #414141; --admin-text: #f1f1f1; --admin-muted: #a6abb4; --admin-primary: #93c5fd; --admin-danger: #fda4af; }
+.admin-manager-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.admin-manager-heading h2 { margin: 0; font-size: 17px; font-weight: 700; }
+.admin-manager-tools, .admin-round-actions { display: flex; align-items: center; gap: 2px; }
+.admin-manager-tools { margin-left: auto; }
+.admin-round-manager button { border-radius: 4px; font-size: 12px; }
+.admin-round-manager button:focus-visible, .admin-round-manager input:focus-visible, .admin-round-manager select:focus-visible { outline: 2px solid var(--admin-primary); outline-offset: 2px; }
+.admin-round-manager svg, .admin-confirm-dialog svg { width: 16px; height: 16px; flex-shrink: 0; }
+.admin-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; flex-shrink: 0; background: transparent; border: 1px solid transparent; color: var(--admin-muted); }
+.admin-icon-button:hover:not(:disabled) { color: var(--admin-primary); background: var(--admin-soft); }
+.admin-icon-button.is-danger:hover:not(:disabled) { color: var(--admin-danger); }
+.admin-icon-button:disabled, .admin-preview-toggle:disabled, .admin-add-round:disabled, .admin-command:disabled { opacity: .35; cursor: not-allowed; }
+.admin-preview-toggle { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 8px; border: 0; background: transparent; color: var(--admin-muted); }
+.admin-preview-toggle[aria-pressed="true"] { color: var(--admin-primary); }
+.admin-edit-state { margin: 6px 0 24px; font-size: 11px; color: var(--admin-muted); }
+.admin-record-container { width: 92%; margin: 0 auto; }
+.admin-record-round { margin-bottom: 20px; }
+.admin-round-band { display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; padding: 4px 0; border-top: 2px solid #60a5fa; border-bottom: 2px solid #60a5fa; }
+.admin-round-summary { flex: 1 1 280px; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 5px 8px; min-height: 32px; background: transparent; border: 0; color: var(--admin-text); text-align: left; font-family: 'DNFForgedBlade', serif; }
+.admin-round-summary:disabled { cursor: default; }
+.admin-round-summary svg { width: 12px; height: 12px; color: var(--admin-muted); transition: transform .15s; }
+.admin-round-summary svg.is-expanded { transform: rotate(90deg); }
+.admin-round-number { font-size: 10px; white-space: nowrap; }
+.admin-round-match { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; font-size: 12px; }
+.admin-round-match b { font-weight: 400; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.admin-winning-team { color: #476cc1; }
+.dark .admin-winning-team { color: #facc15; }
+.admin-opponent { color: var(--admin-muted); font-size: 11px; }
+.admin-round-summary time { margin-left: auto; color: var(--admin-muted); font-size: 10px; white-space: nowrap; }
+.admin-round-actions { margin-left: auto; }
+.admin-round-records { padding: 12px 8px; }
+.admin-round-records[hidden] { display: none; }
+.admin-goal-row { display: flex; align-items: center; gap: 8px; min-height: 60px; padding: 8px 0; border-bottom: 1px solid var(--admin-border); }
+.admin-goal-team { width: 18px; flex-shrink: 0; font-size: 9px; color: var(--admin-muted); white-space: nowrap; }
+.admin-goal-row img { width: 15px; height: 15px; object-fit: contain; flex-shrink: 0; }
+.admin-goal-row .admin-ball-dark { display: none; }
+.dark .admin-goal-row .admin-ball-light { display: none; }
+.dark .admin-goal-row .admin-ball-dark { display: block; }
+.admin-goal-row time { width: 34px; flex-shrink: 0; color: var(--admin-muted); font-size: 10px; font-variant-numeric: tabular-nums; }
+.admin-goal-players { display: flex; align-items: center; flex: 1; min-width: 0; flex-wrap: wrap; gap: 10px 24px; padding: 0 4px; background: transparent; border: 0; color: var(--admin-text); text-align: left; font-family: 'DNFForgedBlade', serif; }
+.admin-goal-players:not(:disabled) { cursor: pointer; }
+.admin-goal-players:disabled { cursor: default; }
+.admin-player { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.admin-player small { color: #e11d48; font-size: 9px; line-height: 1.2; }
+.dark .admin-player small { color: #facc15; }
+.admin-player strong { font-size: 18px; font-weight: 400; line-height: 1.4; overflow-wrap: anywhere; }
+.admin-fever-label { font-size: 9px; color: var(--admin-muted); }
+.admin-no-goals { text-align: center; padding: 12px; color: var(--admin-muted); font-family: 'DNFForgedBlade', serif; font-size: 13px; }
+.admin-add-round { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 8px auto; padding: 8px 12px; border: 0; background: transparent; color: var(--admin-primary); }
+.admin-draft-notice { min-height: 18px; margin-top: 12px; color: var(--admin-muted); text-align: center; font-size: 11px; }
+.admin-empty { padding: 32px 8px; text-align: center; font-size: 12px; color: var(--admin-muted); }
+.admin-incoming { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-bottom: 16px; padding: 8px; color: var(--admin-muted); font-size: 12px; }
+.admin-incoming button { padding: 0; border: 0; background: transparent; color: var(--admin-primary); }
+.admin-record-form { margin: 8px 0; padding: 12px; background: var(--admin-soft); border-top: 2px solid var(--admin-primary); font-family: 'SUITE-Regular', system-ui, sans-serif; }
+.admin-form-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.admin-form-heading h4 { margin: 0; font-size: 14px; font-weight: 700; }
+.admin-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; padding: 8px 0; margin: 0; border: 0; min-width: 0; }
+.admin-field-grid label { display: flex; flex-direction: column; gap: 6px; min-width: 0; color: var(--admin-muted); font-size: 12px; }
+.admin-field-grid input, .admin-field-grid select { width: 100%; min-width: 0; height: 40px; padding: 6px; border: 1px solid var(--admin-border); border-radius: 4px; background: var(--admin-surface); color: var(--admin-text); font-family: inherit; font-size: 14px; }
+.admin-form-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.admin-command { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 10px; min-height: 36px; background: var(--admin-surface); color: var(--admin-text); border: 1px solid var(--admin-border); border-radius: 4px; white-space: nowrap; }
+.admin-command.is-primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+.admin-command.is-danger { background: #be123c; border-color: #be123c; color: #fff; }
+.admin-form-error { margin-top: 8px; color: var(--admin-danger); font-size: 12px; }
+.admin-confirm-dialog { width: min(400px, calc(100% - 32px)); max-height: calc(100dvh - 32px); border: 1px solid #e2e5e9; border-radius: 6px; padding: 24px; background: #fff; color: #20252d; text-align: left; font-family: 'SUITE-Regular', system-ui, sans-serif; }
+.admin-confirm-dialog::backdrop { background: rgb(0 0 0 / 40%); }
+.admin-confirm-dialog h3 { font-size: 17px; font-weight: 700; }
+.admin-confirm-dialog p { margin: 12px 0 24px; font-size: 13px; color: #737b88; overflow-wrap: anywhere; }
+.admin-confirm-dialog .admin-command { --admin-surface: #fff; --admin-text: #20252d; --admin-border: #e2e5e9; font-size: 13px; }
+.dark .admin-confirm-dialog { background: #242424; border-color: #414141; color: #f1f1f1; }
+.dark .admin-confirm-dialog p { color: #a6abb4; }
+.dark .admin-confirm-dialog .admin-command { --admin-surface: #242424; --admin-text: #f1f1f1; --admin-border: #414141; }
+
+@media (max-width: 620px) {
+  .admin-record-container { width: 100%; }
+  .admin-round-summary { gap: 6px; padding-left: 4px; padding-right: 4px; flex-basis: 100%; }
+  .admin-round-band { row-gap: 0; }
+  .admin-round-actions .admin-icon-button { width: 30px; height: 28px; }
+  .admin-round-records { padding-left: 0; padding-right: 0; }
+  .admin-goal-row { gap: 5px; }
+  .admin-goal-players { gap: 10px 14px; }
+  .admin-player strong { font-size: 16px; }
+  .admin-record-form { padding: 10px; }
+  .admin-field-grid { gap: 10px; }
+  .admin-field-grid input[type='time'] { padding: 4px; font-size: 12px; }
+}
