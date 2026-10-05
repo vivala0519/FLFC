@@ -6,22 +6,14 @@ import {
   adminPreviewRounds, adminPreviewTeams, createAdminRound, createAdminRoundDrafts,
   getAdminMatchContext, getAdminRoundScores, removeAdminGoal, replaceAdminGoal, validateAdminGoal,
 } from '@/apis/adminRoundDraft.js'
-import PencilIcon from '@/assets/lucide/pencil.svg?react'
-import TrashIcon from '@/assets/lucide/trash.svg?react'
-import PlusIcon from '@/assets/lucide/plus.svg?react'
-import ResetIcon from '@/assets/lucide/rotate-ccw.svg?react'
-import CheckIcon from '@/assets/lucide/check.svg?react'
-import CloseIcon from '@/assets/lucide/x.svg?react'
-import ChevronIcon from '@/assets/lucide/chevron-right.svg?react'
-import EyeIcon from '@/assets/lucide/eye.svg?react'
 import ballImage from '@/assets/futsal-ball4.png'
 import darkBallImage from '@/assets/futsal-ball-yellow.png'
 import './AdminRoundManager.css'
 
 const fingerprint = (value) => JSON.stringify(value)
 
-const IconButton = ({ label, children, className = '', ...props }) => (
-  <button type="button" className={`admin-icon-button ${className}`} aria-label={label} title={label} {...props}>
+const TextButton = ({ label, children, className = '', ...props }) => (
+  <button type="button" className={`admin-text-button ${className}`} aria-label={label} title={label} {...props}>
     {children}
   </button>
 )
@@ -42,7 +34,7 @@ function Confirmation({ value, onClose, canEdit }) {
         <button type="button" className="admin-command" onClick={onClose}>취소</button>
         <button type="button" className={`admin-command ${value.danger ? 'is-danger' : 'is-primary'}`}
           disabled={value.requiresEdit && !canEdit} onClick={() => { value.action(); onClose() }}>
-          {value.danger ? <TrashIcon aria-hidden="true" /> : <CheckIcon aria-hidden="true" />}{value.label}
+          {value.label}
         </button>
       </div>
     </dialog>
@@ -52,13 +44,12 @@ function Confirmation({ value, onClose, canEdit }) {
 function EditorForm({ title, onSubmit, onCancel, canEdit, error, children }) {
   return <form className="admin-record-form" onSubmit={onSubmit}>
     <div className="admin-form-heading"><h4>{title}</h4>
-      <IconButton label="편집 취소" onClick={onCancel}><CloseIcon aria-hidden="true" /></IconButton>
     </div>
     <fieldset disabled={!canEdit} className="admin-field-grid">{children}</fieldset>
     {error && <p className="admin-form-error" role="alert">{error}</p>}
     <div className="admin-form-actions">
       <button type="button" className="admin-command" onClick={onCancel}>취소</button>
-      <button type="submit" className="admin-command is-primary" disabled={!canEdit}><CheckIcon aria-hidden="true" />초안 적용</button>
+      <button type="submit" className="admin-command is-primary" disabled={!canEdit}>초안 적용</button>
     </div>
   </form>
 }
@@ -66,7 +57,6 @@ function EditorForm({ title, onSubmit, onCancel, canEdit, error, children }) {
 function RoundEditor({ seed, teams, members, context, mode, onModeChange, loading }) {
   const [baseline, setBaseline] = useState(seed)
   const [rounds, setRounds] = useState(seed)
-  const [closedRounds, setClosedRounds] = useState(new Set())
   const [goalForm, setGoalForm] = useState(null)
   const [roundForm, setRoundForm] = useState(null)
   const [formError, setFormError] = useState('')
@@ -93,7 +83,6 @@ function RoundEditor({ seed, teams, members, context, mode, onModeChange, loadin
     closeForms()
     setRounds(seed)
     setBaseline(seed)
-    setClosedRounds(new Set())
     setNotice('초안을 초기화했습니다.')
   }
   const requestNavigation = (action) => {
@@ -101,14 +90,8 @@ function RoundEditor({ seed, teams, members, context, mode, onModeChange, loadin
     setConfirmation({ title: '초안을 닫을까요?', message: '이 화면의 변경사항이 사라집니다.',
       label: '닫기', action: () => { closeForms(); action() } })
   }
-  const expandRound = (id) => setClosedRounds((previous) => {
-    const next = new Set(previous)
-    next.delete(id)
-    return next
-  })
   const openGoalForm = (round, goal) => {
     if (!canEdit || hasForm) return
-    expandRound(round.id)
     setFormError('')
     setGoalForm({ roundId: round.id, isNew: !goal, draft: goal ? { ...goal } : {
       id: `draft-goal-${crypto.randomUUID()}`, time: round.time || '08:00:00',
@@ -141,7 +124,6 @@ function RoundEditor({ seed, teams, members, context, mode, onModeChange, loadin
       ? goal : { ...goal, team: '' }) }
     setRounds((previous) => roundForm.isNew ? [...previous, next]
       : previous.map((round) => round.id === draft.id ? { ...round, ...next } : round))
-    expandRound(draft.id)
     setNotice(roundForm.isNew ? '라운드를 초안에 추가했습니다.' : '라운드를 초안에 반영했습니다.')
     closeForms()
   }
@@ -196,9 +178,9 @@ function RoundEditor({ seed, teams, members, context, mode, onModeChange, loadin
         <div className="admin-manager-tools">
           <button type="button" className="admin-preview-toggle" aria-pressed={mode === 'preview'}
             onClick={() => requestNavigation(() => onModeChange(mode === 'preview' ? 'live' : 'preview'))}>
-            <EyeIcon aria-hidden="true" />미리보기
+            미리보기
           </button>
-          <IconButton label="초안 초기화" disabled={!dirty && !hasForm && !hasIncoming} onClick={() => requestNavigation(reset)}><ResetIcon aria-hidden="true" /></IconButton>
+          <TextButton label="초안 초기화" disabled={!dirty && !hasForm && !hasIncoming} onClick={() => requestNavigation(reset)}>초기화</TextButton>
         </div>
       </header>
       <p className="admin-edit-state">{mode === 'preview' ? '예시 기록' : context.canEdit ? '일요일 08:00 - 10:00' : '열람 전용'} · 로컬 초안{dirty && ' · 변경사항 있음'}</p>
@@ -208,7 +190,6 @@ function RoundEditor({ seed, teams, members, context, mode, onModeChange, loadin
 
       <div className="admin-record-container">
         {rounds.map((round) => {
-          const isClosed = closedRounds.has(round.id)
           const editingRound = roundForm?.draft.id === round.id
           const editingGoal = goalForm?.roundId === round.id
           const isWinner = !['playing', 'draw'].includes(round.result)
@@ -217,7 +198,7 @@ function RoundEditor({ seed, teams, members, context, mode, onModeChange, loadin
           const score = scoreTeams.map((team) => scores[round.teams.indexOf(team)] ?? 0).join(' : ')
           return <section className="admin-record-round" key={round.id} aria-label={`${round.index + 1}라운드`}>
             <div className="admin-round-band">
-              <button type="button" className="admin-round-summary" aria-expanded={!isClosed} aria-controls={`admin-round-${round.id}`}
+              <button type="button" className="admin-round-summary" aria-controls={`admin-round-${round.id}`}
                 disabled={hasForm} onClick={() => setClosedRounds((previous) => {
                   const next = new Set(previous)
                   if (next.has(round.id)) next.delete(round.id)
@@ -232,31 +213,32 @@ function RoundEditor({ seed, teams, members, context, mode, onModeChange, loadin
                   <b>{score || '0 : 0'}</b>
                 </span>
                 <time>{round.time.slice(0, 5)}</time>
-                <ChevronIcon className={isClosed ? '' : 'is-expanded'} aria-hidden="true" />
               </button>
               <div className="admin-round-actions">
-                <IconButton label={`${round.index + 1}라운드 기록 추가`} disabled={!canEdit || hasForm || round.teams.length !== 2} onClick={() => openGoalForm(round)}><PlusIcon aria-hidden="true" /></IconButton>
-                <IconButton label={`${round.index + 1}라운드 팀·결과 수정`} disabled={!canEdit || hasForm} onClick={() => {
-                  expandRound(round.id)
+                <TextButton label={`${round.index + 1}라운드 기록 추가`} disabled={!canEdit || hasForm || round.teams.length !== 2} onClick={() => openGoalForm(round)}>추가</TextButton>
+                <TextButton label={`${round.index + 1}라운드 팀·결과 수정`} disabled={!canEdit || hasForm} onClick={() => {
                   setRoundForm({ isNew: false, draft: { ...round, teams: [...round.teams] } }); setFormError(''); setNotice('')
-                }}><PencilIcon aria-hidden="true" /></IconButton>
-                <IconButton label={`${round.index + 1}라운드 삭제`} className="is-danger" disabled={!canEdit || hasForm} onClick={() => confirmDelete(round)}><TrashIcon aria-hidden="true" /></IconButton>
+                }}>수정</TextButton>
+                <TextButton label={`${round.index + 1}라운드 삭제`} className="is-danger" disabled={!canEdit || hasForm} onClick={() => confirmDelete(round)}>삭제</TextButton>
               </div>
             </div>
-            <div id={`admin-round-${round.id}`} hidden={isClosed} className="admin-round-records">
+            <div id={`admin-round-${round.id}`} className="admin-round-records">
               {editingRound ? renderRoundForm() : <>
                 {round.goals.map((goal) => <div key={goal.id}>
                   {editingGoal && goalForm.draft.id === goal.id ? renderGoalForm(round) : <div className="admin-goal-row">
                     <span className="admin-goal-team">{goal.fever ? '' : goal.team ? `${goal.team}팀` : '?'}</span>
                     <img className="admin-ball-light" src={ballImage} alt="" /><img className="admin-ball-dark" src={darkBallImage} alt="" />
                     <time>{goal.time.slice(0, 5)}</time>
-                    <button type="button" className="admin-goal-players" aria-label={`${round.index + 1}라운드 ${goal.goal} 기록 수정`}
+                    <button type="button" className="admin-goal-players" aria-label={`${round.index + 1}라운드 ${goal.goal} 이름으로 기록 수정`}
                       disabled={!canEdit || hasForm} onClick={() => openGoalForm(round, goal)}>
                       <span className="admin-player"><small>Goal</small><strong>{goal.goal || '-'}</strong></span>
                       {goal.assist && <span className="admin-player"><small>Assist</small><strong>{goal.assist}</strong></span>}
                     </button>
                     {goal.fever && <span className="admin-fever-label">피버</span>}
-                    <IconButton label={`${round.index + 1}라운드 ${goal.goal} 기록 삭제`} className="is-danger" disabled={!canEdit || hasForm} onClick={() => confirmDelete(round, goal)}><TrashIcon aria-hidden="true" /></IconButton>
+                    <div className="admin-goal-actions">
+                      <TextButton label={`${round.index + 1}라운드 ${goal.goal} 기록 수정`} disabled={!canEdit || hasForm} onClick={() => openGoalForm(round, goal)}>수정</TextButton>
+                      <TextButton label={`${round.index + 1}라운드 ${goal.goal} 기록 삭제`} className="is-danger" disabled={!canEdit || hasForm} onClick={() => confirmDelete(round, goal)}>삭제</TextButton>
+                    </div>
                   </div>}
                 </div>)}
                 {!round.goals.length && !editingGoal && <p className="admin-no-goals">득점 없당</p>}
@@ -268,7 +250,7 @@ function RoundEditor({ seed, teams, members, context, mode, onModeChange, loadin
         {!rounds.length && <p className="admin-empty">{loading ? '기록 불러오는 중' : '등록된 라운드가 없습니다.'}</p>}
         {roundForm?.isNew ? renderRoundForm() : <button type="button" className="admin-add-round" disabled={!canEdit || hasForm || loading || teamOptions.length < 2} onClick={() => {
           setRoundForm({ isNew: true, draft: createAdminRound(rounds, teamOptions) }); setFormError(''); setNotice('')
-        }}><PlusIcon aria-hidden="true" />라운드 추가</button>}
+        }}>라운드 추가</button>}
       </div>
       <p className="admin-draft-notice" role="status">{notice}</p>
       <datalist id="admin-member-options">{playerOptions.map((name) => <option key={name} value={name} />)}</datalist>
