@@ -89,6 +89,7 @@ const rankCareerCounts = (counts, unit, includeChasers = false) => {
 
 const analyzeScoringRecords = (recordsByYear, asOfDate) => {
   const totals = new Map()
+  const pointTotals = new Map()
   const maxima = {
     goals: { field: '골', unit: '골', value: 0, names: new Set() },
     assists: { field: '어시', unit: '어시', value: 0, names: new Set() },
@@ -108,6 +109,10 @@ const analyzeScoringRecords = (recordsByYear, asOfDate) => {
 
       for (const [name, stats] of Object.entries(record.data || {})) {
         if (!name.trim() || name.includes('용병')) continue
+        const points = Number(stats?.['승점'])
+        if (Number.isFinite(points) && points > 0) {
+          pointTotals.set(name, (pointTotals.get(name) || 0) + points)
+        }
         for (const maximum of Object.values(maxima)) {
           const rawValue = stats?.[maximum.field]
           if (rawValue === null || rawValue === undefined ||
@@ -135,7 +140,12 @@ const analyzeScoringRecords = (recordsByYear, asOfDate) => {
   const getTotalLeaders = (field, unit) => rankCareerCounts(
     new Map([...totals].map(([name, stats]) => [name, stats[field]])), unit, true,
   )
-  return { ...daily, totalGoals: getTotalLeaders('골', '골'), totalAssists: getTotalLeaders('어시', '어시') }
+  return {
+    ...daily,
+    totalGoals: getTotalLeaders('골', '골'),
+    totalAssists: getTotalLeaders('어시', '어시'),
+    totalPoints: rankCareerCounts(pointTotals, '점', true),
+  }
 }
 
 const analysisIconPaths = {
@@ -571,6 +581,10 @@ const AnalysisTap = (props) => {
       type: 'career-total', icon: 'dailyAssist', title: '최다 누적 어시',
       // description: '통산 최다 어시',
       data: { ...dailyMaximums.totalAssists, status: scoringStreakResult.status },
+    },
+    {
+      type: 'career-total', icon: 'trophy', title: '최다 누적 승점',
+      data: { ...dailyMaximums.totalPoints, status: scoringStreakResult.status },
     },
     {
       type: 'career-mvp', icon: 'trophy', title: '최다 누적 MVP',
