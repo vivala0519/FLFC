@@ -365,7 +365,7 @@ const RecordRow = (props) => {
                       event.stopPropagation()
                       setEditTeamMode(true)
                     }}>
-                      {record.teamList[0]}팀 <span className={'text-assist'}>vs</span> {record.teamList[1]}팀
+                      {record.teamList[0]}팀 <span className={'text-goal'}>vs</span> {record.teamList[1]}팀
                     </div>
                   ) : (
                     <div className={'flex items-center gap-2'} onClick={(event) => event.stopPropagation()}>
