@@ -1,15 +1,13 @@
-import { useEffect, useState } from 'react'
-import { doc, collection, setDoc, getDocs } from 'firebase/firestore'
-import { db } from '../../../firebase.js'
+import { useEffect } from 'react'
 import JSConfetti from 'js-confetti'
 import Laurel from '@/components/atoms/Image/Laurel.jsx'
 import MvpPlayer from '@/components/molecules/MvpPlayer.jsx'
 import '../templates/ParentTap/LetsRecord.css'
 
 const DailyMVP = (props) => {
-  const { setShowMVP, recordData, year, today } = props
-  const yymmdd = year.slice(2, 4) + today
-  const [bestPlayers, setBestPlayers] = useState([])
+  const { setShowMVP, bestPlayers = [], year, today } = props
+  const yymmdd = String(year).slice(-2) + today
+  const playerCount = bestPlayers.length
   // style class
   const mvpTextStyle = 'relative top-[1px] font-kbo text-[25px]'
   const closeMessageStyle = 'mt-3 relative text-sm text-gray-300 -bottom-[12%]'
@@ -21,6 +19,7 @@ const DailyMVP = (props) => {
   const popupContainerStyle =
     'text-assist w-full h-[200px] bg-white box cursor-pointer flex flex-col desktop:w-[30%]'
   useEffect(() => {
+    if (playerCount === 0 || playerCount > 5) return
     const confetti = new JSConfetti()
     const firework = () => {
       confetti.addConfetti({
@@ -50,62 +49,13 @@ const DailyMVP = (props) => {
 
     timeoutId = setTimeout(stopConfetti, 3000)
     return stopConfetti
-  }, [])
+  }, [playerCount, yymmdd])
 
   useEffect(() => {
-    const dailyRecordMap = new Map()
-    const data = recordData.find((data) => data.id === today)
-    if (data) {
-      Object.entries(data.data).forEach(([key, value]) => {
-        dailyRecordMap.set(key, {
-          goal: value['골'],
-          assist: value['어시'],
-          total: value['골'] + value['어시'],
-        })
-      })
-    }
-
-    // 최다 공포 찾기
-    let maxPlayers = []
-    let maxValue = 0
-
-    for (const [key, value] of dailyRecordMap.entries()) {
-      if (value['total'] > maxValue) {
-        maxPlayers = [
-          { name: key, goal: value['goal'], assist: value['assist'] },
-        ]
-        maxValue = value['total']
-      } else if (value['total'] === maxValue) {
-        maxPlayers.push({
-          name: key,
-          goal: value['goal'],
-          assist: value['assist'],
-        })
-      }
-    }
-    setBestPlayers(maxPlayers)
-  }, [recordData])
-
-  // MVP 등록
-  const registerDailyMVP = async () => {
-    const mvpRef = collection(db, 'daily_mvp')
-    const mvpSnapshot = await getDocs(mvpRef)
-    const dailyMVPDocRef = doc(db, `daily_mvp`, yymmdd)
-
-    const todayMVP = mvpSnapshot.docs.find((doc) => doc.id === yymmdd)
-
-    if (todayMVP?.id !== yymmdd && bestPlayers.length > 0) {
-      await setDoc(dailyMVPDocRef, { bestPlayers })
-    }
-  }
-
-  useEffect(() => {
-    if (bestPlayers.length > 5) {
+    if (playerCount > 5) {
       setShowMVP(false)
-    } else {
-      registerDailyMVP()
     }
-  }, [bestPlayers])
+  }, [playerCount, setShowMVP])
 
   return (
     <div className={popupContainerStyle} onClick={() => setShowMVP(false)}>

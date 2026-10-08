@@ -6,10 +6,11 @@ import { createAdminRoundStore } from './adminRoundStore.js'
 const roundRef = (context) => ref(getDatabase(), `${context.key.slice(0, 4)}/${context.key.slice(4)}_rounds`)
 
 export const adminRoundWrites = createAdminRoundStore({
-  readWeeklyTeam: async (context) => {
-    const snapshot = await getDocFromServer(doc(db, 'weeklyTeam', context.weeklyTeamId))
-    return snapshot.exists() ? { id: snapshot.id, data: snapshot.data() } : null
+  readStats: async (context) => {
+    const snapshot = await getDocFromServer(doc(db, context.key.slice(0, 4), context.key.slice(4)))
+    return snapshot.exists() ? snapshot.data() : {}
   },
+  readGameStatus: async (context) => (await get(ref(getDatabase(), `${context.key.slice(0, 4)}/${context.key.slice(4)}_status`))).val(),
   readRounds: async (context) => (await get(roundRef(context))).val(),
   transactRounds: (context, updater) => runTransaction(roundRef(context), updater, { applyLocally: false }),
   writeStats: (context, stats) => setDoc(doc(db, context.key.slice(0, 4), context.key.slice(4)), stats),

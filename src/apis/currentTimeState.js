@@ -1,4 +1,7 @@
-export function createCurrentTimeState(currentTime = new Date()) {
+export function createCurrentTimeState(
+  currentTime = new Date()
+  // currentTime = new Date(2026, 9, 11, 8, 5)
+) {
   const year = currentTime.getFullYear()
   const month = currentTime.getMonth() + 1
   const date = currentTime.getDate()

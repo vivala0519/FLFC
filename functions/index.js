@@ -1,10 +1,29 @@
-const { onRequest } = require('firebase-functions/v2/https')
+const { onSchedule } = require('firebase-functions/v2/scheduler')
 const logger = require('firebase-functions/logger')
 
-const functions = require('firebase-functions')
+const functions = require('firebase-functions/v1')
 const admin = require('firebase-admin')
+const { createGameFinalizer } = require('./lib/finalizeGame.js')
+const { createFirebaseGameAdapter } = require('./lib/firebaseGameAdapter.js')
 
 admin.initializeApp()
+
+const finalizeGame = createGameFinalizer(createFirebaseGameAdapter(admin, logger))
+
+exports.finalizeSundayGame = onSchedule({
+  schedule: '0 10 * * 0',
+  timeZone: 'Asia/Seoul',
+  region: 'asia-northeast3',
+  retryCount: 10,
+  minBackoffSeconds: 60,
+  maxBackoffSeconds: 600,
+  maxRetrySeconds: 3600,
+  timeoutSeconds: 240,
+  memory: '256MiB',
+}, async (event) => {
+  const result = await finalizeGame(event.scheduleTime)
+  logger.info('Sunday game finalization finished.', { game: result.context.key, state: result.state, reason: result.reason })
+})
 
 exports.createVoteData = functions.pubsub
   .schedule('0 12 * * 0')

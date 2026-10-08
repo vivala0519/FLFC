@@ -1,0 +1,11 @@
+{
+  "rules": {
+    ".read": true,
+    "$root": {
+      ".write": "!$root.matches(/^[0-9]{4}$/)",
+      "$day": {
+        ".write": "!$day.matches(/^[0-9]{4}_(rounds|backup|status)$/) || ($day.matches(/^[0-9]{4}_(rounds|backup)$/) && (now + 32400000) % 604800000 >= 287400000 && (now + 32400000) % 604800000 < 295200000 && root.child($root).child($day.replace('_rounds', '_status').replace('_backup', '_status')).child('end_game').val() !== true)"
+      }
+    }
+  }
+}

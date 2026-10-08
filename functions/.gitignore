@@ -1,0 +1,6 @@
+node_modules/
+firebase-debug.log*
+*.local
+
+# Rebuilt automatically before tests, local emulators, and deployment.
+/lib/recordLogic.cjs

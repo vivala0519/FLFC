@@ -21,6 +21,8 @@ export const requestListAtom = atom(requestList)
 export const firestoreRecordAtom = atom(firestoreRecord)
 export const statusBoardStatAtom = atom(statusBoardStat)
 export const totalWeeklyTeamDataAtom = atom(totalWeeklyTeamData)
+export const gameStatusAtom = atom(null)
+export const todaysMVPAtom = atom(null)
 
 // votes
 const voteList = []

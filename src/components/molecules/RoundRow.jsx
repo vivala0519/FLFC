@@ -1,14 +1,34 @@
 import TimeText from '@/components/atoms/Text/TimeText.jsx'
 import Swal from 'sweetalert2'
-import { get, getDatabase, ref, set, update } from 'firebase/database'
+import { get, getDatabase, ref, update, runTransaction } from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { getRoundParticipants } from '@/apis/roundParticipants.js'
+import getRecords from '@/hooks/getRecords.js'
+import { isGameWriteAllowed } from '@/apis/gameWriteWindow.js'
 
 const RecordRow = (props) => {
   const { time: { today, thisYear, currentTime } } = getTimes()
-  const {
-    record,
+  const { gameStatus } = getRecords()
+  const gameStatusRef = useRef(gameStatus)
+  gameStatusRef.current = gameStatus
+  const canEditRound = isGameWriteAllowed({ year: thisYear, day: today, status: gameStatus, now: currentTime })
+  const canWrite = () => isGameWriteAllowed({ year: thisYear, day: today, status: gameStatusRef.current })
+  const assertWritable = () => {
+    if (canWrite()) return
+    const error = new Error('기록 가능 시간이 아닙니다. 경기가 종료되었거나 상태를 확인 중입니다.')
+    error.code = 'game/write-closed'
+    throw error
+  }
+  const guardedUpdate = (reference, value) => {
+    assertWritable()
+    return update(reference, value)
+  }
+  const handleWriteError = (error) => {
+    console.error('라운드 변경에 실패했습니다:', error)
+    void Swal.fire({ icon: 'error', text: error.code === 'game/write-closed' ? error.message : '라운드 변경에 실패했습니다. 최신 기록을 확인해주세요.' })
+  }
+  const { record,
     index,
     // fakeRow,
     isOpen,
@@ -20,8 +40,7 @@ const RecordRow = (props) => {
     setShowSelectScorerTeamPopup,
     setSelectScorerTeamPopupMessage,
     setPopupType,
-    setPlayingTeams,
-  } = props
+    setPlayingTeams } = props
   const ALL_TEAMS = ['1', '2', '3']
   const [showTeamMembers, setShowTeamMembers] = useState(false)
   const [editTeamMode, setEditTeamMode] = useState(false)
@@ -49,6 +68,9 @@ const RecordRow = (props) => {
       setTeamB(record.teamList[1])
     }
   }, [record?.teamList])
+  useEffect(() => {
+    if (!canEditRound) setEditTeamMode(false)
+  }, [canEditRound])
 
   const getRoundRef = (db, thisYear, today, roundId) =>
     ref(db, `${thisYear}/${today}_rounds/${roundId}`)
@@ -81,6 +103,7 @@ const RecordRow = (props) => {
   }
 
   const createRound = async () => {
+    assertWritable()
     const db = getDatabase()
     const oneMinuteLater = new Date(currentTime.getTime() + 1 * 60 * 1000)
     const time =
@@ -121,7 +144,7 @@ const RecordRow = (props) => {
           lastRound.teamList,
         )
         if (participant.length > 0) {
-          await update(lastRoundRef, { participant })
+          await guardedUpdate(lastRoundRef, { participant })
         }
       }
 
@@ -150,11 +173,17 @@ const RecordRow = (props) => {
       participant: [],
     }
 
-    await set(roundRef, roundData)
+    assertWritable()
+    const result = await runTransaction(roundRef, (currentRound) => {
+      if (!canWrite()) return
+      return currentRound || roundData
+    }, { applyLocally: false })
+    if (!result.committed) assertWritable()
     return newRoundId
   }
 
   const selectWinnerTeam = async () => {
+    assertWritable()
     const roundId = await createRound()
     setPendingRoundId(roundId)
     setSelectTeamPopupMessage('첫 라운드 어느 팀이 경기했나요?')
@@ -162,6 +191,7 @@ const RecordRow = (props) => {
   }
 
   const exitRound = async (roundId) => {
+    assertWritable()
     const db = getDatabase()
     const roundRef = getRoundRef(db, thisYear, today, roundId)
     const snap = await get(roundRef)
@@ -174,7 +204,7 @@ const RecordRow = (props) => {
     const mostGetGoalTeam = getMostFrequentElements(roundData.getGoalTeam || [])
     // 한골
     if (mostGetGoalTeam.length === 1) {
-      await update(roundRef, {
+      await guardedUpdate(roundRef, {
         winnerTeam: {
           number: [mostGetGoalTeam[0]],
           member: weeklyTeamData.data[String(mostGetGoalTeam[0])],
@@ -191,7 +221,7 @@ const RecordRow = (props) => {
         nextTeamList = ['1', '2']
       }
       const newRoundRef = getRoundRef(db, thisYear, today, newRoundId)
-      await update(newRoundRef, {teamList: nextTeamList})
+      await guardedUpdate(newRoundRef, {teamList: nextTeamList})
     }
     // 무승부
     if ([0, 2].includes(mostGetGoalTeam.length)) {
@@ -214,13 +244,15 @@ const RecordRow = (props) => {
         }
       } else {
         // 나중에 들어온 팀 (index 0)
-        await update(roundRef, {
+        await guardedUpdate(roundRef, {
           winnerTeam: {
             number: roundData.teamList,
             member: weeklyTeamData.data[String(roundData.teamList[0])].concat(
               weeklyTeamData.data[String(roundData.teamList[1])],
             ),
           },
+          lostTeam: false,
+          participant: getRoundParticipants(weeklyTeamData, roundData.teamList),
         })
         const newRoundId = await createRound()
         const restTeam = ALL_TEAMS.find(
@@ -233,12 +265,16 @@ const RecordRow = (props) => {
           nextTeamList = ['1', '2']
         }
         const newRoundRef = getRoundRef(db, thisYear, today, newRoundId)
-        await update(newRoundRef, { teamList: nextTeamList })
+        await guardedUpdate(newRoundRef, { teamList: nextTeamList })
       }
     }
   }
 
   const exitRoundHandler = async (roundId) => {
+    if (!canWrite()) {
+      try { assertWritable() } catch (error) { handleWriteError(error) }
+      return
+    }
     Swal.fire({
       title: '최근 라운드 종료',
       icon: 'warning',
@@ -249,7 +285,7 @@ const RecordRow = (props) => {
       cancelButtonText: '취소'
     }).then((result) => {
       if (result.isConfirmed) {
-        exitRound(roundId)
+        void exitRound(roundId).catch(handleWriteError)
       }
     })
   }
@@ -261,14 +297,19 @@ const RecordRow = (props) => {
   }
 
   const updateTeamListHandler = async (roundId) => {
-    if (teamA === record.teamList[0] && teamB === record.teamList[1]) {
+    try {
+      assertWritable()
+      if (teamA === record.teamList[0] && teamB === record.teamList[1]) {
+        setEditTeamMode(false)
+        return
+      }
+      const db = getDatabase()
+      const roundRef = getRoundRef(db, thisYear, today, roundId)
+      await guardedUpdate(roundRef, { teamList: [teamA, teamB], updated: true })
       setEditTeamMode(false)
-      return
+    } catch (error) {
+      handleWriteError(error)
     }
-    const db = getDatabase()
-    const roundRef = getRoundRef(db, thisYear, today, roundId)
-    await update(roundRef, { teamList: [teamA, teamB], updated: true })
-    setEditTeamMode(false)
   }
 
   const getEndedRoundDisplay = () => {
@@ -363,7 +404,7 @@ const RecordRow = (props) => {
                   (!editTeamMode ? (
                     <div className={teamStyle + ' whitespace-nowrap'} onClick={(event) => {
                       event.stopPropagation()
-                      setEditTeamMode(true)
+                      if (canEditRound) setEditTeamMode(true)
                     }}>
                       {record.teamList[0]}팀 <span className={'text-goal'}>vs</span> {record.teamList[1]}팀
                     </div>
@@ -407,7 +448,7 @@ const RecordRow = (props) => {
                     {scoreText}
                   </span>
                 )}
-                {!editTeamMode && (
+                {!editTeamMode && canEditRound && (
                   <div className={roundExitButtonStyle + ' shrink-0 whitespace-nowrap'} onClick={(event) => {
                     event.stopPropagation()
                     exitRoundHandler(record.id)

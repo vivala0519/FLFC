@@ -1,0 +1,141 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Client aggregate writes are valid only for today's Sunday match, before 10:00 KST.
+    // Admin SDK finalization bypasses these client rules.
+    function canWriteDaily(year, day) {
+      let koreaTime = request.time + duration.value(9, 'h');
+      return koreaTime.dayOfWeek() == 7
+        && ((koreaTime.hours() == 7 && koreaTime.minutes() >= 50) || koreaTime.hours() >= 8)
+        && koreaTime.hours() < 10
+        && int(year) == koreaTime.year()
+        && int(day) == koreaTime.month() * 100 + koreaTime.day();
+    }
+
+    match /2021/{documentId} {
+      allow read: if true;
+      allow write: if !documentId.matches('^[0-9]{4}$') || canWriteDaily('2021', documentId);
+      // Preserve the existing grant for subcollections; daily totals live in the direct document.
+      match /{subcollection}/{document=**} {
+        allow read, write: if true;
+      }
+    }
+    match /2022/{documentId} {
+      allow read: if true;
+      allow write: if !documentId.matches('^[0-9]{4}$') || canWriteDaily('2022', documentId);
+      // Preserve the existing grant for subcollections; daily totals live in the direct document.
+      match /{subcollection}/{document=**} {
+        allow read, write: if true;
+      }
+    }
+    match /2023/{documentId} {
+      allow read: if true;
+      allow write: if !documentId.matches('^[0-9]{4}$') || canWriteDaily('2023', documentId);
+      // Preserve the existing grant for subcollections; daily totals live in the direct document.
+      match /{subcollection}/{document=**} {
+        allow read, write: if true;
+      }
+    }
+    match /2024/{documentId} {
+      allow read: if true;
+      allow write: if !documentId.matches('^[0-9]{4}$') || canWriteDaily('2024', documentId);
+      // Preserve the existing grant for subcollections; daily totals live in the direct document.
+      match /{subcollection}/{document=**} {
+        allow read, write: if true;
+      }
+    }
+    match /2025/{documentId} {
+      allow read: if true;
+      allow write: if !documentId.matches('^[0-9]{4}$') || canWriteDaily('2025', documentId);
+      // Preserve the existing grant for subcollections; daily totals live in the direct document.
+      match /{subcollection}/{document=**} {
+        allow read, write: if true;
+      }
+    }
+    match /2025_dev/{document=**} {
+      // 쓰기 권한 설정
+      allow write: if true;
+      // 읽기 권한 설정
+      allow read: if true;
+    }
+    match /2026/{documentId} {
+      allow read: if true;
+      allow write: if !documentId.matches('^[0-9]{4}$') || canWriteDaily('2026', documentId);
+      // Preserve the existing grant for subcollections; daily totals live in the direct document.
+      match /{subcollection}/{document=**} {
+        allow read, write: if true;
+      }
+    }
+    match /2026_dev/{document=**} {
+      // 쓰기 권한 설정
+      allow write: if true;
+      // 읽기 권한 설정
+      allow read: if true;
+    }
+    match /2027/{documentId} {
+      allow read: if true;
+      allow write: if !documentId.matches('^[0-9]{4}$') || canWriteDaily('2027', documentId);
+      // Preserve the existing grant for subcollections; daily totals live in the direct document.
+      match /{subcollection}/{document=**} {
+        allow read, write: if true;
+      }
+    }
+    match /2028/{documentId} {
+      allow read: if true;
+      allow write: if !documentId.matches('^[0-9]{4}$') || canWriteDaily('2028', documentId);
+      // Preserve the existing grant for subcollections; daily totals live in the direct document.
+      match /{subcollection}/{document=**} {
+        allow read, write: if true;
+      }
+    }
+    match /members/{document=**} {
+      // 쓰기 권한 설정
+      allow write: if true;
+      // 읽기 권한 설정
+      allow read: if true;
+    }
+    match /daily_mvp/{document=**} {
+      // 쓰기 권한 설정
+      allow write: if false;
+      // 읽기 권한 설정
+      allow read: if true;
+    }
+    match /history/{document=**} {
+      // 쓰기 권한 설정
+      allow write: if false;
+      // 읽기 권한 설정
+      allow read: if true;
+    }
+    match /weeklyTeam/{document=**} {
+      // 쓰기 권한 설정
+      allow write: if true;
+      // 읽기 권한 설정
+      allow read: if true;
+    }
+    match /mail/{document=**} {
+      // 쓰기 권한 설정
+      allow write: if true;
+      // 읽기 권한 설정
+      allow read: if true;
+    }
+    match /weeklyTeam2025/{document=**} {
+      // 쓰기 권한 설정
+      allow write: if true;
+      // 읽기 권한 설정
+      allow read: if true;
+    }
+    match /balancer/{document=**} {
+      // 쓰기 권한 설정
+      allow write: if true;
+      // 읽기 권한 설정
+      allow read: if true;
+    }
+    match /maintenance/{document=**} {
+      // 쓰기 권한 설정
+      allow write: if true;
+      // 읽기 권한 설정
+      allow read: if true;
+    }
+  }
+}

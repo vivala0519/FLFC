@@ -1,5 +1,4 @@
 import { createAdminRound, createAdminRoundDrafts, getAdminRoundScores, validateAdminGoal } from './adminRoundDraft.js'
-import { getRoundParticipants } from './roundParticipants.js'
 
 export function getAdminRoundVersion(value) {
   if (Array.isArray(value)) return `[${value.map(getAdminRoundVersion).join(',')}]`
@@ -12,20 +11,39 @@ const clockPattern = /^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/
 const fullClock = (time) => time.length === 5 ? `${time}:00` : time
 const validId = (id) => typeof id === 'string' && id.length > 0 && !/[.#$[\]/]/.test(id)
 const isMarker = ([id, goal]) => id === 'fever-time-bar' || goal?.id === 'fever-time-bar'
-const hasRoster = (weeklyTeam, team) => Array.isArray(weeklyTeam?.data?.[team])
-  && weeklyTeam.data[team].some((name) => typeof name === 'string' && name.trim())
+const memberList = (value) => Array.isArray(value)
+  ? [...new Set(value.filter((name) => typeof name === 'string' && name.trim()).map((name) => name.trim()))] : []
 
-function validateRound(round, weeklyTeam) {
+function validateRound(round) {
   if (!clockPattern.test(round.time)) throw new Error('라운드 시작 시간을 확인해주세요.')
   if (round.teams.length !== 2 || round.teams[0] === round.teams[1]
-    || round.teams.some((team) => !hasRoster(weeklyTeam, team))) {
-    throw new Error('주간 팀에 명단이 있는 서로 다른 두 팀을 선택해주세요.')
+    || round.teams.some((team) => typeof team !== 'string' || !team.trim() || !validId(team))) {
+    throw new Error('서로 다른 두 팀을 선택해주세요.')
   }
   if (!['playing', 'draw', ...round.teams].includes(round.result)) throw new Error('라운드 결과를 확인해주세요.')
 }
 
+function getStoredTeamMembers(raw, draft, weeklyTeam) {
+  const originalTeams = Array.isArray(raw.teamList) ? raw.teamList.map(String) : []
+  const originalWinners = Array.isArray(raw.winnerTeam?.number) ? raw.winnerTeam.number.map(String) : []
+  const participants = memberList(raw.participant)
+  const winners = memberList(raw.winnerTeam?.member)
+  return Object.fromEntries(draft.teams.map((team) => {
+    let roster = memberList(raw.teamMembers?.[team])
+    // Recover the two rosters from the stored winner and participant snapshot.
+    if (!roster.length && originalTeams.includes(team) && originalWinners.length === 1) {
+      if (team === originalWinners[0]) roster = winners
+      else if (participants.length && winners.length && winners.every((name) => participants.includes(name))) {
+        roster = participants.filter((name) => !winners.includes(name))
+      }
+    }
+    if (!roster.length) roster = memberList(weeklyTeam?.data?.[team])
+    return [team, roster]
+  }))
+}
+
 function writeRound(raw, draft, weeklyTeam) {
-  validateRound(draft, weeklyTeam)
+  validateRound(draft)
   for (const goal of draft.goals) {
     const error = validateAdminGoal(goal, draft)
     if (error) throw new Error(error)
@@ -40,10 +58,19 @@ function writeRound(raw, draft, weeklyTeam) {
     goals['fever-time-bar'] = { id: 'fever-time-bar', time: draft.goals.find((goal) => goal.fever).time }
   }
   const numbers = draft.result === 'playing' ? [] : draft.result === 'draw' ? draft.teams : [draft.result]
+  const teamMembers = getStoredTeamMembers(raw, draft, weeklyTeam)
+  const allRostersKnown = draft.teams.every((team) => teamMembers[team].length > 0)
+  const participants = allRostersKnown ? memberList(draft.teams.flatMap((team) => teamMembers[team])) : memberList(raw.participant)
+  const previousNumbers = Array.isArray(raw.winnerTeam?.number) ? raw.winnerTeam.number.map(String) : []
+  const sameResult = getAdminRoundVersion([...previousNumbers].sort()) === getAdminRoundVersion([...numbers].sort())
+  const winningMembers = numbers.every((team) => teamMembers[team].length > 0)
+    ? memberList(numbers.flatMap((team) => teamMembers[team]))
+    : sameResult ? memberList(raw.winnerTeam?.member) : numbers.length === 2 ? participants : []
   return { ...raw, id: draft.id, index: draft.index, time: fullClock(draft.time), teamList: draft.teams,
+    teamMembers,
     goal: goals, getGoalTeam: draft.goals.filter((goal) => !goal.fever).map((goal) => goal.team),
-    participant: numbers.length ? getRoundParticipants(weeklyTeam, draft.teams) : [],
-    winnerTeam: numbers.length ? { number: numbers, member: getRoundParticipants(weeklyTeam, numbers) } : null,
+    participant: numbers.length ? participants : [],
+    winnerTeam: numbers.length ? { number: numbers, member: winningMembers } : null,
     lostTeam: numbers.length === 1 ? draft.teams.find((team) => team !== numbers[0]) : false }
 }
 

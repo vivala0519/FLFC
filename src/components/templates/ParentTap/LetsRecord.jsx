@@ -15,15 +15,16 @@ import FeverTimeBar from '@/components/organisms/FeverTimeBar.jsx'
 import ParticleFootballLoader from '@/components/atoms/ParticleFootballLoader.jsx'
 import './LetsRecord.css'
 import Swal from 'sweetalert2'
-import { get, getDatabase, ref, remove, set, update } from 'firebase/database'
-import { getRoundParticipants } from '@/apis/roundParticipants.js'
+import { get, getDatabase, ref, runTransaction } from 'firebase/database'
+import { finalizeRound } from '@/apis/finalizeRound.js'
+import { isGameWriteAllowed } from '@/apis/gameWriteWindow.js'
 import { createRecordMemberResolver } from '@/apis/recordMembers.js'
 import { formatDailyRecordStats } from '@/apis/formatDailyRecordStats.js'
 
 const LetsRecord = (props) => {
-  const { time: { today, thisDay, thisYear, currentTime, gameEndTime, gameStartTime, recordTapCloseTime } } = getTimes()
+  const { time: { today, thisDay, thisYear, currentTime, gameEndTime, recordTapCloseTime } } = getTimes()
   const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
-  const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
+  const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRound, todaysRequestList, gameStatus } = getRecords()
   const { open, setOpen, headerHeight } = props
   const writeContainerRef = useRef(null)
   const recordBurstTargetRef = useRef(null)
@@ -42,7 +43,6 @@ const LetsRecord = (props) => {
   const [realtimeRoundLoaded, setRealtimeRoundLoaded] = useState(false)
   const [registerHeight, setRegisterHeight] = useState(0)
   const [feverTimeHeight, setFeverTimeHeight] = useState(0)
-  const [canRegister, setCanRegister] = useState(false)
   const [lastRecord, setLastRecord] = useState('')
   const [showMVP, setShowMVP] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
@@ -63,17 +63,17 @@ const LetsRecord = (props) => {
   // style class
   const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-2'}`
   const templateContainerStyle = 'flex flex-col items-center w-full'
-  const canWriteFirestoreRecord =
-    thisDay === 0 &&
-    currentTime >= gameStartTime &&
-    currentTime <= gameEndTime
-  const canFinalizeFirestoreRecord =
-    thisDay === 0 &&
-    showMVP &&
-    currentTime >= gameEndTime &&
-    currentTime <= recordTapCloseTime
-  const canWriteFirestoreStats =
-    canWriteFirestoreRecord || canFinalizeFirestoreRecord
+  const statusRef = useRef(gameStatus)
+  statusRef.current = gameStatus
+  const canRegister = isGameWriteAllowed({ year: thisYear, day: today, status: gameStatus, now: currentTime })
+  const canWriteFirestoreStats = canRegister
+  const isCurrentGameStatus = gameStatus?.loaded && gameStatus.year === thisYear && gameStatus.day === today
+  const finalResultReady = isCurrentGameStatus && gameStatus.data?.finalized === true && !!gameStatus.data?.team_scores
+  const bestPlayers = gameStatus?.data?.best_players || []
+  const awaitingFinalResult = thisDay === 0 && currentTime >= gameEndTime && currentTime <= recordTapCloseTime
+    && displayRecord.length > 0 && !finalResultReady
+  const announcedGameRef = useRef(null)
+  const canMutateNow = () => isGameWriteAllowed({ year: thisYear, day: today, status: statusRef.current })
 
   useEffect(() => {
     if (totalWeeklyTeamData?.length) {
@@ -93,18 +93,26 @@ const LetsRecord = (props) => {
   }, [])
 
   useEffect(() => {
-    if (thisDay !== 6) {
-      setOpen(true)
-    }
-    setCanRegister(canWriteFirestoreRecord)
+    if (thisDay !== 6) setOpen(true)
+  }, [thisDay, setOpen])
 
-    if (thisDay === 0) {
-      if (currentTime >= gameEndTime && currentTime <= recordTapCloseTime) {
-        setShowMVP(true)
-        setShowRequestUpdateButton(true)
-      }
+  useEffect(() => {
+    if (canRegister) return
+    setEditingRecordKey(null)
+    setShowSelectTeamPopup(false)
+    setShowSelectScorerTeamPopup(false)
+    setHandleRoundWinnerTrigger(null)
+  }, [canRegister])
+
+  useEffect(() => {
+    const gameKey = `${thisYear}/${today}`
+    if (thisDay === 0 && currentTime >= gameEndTime && currentTime <= recordTapCloseTime
+      && finalResultReady && announcedGameRef.current !== gameKey) {
+      announcedGameRef.current = gameKey
+      setShowMVP(true)
+      setShowRequestUpdateButton(true)
     }
-  }, [thisDay, weeklyTeamData, canWriteFirestoreRecord])
+  }, [thisDay, currentTime, gameEndTime, recordTapCloseTime, finalResultReady, thisYear, today])
 
   // daily 실시간 record
   useEffect(() => {
@@ -114,7 +122,9 @@ const LetsRecord = (props) => {
     if (thisDay <= 6 && thisDay >= 1) {
       setLoadingFlag(false)
     }
-    const data = todaysRealtimeRound
+    const data = Object.fromEntries(Object.entries(todaysRealtimeRound).filter(([, round]) =>
+      round && typeof round === 'object' && Number.isFinite(Number(round.index)),
+    ))
     if (Object.keys(data).length === 0) {
       setTodayRecord([])
       setDisplayRecord([])
@@ -190,109 +200,40 @@ const LetsRecord = (props) => {
   }, [open, currentTime])
 
   const feverTimeHandler = () => {
+    if (!canMutateNow()) return
     Swal.fire({
-      title: '피버 타임 켤까요?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Fever!',
-      cancelButtonText: '취소',
+      title: '피버 타임 켤까요?', icon: 'warning', showCancelButton: true,
+      confirmButtonColor: '#d33', cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Fever!', cancelButtonText: '취소',
     }).then(async (result) => {
-      if (!result.isConfirmed) return
-
-      const getMostFrequentElements = (arr) => {
-        if (!arr) return []
-        const countMap = {}
-
-        for (const value of arr) {
-          countMap[value] = (countMap[value] || 0) + 1
-        }
-
-        const maxCount = Math.max(...Object.values(countMap))
-
-        return Object.entries(countMap)
-          .filter(([_, count]) => count === maxCount)
-          .map(([value]) => value)
+      if (!result.isConfirmed || !canMutateNow()) return
+      try {
+        const roundsRef = ref(getDatabase(), `${thisYear}/${today}_rounds`)
+        await get(roundsRef)
+        const result = await runTransaction(roundsRef, (rounds) => {
+          if (!canMutateNow() || !rounds) return
+          const next = { ...rounds }
+          const entries = Object.entries(next).filter(([, round]) => round && typeof round === 'object')
+            .sort((a, b) => Number(a[1].index) - Number(b[1].index))
+          let last = entries.pop()
+          if (!last) return
+          if (!Object.keys(last[1].goal || {}).length) {
+            delete next[last[0]]
+            last = entries.pop()
+            if (!last) return
+          }
+          const [id, round] = last
+          const closed = round.winnerTeam ? round : finalizeRound(round, weeklyTeamData)
+          if (!closed) return
+          const time = `${String(currentTime.getHours()).padStart(2, '0')}:${String(currentTime.getMinutes()).padStart(2, '0')}:${String(currentTime.getSeconds()).padStart(2, '0')}`
+          next[id] = { ...closed, goal: { ...closed.goal, 'fever-time-bar': { id: 'fever-time-bar', time } } }
+          return next
+        }, { applyLocally: false })
+        if (result.committed) setIsFeverTime(true)
+      } catch (error) {
+        console.error('피버 타임을 저장하지 못했습니다:', error)
       }
-
-      const db = getDatabase()
-      const basePath = `${thisYear}/${today}_rounds`
-
-      // 1) 마지막 라운드 찾기
-      const lastRound = await getLastRound(db, basePath)
-      if (!lastRound) return
-
-      const lastRoundRef = ref(db, `${basePath}/${lastRound.id}`)
-      const lastRoundSnap = await get(lastRoundRef)
-      const lastRoundValue = lastRoundSnap.val()
-
-      if (lastRoundValue?.goal) {
-        // 2-A) 골이 있는 라운드면 → 승패 여부, fever-time-bar 추가
-        const mostGetGoalTeam = getMostFrequentElements(
-          lastRoundValue.getGoalTeam || [],
-        )
-        const participant = getRoundParticipants(
-          weeklyTeamData,
-          lastRoundValue.teamList,
-        )
-        await update(lastRoundRef, {
-          participant,
-          winnerTeam: {
-            number: mostGetGoalTeam,
-            member:
-              mostGetGoalTeam.length === 1
-                ? weeklyTeamData.data[String(mostGetGoalTeam[0])]
-                : weeklyTeamData.data[String(mostGetGoalTeam[0])].concat(weeklyTeamData.data[String(mostGetGoalTeam[1])])
-          },
-          lostTeam: mostGetGoalTeam.length === 1 && lastRoundValue.teamList.find(
-            (team) => team !== String(mostGetGoalTeam[0]),
-          ),
-        })
-        await addFeverBarToRound(db, basePath, lastRound.id)
-      } else {
-        // 2-B) 골이 없는 라운드면 → 라운드 삭제 후,
-        //      새로 마지막 라운드 찾아서 fever-time-bar 추가
-        await remove(lastRoundRef)
-
-        const newLastRound = await getLastRound(db, basePath)
-        if (!newLastRound) return
-
-        await addFeverBarToRound(db, basePath, newLastRound.id)
-      }
-
-      setIsFeverTime(true)
     })
-  }
-
-  /** 현재 시간 HH:mm:ss 포맷 */
-  const formatCurrentTime = (currentTime) => {
-    const h = currentTime.getHours().toString().padStart(2, '0')
-    const m = currentTime.getMinutes().toString().padStart(2, '0')
-    const s = currentTime.getSeconds().toString().padStart(2, '0')
-    return `${h}:${m}:${s}`
-  }
-
-  /** rounds 컬렉션에서 index가 가장 큰 라운드 찾기 */
-  const getLastRound = async (db, basePath) => {
-    const roundRef = ref(db, basePath)
-    const snap = await get(roundRef)
-    const rounds = snap.val()
-    if (!rounds) return null
-
-    const lastRoundObj = Object.values(rounds).reduce((max, cur) =>
-      cur.index > max.index ? cur : max,
-    )
-
-    return lastRoundObj // { id, index, ... }
-  }
-
-  /** 특정 라운드에 fever-time-bar goal 추가 */
-  const addFeverBarToRound = async (db, basePath, roundId) => {
-    const goalRef = ref(db, `${basePath}/${roundId}/goal/fever-time-bar`)
-    const formattedTime = formatCurrentTime(currentTime)
-
-    await set(goalRef, { id: 'fever-time-bar', time: formattedTime })
   }
 
   const parseTimeFromString = (record) => {
@@ -349,7 +290,7 @@ const LetsRecord = (props) => {
   }, [todayRecord, displayRecord, formatRecordByName])
 
   const registerRecord = async () => {
-    if (!canWriteFirestoreStats) {
+    if (!canWriteFirestoreStats || !canMutateNow()) {
       console.warn('Firestore record write blocked outside allowed record window')
       return
     }
@@ -436,18 +377,24 @@ const LetsRecord = (props) => {
       {/*{!showRequestUpdateButton && <Separator fullWidth={false} />}*/}
       <div className={templateContainerStyle}>
         <>
-          {showMVP && (
+          {awaitingFinalResult && (
+            <p role="status" className="mb-3 text-sm text-blue-700 dark:text-blue-300">
+              {gameStatus.data?.phase === 'error' ? '최종 집계를 다시 시도하고 있습니다.' : '경기가 종료되었습니다. 최종 결과를 집계하고 있습니다.'}
+            </p>
+          )}
+          {showMVP && finalResultReady && (
             <div className={'absolute z-10 flex flex-col items-center top-[10%] w-[90%]'}>
-              <DailyMVP
+              {bestPlayers.length > 0 && <DailyMVP
                 setShowMVP={setShowMVP}
-                recordData={firestoreRecord ? firestoreRecord[thisYear] : []}
+                bestPlayers={bestPlayers}
                 year={thisYear}
                 today={today}
-              />
+              />}
               <TeamScorePopup
                 showMVP={showMVP}
                 setShowMVP={setShowMVP}
                 recordData={displayRecord}
+                finalTeamScore={gameStatus.data.team_scores}
                 weeklyTeamData={weeklyTeamData}
               />
             </div>

@@ -9,8 +9,10 @@ import {
   totalWeeklyTeamDataAtom,
   existingMembersAtom,
   timeAtom,
+  gameStatusAtom,
+  todaysMVPAtom,
 } from '@/store/atoms'
-import { collection, onSnapshot } from 'firebase/firestore'
+import { collection, doc, onSnapshot } from 'firebase/firestore'
 import { db as firestoreDb } from '../../firebase.js'
 import { analyzeForStatusBoard } from '../apis/analyzeData.js'
 import { getAnalysisCachePeriod } from '../apis/analysisDataCache.js'
@@ -26,6 +28,8 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
   )
   const [existingMembers] = useAtom(existingMembersAtom)
   const [time] = useAtom(timeAtom)
+  const [, setGameStatus] = useAtom(gameStatusAtom)
+  const [, setTodaysMVP] = useAtom(todaysMVPAtom)
 
   const { thisYear, thisMonth, currentTime } = time
   const cacheDayKey = getAnalysisCachePeriod(currentTime).dayKey
@@ -44,24 +48,58 @@ export default function useUpdateRecords(yearParameter, setRecordRoomLoadingFlag
     }
     const targetId = `${String(targetDate.getUTCMonth() + 1).padStart(2, '0')}${String(targetDate.getUTCDate()).padStart(2, '0')}`
     const targetYear = String(targetDate.getUTCFullYear())
+    const context = { year: targetYear, day: targetId, loaded: false, data: null }
+    let active = true
+    setGameStatus(context)
+    setTodaysMVP(context)
     const unsubscribeRounds = onValue(
       ref(rtdb, `${targetYear}/${targetId}_rounds`),
       (snapshot) => {
+        if (!active) return
         setTodaysRealtimeRound(snapshot.val() || {})
       },
     )
     const unsubscribeRequests = onValue(
       ref(rtdb, `${targetYear}/${targetId}_request`),
       (snapshot) => {
+        if (!active) return
         setRequestList(snapshot.val() || {})
+      },
+    )
+    const unsubscribeStatus = onValue(
+      ref(rtdb, `${targetYear}/${targetId}_status`),
+      (snapshot) => {
+        if (!active) return
+        setGameStatus({ ...context, loaded: true, data: snapshot.val() })
+      },
+      (error) => {
+        if (!active) return
+        setGameStatus(context)
+        console.error('경기 종료 상태를 가져오는 중 에러 발생:', error)
+      },
+    )
+    const mvpDocumentId = `${targetYear.slice(-2)}${targetId}`
+    const unsubscribeMVP = onSnapshot(
+      doc(firestoreDb, 'daily_mvp', mvpDocumentId),
+      (snapshot) => {
+        if (!active) return
+        setTodaysMVP({ ...context, loaded: true, data: snapshot.exists() ? snapshot.data() : null })
+      },
+      (error) => {
+        if (!active) return
+        setTodaysMVP(context)
+        console.error('오늘의 MVP를 가져오는 중 에러 발생:', error)
       },
     )
 
     return () => {
+      active = false
       unsubscribeRounds()
       unsubscribeRequests()
+      unsubscribeStatus()
+      unsubscribeMVP()
     }
-  }, [cacheDayKey, setTodaysRealtimeRound, setRequestList])
+  }, [cacheDayKey, setTodaysRealtimeRound, setRequestList, setGameStatus, setTodaysMVP])
 
   // 2) Firestore year fetch: year별 데이터만 담당
 

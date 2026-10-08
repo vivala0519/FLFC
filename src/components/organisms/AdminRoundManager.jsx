@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { uid } from 'uid'
 import getTimes from '@/hooks/getTimes.js'
 import getRecords from '@/hooks/getRecords.js'
 import getMembers from '@/hooks/getMembers.js'
@@ -69,10 +70,11 @@ export function AdminRoundEditor({ source, seed: rounds, teams, members, context
   const form = goalForm || roundForm
   const hasIncoming = Boolean(form && getAdminRoundVersion(form.expected)
     !== getAdminRoundVersion(roundForm?.isNew ? source || {} : source?.[form.roundId]))
-  const canEdit = context.canEdit && !loading && members.length > 0 && !statsPending
+  const canEdit = context.canEdit && !loading && !statsPending
   const hasForm = Boolean(goalForm || roundForm)
   const controlsLocked = hasForm || saving || Boolean(confirmation)
-  const teamOptions = [...new Set([...Object.keys(teams).filter((team) => Array.isArray(teams[team])
+  const playingRound = rounds.find((round) => round.result === 'playing')
+  const teamOptions = [...new Set(['1', '2', '3', ...Object.keys(teams).filter((team) => Array.isArray(teams[team])
     && teams[team].some((name) => typeof name === 'string' && name.trim())), ...rounds.flatMap((round) => round.teams)])].sort()
   const playerOptions = [...new Set([...members, ...Object.values(teams).flat(),
     ...rounds.flatMap((round) => round.goals.flatMap((goal) => [goal.goal, goal.assist]))])]
@@ -102,7 +104,7 @@ export function AdminRoundEditor({ source, seed: rounds, teams, members, context
     if (!canEdit || hasForm) return
     setFormError('')
     setGoalForm({ roundId: round.id, expected: source[round.id], isNew: !goal, draft: goal ? { ...goal } : {
-      id: crypto.randomUUID(), time: context.timeLabel,
+      id: uid(), time: context.timeLabel,
       goal: '', assist: '', team: round.teams[0] || '', fever: false,
     } })
     setNotice('')
@@ -237,9 +239,12 @@ export function AdminRoundEditor({ source, seed: rounds, teams, members, context
           </section>
         })}
         {!rounds.length && <p className="admin-empty">{loading ? '기록 불러오는 중' : '등록된 라운드가 없습니다.'}</p>}
-        {roundForm?.isNew ? renderRoundForm() : <button type="button" className="admin-add-round" disabled={!canEdit || controlsLocked || teamOptions.length < 2 || rounds.some((round) => round.result === 'playing')} onClick={() => {
+        {roundForm?.isNew ? renderRoundForm() : <button type="button" className="admin-add-round" disabled={!canEdit || controlsLocked || teamOptions.length < 2 || Boolean(playingRound)} onClick={() => {
           setRoundForm({ isNew: true, expected: source || {}, draft: createAdminRound(rounds, teamOptions, rounds.length ? context.timeLabel : '08:00:00') }); setFormError(''); setNotice('')
         }}>라운드 추가</button>}
+        {playingRound && !hasForm && <p className="admin-save-notice" role="status">
+          이전 라운드의 결과를 저장해야 새 라운드를 추가할 수 있습니다.
+        </p>}
       </div>
       <p className="admin-save-notice" role={statsPending ? 'alert' : 'status'}>{saving ? '기록 저장중' : notice}</p>
       {statsPending && <button type="button" className="admin-command" disabled={saving || !context.canEdit} onClick={async () => {
@@ -262,13 +267,13 @@ export function AdminRoundEditor({ source, seed: rounds, teams, members, context
 export default function AdminRoundManager() {
   const { time: { currentTime } } = getTimes()
   const { todaysRealtimeRound, totalWeeklyTeamData } = getRecords()
-  const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
+  const { existingMembers, totalMembers, oneCharacterMembers, membersNickName } = getMembers()
   const context = getAdminMatchContext(currentTime)
   const rounds = useMemo(() => createAdminRoundDrafts(todaysRealtimeRound), [todaysRealtimeRound])
   const weeklyTeam = totalWeeklyTeamData?.find((item) => item.id === context.weeklyTeamId)?.data || {}
-  const memberInfo = { members: existingMembers, oneCharacterMembers, nicknames: membersNickName }
+  const memberInfo = { members: totalMembers, oneCharacterMembers, nicknames: membersNickName, weeklyTeam: { data: weeklyTeam } }
   return <AdminRoundEditor key={context.key} context={context} source={todaysRealtimeRound} seed={rounds} teams={weeklyTeam}
-    members={existingMembers} loading={todaysRealtimeRound == null || totalWeeklyTeamData == null}
+    members={existingMembers} loading={todaysRealtimeRound == null}
     onSave={(operation) => adminRoundWrites.save(context, operation, memberInfo)}
     onRetry={() => adminRoundWrites.retryStats(context, memberInfo)} />
 }

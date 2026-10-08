@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Swal from 'sweetalert2'
-import { getDatabase, ref, get, set, update } from 'firebase/database'
+import { getDatabase, ref, get, set, update, runTransaction } from 'firebase/database'
 import { uid } from 'uid'
 import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
@@ -11,6 +11,8 @@ import RequestBox from '@/components/organisms/RequestBox.jsx'
 import Separator from '@/components/atoms/Separator.jsx'
 import { getRoundParticipants } from '@/apis/roundParticipants.js'
 import { createRecordMemberResolver, findWeeklyMemberTeam } from '@/apis/recordMembers.js'
+import getRecords from '@/hooks/getRecords.js'
+import { isGameWriteAllowed } from '@/apis/gameWriteWindow.js'
 
 const ALL_TEAMS = ['1', '2', '3']
 
@@ -31,40 +33,10 @@ const getNumberAtLeastTwo = (arr) => {
 const getRoundRef = (db, thisYear, today, roundId) =>
   ref(db, `${thisYear}/${today}_rounds/${roundId}`)
 
-// 라운드 골 기록과 백업 저장
-const saveGoalRecord = async (db, thisYear, today, roundId, record) => {
-  if (!record) return
-  const { id } = record
-
-  const goalRef = ref(db, `${thisYear}/${today}_rounds/${roundId}/goal/${id}`)
-  await set(goalRef, record)
-
-  await set(ref(db, `${thisYear}/${today}_backup/${id}`), record)
-}
-
-// 라운드에 teamList 채우기
-const ensureRoundTeamList = async (db, thisYear, today, roundId, playingTeams) => {
-  const roundRef = getRoundRef(db, thisYear, today, roundId)
-  const snap = await get(roundRef)
-  const roundData = snap.val() || {}
-
-  // if (Array.isArray(roundData.teamList) && roundData.teamList.length >= 2) {
-  //   return roundData
-  // }
-
-  // const newTeamList = Array.isArray(roundData.teamList)
-  //   ? [...new Set([...roundData.teamList, ...playingTeams])]
-  //   : [...playingTeams]
-
-  await update(roundRef, { teamList: [...playingTeams] })
-  return { ...roundData, teamList: [...playingTeams] }
-}
-
 // ---------------------- 컴포넌트 ----------------------
 
 const WriteContainer = (props) => {
-  const {
-    burstTargetRef,
+  const { burstTargetRef,
     onPrepareBurst,
     weeklyTeamData,
     containerRef,
@@ -91,12 +63,12 @@ const WriteContainer = (props) => {
     setShowSelectScorerTeamPopup,
     setSelectScorerTeamPopupMessage,
     playingTeams,
-    setPlayingTeams,
-  } = props
+    setPlayingTeams } = props
 
-  const {
-    time: { today, thisYear, currentTime, gameStartTime, gameEndTime },
-  } = getTimes()
+  const { time: { today, thisYear, currentTime } } = getTimes()
+  const { gameStatus } = getRecords()
+  const gameStatusRef = useRef(gameStatus)
+  gameStatusRef.current = gameStatus
   const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
   const resolveMember = createRecordMemberResolver(existingMembers, oneCharacterMembers, membersNickName)
 
@@ -114,6 +86,63 @@ const WriteContainer = (props) => {
   }
 
   const db = getDatabase()
+  const canWrite = () => isGameWriteAllowed({ year: thisYear, day: today, status: gameStatusRef.current })
+  const assertWritable = () => {
+    if (canWrite()) return
+    const error = new Error('기록 가능 시간이 아닙니다. 경기가 종료되었거나 상태를 확인 중입니다.')
+    error.code = 'game/write-closed'
+    throw error
+  }
+  const guardedSet = (reference, value) => {
+    assertWritable()
+    return set(reference, value)
+  }
+  const guardedUpdate = (reference, value) => {
+    assertWritable()
+    return update(reference, value)
+  }
+  const handleWriteError = (error) => {
+    setIsWriting(false)
+    setPendingRoundId(null)
+    setStoredGoalData(null)
+    setScorerTeam(null)
+    setHandleRoundWinnerTrigger(null)
+    setShowSelectTeamPopup(false)
+    setShowSelectScorerTeamPopup(false)
+    console.error('기록 저장에 실패했습니다:', error)
+    void Swal.fire({ icon: 'error', text: error.code === 'game/write-closed' ? error.message : '기록 저장에 실패했습니다. 최신 기록을 확인해주세요.' })
+  }
+  const backupGoal = async (record) => {
+    if (!record || !canWrite()) return
+    try {
+      await guardedSet(ref(db, `${thisYear}/${today}_backup/${record.id}`), record)
+    } catch (error) {
+      // The canonical goal is already committed; a backup cannot undo it.
+      console.error('골 백업 저장에 실패했습니다:', error)
+    }
+  }
+  const saveGoalRecord = async (roundId, record) => {
+    if (!record) return false
+    assertWritable()
+    const result = await runTransaction(getRoundRef(db, thisYear, today, roundId), (round) => {
+      if (!canWrite() || !round) return
+      return { ...round, goal: { ...round.goal, [record.id]: { ...record, fever: true } } }
+    }, { applyLocally: false })
+    if (!result.committed) {
+      assertWritable()
+      throw new Error('라운드 기록이 변경되었습니다. 최신 기록을 확인해주세요.')
+    }
+    await backupGoal({ ...record, fever: true })
+    return true
+  }
+  const ensureRoundTeamList = async (roundId, teams) => {
+    assertWritable()
+    const roundRef = getRoundRef(db, thisYear, today, roundId)
+    const snapshot = await get(roundRef)
+    const roundData = snapshot.val() || {}
+    await guardedUpdate(roundRef, { teamList: [...teams] })
+    return { ...roundData, teamList: [...teams] }
+  }
 
   const getMemberTeam = (name) => {
     return findWeeklyMemberTeam(weeklyTeamData, name, resolveMember)
@@ -140,19 +169,13 @@ const WriteContainer = (props) => {
   // 라운드 우승 처리 + 다음 라운드 세팅
   const handleRoundWinner = async (roundId, winner, fromDraw) => {
     if (!winner) return
+    assertWritable()
 
     const roundRef = getRoundRef(db, thisYear, today, roundId)
     const roundSnap = await get(roundRef)
     const roundData = roundSnap.val()
 
-    // 이긴 팀 해당 라운드에 winnerTeam 업데이트
-    await update(roundRef, {
-      winnerTeam: {
-        number: fromDraw ? roundData.teamList : [winner],
-        member: fromDraw ? weeklyTeamData.data[roundData.teamList[0]].concat(weeklyTeamData.data[roundData.teamList[1]]) : weeklyTeamData.data[winner]
-      },
-      lostTeam: !fromDraw && roundData.teamList.find(team => team !== winner)
-    })
+    if (!roundData?.winnerTeam) return
 
     // 다음 라운드 구성
     const roundTeam = (roundData.teamList || []).map(String)
@@ -168,39 +191,63 @@ const WriteContainer = (props) => {
 
     // 이긴팀, 쉬고 있던 팀 다음 라운드에 teamList 업데이트
     setPlayingTeams(new Set(nextTeamList))
-    await update(newRoundRef, { teamList: nextTeamList })
+    await guardedUpdate(newRoundRef, { teamList: nextTeamList })
   }
 
   // getGoalTeam 에 팀 추가 + 우승 여부 체크
-  const applyTeamGoal = async (roundId, teamNumber, fromDraw) => {
-    const goalTeamRef = ref(
-      db,
-      `${thisYear}/${today}_rounds/${roundId}/getGoalTeam`,
-    )
-    const goalTeamSnap = await get(goalTeamRef)
-    const currentList =
-      goalTeamSnap.exists() && Array.isArray(goalTeamSnap.val())
-        ? goalTeamSnap.val()
-        : []
-
-    if (fromDraw) {
-      currentList.push(teamNumber)
-      currentList.push(teamNumber)
-    } else {
-      currentList.push(teamNumber)
+  const applyTeamGoal = async (roundId, teamNumber, fromDraw = false, record = null) => {
+    assertWritable()
+    const team = String(teamNumber)
+    let alreadyRecorded = false
+    const result = await runTransaction(getRoundRef(db, thisYear, today, roundId), (round) => {
+      alreadyRecorded = false
+      if (!canWrite() || !round) return
+      if (record && round.goal?.[record.id]) {
+        alreadyRecorded = true
+        return round
+      }
+      if (round.winnerTeam || !round.teamList?.map(String).includes(team)) return
+      const goalTeams = Array.isArray(round.getGoalTeam) ? round.getGoalTeam.map(String) : []
+      goalTeams.push(team)
+      if (fromDraw) goalTeams.push(team)
+      const nextRound = {
+        ...round,
+        getGoalTeam: goalTeams,
+        ...(record ? { goal: { ...round.goal, [record.id]: { ...record, team, fever: false } } } : {}),
+      }
+      const winner = getNumberAtLeastTwo(goalTeams)
+      if (winner) {
+        const winners = fromDraw ? round.teamList.map(String) : [winner]
+        nextRound.winnerTeam = { number: winners, member: getRoundParticipants(weeklyTeamData, winners) }
+        nextRound.lostTeam = fromDraw ? false : round.teamList.map(String).find((candidate) => candidate !== winner)
+        nextRound.participant = getRoundParticipants(weeklyTeamData, round.teamList)
+      }
+      return nextRound
+    }, { applyLocally: false })
+    if (!result.committed) {
+      assertWritable()
+      throw new Error('라운드가 종료되었거나 팀 정보가 변경되었습니다. 최신 기록을 확인해주세요.')
     }
-
-    const winner = getNumberAtLeastTwo(currentList)
-    // 2골 이상 득점한 팀 바로 승리 처리
-    if (winner) {
-      await handleRoundWinner(roundId, winner, fromDraw)
+    if (alreadyRecorded) return true
+    const committedRound = result.snapshot.val()
+    if (record) await backupGoal({ ...record, team, fever: false })
+    const winner = getNumberAtLeastTwo(committedRound.getGoalTeam || [])
+    if (winner && canWrite()) {
+      try {
+        await handleRoundWinner(roundId, winner, fromDraw)
+      } catch (error) {
+        // The goal and final result are already saved; closure ends this workflow normally.
+        if (error.code !== 'game/write-closed' && canWrite()) {
+          console.warn('골은 저장되었지만 다음 라운드를 생성하지 못했습니다:', error)
+        }
+      }
     }
-
-    await set(goalTeamRef, currentList)
+    return true
   }
 
   // scorer가 속한 팀을 찾아서 applyTeamGoal 실행
   const updateGoalTeam = async (roundId, scorerName, record) => {
+    assertWritable()
     const roundRef = getRoundRef(db, thisYear, today, roundId)
     const roundSnap = await get(roundRef)
     const roundData = roundSnap.val()
@@ -215,22 +262,23 @@ const WriteContainer = (props) => {
     if (!teamNumber) {
       console.log('no teamNumber for scorer', scorerName)
       await openScorerTeamPopup(roundData, record)
-      return
+      return false
     }
 
     if (!roundTeamList.includes(String(teamNumber))) {
       await openScorerTeamPopup(roundData, record)
-      return
+      return false
     }
 
-    await applyTeamGoal(roundId, teamNumber)
-    await saveGoalRecord(db, thisYear, today, roundId, record)
+    await applyTeamGoal(roundId, teamNumber, false, record)
     setStoredGoalData(null)
+    return true
   }
 
   // ---------------------- 라운드 생성 ----------------------
 
   const createRound = async () => {
+    assertWritable()
     const oneMinuteLater = new Date(currentTime.getTime() + 1 * 60 * 1000)
     const time =
       oneMinuteLater.getHours().toString().padStart(2, '0') +
@@ -274,7 +322,7 @@ const WriteContainer = (props) => {
           lastRound.teamList,
         )
         if (participant.length > 0) {
-          await update(lastRoundRef, { participant })
+          await guardedUpdate(lastRoundRef, { participant })
         }
       }
 
@@ -303,7 +351,13 @@ const WriteContainer = (props) => {
       participant: [],
     }
 
-    await set(roundRef, roundData)
+    assertWritable()
+    await runTransaction(roundRef, (currentRound) => {
+      if (!canWrite()) return
+      return currentRound || roundData
+    }, { applyLocally: false }).then((result) => {
+      if (!result.committed) assertWritable()
+    })
     return newRoundId
   }
 
@@ -311,6 +365,7 @@ const WriteContainer = (props) => {
 
   useEffect(() => {
     const run = async () => {
+      assertWritable()
       const roundRef = ref(db, `${thisYear}/${today}_rounds`)
       const roundSnap = await get(roundRef)
       const rounds = roundSnap.val()
@@ -326,29 +381,29 @@ const WriteContainer = (props) => {
       setPendingRoundId(null)
     }
     if (handleRoundWinnerTrigger) {
-      run()
+      void run().catch(handleWriteError)
     }
+    // The trigger owns this workflow; writes always recheck the current status ref.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleRoundWinnerTrigger])
 
   useEffect(() => {
     if (showSelectTeamPopup) return
     if (showSelectScorerTeamPopup) return
     if (!pendingRoundId) return
+    if (popupType === 'playing' && !storedGoalData) return
 
     const run = async () => {
+      assertWritable()
       const roundId = pendingRoundId
 
       // 1) 라운드 teamList 채우기
-      await ensureRoundTeamList(db, thisYear, today, roundId, playingTeams)
+      await ensureRoundTeamList(roundId, playingTeams)
 
       if (popupType === 'playing') {
         // 2) 득점자의 팀 getGoalTeam에 추가
-        await updateGoalTeam(roundId, storedGoalData.goal, storedGoalData)
-
-        // 3) 골 기록 저장
-        if (storedGoalData) {
-          await saveGoalRecord(db, thisYear, today, roundId, storedGoalData)
-        }
+        const saved = await updateGoalTeam(roundId, storedGoalData.goal, storedGoalData)
+        if (!saved) return
 
         // 4) UI 정리
         setLastRecord(storedGoalData.id)
@@ -367,7 +422,7 @@ const WriteContainer = (props) => {
       }
     }
 
-    run()
+    void run().catch(handleWriteError)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSelectTeamPopup, storedGoalData, pendingRoundId])
 
@@ -375,6 +430,7 @@ const WriteContainer = (props) => {
 
   useEffect(() => {
     const run = async () => {
+      assertWritable()
       // 마지막 라운드 찾기
       const roundRef = ref(db, `${thisYear}/${today}_rounds`)
       const roundSnap = await get(roundRef)
@@ -387,8 +443,8 @@ const WriteContainer = (props) => {
       const lastRoundId = lastRoundObj.id
 
       // 선택된 팀을 득점 팀으로 반영
-      await applyTeamGoal(lastRoundId, scorerTeam)
-      await saveGoalRecord(db, thisYear, today, lastRoundId, storedGoalData)
+      if (!storedGoalData) return
+      await applyTeamGoal(lastRoundId, scorerTeam, false, storedGoalData)
 
       setScorerTeam(null)
       setStoredGoalData(null)
@@ -402,7 +458,7 @@ const WriteContainer = (props) => {
 
     if (showSelectScorerTeamPopup) return
     if (scorerTeam && !handleRoundWinnerTrigger) {
-      run()
+      void run().catch(handleWriteError)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSelectScorerTeamPopup, scorerTeam])
@@ -410,14 +466,8 @@ const WriteContainer = (props) => {
   // ---------------------- 골 등록 핸들러 ----------------------
 
   const registerHandler = async () => {
-    if (editingRecordKey) return
-    const day = currentTime.getDay()
-
-    if (
-      day !== 0 &&
-      currentTime >= gameStartTime &&
-      currentTime <= gameEndTime
-    ) {
+    if (editingRecordKey || isWriting) return
+    if (!canWrite()) {
       Swal.fire({
         icon: 'error',
         text: '기록 가능 시간이 아닙니다.',
@@ -427,131 +477,77 @@ const WriteContainer = (props) => {
 
     if (!scorer.trim()) return
 
-    setIsWriting(true)
+    try {
+      setIsWriting(true)
 
-    const time =
-      currentTime.getHours().toString().padStart(2, '0') +
-      ':' +
-      currentTime.getMinutes().toString().padStart(2, '0') +
-      ':' +
-      currentTime.getSeconds().toString().padStart(2, '0')
+      const time =
+        currentTime.getHours().toString().padStart(2, '0') +
+        ':' +
+        currentTime.getMinutes().toString().padStart(2, '0') +
+        ':' +
+        currentTime.getSeconds().toString().padStart(2, '0')
 
-    const goalId = uid()
-    const roundId = await createRound()
+      const goalId = uid()
+      const roundId = await createRound()
 
-    const scorerName = getRecordName(scorer)
-    const assistantName = getRecordName(assistant)
+      const scorerName = getRecordName(scorer)
+      const assistantName = getRecordName(assistant)
 
-    const checkMemberHandler = (roundData) => {
-      const roundTeamList = (roundData.teamList || []).map(String)
-      const scorerMemberTeam = getMemberTeam(scorerName)
+      const checkMemberHandler = (roundData) => {
+        const roundTeamList = (roundData.teamList || []).map(String)
+        const scorerMemberTeam = getMemberTeam(scorerName)
 
-      if (
-        scorerMemberTeam &&
-        !roundTeamList.includes(String(scorerMemberTeam))
-      ) {
-        openScorerTeamPopup(roundData, record)
-        return false
+        if (
+          scorerMemberTeam &&
+          !roundTeamList.includes(String(scorerMemberTeam))
+        ) {
+          openScorerTeamPopup(roundData, record)
+          return false
+        }
+
+        const assistantMemberTeam = getMemberTeam(assistantName)
+        if (
+          !scorerMemberTeam &&
+          assistantMemberTeam &&
+          !roundTeamList.includes(String(assistantMemberTeam))
+        ) {
+          openScorerTeamPopup(roundData, record)
+          return false
+        }
+
+        if (!scorerMemberTeam && !assistantMemberTeam && !['용병', '자책'].includes(scorerName)) {
+          openScorerTeamPopup(roundData, record)
+          return false
+        }
+
+        return true
       }
 
-      const assistantMemberTeam = getMemberTeam(assistantName)
-      if (
-        !scorerMemberTeam &&
-        assistantMemberTeam &&
-        !roundTeamList.includes(String(assistantMemberTeam))
-      ) {
-        openScorerTeamPopup(roundData, record)
-        return false
+      const record = {
+        id: goalId,
+        time,
+        goal: scorerName.trim(),
+        assist: assistantName.trim(),
       }
-
-      if (!scorerMemberTeam && !assistantMemberTeam && !['용병', '자책'].includes(scorerName)) {
-        openScorerTeamPopup(roundData, record)
-        return false
-      }
-
-      return true
-    }
-
-    const record = {
-      id: goalId,
-      time,
-      goal: scorerName.trim(),
-      assist: assistantName.trim(),
-    }
-    if (isFeverTime) {
-      await saveGoalRecord(db, thisYear, today, roundId, record)
-    } else {
       const roundRef = getRoundRef(db, thisYear, today, roundId)
       const roundSnap = await get(roundRef)
       const roundData = roundSnap.val()
-
-      // 팀 정보 아직 없음 → 팝업 띄우고 여기서 멈춤
-      if (!roundData.teamList || roundData.teamList.length < 2) {
-        if (roundData.index < 1) {
-          // 두 팀뿐인 케이스
-          const isThirdTeamBlank = weeklyTeamData.data['3'].every((v) => v.trim() === '')
-          if (isThirdTeamBlank) {
-            roundData.teamList = ['1', '2']
-            await update(roundRef, { teamList: ['1', '2'] })
-
-            const checkMember = checkMemberHandler(roundData)
-            if (!checkMember) return
-            await updateGoalTeam(roundId, record.goal, record)
-
-            setLastRecord(goalId)
-            setScorer('')
-            setAssistant('')
-            setTimeout(() => {
-              setIsWriting(false)
-            }, 300)
-            return
-          }
-          setSelectTeamPopupMessage('경기 중인 팀을 선택해주세요')
-          setShowSelectTeamPopup(true)
-          setStoredGoalData(record)
-          setPendingRoundId(roundId)
-          return
-        } else {
-          const wholeSnap = await get(ref(db, `${thisYear}/${today}_rounds`))
-        }
+      if (isFeverTime || Object.prototype.hasOwnProperty.call(roundData?.goal || {}, 'fever-time-bar')) {
+        await saveGoalRecord(roundId, record)
       } else {
-        const isPastMoreThanMinutes = (gameTime, minutes = 10, now = currentTime) => {
-          const m = /^(\d{2}):(\d{2}):(\d{2})$/.exec(gameTime)
-          if (!m) return false
+        // 팀 정보 아직 없음 → 팝업 띄우고 여기서 멈춤
+        if (!roundData.teamList || roundData.teamList.length < 2) {
+          if (roundData.index < 1) {
+            // 두 팀뿐인 케이스
+            const isThirdTeamBlank = weeklyTeamData.data['3'].every((v) => v.trim() === '')
+            if (isThirdTeamBlank) {
+              roundData.teamList = ['1', '2']
+              await guardedUpdate(roundRef, { teamList: ['1', '2'] })
 
-          const [, hh, mm, ss] = m.map(Number)
-
-          const target = new Date(
-            now.getFullYear(),
-            now.getMonth(),
-            now.getDate(),
-            hh,
-            mm,
-            ss,
-            0,
-          )
-
-          const diffMs = now - target
-          return diffMs >= minutes * 60 * 1000
-        }
-        if (isPastMoreThanMinutes(roundData.time, 11)) {
-          Swal.fire({
-            title: '10분 이상 지난 라운드예요',
-            icon: 'warning',
-            text: '이전 라운드가 종료됐는지 확인해주세요. 해당 라운드가 맞나요?',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: '계속',
-            cancelButtonText: '취소',
-          }).then( async (result) => {
-            if (result.isConfirmed) {
               const checkMember = checkMemberHandler(roundData)
               if (!checkMember) return
-
-              setStoredGoalData(record)
-
-              await updateGoalTeam(roundId, record.goal, record)
+              const saved = await updateGoalTeam(roundId, record.goal, record)
+              if (!saved) return
 
               setLastRecord(goalId)
               setScorer('')
@@ -559,30 +555,90 @@ const WriteContainer = (props) => {
               setTimeout(() => {
                 setIsWriting(false)
               }, 300)
+              return
             }
-            if (result.isDismissed) {
-              setIsWriting(false)
-            }
-          })
-          return
+            setSelectTeamPopupMessage('경기 중인 팀을 선택해주세요')
+            setShowSelectTeamPopup(true)
+            setStoredGoalData(record)
+            setPendingRoundId(roundId)
+            return
+          } else {
+            const wholeSnap = await get(ref(db, `${thisYear}/${today}_rounds`))
+          }
+        } else {
+          const isPastMoreThanMinutes = (gameTime, minutes = 10, now = currentTime) => {
+            const m = /^(\d{2}):(\d{2}):(\d{2})$/.exec(gameTime)
+            if (!m) return false
+
+            const [, hh, mm, ss] = m.map(Number)
+
+            const target = new Date(
+              now.getFullYear(),
+              now.getMonth(),
+              now.getDate(),
+              hh,
+              mm,
+              ss,
+              0,
+            )
+
+            const diffMs = now - target
+            return diffMs >= minutes * 60 * 1000
+          }
+          if (isPastMoreThanMinutes(roundData.time, 11)) {
+            Swal.fire({
+              title: '10분 이상 지난 라운드예요',
+              icon: 'warning',
+              text: '이전 라운드가 종료됐는지 확인해주세요. 해당 라운드가 맞나요?',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: '계속',
+              cancelButtonText: '취소',
+            }).then( async (result) => {
+              if (result.isConfirmed) {
+                assertWritable()
+                const checkMember = checkMemberHandler(roundData)
+                if (!checkMember) return
+
+                setStoredGoalData(record)
+
+                const saved = await updateGoalTeam(roundId, record.goal, record)
+                if (!saved) return
+
+                setLastRecord(goalId)
+                setScorer('')
+                setAssistant('')
+                setTimeout(() => {
+                  setIsWriting(false)
+                }, 300)
+              }
+              if (result.isDismissed) {
+                setIsWriting(false)
+              }
+            }).catch(handleWriteError)
+            return
+          }
+          const checkMember = checkMemberHandler(roundData)
+          if (!checkMember) return
         }
-        const checkMember = checkMemberHandler(roundData)
-        if (!checkMember) return
+
+        setStoredGoalData(record)
+
+        // 팀 정보 이미 있으면 → 바로 저장
+        const saved = await updateGoalTeam(roundId, record.goal, record)
+        if (!saved) return
       }
 
-      setStoredGoalData(record)
-
-      // 팀 정보 이미 있으면 → 바로 저장
-      await updateGoalTeam(roundId, record.goal, record)
-      // await saveGoalRecord(db, thisYear, today, roundId, record)
+      setLastRecord(goalId)
+      setScorer('')
+      setAssistant('')
+      setTimeout(() => {
+        setIsWriting(false)
+      }, 300)
+    } catch (error) {
+      handleWriteError(error)
     }
-
-    setLastRecord(goalId)
-    setScorer('')
-    setAssistant('')
-    setTimeout(() => {
-      setIsWriting(false)
-    }, 300)
   }
 
   // ---------------------- 렌더 ----------------------

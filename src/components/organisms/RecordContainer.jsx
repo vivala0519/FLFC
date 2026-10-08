@@ -1,6 +1,9 @@
 import { Fragment, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import Swal from 'sweetalert2'
-import { get, getDatabase, ref, remove, set} from 'firebase/database'
+import { get, getDatabase, ref, runTransaction } from 'firebase/database'
+import getRecords from '@/hooks/getRecords.js'
+import { isGameWriteAllowed } from '@/apis/gameWriteWindow.js'
+import { removeRoundGoal } from '@/apis/removeRoundGoal.js'
 import getTimes from '@/hooks/getTimes.js'
 import RecordRow from '@/components/molecules/RecordRow.jsx'
 import RoundRow from '@/components/molecules/RoundRow.jsx'
@@ -8,6 +11,9 @@ import RoundRow from '@/components/molecules/RoundRow.jsx'
 const RecordContainer = (props) => {
   const { formatRecordByName, recordsLoaded, open, isFeverTime, dynamicHeight, editingRecordKey, setEditingRecordKey, showMVP, displayRecord, lastRecord, canRegister, weeklyTeamData, setPendingRoundId, setShowSelectTeamPopup, setShowSelectScorerTeamPopup, setSelectTeamPopupMessage, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams, burstTargetRef, burstControllerRef } = props
   const { time: { today, thisYear } } = getTimes()
+  const { gameStatus } = getRecords()
+  const statusRef = useRef(gameStatus)
+  statusRef.current = gameStatus
   const [openRounds, setOpenRounds] = useState(new Set())
   const [closedRounds, setClosedRounds] = useState(new Set())
   const containerStyle = `w-[96%] relative overscroll-y-contain flex flex-col items-center p-2 border border-transparent overflow-x-hidden `
@@ -59,75 +65,26 @@ const RecordContainer = (props) => {
     }
   }, [displayRecord])
 
-  const deleteRecord = (toDeleteId, index) => {
+  const deleteRecord = (toDeleteId) => {
+    const canMutate = () => canRegister && isGameWriteAllowed({ year: thisYear, day: today, status: statusRef.current })
+    if (!canMutate()) return
     Swal.fire({
-      title: '삭제, Really?',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: '삭제',
-      cancelButtonText: '취소'
-    }).then( async (result) => {
-      if (result.isConfirmed) {
-        const db = getDatabase()
-        const refPath = thisYear + '/' + today + '_rounds'
-        const roundRef = ref(db, refPath)
-
-        const roundsSnapshot =  await get(roundRef)
-        const rounds = roundsSnapshot.val()
-        const roundValues = Object.values(rounds)
-
-        if (roundValues.length > 0) {
-          const lastRound = roundValues.reduce((prev, cur) => {
-            const prevIndex = typeof prev.index === 'number' ? prev.index : -1
-            const curIndex = typeof cur.index === 'number' ? cur.index : -1
-            return curIndex > prevIndex ? cur : prev
-          })
-
-          const recordRef = ref(db, thisYear + '/' + today + '_rounds/' + lastRound.id + '/goal/' + toDeleteId)
-          remove(recordRef).then(() => {
-            console.log('Document successfully deleted!')
-          })
-          .catch((error) => {
-            console.log(error)
-          });
-
-          const getGoalTeamRef = ref(db, thisYear + '/' + today + '_rounds/' + lastRound.id + '/getGoalTeam')
-
-          const snap = await get(getGoalTeamRef)
-
-          // 값이 없으면 그냥 종료
-          if (!snap.exists()) return
-
-          const list = snap.val()
-
-          // 혹시 배열이 아니면 에러 처리
-          if (!Array.isArray(list)) {
-            console.error('getGoalTeam is not an array:', list)
-            return
-          }
-
-          // 인덱스 범위 체크
-          if (index < 0 || index >= list.length) {
-            console.warn('invalid index:', index)
-            return
-          }
-
-          // 해당 index 제거
-          const newList = list.filter((_, i) => i !== index)
-          // 또는: list.splice(index, 1); const newList = list
-
-          // 다시 저장
-          await set(getGoalTeamRef, newList)
-        }
-
-        // remove(recordRef).then(() => {
-        //   console.log('Document successfully deleted!')
-        // })
-        //   .catch((error) => {
-        //     console.log(error)
-        //   });
+      title: '기록을 삭제할까요?', icon: 'warning', showCancelButton: true,
+      confirmButtonText: '삭제', cancelButtonText: '취소',
+    }).then(async (result) => {
+      if (!result.isConfirmed || !canMutate()) return
+      const lastRound = displayRecord[displayRecord.length - 1]
+      const roundId = lastRound?.roundId || lastRound?.id
+      if (!roundId) return
+      try {
+        const roundRef = ref(getDatabase(), `${thisYear}/${today}_rounds/${roundId}`)
+        await get(roundRef)
+        await runTransaction(roundRef, (round) => {
+          if (!canMutate()) return
+          return removeRoundGoal(round, toDeleteId)
+        }, { applyLocally: false })
+      } catch (error) {
+        console.error('기록을 삭제하지 못했습니다:', error)
       }
     })
   }
@@ -159,6 +116,7 @@ const RecordContainer = (props) => {
         <div className={'w-full flex flex-col items-center'}>
           <div className={`w-[85%] border-blue-400`}></div>
           <RoundRow
+            canRegister={canRegister}
             index={0}
             fakeRow={true}
             record={{ winner: null, time: '08:00:00' }}
@@ -177,6 +135,7 @@ const RecordContainer = (props) => {
           <div className={`${!closedRounds.has(index) && 'border-blue-400'} w-[85%] `}></div>
           {/*)}*/}
           <RoundRow
+            canRegister={canRegister}
             key={index}
             index={index}
             fakeRow={false}

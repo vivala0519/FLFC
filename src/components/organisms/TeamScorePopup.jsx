@@ -1,16 +1,7 @@
-import { useEffect, useState } from 'react'
-import { getDatabase, ref, runTransaction } from 'firebase/database'
-import getTimes from '@/hooks/getTimes.js'
-import { finalizeRound } from '@/apis/finalizeRound.js'
+import { useMemo } from 'react'
 
 const TeamScorePopup = (props) => {
-  const { time: { today, thisYear } } = getTimes()
-  const { setShowMVP, recordData, weeklyTeamData, showMVP } = props
-  const [teamScore, setTeamScore] = useState({
-    '1': { win: 0, draw: 0, lost: 0 },
-    '2': { win: 0, draw: 0, lost: 0 },
-    '3': { win: 0, draw: 0, lost: 0 },
-  })
+  const { setShowMVP, recordData = [], weeklyTeamData, finalTeamScore } = props
   const thirdTeamRoster = weeklyTeamData?.data?.['3']
   const hasThirdTeamRoster = Array.isArray(thirdTeamRoster)
     && thirdTeamRoster.some((member) => typeof member === 'string' && member.trim() !== '')
@@ -27,25 +18,8 @@ const TeamScorePopup = (props) => {
   const popupContainerStyle =
     'w-[100%] h-[150px] bg-white dark:text-black cursor-pointer border-gray-200 border-4 flex flex-col desktop:w-[30%] flex gap-2 items-center justify-center'
 
-  useEffect(() => {
-    const lastRound = recordData[recordData.length - 1]
-    if (!showMVP || !lastRound || lastRound.winnerTeam) return
-    const roundId = lastRound.roundId || lastRound.id
-    if (!roundId) return
-
-    const db = getDatabase()
-    const lastRoundRef = ref(db, `${thisYear}/${today}_rounds/${roundId}`)
-    runTransaction(
-      lastRoundRef,
-      (currentRound) => finalizeRound(currentRound, weeklyTeamData),
-      { applyLocally: false },
-    ).catch((error) => {
-      console.error('Failed to finalize last round:', error)
-    })
-  }, [recordData, showMVP, weeklyTeamData, thisYear, today])
-
-  useEffect(() => {
-    if (!showMVP) return
+  const teamScore = useMemo(() => {
+    if (finalTeamScore) return finalTeamScore
     const stats = {}
 
     recordData.forEach((rec) => {
@@ -78,8 +52,8 @@ const TeamScorePopup = (props) => {
     ;['1', '2', '3'].forEach((team) => {
       if (!stats[team]) stats[team] = { win: 0, draw: 0, lost: 0 }
     })
-    setTeamScore(stats)
-  }, [recordData, showMVP])
+    return stats
+  }, [recordData, finalTeamScore])
 
   return (
     <div className={popupContainerStyle} onClick={() => setShowMVP(false)}>
