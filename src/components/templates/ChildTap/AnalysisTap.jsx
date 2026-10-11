@@ -19,6 +19,7 @@ import { analyzeStarterStats } from '@/apis/analyzeStarterStats.js'
 import { analyzeStarterPointRate } from '@/apis/analyzeStarterPointRate.js'
 import { analyzeWinningTrio } from '@/apis/analyzeWinningTrio.js'
 import { analyzeLowScoringDuo } from '@/apis/analyzeLowScoringDuo.js'
+import { analyzeSeasonGoalDuos } from '@/apis/analyzeSeasonGoalDuos.js'
 import { analyzePlayerRadar } from '@/apis/analyzePlayerRadar.js'
 import { analyzeCareerRecords } from '@/apis/analyzeCareerRecords.js'
 import { analyzeCareerGoalDuos, analyzeCareerPartners } from '@/apis/analyzeCareerPartners.js'
@@ -328,10 +329,11 @@ const AnalysisTap = (props) => {
     totalMembers,
     thisYear,
     thisMonth,
-  ), [thisQuarterData, totalWeeklyTeamData, totalMembers, thisYear, thisMonth])
+    bestFive.memberInfo,
+  ), [thisQuarterData, totalWeeklyTeamData, totalMembers, thisYear, thisMonth, bestFive.memberInfo])
   const lowScoringDuo = lowScoringDuoStats ? {
     name: lowScoringDuoStats.pairs.map(({ players }) => players.join(' - ')),
-    count: `같은 팀 ${lowScoringDuoStats.pairs[0].sharedDays}회 · 합작 ${lowScoringDuoStats.pairs[0].points}골`,
+    count: `같은 팀 ${lowScoringDuoStats.pairs[0].sharedDays}회 · 합작 ${lowScoringDuoStats.pairs[0].goals}골`,
   } : {}
 
   const analysisItems = [
@@ -432,7 +434,7 @@ const AnalysisTap = (props) => {
       // isNew: true,
       icon: 'handshake',
       title: '친해지자..',
-      description: '같은 팀 횟수 대비 공격포인트가 가장 낮은 듀오',
+      description: '같은 팀 횟수 대비 공격포인트가 가장 적은 듀오',
       data: lowScoringDuo,
     },
     {
@@ -705,7 +707,8 @@ const AnalysisTap = (props) => {
           totalData.push(value)
         })
       })
-      const { leaders, chasing } = getSonKaeDuo(totalData)
+      const { combinations, leaders, chasing } = analyzeSeasonGoalDuos(totalData)
+      setThisQuarterPlayersCombination(combinations)
       const duoName = ({ key }) => key.split('_').map((name) => getFullName(name) || name).join(' - ')
       setSonKaeDuo(leaders.length > 0 ? {
         name: leaders.map(duoName),
@@ -1026,33 +1029,6 @@ const AnalysisTap = (props) => {
       getWeeklyTeamData()
     }
   }, [totalWeeklyTeamData, existingMembers, getWeeklyTeamData])
-
-  const getSonKaeDuo = (totalData) => {
-    // 최다 골 합작
-    const combinationMap = new Map()
-    totalData.forEach((item) => {
-      if (
-        item.goal &&
-        item.assist &&
-        item.goal !== '용병' &&
-        item.assist !== '용병'
-      ) {
-        const sortedKey = [item.goal, item.assist].sort()
-        const key = `${sortedKey[0]}_${sortedKey[1]}`
-        combinationMap.set(key, (combinationMap.get(key) || 0) + 1)
-      }
-    })
-    setThisQuarterPlayersCombination(combinationMap)
-
-    const ranked = [...combinationMap].map(([key, count]) => ({ key, count }))
-      .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
-    const topCount = ranked[0]?.count
-    const nextCount = ranked.find(({ count }) => count < topCount)?.count
-    return {
-      leaders: ranked.filter(({ count }) => count === topCount),
-      chasing: nextCount === undefined ? [] : ranked.filter(({ count }) => count === nextCount),
-    }
-  }
 
   const getPointClub = (pointData) => {
     const tenObject = {}
