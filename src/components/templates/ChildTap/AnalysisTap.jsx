@@ -1418,8 +1418,13 @@ const AnalysisTap = (props) => {
               <div className="flex max-h-[85vh] flex-col">
                 <div className="flex shrink-0 items-center justify-between gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-500">
                   <div className="min-w-0">
-                    <h3 id="player-detail-title" className="break-words text-lg font-bold font-dnf-forged text-blue-700 dark:text-blue-400">
-                      {playerDetail.name}
+                    <h3 id="player-detail-title" className="flex flex-wrap items-center gap-2 break-words text-lg font-bold font-dnf-forged text-blue-700 dark:text-blue-400">
+                      <span>{playerDetail.name}</span>
+                      {selectedMemberInfo?.injured === true && (
+                        <span className="shrink-0 rounded border border-red-200 bg-red-50 px-2 py-0.5 font-sans text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-900/40 dark:text-red-300">
+                          부상중
+                        </span>
+                      )}
                     </h3>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
                       <span>{preferredFootLabel}</span>
