@@ -36,6 +36,12 @@ function WeeklyTeam(props) {
   ])
   const [balancer, setBalancer] = useState('')
   const { membersNickName } = getMembers()
+  const selectedWeeklyTeam = weeklyTeamData[page]
+  const latestWeeklyTeam = weeklyTeamData[weeklyTeamData.length - 1]
+  const isOffDay = (totalWeeklyTeamData?.find((team) => team.id === selectedWeeklyTeam?.id)
+    ?? selectedWeeklyTeam)?.data?.isOffDay === true
+  const latestTeamIsOffDay = (totalWeeklyTeamData?.find((team) => team.id === latestWeeklyTeam?.id)
+    ?? latestWeeklyTeam)?.data?.isOffDay === true
 
   const tapContainerStyle = 'relative w-full h-[80vh]'
   const dayTitleContainerStyle = 'flex gap-5 justify-center items-center'
@@ -75,6 +81,7 @@ function WeeklyTeam(props) {
   }, [])
 
   const shareKakao = () => {
+    if (isOffDay || latestTeamIsOffDay) return
     if (window.Kakao) {
       const thisWeekTeam = weeklyTeamData[weeklyTeamData.length - 1]
       const firstTeam = thisWeekTeam.data[1].join(' ')
@@ -126,6 +133,16 @@ function WeeklyTeam(props) {
     }
   }, [editMode])
 
+  useEffect(() => {
+    if (!editMode && Array.isArray(totalWeeklyTeamData)) {
+      setWeeklyTeamData(totalWeeklyTeamData)
+    }
+  }, [totalWeeklyTeamData, editMode])
+
+  useEffect(() => {
+    if (isOffDay) setEditMode(false)
+  }, [isOffDay])
+
   const pageMoveHandler = (left) => {
     if (left && page > 0) {
       setPage(page - 1)
@@ -144,6 +161,7 @@ function WeeklyTeam(props) {
   }
 
   const createWeeklyTeamHandler = (isNew) => {
+    if (!isNew && (isOffDay || latestTeamIsOffDay)) return
     // 첫 생성
     if (isNew) {
       const newWeeklyTeam = {
@@ -176,11 +194,13 @@ function WeeklyTeam(props) {
   }
 
   const registerTeamHandler = () => {
+    if (isOffDay || latestTeamIsOffDay) return
     const newWeeklyTeamData = [...weeklyTeamData]
     const replacedTeamData = inputTeamData.map(team =>
         team.map(name => membersNickName[name]?.slice(1) ?? name)
     )
     const newData = {
+      ...newWeeklyTeamData[weeklyTeamData.length - 1].data,
       1: replacedTeamData[0],
       2: replacedTeamData[1],
       3: replacedTeamData[2],
@@ -215,22 +235,9 @@ function WeeklyTeam(props) {
       {/*</div>*/}
       {/*)}*/}
       <div className={dayTitleContainerStyle}>
-        {!editMode && (
-          <LeftButton
-            onClick={() => pageMoveHandler(true)}
-            $show={page !== 0}
-          />
-        )}
-        <TapTitleText
-          active={page === weeklyTeamData.length - 1 && activeBorder}
-          title={displayDateText(weeklyTeamData[page]?.id)}
-        />
-        {!editMode && (
-          <RightButton
-            onClick={() => pageMoveHandler(false)}
-            $show={page !== weeklyTeamData.length - 1}
-          />
-        )}
+        {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page !== 0} />}
+        <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder} title={displayDateText(weeklyTeamData[page]?.id)} />
+        {!editMode && <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1} />}
       </div>
       <div className="flex flex-col">
         {!editMode && (
@@ -238,68 +245,61 @@ function WeeklyTeam(props) {
             <hr className="w-full border-blue-700" />
           </div>
         )}
-        {page === weeklyTeamData.length - 1 && (
-          <div className="mb-4">이번 달 황밸 요정🧚 : {balancer}</div>
-        )}
-        <div className="w-full flex justify-center mb-5">
-          <div
-            className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-[#bb2649] animate-pulse p-2'}`}
-          >
-            <div className="flex flex-col gap-5 items-start p-1 rounded-md">
-              {!editMode ? (
-                [1, 2, 3].map((team, index) => (
-                  <div key={index} className="flex gap-5">
-                    <span
-                      style={{ width: '25px' }}
-                      className="relative left-1 flex items-center"
-                    >
-                      {team}팀
-                    </span>
-                    <div className="flex gap-[10px]">
-                      {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
-                        <span
-                          key={idx}
-                          className="whitespace-pre flex items-center"
-                        >
-                          {player}
-                        </span>
+        {page === weeklyTeamData.length - 1 && <div className="mb-4">이번 달 황밸 요정🧚 : {balancer}</div>}
+        {isOffDay ? (
+          <p role="status" className="mb-5 flex min-h-32 items-center justify-center text-sm font-medium text-blue-700 dark:text-yellow-400">
+            이번주는 경기가 없습니다🍃
+          </p>
+        ) : (
+          <div className="w-full flex justify-center mb-5">
+            <div
+              className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-[#bb2649] animate-pulse p-2'}`}
+            >
+              <div className="flex flex-col gap-5 items-start p-1 rounded-md">
+                {!editMode ? (
+                  [1, 2, 3].map((team, index) => (
+                    <div key={index} className="flex gap-5">
+                      <span style={{ width: '25px' }} className="relative left-1 flex items-center">
+                        {team}팀
+                      </span>
+                      <div className="flex gap-[10px]">
+                        {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
+                          <span key={idx} className="whitespace-pre flex items-center">
+                            {player}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  // 팀 생성 모드
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3 items-center">
+                      {inputTeamData?.map((team, index) => (
+                        <div key={index} className="flex flex-col gap-2">
+                          <span style={{ width: '25px' }} className="w-full text-left text-black relative left-1">
+                            {index + 1}팀
+                          </span>
+                          <div className="flex gap-1">
+                            {team.map((player, idx) => (
+                              <input
+                                key={idx}
+                                type="text"
+                                value={player}
+                                className="w-12 border-blue-600 border-2 outline-none text-center"
+                                onChange={(event) => teamMakerInputHandler(event, index, idx)}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       ))}
                     </div>
                   </div>
-                ))
-              ) : (
-                // 팀 생성 모드
-                <div className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-3 items-center">
-                    {inputTeamData?.map((team, index) => (
-                      <div key={index} className="flex flex-col gap-2">
-                        <span
-                          style={{ width: '25px' }}
-                          className="w-full text-left text-black relative left-1"
-                        >
-                          {index + 1}팀
-                        </span>
-                        <div className="flex gap-1">
-                          {team.map((player, idx) => (
-                            <input
-                              key={idx}
-                              type="text"
-                              value={player}
-                              className="w-12 border-blue-600 border-2 outline-none text-center"
-                              onChange={(event) =>
-                                teamMakerInputHandler(event, index, idx)
-                              }
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
         <div className="w-full flex justify-center">
           {canCreate ? (
             !editMode ? (
@@ -315,9 +315,7 @@ function WeeklyTeam(props) {
                       borderRadius: '3px',
                     }}
                   >
-                    <span className="animate-bounceUpDown text-black">
-                      이번 주 팀 생성하기
-                    </span>
+                    <span className="animate-bounceUpDown text-black">이번 주 팀 생성하기</span>
                     <Write />
                   </div>
                 </div>
@@ -369,6 +367,8 @@ function WeeklyTeam(props) {
               <Register />
             </div>
           ) : (
+            !isOffDay &&
+            !latestTeamIsOffDay &&
             [0, 4, 5, 6, 7].includes(currentDay) && (
               <div>
                 <div

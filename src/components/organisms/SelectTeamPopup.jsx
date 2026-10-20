@@ -33,12 +33,13 @@ const SelectTeamPopup = (props) => {
     <div className={popupContainer}>
       <div className={innerContainer}>
         <span className={'text-lg'}>{selectTeamPopupMessage}</span>
-        {Object.values(weeklyTeamData?.data)?.map((data, index) => {
-          const isSelected = playingTeams.has(String(index + 1))
+        {['1', '2', '3'].filter((team) => Array.isArray(weeklyTeamData?.data?.[team])).map((team) => {
+          const data = weeklyTeamData.data[team]
+          const isSelected = playingTeams.has(team)
           return (
             <div
-              key={index}
-              onClick={() => toggleTeam(index + 1)}
+              key={team}
+              onClick={() => toggleTeam(team)}
               className={
                 teamDiv +
                 (isSelected
@@ -46,7 +47,7 @@ const SelectTeamPopup = (props) => {
                   : ' border-gray-200')
               }
             >
-              <span className="mb-1">{index + 1}팀</span>
+              <span className="mb-1">{team}팀</span>
               <span>{data.join(' ')}</span>
             </div>
           )

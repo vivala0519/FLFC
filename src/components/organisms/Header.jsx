@@ -6,27 +6,35 @@ import HeaderPullToRefresh from '@/components/molecules/HeaderPullToRefresh.jsx'
 import plabFootballLogo from '@/assets/plab-football-logo.png'
 import MoonIcon from '@/assets/lucide/moon.svg?react'
 import SunIcon from '@/assets/lucide/sun.svg?react'
+import getTimes from '@/hooks/getTimes.js'
+import getRecords from '@/hooks/getRecords.js'
+import { getRecordAvailability } from '@/apis/recordAvailability.js'
 
 const Header = (props) => {
   const headerRef = useRef(null)
   const headerStyle = 'flex flex-col items-center w-full top-5'
 
   const { tap, setTap, lastDate, setHeaderHeight, isDarkMode, onToggleTheme } = props
-  const [isLive, setIsLive] = useState(false)
+  const { time } = getTimes()
+  const { totalWeeklyTeamData } = getRecords()
+  const { canRegister: isLive } = getRecordAvailability(time, totalWeeklyTeamData)
   const [weeklyTeamIsLive, setWeeklyTeamIsLive] = useState(false)
+  const latestWeeklyTeam = totalWeeklyTeamData?.[totalWeeklyTeamData.length - 1]
+  const weeklyTeamIsOffDay = latestWeeklyTeam?.data?.isOffDay === true
   const tapInfo = { tap: tap, setTap: setTap }
-  const liveBadgeInfo = { isLive: isLive, weeklyTeamIsLive: weeklyTeamIsLive }
+  const liveBadgeInfo = { isLive: isLive, weeklyTeamIsLive: weeklyTeamIsLive && !weeklyTeamIsOffDay }
 
-  // Let's Record 탭 Live 뱃지 활성 세팅
-  const startTime = new Date()
-  startTime.setHours(7, 50, 0, 0)
+  // Weekly Team 탭 Live 뱃지 시간 기준
   const endTime = new Date()
   endTime.setHours(10, 0, 0, 0)
   const currentTime = new Date()
-  const day = currentTime.getDay()
 
   // Weekly Team 탭 Live 뱃지 활성 세팅
   useEffect(() => {
+    if (weeklyTeamIsOffDay) {
+      setWeeklyTeamIsLive(false)
+      return
+    }
     if (lastDate) {
       const lastDateYear = parseInt('20' + lastDate.slice(0, 2))
       const lastDateMonth = parseInt(lastDate.slice(2, 4)) - 1
@@ -42,17 +50,10 @@ const Header = (props) => {
         }
       }
     }
-  }, [lastDate])
+  }, [lastDate, weeklyTeamIsOffDay])
 
   // set header height
   useEffect(() => {
-    if (
-      [0, 7].includes(day) &&
-      currentTime >= startTime &&
-      currentTime <= endTime
-    ) {
-      setIsLive(true)
-    }
     if (headerRef.current) {
       setHeaderHeight(headerRef.current.clientHeight)
     }

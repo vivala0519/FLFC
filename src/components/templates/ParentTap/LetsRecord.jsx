@@ -19,9 +19,11 @@ import { get, getDatabase, ref, remove, set, update } from 'firebase/database'
 import { getRoundParticipants } from '@/apis/roundParticipants.js'
 import { createRecordMemberResolver } from '@/apis/recordMembers.js'
 import { formatDailyRecordStats } from '@/apis/formatDailyRecordStats.js'
+import { getRecordAvailability } from '@/apis/recordAvailability.js'
 
 const LetsRecord = (props) => {
-  const { time: { today, thisDay, thisYear, currentTime, gameEndTime, gameStartTime, recordTapCloseTime } } = getTimes()
+  const { time } = getTimes()
+  const { today, thisDay, thisYear, currentTime, gameEndTime, recordTapCloseTime } = time
   const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
   const { totalWeeklyTeamData, firestoreRecord, todaysRealtimeRound, todaysRequestList } = getRecords()
   const { open, setOpen, headerHeight } = props
@@ -42,7 +44,6 @@ const LetsRecord = (props) => {
   const [realtimeRoundLoaded, setRealtimeRoundLoaded] = useState(false)
   const [registerHeight, setRegisterHeight] = useState(0)
   const [feverTimeHeight, setFeverTimeHeight] = useState(0)
-  const [canRegister, setCanRegister] = useState(false)
   const [lastRecord, setLastRecord] = useState('')
   const [showMVP, setShowMVP] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
@@ -63,11 +64,10 @@ const LetsRecord = (props) => {
   // style class
   const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-2'}`
   const templateContainerStyle = 'flex flex-col items-center w-full'
-  const canWriteFirestoreRecord =
-    thisDay === 0 &&
-    currentTime >= gameStartTime &&
-    currentTime <= gameEndTime
+  const { isReady: isWeeklyTeamReady, isOffDay, canRegister } = getRecordAvailability(time, totalWeeklyTeamData)
+  const canWriteFirestoreRecord = canRegister
   const canFinalizeFirestoreRecord =
+    isWeeklyTeamReady && !isOffDay &&
     thisDay === 0 &&
     showMVP &&
     currentTime >= gameEndTime &&
@@ -96,7 +96,11 @@ const LetsRecord = (props) => {
     if (thisDay !== 6) {
       setOpen(true)
     }
-    setCanRegister(canWriteFirestoreRecord)
+    if (isOffDay || !isWeeklyTeamReady) {
+      setShowMVP(false)
+      setShowRequestUpdateButton(false)
+      return
+    }
 
     if (thisDay === 0) {
       if (currentTime >= gameEndTime && currentTime <= recordTapCloseTime) {
@@ -104,7 +108,17 @@ const LetsRecord = (props) => {
         setShowRequestUpdateButton(true)
       }
     }
-  }, [thisDay, weeklyTeamData, canWriteFirestoreRecord])
+  }, [thisDay, weeklyTeamData, canWriteFirestoreRecord, isOffDay, isWeeklyTeamReady])
+
+  useEffect(() => {
+    if (canRegister) return
+    setEditingRecordKey(null)
+    setShowSelectTeamPopup(false)
+    setShowSelectScorerTeamPopup(false)
+    setPendingRoundId(null)
+    setScorerTeam(null)
+    setHandleRoundWinnerTrigger(null)
+  }, [canRegister])
 
   // daily 실시간 record
   useEffect(() => {
@@ -190,6 +204,7 @@ const LetsRecord = (props) => {
   }, [open, currentTime])
 
   const feverTimeHandler = () => {
+    if (!canRegister) return
     Swal.fire({
       title: '피버 타임 켤까요?',
       icon: 'warning',
@@ -436,7 +451,7 @@ const LetsRecord = (props) => {
       {/*{!showRequestUpdateButton && <Separator fullWidth={false} />}*/}
       <div className={templateContainerStyle}>
         <>
-          {showMVP && (
+          {showMVP && isWeeklyTeamReady && !isOffDay && (
             <div className={'absolute z-10 flex flex-col items-center top-[10%] w-[90%]'}>
               <DailyMVP
                 setShowMVP={setShowMVP}
@@ -455,7 +470,7 @@ const LetsRecord = (props) => {
           <RecordContainer
             burstTargetRef={recordBurstTargetRef}
             burstControllerRef={recordBurstControllerRef}
-            open={open}
+            open={open && !isOffDay}
             showMVP={showMVP}
             lastRecord={lastRecord}
             isFeverTime={isFeverTime}
@@ -495,6 +510,7 @@ const LetsRecord = (props) => {
             editingRecordKey={editingRecordKey}
             canRegister={canRegister}
             playingTeams={playingTeams}
+            isOffDay={isOffDay}
             weeklyTeamData={weeklyTeamData}
             pendingRoundId={pendingRoundId}
             requestUpdateMode={requestUpdateMode}
@@ -516,7 +532,7 @@ const LetsRecord = (props) => {
           />
         </>
       </div>
-      {showSelectTeamPopup && (
+      {canRegister && showSelectTeamPopup && (
         <SelectTeamPopup
           playingTeams={playingTeams}
           weeklyTeamData={weeklyTeamData}
@@ -526,7 +542,7 @@ const LetsRecord = (props) => {
           setShowSelectTeamPopup={setShowSelectTeamPopup}
         />
       )}
-      {showSelectScorerTeamPopup && (
+      {canRegister && showSelectScorerTeamPopup && (
         <SelectScorerTeamPopup
           scorerTeam={scorerTeam}
           playingTeams={playingTeams}

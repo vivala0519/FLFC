@@ -63,14 +63,14 @@ const ensureRoundTeamList = async (db, thisYear, today, roundId, playingTeams) =
 // ---------------------- 컴포넌트 ----------------------
 
 const WriteContainer = (props) => {
-  const {
-    burstTargetRef,
+  const {burstTargetRef,
     onPrepareBurst,
     weeklyTeamData,
     containerRef,
     editingRecordKey,
     open,
     canRegister,
+    isOffDay,
     setLastRecord,
     requestUpdateMode,
     setRequestUpdateMode,
@@ -91,12 +91,9 @@ const WriteContainer = (props) => {
     setShowSelectScorerTeamPopup,
     setSelectScorerTeamPopupMessage,
     playingTeams,
-    setPlayingTeams,
-  } = props
+    setPlayingTeams,} = props
 
-  const {
-    time: { today, thisYear, currentTime, gameStartTime, gameEndTime },
-  } = getTimes()
+  const {time: { today, thisYear, currentTime },} = getTimes()
   const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
   const resolveMember = createRecordMemberResolver(existingMembers, oneCharacterMembers, membersNickName)
 
@@ -105,6 +102,12 @@ const WriteContainer = (props) => {
   const [storedGoalData, setStoredGoalData] = useState(null)
   const [isWriting, setIsWriting] = useState(false)
   const [isFeverTime, setIsFeverTime] = useState(false)
+
+  useEffect(() => {
+    if (canRegister) return
+    setStoredGoalData(null)
+    setIsWriting(false)
+  }, [canRegister])
 
   const writeBoxPropsData = {
     scorer,
@@ -311,6 +314,7 @@ const WriteContainer = (props) => {
 
   useEffect(() => {
     const run = async () => {
+      if (!canRegister) return
       const roundRef = ref(db, `${thisYear}/${today}_rounds`)
       const roundSnap = await get(roundRef)
       const rounds = roundSnap.val()
@@ -328,9 +332,10 @@ const WriteContainer = (props) => {
     if (handleRoundWinnerTrigger) {
       run()
     }
-  }, [handleRoundWinnerTrigger])
+  }, [handleRoundWinnerTrigger, canRegister])
 
   useEffect(() => {
+    if (!canRegister) return
     if (showSelectTeamPopup) return
     if (showSelectScorerTeamPopup) return
     if (!pendingRoundId) return
@@ -369,13 +374,14 @@ const WriteContainer = (props) => {
 
     run()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showSelectTeamPopup, storedGoalData, pendingRoundId])
+  }, [showSelectTeamPopup, storedGoalData, pendingRoundId, canRegister])
 
   // ---------------------- Effect: scorerTeam 팝업에서 선택 후 처리 ----------------------
 
   useEffect(() => {
     const run = async () => {
       // 마지막 라운드 찾기
+      if (!canRegister) return
       const roundRef = ref(db, `${thisYear}/${today}_rounds`)
       const roundSnap = await get(roundRef)
       const rounds = roundSnap.val()
@@ -405,19 +411,13 @@ const WriteContainer = (props) => {
       run()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showSelectScorerTeamPopup, scorerTeam])
+  }, [showSelectScorerTeamPopup, scorerTeam, canRegister])
 
   // ---------------------- 골 등록 핸들러 ----------------------
 
   const registerHandler = async () => {
     if (editingRecordKey) return
-    const day = currentTime.getDay()
-
-    if (
-      day !== 0 &&
-      currentTime >= gameStartTime &&
-      currentTime <= gameEndTime
-    ) {
+    if (!canRegister) {
       Swal.fire({
         icon: 'error',
         text: '기록 가능 시간이 아닙니다.',
@@ -608,9 +608,9 @@ const WriteContainer = (props) => {
         />
       ) : (
         <div className="relative flex justify-center">
-          {!requestUpdateMode ? (
+          {isOffDay || !requestUpdateMode ? (
             <div className={'w-[98%]'}>
-              <InfoMessageBox open={open} />
+              <InfoMessageBox open={open} isOffDay={isOffDay} />
               {/*{showRequestUpdateButton && (*/}
               {/*  <ShowRequestButton setRequestUpdateMode={setRequestUpdateMode} />*/}
               {/*)}*/}
