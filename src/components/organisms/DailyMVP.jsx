@@ -7,7 +7,7 @@ import MvpPlayer from '@/components/molecules/MvpPlayer.jsx'
 import '../templates/ParentTap/LetsRecord.css'
 
 const DailyMVP = (props) => {
-  const { setShowMVP, recordData, year, today } = props
+  const { setShowMVP, recordData, year, today, showCelebration = true } = props
   const yymmdd = year.slice(2, 4) + today
   const [bestPlayers, setBestPlayers] = useState([])
   // style class
@@ -21,6 +21,7 @@ const DailyMVP = (props) => {
   const popupContainerStyle =
     'text-assist w-full h-[200px] bg-white box cursor-pointer flex flex-col desktop:w-[30%]'
   useEffect(() => {
+    if (!showCelebration) return undefined
     const confetti = new JSConfetti()
     const firework = () => {
       confetti.addConfetti({
@@ -50,7 +51,7 @@ const DailyMVP = (props) => {
 
     timeoutId = setTimeout(stopConfetti, 3000)
     return stopConfetti
-  }, [])
+  }, [showCelebration])
 
   useEffect(() => {
     const dailyRecordMap = new Map()
