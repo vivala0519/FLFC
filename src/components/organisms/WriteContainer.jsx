@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import Swal from 'sweetalert2'
-import { getDatabase, ref, get, set, update } from 'firebase/database'
+import { getDatabase, ref, get, set, update, runTransaction } from 'firebase/database'
 import { uid } from 'uid'
 import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
@@ -11,6 +11,7 @@ import RequestBox from '@/components/organisms/RequestBox.jsx'
 import Separator from '@/components/atoms/Separator.jsx'
 import { getRoundParticipants } from '@/apis/roundParticipants.js'
 import { createRecordMemberResolver, findWeeklyMemberTeam } from '@/apis/recordMembers.js'
+import { isFeverRound } from '@/apis/roundFever.js'
 
 const ALL_TEAMS = ['1', '2', '3']
 
@@ -32,14 +33,15 @@ const getRoundRef = (db, thisYear, today, roundId) =>
   ref(db, `${thisYear}/${today}_rounds/${roundId}`)
 
 // 라운드 골 기록과 백업 저장
-const saveGoalRecord = async (db, thisYear, today, roundId, record) => {
+const saveGoalRecord = async (db, thisYear, today, roundId, record, fever = false) => {
   if (!record) return
   const { id } = record
+  const savedRecord = fever ? { ...record, fever: true, team: '' } : { ...record, fever: false }
 
   const goalRef = ref(db, `${thisYear}/${today}_rounds/${roundId}/goal/${id}`)
-  await set(goalRef, record)
+  await set(goalRef, savedRecord)
 
-  await set(ref(db, `${thisYear}/${today}_backup/${id}`), record)
+  await set(ref(db, `${thisYear}/${today}_backup/${id}`), savedRecord)
 }
 
 // 라운드에 teamList 채우기
@@ -47,17 +49,12 @@ const ensureRoundTeamList = async (db, thisYear, today, roundId, playingTeams) =
   const roundRef = getRoundRef(db, thisYear, today, roundId)
   const snap = await get(roundRef)
   const roundData = snap.val() || {}
-
-  // if (Array.isArray(roundData.teamList) && roundData.teamList.length >= 2) {
-  //   return roundData
-  // }
-
-  // const newTeamList = Array.isArray(roundData.teamList)
-  //   ? [...new Set([...roundData.teamList, ...playingTeams])]
-  //   : [...playingTeams]
-
-  await update(roundRef, { teamList: [...playingTeams] })
-  return { ...roundData, teamList: [...playingTeams] }
+  if (isFeverRound(roundData)) return roundData
+  const result = await runTransaction(roundRef, (currentRound) => {
+    if (!currentRound || isFeverRound(currentRound)) return undefined
+    return { ...currentRound, teamList: [...playingTeams] }
+  }, { applyLocally: false })
+  return result.snapshot.val() || roundData
 }
 
 // ---------------------- 컴포넌트 ----------------------
@@ -101,7 +98,6 @@ const WriteContainer = (props) => {
   const [assistant, setAssistant] = useState('')
   const [storedGoalData, setStoredGoalData] = useState(null)
   const [isWriting, setIsWriting] = useState(false)
-  const [isFeverTime, setIsFeverTime] = useState(false)
 
   useEffect(() => {
     if (canRegister) return
@@ -145,21 +141,25 @@ const WriteContainer = (props) => {
     if (!winner) return
 
     const roundRef = getRoundRef(db, thisYear, today, roundId)
-    const roundSnap = await get(roundRef)
-    const roundData = roundSnap.val()
-
-    // 이긴 팀 해당 라운드에 winnerTeam 업데이트
-    await update(roundRef, {
-      winnerTeam: {
-        number: fromDraw ? roundData.teamList : [winner],
-        member: fromDraw ? weeklyTeamData.data[roundData.teamList[0]].concat(weeklyTeamData.data[roundData.teamList[1]]) : weeklyTeamData.data[winner]
-      },
-      lostTeam: !fromDraw && roundData.teamList.find(team => team !== winner)
-    })
+    await get(roundRef)
+    const result = await runTransaction(roundRef, (roundData) => {
+      if (!roundData || isFeverRound(roundData) || roundData.winnerTeam) return undefined
+      return {
+        ...roundData,
+        winnerTeam: {
+          number: fromDraw ? roundData.teamList : [winner],
+          member: fromDraw ? getRoundParticipants(weeklyTeamData, roundData.teamList) : weeklyTeamData.data[winner],
+        },
+        lostTeam: !fromDraw && roundData.teamList.find(team => team !== winner),
+      }
+    }, { applyLocally: false })
+    if (!result.committed) return
+    const roundData = result.snapshot.val()
 
     // 다음 라운드 구성
     const roundTeam = (roundData.teamList || []).map(String)
     const newRoundId = await createRound()
+    if (newRoundId === roundId) return
     const restTeam = ALL_TEAMS.find((team) => !roundTeam.includes(team))
     let nextTeamList = [restTeam, String(winner)]
     const isThirdTeamBlank = weeklyTeamData.data['3'].every((v) => v.trim() === '')
@@ -171,35 +171,32 @@ const WriteContainer = (props) => {
 
     // 이긴팀, 쉬고 있던 팀 다음 라운드에 teamList 업데이트
     setPlayingTeams(new Set(nextTeamList))
-    await update(newRoundRef, { teamList: nextTeamList })
+    await runTransaction(newRoundRef, (nextRound) => {
+      if (!nextRound || isFeverRound(nextRound)) return undefined
+      return { ...nextRound, teamList: nextTeamList }
+    }, { applyLocally: false })
   }
 
   // getGoalTeam 에 팀 추가 + 우승 여부 체크
   const applyTeamGoal = async (roundId, teamNumber, fromDraw) => {
-    const goalTeamRef = ref(
-      db,
-      `${thisYear}/${today}_rounds/${roundId}/getGoalTeam`,
-    )
-    const goalTeamSnap = await get(goalTeamRef)
-    const currentList =
-      goalTeamSnap.exists() && Array.isArray(goalTeamSnap.val())
-        ? goalTeamSnap.val()
-        : []
+    const roundRef = getRoundRef(db, thisYear, today, roundId)
+    await get(roundRef)
+    const result = await runTransaction(roundRef, (roundData) => {
+      if (!roundData || isFeverRound(roundData)) return undefined
+      const currentList = Array.isArray(roundData.getGoalTeam) ? [...roundData.getGoalTeam] : []
+      currentList.push(teamNumber)
+      if (fromDraw) currentList.push(teamNumber)
+      return { ...roundData, getGoalTeam: currentList }
+    }, { applyLocally: false })
+    if (!result.committed) return false
 
-    if (fromDraw) {
-      currentList.push(teamNumber)
-      currentList.push(teamNumber)
-    } else {
-      currentList.push(teamNumber)
-    }
-
-    const winner = getNumberAtLeastTwo(currentList)
+    const winner = getNumberAtLeastTwo(result.snapshot.val().getGoalTeam)
     // 2골 이상 득점한 팀 바로 승리 처리
     if (winner) {
       await handleRoundWinner(roundId, winner, fromDraw)
     }
 
-    await set(goalTeamRef, currentList)
+    return true
   }
 
   // scorer가 속한 팀을 찾아서 applyTeamGoal 실행
@@ -207,6 +204,11 @@ const WriteContainer = (props) => {
     const roundRef = getRoundRef(db, thisYear, today, roundId)
     const roundSnap = await get(roundRef)
     const roundData = roundSnap.val()
+    if (isFeverRound(roundData)) {
+      await saveGoalRecord(db, thisYear, today, roundId, record, true)
+      setStoredGoalData(null)
+      return
+    }
     const roundTeamList = (roundData?.teamList || []).map(String)
     let teamNumber = getMemberTeam(scorerName)
 
@@ -226,8 +228,8 @@ const WriteContainer = (props) => {
       return
     }
 
-    await applyTeamGoal(roundId, teamNumber)
-    await saveGoalRecord(db, thisYear, today, roundId, record)
+    const applied = await applyTeamGoal(roundId, teamNumber)
+    await saveGoalRecord(db, thisYear, today, roundId, record, !applied)
     setStoredGoalData(null)
   }
 
@@ -262,14 +264,8 @@ const WriteContainer = (props) => {
           return curIndex > prevIndex ? cur : prev
         })
 
-        // 아직 안 끝난 라운드 있으면 그 라운드 계속 사용
-        if (!lastRound.winnerTeam) {
-          return lastRound.id
-        }
-        if (lastRound.goal && Object.keys(lastRound.goal).includes('fever-time-bar')) {
-          setIsFeverTime(true)
-          return lastRound.id
-        }
+        // Fever goals stay in the last round, even while its result is being finalized.
+        if (isFeverRound(lastRound) || !lastRound.winnerTeam) return lastRound.id
 
         const lastRoundRef = getRoundRef(db, thisYear, today, lastRound.id)
         const participant = getRoundParticipants(
@@ -344,16 +340,11 @@ const WriteContainer = (props) => {
       const roundId = pendingRoundId
 
       // 1) 라운드 teamList 채우기
-      await ensureRoundTeamList(db, thisYear, today, roundId, playingTeams)
+      const roundData = await ensureRoundTeamList(db, thisYear, today, roundId, playingTeams)
 
-      if (popupType === 'playing') {
+      if (popupType === 'playing' || (isFeverRound(roundData) && storedGoalData)) {
         // 2) 득점자의 팀 getGoalTeam에 추가
         await updateGoalTeam(roundId, storedGoalData.goal, storedGoalData)
-
-        // 3) 골 기록 저장
-        if (storedGoalData) {
-          await saveGoalRecord(db, thisYear, today, roundId, storedGoalData)
-        }
 
         // 4) UI 정리
         setLastRecord(storedGoalData.id)
@@ -393,8 +384,8 @@ const WriteContainer = (props) => {
       const lastRoundId = lastRoundObj.id
 
       // 선택된 팀을 득점 팀으로 반영
-      await applyTeamGoal(lastRoundId, scorerTeam)
-      await saveGoalRecord(db, thisYear, today, lastRoundId, storedGoalData)
+      const applied = await applyTeamGoal(lastRoundId, scorerTeam)
+      await saveGoalRecord(db, thisYear, today, lastRoundId, storedGoalData, !applied)
 
       setScorerTeam(null)
       setStoredGoalData(null)
@@ -478,12 +469,12 @@ const WriteContainer = (props) => {
       goal: scorerName.trim(),
       assist: assistantName.trim(),
     }
-    if (isFeverTime) {
-      await saveGoalRecord(db, thisYear, today, roundId, record)
+    const roundRef = getRoundRef(db, thisYear, today, roundId)
+    const roundSnap = await get(roundRef)
+    const roundData = roundSnap.val()
+    if (isFeverRound(roundData)) {
+      await saveGoalRecord(db, thisYear, today, roundId, record, true)
     } else {
-      const roundRef = getRoundRef(db, thisYear, today, roundId)
-      const roundSnap = await get(roundRef)
-      const roundData = roundSnap.val()
 
       // 팀 정보 아직 없음 → 팝업 띄우고 여기서 멈춤
       if (!roundData.teamList || roundData.teamList.length < 2) {

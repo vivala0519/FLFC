@@ -1,4 +1,5 @@
 import { getRoundParticipants } from './roundParticipants.js'
+import { getRegularRoundGoals } from './roundFever.js'
 
 // RTDB transactions use undefined to abort and null to delete the round.
 export const finalizeRound = (round, weeklyTeamData) => {
@@ -10,9 +11,7 @@ export const finalizeRound = (round, weeklyTeamData) => {
   if (hours > 23 || minutes > 59 || seconds > 59) return
   const startTime = Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds)
 
-  const goalEntries = Object.entries(round.goal || {}).filter(
-    ([id, goal]) => id !== 'fever-time-bar' && goal?.id !== 'fever-time-bar',
-  )
+  const goalEntries = getRegularRoundGoals(round)
   const recordedTeams = round.getGoalTeam ?? []
   if (!Array.isArray(recordedTeams)) return
   const goalTeams = recordedTeams.map(String)

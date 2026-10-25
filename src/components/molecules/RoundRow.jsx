@@ -4,6 +4,7 @@ import { get, getDatabase, ref, set, update } from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
 import { useEffect, useState } from 'react'
 import { getRoundParticipants } from '@/apis/roundParticipants.js'
+import { getRegularRoundGoals, isFeverRound } from '@/apis/roundFever.js'
 
 const RecordRow = (props) => {
   const { time: { today, thisYear, currentTime } } = getTimes()
@@ -109,6 +110,7 @@ const RecordRow = (props) => {
           const curIndex = typeof cur.index === 'number' ? cur.index : -1
           return curIndex > prevIndex ? cur : prev
         })
+        if (isFeverRound(lastRound)) return lastRound.id
 
         // 아직 안 끝난 라운드 있으면 그 라운드 계속 사용
         if (!lastRound.winnerTeam) {
@@ -166,6 +168,7 @@ const RecordRow = (props) => {
     const roundRef = getRoundRef(db, thisYear, today, roundId)
     const snap = await get(roundRef)
     const roundData = snap.val() || {}
+    if (isFeverRound(roundData)) return
     const teamList = roundData['teamList']
     if (roundData.winnerTeam) {
       window.location.reload()
@@ -184,6 +187,7 @@ const RecordRow = (props) => {
         participant: getRoundParticipants(weeklyTeamData, teamList),
       })
       const newRoundId = await createRound()
+      if (newRoundId === roundId) return
       const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(String(team)))
       let nextTeamList = [restTeam, String(mostGetGoalTeam[0])]
       const isThirdTeamBlank = weeklyTeamData.data['3'].every((v) => v.trim() === '')
@@ -223,6 +227,7 @@ const RecordRow = (props) => {
           },
         })
         const newRoundId = await createRound()
+        if (newRoundId === roundId) return
         const restTeam = ALL_TEAMS.find(
           (team) => !roundData.teamList.includes(String(team)),
         )
@@ -289,9 +294,7 @@ const RecordRow = (props) => {
   const scoreTeams = endedRoundDisplay.winner
     ? [endedRoundDisplay.winner, ...endedRoundDisplay.opponents]
     : endedRoundDisplay.teamList
-  const goalCount = Object.entries(record.goal || {}).filter(
-    ([id, goal]) => id !== 'fever-time-bar' && goal?.id !== 'fever-time-bar',
-  ).length
+  const goalCount = getRegularRoundGoals(record).length
   // Draw resolution can append team entries without actual goal records.
   const goalTeams = Array.isArray(record.getGoalTeam)
     ? record.getGoalTeam.slice(0, goalCount).map(String) : []

@@ -7,6 +7,7 @@ import getRecords from '@/hooks/getRecords.js'
 
 import DailyMVP from '@/components/organisms/DailyMVP.jsx'
 import TeamScorePopup from '@/components/organisms/TeamScorePopup.jsx'
+import NewsPendingModal from '@/components/organisms/NewsPendingModal.jsx'
 import RecordContainer from '@/components/organisms/RecordContainer.jsx'
 import WriteContainer from '@/components/organisms/WriteContainer.jsx'
 import SelectTeamPopup from '@/components/organisms/SelectTeamPopup.jsx'
@@ -20,6 +21,7 @@ import { getRoundParticipants } from '@/apis/roundParticipants.js'
 import { createRecordMemberResolver } from '@/apis/recordMembers.js'
 import { formatDailyRecordStats } from '@/apis/formatDailyRecordStats.js'
 import { getRecordAvailability } from '@/apis/recordAvailability.js'
+import { isFeverRound } from '@/apis/roundFever.js'
 
 const LetsRecord = (props) => {
   const { time } = getTimes()
@@ -241,6 +243,10 @@ const LetsRecord = (props) => {
       const lastRoundRef = ref(db, `${basePath}/${lastRound.id}`)
       const lastRoundSnap = await get(lastRoundRef)
       const lastRoundValue = lastRoundSnap.val()
+      if (isFeverRound(lastRoundValue)) {
+        setIsFeverTime(true)
+        return
+      }
 
       if (lastRoundValue?.goal) {
         // 2-A) 골이 있는 라운드면 → 승패 여부, fever-time-bar 추가
@@ -440,6 +446,9 @@ const LetsRecord = (props) => {
 
   return (
     <div className={tapContainerStyle}>
+      {isWeeklyTeamReady && !isOffDay && thisDay === 0 && currentTime >= gameEndTime && (
+        <NewsPendingModal key={`${thisYear}${today}`} dateId={`${thisYear.slice(-2)}${today}`} />
+      )}
       {loadingFlag && (
         <div className="fixed z-20 bg-white dark:bg-gray-950 w-full h-[80%] flex items-center justify-center">
           {/*<div className="bg-loading bg-[length:100%_100%] w-[200px] h-[200px]" />*/}
@@ -452,8 +461,9 @@ const LetsRecord = (props) => {
       <div className={templateContainerStyle}>
         <>
           {showMVP && isWeeklyTeamReady && !isOffDay && (
-            <div className={'absolute z-10 flex flex-col items-center top-[10%] w-[90%]'}>
+            <div className="hidden">
               <DailyMVP
+                showCelebration={false}
                 setShowMVP={setShowMVP}
                 recordData={firestoreRecord ? firestoreRecord[thisYear] : []}
                 year={thisYear}
@@ -471,7 +481,7 @@ const LetsRecord = (props) => {
             burstTargetRef={recordBurstTargetRef}
             burstControllerRef={recordBurstControllerRef}
             open={open && !isOffDay}
-            showMVP={showMVP}
+            showMVP={false}
             lastRecord={lastRecord}
             isFeverTime={isFeverTime}
             canRegister={canRegister}
