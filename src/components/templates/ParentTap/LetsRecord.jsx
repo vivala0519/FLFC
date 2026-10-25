@@ -66,7 +66,7 @@ const LetsRecord = (props) => {
   // style class
   const tapContainerStyle = `flex flex-col items-center w-full relative ${!open ? 'justify-center h-[75vh] top-[-21px]' : 'top-2'}`
   const templateContainerStyle = 'flex flex-col items-center w-full'
-  const { isReady: isWeeklyTeamReady, isOffDay, canRegister } = getRecordAvailability(time, totalWeeklyTeamData)
+  const { isReady: isWeeklyTeamReady, isOffDay, isPreviousGameOffDay, canRegister } = getRecordAvailability(time, totalWeeklyTeamData)
   const canWriteFirestoreRecord = canRegister
   const canFinalizeFirestoreRecord =
     isWeeklyTeamReady && !isOffDay &&
@@ -443,6 +443,14 @@ const LetsRecord = (props) => {
       setFeverTimeHeight(0)
     }
   }, [feverTimeRef?.current?.clientHeight, showFeverTime, isFeverTime])
+
+  if (isPreviousGameOffDay) {
+    return (
+      <div className="flex w-full items-center justify-center py-16 text-gray-500 dark:text-gray-400" role="status">
+        지난 주에는 경기가 없었습니다🍃
+      </div>
+    )
+  }
 
   return (
     <div className={tapContainerStyle}>
