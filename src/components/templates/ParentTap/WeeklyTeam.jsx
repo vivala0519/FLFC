@@ -25,7 +25,7 @@ function WeeklyTeam(props) {
   const { setRegisteredTeam } = props
   const [weeklyTeamData, setWeeklyTeamData] = useState([])
   const [lastDate, setLastDate] = useState('')
-  const [page, setPage] = useState(0)
+  const [page, setPage] = useState(null)
   const [editMode, setEditMode] = useState(false)
   const [canCreate, setCanCreate] = useState(true)
   const [activeBorder, setActiveBorder] = useState(false)
@@ -59,34 +59,43 @@ function WeeklyTeam(props) {
   const sundayDate = nextSunday.getDate()
   const sundayMonth = nextSunday.getMonth() + 1
 
-  const fetchWeeklyTeamData = async () => {
+  useEffect(() => {
+    if (editMode || !Array.isArray(totalWeeklyTeamData)) return
     setWeeklyTeamData(totalWeeklyTeamData)
-    setPage(totalWeeklyTeamData.length - 1)
-    setLastDate(totalWeeklyTeamData[totalWeeklyTeamData.length - 1].id)
-
-    const balancerRef = collection(db, 'balancer')
-    const balancerSnapshot = await getDocs(balancerRef)
-    const balancerData = balancerSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      data: doc.data(),
-    }))[0]['data']
-    setBalancer(balancerData['name'])
-  }
+    const lastPage = Math.max(0, totalWeeklyTeamData.length - 1)
+    setPage((currentPage) => currentPage === null ? lastPage : Math.min(currentPage, lastPage))
+    setLastDate(totalWeeklyTeamData[totalWeeklyTeamData.length - 1]?.id ?? '')
+  }, [totalWeeklyTeamData, editMode])
 
   useEffect(() => {
-    if (window.location.href.includes('localhost:5173')) return
-    if (!window.Kakao.isInitialized()) {
-      window.Kakao.init(import.meta.env.VITE_KAKAO_API_KEY)
+    let active = true
+    const fetchBalancer = async () => {
+      try {
+        const snapshot = await getDocs(collection(db, 'balancer'))
+        if (active) setBalancer(snapshot.docs[0]?.data()?.name ?? '')
+      } catch (error) {
+        console.error('황밸 요정 정보를 가져오지 못했습니다:', error)
+      }
+    }
+    fetchBalancer()
+    return () => { active = false }
+  }, [])
+
+  useEffect(() => {
+    const kakao = window.Kakao
+    const apiKey = import.meta.env.VITE_KAKAO_API_KEY
+    if (kakao && apiKey && !kakao.isInitialized()) {
+      kakao.init(apiKey)
     }
   }, [])
 
   const shareKakao = () => {
     if (isOffDay || latestTeamIsOffDay) return
-    if (window.Kakao) {
+    if (window.Kakao?.isInitialized() && latestWeeklyTeam) {
       const thisWeekTeam = weeklyTeamData[weeklyTeamData.length - 1]
-      const firstTeam = thisWeekTeam.data[1].join(' ')
-      const secondTeam = thisWeekTeam.data[2].join(' ')
-      const thirdTeam = thisWeekTeam.data[3].join(' ')
+      const firstTeam = (thisWeekTeam.data[1] ?? []).join(' ')
+      const secondTeam = (thisWeekTeam.data[2] ?? []).join(' ')
+      const thirdTeam = (thisWeekTeam.data[3] ?? []).join(' ')
       const kakao = window.Kakao
 
       kakao.Share.sendCustom({
@@ -106,13 +115,12 @@ function WeeklyTeam(props) {
   }
 
   useEffect(() => {
-    fetchWeeklyTeamData()
-
+    if (!lastDate) {
+      setCanCreate(true)
+      setActiveBorder(false)
+      return
+    }
     if (lastDate) {
-      if ([0, 1, 2].includes(currentDay)) {
-        setCanCreate(false)
-      }
-
       const lastDateYear = parseInt('20' + lastDate.slice(0, 2))
       const lastDateMonth = parseInt(lastDate.slice(2, 4), 10) - 1
       const lastDateDay = parseInt(lastDate.slice(4, 6), 10)
@@ -120,24 +128,10 @@ function WeeklyTeam(props) {
       const lastTeamDate = new Date(lastDateYear, lastDateMonth, lastDateDay)
       lastTeamDate.setHours(10, 0, 0, 0)
 
-      if (lastTeamDate > today) {
-        setCanCreate(false)
-        setActiveBorder(true)
-      }
+      setCanCreate(![0, 1, 2].includes(currentDay) && lastTeamDate <= currentTime)
+      setActiveBorder(lastTeamDate > currentTime)
     }
-  }, [lastDate])
-
-  useEffect(() => {
-    if (!editMode) {
-      fetchWeeklyTeamData()
-    }
-  }, [editMode])
-
-  useEffect(() => {
-    if (!editMode && Array.isArray(totalWeeklyTeamData)) {
-      setWeeklyTeamData(totalWeeklyTeamData)
-    }
-  }, [totalWeeklyTeamData, editMode])
+  }, [lastDate, currentDay, currentTime])
 
   useEffect(() => {
     if (isOffDay) setEditMode(false)
@@ -172,7 +166,7 @@ function WeeklyTeam(props) {
           3: [],
         },
       }
-      if (newWeeklyTeam.id !== weeklyTeamData[weeklyTeamData.length - 1].id) {
+      if (newWeeklyTeam.id !== latestWeeklyTeam?.id) {
         setWeeklyTeamData([...weeklyTeamData, newWeeklyTeam])
         setPage(weeklyTeamData.length)
         setEditMode(true)
@@ -185,9 +179,9 @@ function WeeklyTeam(props) {
     } else {
       // 수정
       setInputTeamData([
-        weeklyTeamData[weeklyTeamData.length - 1].data[1],
-        weeklyTeamData[weeklyTeamData.length - 1].data[2],
-        weeklyTeamData[weeklyTeamData.length - 1].data[3],
+        latestWeeklyTeam?.data[1] ?? ['', '', '', '', '', ''],
+        latestWeeklyTeam?.data[2] ?? ['', '', '', '', '', ''],
+        latestWeeklyTeam?.data[3] ?? ['', '', '', '', '', ''],
       ])
       setEditMode(true)
     }
@@ -224,6 +218,14 @@ function WeeklyTeam(props) {
     }
   }
 
+  if (!Array.isArray(totalWeeklyTeamData) || page === null) {
+    return (
+      <div className="flex w-full justify-center py-16 text-gray-500 dark:text-gray-400" role="status">
+        주간 팀을 불러오는 중입니다
+      </div>
+    )
+  }
+
   return (
     <div className={tapContainerStyle}>
       {/*{editMode && (*/}
@@ -235,9 +237,9 @@ function WeeklyTeam(props) {
       {/*</div>*/}
       {/*)}*/}
       <div className={dayTitleContainerStyle}>
-        {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page !== 0} />}
+        {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page > 0} />}
         <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder} title={displayDateText(weeklyTeamData[page]?.id)} />
-        {!editMode && <RightButton onClick={() => pageMoveHandler(false)} $show={page !== weeklyTeamData.length - 1} />}
+        {!editMode && <RightButton onClick={() => pageMoveHandler(false)} $show={page < weeklyTeamData.length - 1} />}
       </div>
       <div className="flex flex-col">
         {!editMode && (
@@ -246,7 +248,9 @@ function WeeklyTeam(props) {
           </div>
         )}
         {page === weeklyTeamData.length - 1 && <div className="mb-4">이번 달 황밸 요정🧚 : {balancer}</div>}
-        {isOffDay ? (
+        {!weeklyTeamData.length ? (
+          <p role="status" className="py-8 text-gray-500 dark:text-gray-400">등록된 주간 팀이 없습니다.</p>
+        ) : isOffDay ? (
           <p role="status" className="mb-5 flex min-h-32 items-center justify-center text-sm font-medium text-blue-700 dark:text-yellow-400">
             이번주는 경기가 없습니다🍃
           </p>
@@ -303,7 +307,7 @@ function WeeklyTeam(props) {
         <div className="w-full flex justify-center">
           {canCreate ? (
             !editMode ? (
-              page === weeklyTeamData.length - 1 && (
+              (!weeklyTeamData.length || page === weeklyTeamData.length - 1) && (
                 <div>
                   <div
                     className="flex block-border bg-gray-50 cursor-pointer justify-center items-center"
