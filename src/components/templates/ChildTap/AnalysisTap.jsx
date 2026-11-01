@@ -145,6 +145,9 @@ const analyzeScoringRecords = (recordsByYear, asOfDate) => {
     ...daily,
     totalGoals: getTotalLeaders('골', '골'),
     totalAssists: getTotalLeaders('어시', '어시'),
+    totalAttackPoints: rankCareerCounts(
+      new Map([...totals].map(([name, stats]) => [name, stats['골'] + stats['어시']])), '점', true,
+    ),
     totalPoints: rankCareerCounts(pointTotals, '점', true),
   }
 }
@@ -583,6 +586,10 @@ const AnalysisTap = (props) => {
       type: 'career-total', icon: 'dailyAssist', title: '최다 누적 어시',
       // description: '통산 최다 어시',
       data: { ...dailyMaximums.totalAssists, status: scoringStreakResult.status },
+    },
+    {
+      type: 'career-total', icon: 'rising', title: '최다 누적 공격포인트',
+      data: { ...dailyMaximums.totalAttackPoints, status: scoringStreakResult.status },
     },
     {
       type: 'career-total', icon: 'trophy', title: '최다 누적 승점',
