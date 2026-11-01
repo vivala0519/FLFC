@@ -5,8 +5,6 @@ import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
 
-import DailyMVP from '@/components/organisms/DailyMVP.jsx'
-import TeamScorePopup from '@/components/organisms/TeamScorePopup.jsx'
 import NewsPendingModal from '@/components/organisms/NewsPendingModal.jsx'
 import RecordContainer from '@/components/organisms/RecordContainer.jsx'
 import WriteContainer from '@/components/organisms/WriteContainer.jsx'
@@ -47,7 +45,6 @@ const LetsRecord = (props) => {
   const [registerHeight, setRegisterHeight] = useState(0)
   const [feverTimeHeight, setFeverTimeHeight] = useState(0)
   const [lastRecord, setLastRecord] = useState('')
-  const [showMVP, setShowMVP] = useState(false)
   const [requestUpdateMode, setRequestUpdateMode] = useState(false)
   const [requestList, setRequestList] = useState([])
   const [playingTeams, setPlayingTeams] = useState(new Set())
@@ -68,14 +65,7 @@ const LetsRecord = (props) => {
   const templateContainerStyle = 'flex flex-col items-center w-full'
   const { isReady: isWeeklyTeamReady, isOffDay, isPreviousGameOffDay, canRegister } = getRecordAvailability(time, totalWeeklyTeamData)
   const canWriteFirestoreRecord = canRegister
-  const canFinalizeFirestoreRecord =
-    isWeeklyTeamReady && !isOffDay &&
-    thisDay === 0 &&
-    showMVP &&
-    currentTime >= gameEndTime &&
-    currentTime <= recordTapCloseTime
-  const canWriteFirestoreStats =
-    canWriteFirestoreRecord || canFinalizeFirestoreRecord
+  const canWriteFirestoreStats = canWriteFirestoreRecord
 
   useEffect(() => {
     if (totalWeeklyTeamData?.length) {
@@ -99,14 +89,12 @@ const LetsRecord = (props) => {
       setOpen(true)
     }
     if (isOffDay || !isWeeklyTeamReady) {
-      setShowMVP(false)
       setShowRequestUpdateButton(false)
       return
     }
 
     if (thisDay === 0) {
       if (currentTime >= gameEndTime && currentTime <= recordTapCloseTime) {
-        setShowMVP(true)
         setShowRequestUpdateButton(true)
       }
     }
@@ -370,7 +358,7 @@ const LetsRecord = (props) => {
   }, [todayRecord, displayRecord, formatRecordByName])
 
   const registerRecord = async () => {
-    if (!canWriteFirestoreStats) {
+    if (!canWriteFirestoreStats || Date.now() >= gameEndTime) {
       console.warn('Firestore record write blocked outside allowed record window')
       return
     }
@@ -468,23 +456,6 @@ const LetsRecord = (props) => {
       {/*{!showRequestUpdateButton && <Separator fullWidth={false} />}*/}
       <div className={templateContainerStyle}>
         <>
-          {showMVP && isWeeklyTeamReady && !isOffDay && (
-            <div className="hidden">
-              <DailyMVP
-                showCelebration={false}
-                setShowMVP={setShowMVP}
-                recordData={firestoreRecord ? firestoreRecord[thisYear] : []}
-                year={thisYear}
-                today={today}
-              />
-              <TeamScorePopup
-                showMVP={showMVP}
-                setShowMVP={setShowMVP}
-                recordData={displayRecord}
-                weeklyTeamData={weeklyTeamData}
-              />
-            </div>
-          )}
           <RecordContainer
             burstTargetRef={recordBurstTargetRef}
             burstControllerRef={recordBurstControllerRef}

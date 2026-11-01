@@ -8,7 +8,7 @@ export const getRecordAvailability = (time, weeklyTeams) => {
   const isPreviousGameOffDay = isReady && time.thisDay !== 0
     && weeklyTeams.find((team) => team.id === lastSundayId)?.data?.isOffDay === true
   const canRegister = isReady && !isOffDay && time.thisDay === 0
-    && time.currentTime >= time.gameStartTime && time.currentTime <= time.gameEndTime
+    && time.currentTime >= time.gameStartTime && time.currentTime < time.gameEndTime
 
   return { isReady, isOffDay, isPreviousGameOffDay, canRegister }
 }

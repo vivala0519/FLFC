@@ -159,6 +159,7 @@ const RecordContainer = (props) => {
         <div className={'w-full flex flex-col items-center'}>
           <div className={`w-[85%] border-blue-400`}></div>
           <RoundRow
+            canRegister={canRegister}
             index={0}
             fakeRow={true}
             record={{ winner: null, time: '08:00:00' }}
@@ -177,6 +178,7 @@ const RecordContainer = (props) => {
           <div className={`${!closedRounds.has(index) && 'border-blue-400'} w-[85%] `}></div>
           {/*)}*/}
           <RoundRow
+            canRegister={canRegister}
             key={index}
             index={index}
             fakeRow={false}

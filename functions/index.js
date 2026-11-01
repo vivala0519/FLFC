@@ -7,9 +7,17 @@ const WEBHOOK_URL = defineSecret("FLFC_NEWS_WEBHOOK_URL");
 const WEBHOOK_KEY = defineSecret("FLFC_NEWS_WEBHOOK_KEY");
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
+const { getFirestore, FieldValue } = require('firebase-admin/firestore')
+const { getDatabase } = require('firebase-admin/database')
 
 admin.initializeApp()
 
+const { createWeeklyMatchFinalizer } = require('./finalizeWeeklyMatch')
+const finalizeWeeklyMatch = createWeeklyMatchFinalizer({
+    firestore: getFirestore(),
+    rtdb: getDatabase(),
+    timestamp: () => FieldValue.serverTimestamp(),
+})
 
 exports.triggerWeeklyNews = onSchedule(
     {
@@ -17,10 +25,16 @@ exports.triggerWeeklyNews = onSchedule(
         timeZone: "Asia/Seoul",
         region: "asia-northeast3",
         secrets: [WEBHOOK_URL, WEBHOOK_KEY],
+        retryCount: 3,
+        minBackoffSeconds: 30,
     },
-    async () => {
-        const d = new Date(Date.now() + 9 * 3600 * 1000);
-        const id = d.toISOString().slice(2, 10).replace(/-/g, "");
+    async (event) => {
+        const result = await finalizeWeeklyMatch(event.scheduleTime);
+        if (result.status !== 'completed') {
+            logger.info('Weekly match skipped', result);
+            return;
+        }
+        const id = result.id;
         const res = await fetch(WEBHOOK_URL.value(), {
             method: "POST",
             headers: {

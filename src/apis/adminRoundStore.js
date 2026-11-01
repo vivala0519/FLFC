@@ -26,7 +26,6 @@ export function createAdminRoundStore({ readWeeklyTeam, readRounds, transactRoun
     let rounds = await readRounds(context)
     // RTDB and Firestore cannot share a transaction; recheck concurrent goals after each aggregate write.
     for (let attempt = 0; attempt < 3; attempt++) {
-      // Complete an already authorized save even if it crosses 10:00 during network requests.
       const records = Object.values(rounds || {})
       const goals = records.flatMap((round) => Object.entries(round.goal || {}).map(([id, goal]) => ({ ...goal, id })))
       await writeStats(context, formatDailyRecordStats(weeklyTeam, goals, records, resolveMember))

@@ -7,9 +7,10 @@ import { getRoundParticipants } from '@/apis/roundParticipants.js'
 import { getRegularRoundGoals, isFeverRound } from '@/apis/roundFever.js'
 
 const RecordRow = (props) => {
-  const { time: { today, thisYear, currentTime } } = getTimes()
+  const { time: { today, thisYear, currentTime, gameEndTime } } = getTimes()
   const {
     record,
+    canRegister = false,
     index,
     // fakeRow,
     isOpen,
@@ -39,17 +40,19 @@ const RecordRow = (props) => {
   // const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
   // const arrowIcon = 'bg-[url("@/assets/up2.png")] '
   const roundExitButtonStyle = 'text-goal dark:text-red-300 animate-pulse'
+  const canWriteRound = () => canRegister && Date.now() < gameEndTime
 
 
   const optionsForA = ALL_TEAMS.filter((opt) => opt !== teamB)
   const optionsForB = ALL_TEAMS.filter((opt) => opt !== teamA)
 
   useEffect(() => {
+    if (!canRegister) setEditTeamMode(false)
     if (record?.teamList?.length === 2) {
       setTeamA(record.teamList[0])
       setTeamB(record.teamList[1])
     }
-  }, [record?.teamList])
+  }, [record?.teamList, canRegister])
 
   const getRoundRef = (db, thisYear, today, roundId) =>
     ref(db, `${thisYear}/${today}_rounds/${roundId}`)
@@ -82,6 +85,7 @@ const RecordRow = (props) => {
   }
 
   const createRound = async () => {
+    if (!canWriteRound()) return
     const db = getDatabase()
     const oneMinuteLater = new Date(currentTime.getTime() + 1 * 60 * 1000)
     const time =
@@ -93,6 +97,7 @@ const RecordRow = (props) => {
 
     const dateRef = ref(db, `${thisYear}/${today}_rounds`)
     const snapshot = await get(dateRef)
+    if (!canWriteRound()) return
 
     let roundIndex
     let startTime
@@ -158,15 +163,18 @@ const RecordRow = (props) => {
 
   const selectWinnerTeam = async () => {
     const roundId = await createRound()
+    if (!roundId) return
     setPendingRoundId(roundId)
     setSelectTeamPopupMessage('첫 라운드 어느 팀이 경기했나요?')
     setShowSelectTeamPopup(true)
   }
 
   const exitRound = async (roundId) => {
+    if (!canWriteRound()) return
     const db = getDatabase()
     const roundRef = getRoundRef(db, thisYear, today, roundId)
     const snap = await get(roundRef)
+    if (!canWriteRound()) return
     const roundData = snap.val() || {}
     if (isFeverRound(roundData)) return
     const teamList = roundData['teamList']
@@ -187,7 +195,7 @@ const RecordRow = (props) => {
         participant: getRoundParticipants(weeklyTeamData, teamList),
       })
       const newRoundId = await createRound()
-      if (newRoundId === roundId) return
+      if (!newRoundId || newRoundId === roundId) return
       const restTeam = ALL_TEAMS.find((team) => !roundData.teamList.includes(String(team)))
       let nextTeamList = [restTeam, String(mostGetGoalTeam[0])]
       const isThirdTeamBlank = weeklyTeamData.data['3'].every((v) => v.trim() === '')
@@ -227,7 +235,7 @@ const RecordRow = (props) => {
           },
         })
         const newRoundId = await createRound()
-        if (newRoundId === roundId) return
+        if (!newRoundId || newRoundId === roundId) return
         const restTeam = ALL_TEAMS.find(
           (team) => !roundData.teamList.includes(String(team)),
         )
@@ -244,6 +252,7 @@ const RecordRow = (props) => {
   }
 
   const exitRoundHandler = async (roundId) => {
+    if (!canWriteRound()) return
     Swal.fire({
       title: '최근 라운드 종료',
       icon: 'warning',
@@ -266,6 +275,7 @@ const RecordRow = (props) => {
   }
 
   const updateTeamListHandler = async (roundId) => {
+    if (!canWriteRound()) return
     if (teamA === record.teamList[0] && teamB === record.teamList[1]) {
       setEditTeamMode(false)
       return
@@ -366,6 +376,7 @@ const RecordRow = (props) => {
                   (!editTeamMode ? (
                     <div className={teamStyle + ' whitespace-nowrap'} onClick={(event) => {
                       event.stopPropagation()
+                      if (!canWriteRound()) return
                       setEditTeamMode(true)
                     }}>
                       {record.teamList[0]}팀 <span className={'text-goal'}>vs</span> {record.teamList[1]}팀
@@ -410,7 +421,7 @@ const RecordRow = (props) => {
                     {scoreText}
                   </span>
                 )}
-                {!editTeamMode && (
+                {canRegister && !editTeamMode && (
                   <div className={roundExitButtonStyle + ' shrink-0 whitespace-nowrap'} onClick={(event) => {
                     event.stopPropagation()
                     exitRoundHandler(record.id)

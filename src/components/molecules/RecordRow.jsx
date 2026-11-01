@@ -28,7 +28,7 @@ const RecordRow = (props) => {
   const canWriteFirestoreRecord =
     thisDay === 0 &&
     currentTime >= gameStartTime &&
-    currentTime <= gameEndTime
+    currentTime < gameEndTime
 
   const rawStyle = `relative flex items-center justify-center mobile:justify-normal w-[85%] pt-1 transition-[left] duration-300 ease-out motion-reduce:transition-none ${isEditing ? '-left-4 pl-0 gap-0' : 'gap-1.5'}`
   const recordAreaStyle = 'flex items-center pr-2 relative bottom-[2px]'
@@ -70,7 +70,7 @@ const RecordRow = (props) => {
   }
 
   const registerRecord = async (stats) => {
-    if (!canWriteFirestoreRecord) {
+    if (!canWriteFirestoreRecord || Date.now() >= gameEndTime) {
       console.warn('Firestore record write blocked outside Sunday 08:00-10:00')
       return
     }
