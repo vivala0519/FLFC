@@ -1,0 +1,97 @@
+.header-family-apps {
+  position: relative;
+  display: flex;
+  flex: 1 1 0%;
+  align-self: stretch;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-width: 140px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.header-family-apps__panel {
+  position: absolute;
+  inset: 5px 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) 32px;
+  grid-template-rows: 14px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 2px;
+  width: 100%;
+  max-width: 200px;
+  padding: 2px 6px;
+  background: #fff;
+  color: #1d4ed8;
+  visibility: hidden;
+  transform: translateX(calc(100% + 1px));
+  transition: transform 240ms ease, visibility 0s 240ms;
+}
+
+.header-family-apps[data-open='true'] .header-family-apps__panel {
+  visibility: visible;
+  transform: translateX(0);
+  transition-delay: 0s;
+}
+
+.header-family-apps__title {
+  grid-column: 1 / 4;
+  grid-row: 1;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 14px;
+  text-align: center;
+}
+
+.header-family-apps__app {
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 44px;
+  border-radius: 6px;
+  transition: opacity 150ms ease;
+}
+
+.header-family-apps__app:hover { opacity: 0.8; }
+.header-family-apps__app:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+
+.header-family-apps__app img {
+  width: 100%;
+  max-width: 40px;
+  height: auto;
+  aspect-ratio: 1;
+  border: 2px solid #1d4ed8;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.header-family-apps__close {
+  grid-column: 4;
+  grid-row: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 44px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+
+.header-family-apps__close:hover { opacity: 0.7; }
+.header-family-apps__close:focus-visible { outline: 2px solid currentColor; outline-offset: -2px; }
+
+.dark .header-family-apps__panel {
+  background: #242424;
+  color: #93c5fd;
+}
+
+.dark .header-family-apps__app img { border-color: #60a5fa; }
+
+@media (prefers-reduced-motion: reduce) {
+  .header-family-apps__panel { transition: none; }
+}

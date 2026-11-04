@@ -125,7 +125,7 @@ export function createParticleText(element, canvas, text) {
     }
     // The same glyph particles form a compact, panelled football, then FLFC.
     const ballRadius = Math.min(fontSize * 0.68, width / 2 - 4, height / 2 - 4)
-    const targets = createFootballTargets(next.length, width / 2, height / 2, ballRadius)
+    const targets = createFootballTargets(next.length, PADDING + ballRadius, PADDING + ballRadius, ballRadius)
     particles = next.map((particle, index) => {
       const ball = targets[index]
       const dx = ball.x - particle.homeX
