@@ -27,21 +27,35 @@ const createWeeklyMatchFinalizer = ({ firestore, rtdb, timestamp }) => async (sc
   )
   const weeklyTeam = { id, data: roster }
   const roundRef = rtdb.ref(`${year}/${mmdd}_rounds`)
-  const result = await roundRef.transaction((current) => {
-    const rounds = Object.entries(current || {}).sort(([, a], [, b]) => Number(a.index) - Number(b.index))
-    if (rounds.length === 0) return undefined
-    if (rounds.slice(0, -1).some(([, round]) => !round.winnerTeam)) {
-      throw new Error('An earlier round is still unfinished; refusing a partial finalization')
-    }
-    const [roundId, lastRound] = rounds[rounds.length - 1]
-    if (lastRound.winnerTeam) return current
-    const finalized = finalizeRound(lastRound, weeklyTeam)
-    if (finalized === undefined) throw new Error('Last round has incomplete team or goal data')
-    const next = { ...current }
-    if (finalized === null) delete next[roundId]
-    else next[roundId] = finalized
-    return next
-  }, undefined, false)
+  let cacheListener
+  let result
+  try {
+    // Keep the cache alive until the transaction finishes. A cold client's initial
+    // null would otherwise abort the updater before it ever reads server data.
+    const initialSnapshot = await new Promise((resolve, reject) => {
+      cacheListener = resolve
+      roundRef.on('value', cacheListener, reject)
+    })
+    if (!initialSnapshot.exists()) return { status: 'skipped', id, reason: 'no-rounds' }
+
+    result = await roundRef.transaction((current) => {
+      const rounds = Object.entries(current || {}).sort(([, a], [, b]) => Number(a.index) - Number(b.index))
+      if (rounds.length === 0) return undefined
+      if (rounds.slice(0, -1).some(([, round]) => !round.winnerTeam)) {
+        throw new Error('An earlier round is still unfinished; refusing a partial finalization')
+      }
+      const [roundId, lastRound] = rounds[rounds.length - 1]
+      if (lastRound.winnerTeam) return current
+      const finalized = finalizeRound(lastRound, weeklyTeam)
+      if (finalized === undefined) throw new Error('Last round has incomplete team or goal data')
+      const next = { ...current }
+      if (finalized === null) delete next[roundId]
+      else next[roundId] = finalized
+      return next
+    }, undefined, false)
+  } finally {
+    if (cacheListener) roundRef.off('value', cacheListener)
+  }
   if (!result.committed) return { status: 'skipped', id, reason: 'no-rounds' }
 
   const rounds = Object.values(result.snapshot.val() || {})
