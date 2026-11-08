@@ -7,6 +7,7 @@ import NewBadge from '@/components/atoms/NewBadge.jsx'
 import BestFiveCard from '@/components/organisms/BestFiveCard.jsx'
 import PlayerRadarChart from '@/components/organisms/PlayerRadarChart.jsx'
 import QuarterlyRecordChart from '@/components/organisms/QuarterlyRecordChart.jsx'
+import DuoRecordList from '@/components/molecules/DuoRecordList.jsx'
 import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
@@ -91,6 +92,7 @@ const rankCareerCounts = (counts, unit, includeChasers = false) => {
 const analyzeScoringRecords = (recordsByYear, asOfDate) => {
   const totals = new Map()
   const pointTotals = new Map()
+  const attendanceTotals = new Map()
   const maxima = {
     goals: { field: '골', unit: '골', value: 0, names: new Set() },
     assists: { field: '어시', unit: '어시', value: 0, names: new Set() },
@@ -113,6 +115,10 @@ const analyzeScoringRecords = (recordsByYear, asOfDate) => {
         const points = Number(stats?.['승점'])
         if (Number.isFinite(points) && points > 0) {
           pointTotals.set(name, (pointTotals.get(name) || 0) + points)
+        }
+        const attendance = Number(stats?.['출석'])
+        if (Number.isFinite(attendance) && attendance > 0) {
+          attendanceTotals.set(name, (attendanceTotals.get(name) || 0) + attendance)
         }
         for (const maximum of Object.values(maxima)) {
           const rawValue = stats?.[maximum.field]
@@ -149,10 +155,12 @@ const analyzeScoringRecords = (recordsByYear, asOfDate) => {
       new Map([...totals].map(([name, stats]) => [name, stats['골'] + stats['어시']])), '점', true,
     ),
     totalPoints: rankCareerCounts(pointTotals, '점', true),
+    totalAttendance: rankCareerCounts(attendanceTotals, '회', true),
   }
 }
 
 const analysisIconPaths = {
+  check: <path d="m5 12 4 4L19 6" />,
   bestFive: <path d="m12 2 2.8 6 6.6.8-4.8 4.5 1.2 6.5L12 17l-5.8 2.8 1.2-6.5-4.8-4.5 6.6-.8L12 2Z" />,
   trophy: <>
     <path d="M7 3h10v7a5 5 0 0 1-10 0V3Z" />
@@ -337,6 +345,9 @@ const AnalysisTap = (props) => {
   const lowScoringDuo = lowScoringDuoStats ? {
     name: lowScoringDuoStats.pairs.map(({ players }) => players.join(' - ')),
     count: `같은 팀 ${lowScoringDuoStats.pairs[0].sharedDays}회 · 합작 ${lowScoringDuoStats.pairs[0].goals}골`,
+    duos: lowScoringDuoStats.pairs.map(({ players, sharedDays, goals }) => ({
+      id: JSON.stringify(players), players, count: goals, sharedDays,
+    })),
   } : {}
 
   const analysisItems = [
@@ -596,6 +607,10 @@ const AnalysisTap = (props) => {
       data: { ...dailyMaximums.totalPoints, status: scoringStreakResult.status },
     },
     {
+      type: 'career-total', icon: 'check', title: '최다 누적 출석',
+      data: { ...dailyMaximums.totalAttendance, status: scoringStreakResult.status },
+    },
+    {
       type: 'career-mvp', icon: 'trophy', title: '최다 누적 MVP',
       // description: '통산 데일리 MVP 최다 플레이어',
       data: careerMostMVP,
@@ -717,11 +732,16 @@ const AnalysisTap = (props) => {
       const { combinations, leaders, chasing } = analyzeSeasonGoalDuos(totalData)
       setThisQuarterPlayersCombination(combinations)
       const duoName = ({ key }) => key.split('_').map((name) => getFullName(name) || name).join(' - ')
+      const duoRecord = ({ key, count }) => ({
+        id: key, count, players: key.split('_').map((name) => getFullName(name) || name),
+      })
       setSonKaeDuo(leaders.length > 0 ? {
         name: leaders.map(duoName),
         count: `${leaders[0].count}골`,
         additional: chasing.map(duoName),
         additionalCount: chasing.length > 0 ? `${chasing[0].count}골` : '',
+        duos: leaders.map(duoRecord),
+        additionalDuos: chasing.map(duoRecord),
       } : {})
 
       // 시간에 따른 포인트 분석 데이터
@@ -1326,6 +1346,22 @@ const AnalysisTap = (props) => {
                 </p>
               )}
             </dd>
+          </>
+        ) : type === 'duo' || type === 'low-scoring-duo' ? (
+          <>
+            <dd className="pl-7 mt-2 w-[90%]">
+              {data.duos?.length > 0 ? (
+                <DuoRecordList duos={data.duos} />
+              ) : (
+                <span className="font-semibold text-blueSignature dark:text-yellow-400 font-dnf-forged">-</span>
+              )}
+            </dd>
+            {data.additionalDuos?.length > 0 && (
+              <dd className="pl-7 mt-3 w-[90%]">
+                <p className="mb-2 text-xs font-medium text-goal dark:text-rose-400">추격 듀오</p>
+                <DuoRecordList duos={data.additionalDuos} muted />
+              </dd>
+            )}
           </>
         ) : (
           <>
