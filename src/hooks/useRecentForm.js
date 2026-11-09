@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { analyzeRecentForm, getRecentFormCutoff } from '../apis/analyzeRecentForm.js'
 import { getAnalysisYearRecords, subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
 
 const EMPTY_RESULT = { leaders: [], decliners: [], eligibleCount: 0 }
 const FIRST_RECORD_YEAR = 2021
 
-export default function useRecentForm(members, asOfDate, cacheDayKey, { year: seasonYear, quarter: seasonQuarter } = {}) {
-  const [result, setResult] = useState({ status: 'loading', ...EMPTY_RESULT })
+export default function useRecentForm(members, asOfDate, cacheDayKey, { year: seasonYear, quarter: seasonQuarter, memberInfo, cleanSheetDays, cleanSheetStatus } = {}) {
+  const requestKey = JSON.stringify([members, asOfDate, cacheDayKey, seasonYear, seasonQuarter])
+  const [source, setSource] = useState({ requestKey: null, status: 'loading', recordsByYear: null })
 
   useEffect(() => {
     let cancelled = false
@@ -17,7 +18,8 @@ export default function useRecentForm(members, asOfDate, cacheDayKey, { year: se
     ))
     const season = { year: seasonYear, quarter: seasonQuarter }
 
-    setResult({ status: 'loading', ...EMPTY_RESULT })
+    const updateSource = (status, recordsByYear = null) => setSource({ requestKey, status, recordsByYear })
+    updateSource('loading')
     if (members.length === 0) return undefined
 
     const unsubscribe = subscribeAnalysisYearRecords(
@@ -25,7 +27,7 @@ export default function useRecentForm(members, asOfDate, cacheDayKey, { year: se
       async (currentRecords) => {
         const currentRevision = ++revision
         const isCurrent = () => !cancelled && currentRevision === revision
-        setResult({ status: 'loading', ...EMPTY_RESULT })
+        updateSource('loading')
 
         try {
           const recordsByYear = { [currentYear]: currentRecords }
@@ -42,20 +44,15 @@ export default function useRecentForm(members, asOfDate, cacheDayKey, { year: se
           }
 
           if (isCurrent()) {
-            setResult({
-              status: 'ready',
-              leaders: analysis.leaders,
-              decliners: analysis.decliners,
-              eligibleCount: analysis.eligibleCount,
-            })
+            updateSource('ready', recordsByYear)
           }
         } catch {
-          if (isCurrent()) setResult({ status: 'error', ...EMPTY_RESULT })
+          if (isCurrent()) updateSource('error')
         }
       },
       () => {
         revision++
-        if (!cancelled) setResult({ status: 'error', ...EMPTY_RESULT })
+        if (!cancelled) updateSource('error')
       },
     )
 
@@ -63,7 +60,23 @@ export default function useRecentForm(members, asOfDate, cacheDayKey, { year: se
       cancelled = true
       unsubscribe()
     }
-  }, [members, asOfDate, cacheDayKey, seasonYear, seasonQuarter])
+  }, [members, asOfDate, cacheDayKey, seasonYear, seasonQuarter, requestKey])
 
-  return result
+  // Round/member updates only recalculate the comparison; they never restart Firestore reads.
+  return useMemo(() => {
+    const needsCleanSheets = memberInfo === null || members.some((name) =>
+      memberInfo?.[name]?.goalKeeper === true || memberInfo?.[name]?.goalkeeper === true,
+    )
+    if (source.requestKey !== requestKey) return { status: 'loading', ...EMPTY_RESULT }
+    if (source.status === 'error' || (needsCleanSheets && cleanSheetStatus === 'error')) {
+      return { status: 'error', ...EMPTY_RESULT }
+    }
+    if (source.status !== 'ready' || memberInfo === null ||
+      (needsCleanSheets && (cleanSheetStatus !== 'ready' || !cleanSheetDays))) {
+      return { status: 'loading', ...EMPTY_RESULT }
+    }
+    const analysis = analyzeRecentForm(source.recordsByYear, members, asOfDate,
+      { year: seasonYear, quarter: seasonQuarter }, { memberInfo, cleanSheetDays })
+    return { status: 'ready', leaders: analysis.leaders, decliners: analysis.decliners, eligibleCount: analysis.eligibleCount }
+  }, [source, requestKey, members, asOfDate, seasonYear, seasonQuarter, memberInfo, cleanSheetDays, cleanSheetStatus])
 }

@@ -100,6 +100,7 @@ export const analyzeCleanSheets = ({ roundYears, weeklyTeams, memberInfo, member
           const counts = seasons.get(seasonKey) || new Map()
           const dayCounts = dailyCounts.get(period.date) || new Map()
           if (!counts.has(name)) counts.set(name, 0)
+          if (!dayCounts.has(name)) dayCounts.set(name, 0)
           if (!scoringTeams.some((number) => number !== team)) {
             totals.set(name, totals.get(name) + 1)
             counts.set(name, counts.get(name) + 1)
@@ -135,5 +136,5 @@ export const analyzeCleanSheets = ({ roundYears, weeklyTeams, memberInfo, member
       }
     }
   }
-  return { totals, seasons, careerHigh, dailyHigh, concededTotals, concededSeasons }
+  return { totals, seasons, careerHigh, days: dailyCounts, dailyHigh, concededTotals, concededSeasons }
 }

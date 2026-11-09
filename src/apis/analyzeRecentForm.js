@@ -23,7 +23,7 @@ export const getRecentFormCutoff = (asOfDate) => {
 }
 
 // Compare totals from the most recent two appearances with the previous two.
-export const analyzeRecentForm = (recordsByYear, members, asOfDate, season = {}) => {
+export const analyzeRecentForm = (recordsByYear, members, asOfDate, season = {}, { memberInfo, cleanSheetDays } = {}) => {
   const appearances = new Map(
     [...new Set(members)].filter((name) => name && !name.includes('용병')).map((name) => [name, []]),
   )
@@ -50,6 +50,7 @@ export const analyzeRecentForm = (recordsByYear, members, asOfDate, season = {})
           date,
           attackPoints: getPoints(stats['골']) + getPoints(stats['어시']),
           winPoints: getPoints(stats['승점']),
+          cleanSheets: cleanSheetDays?.get(date)?.get(name) ?? null,
         })
       }
     }
@@ -66,15 +67,22 @@ export const analyzeRecentForm = (recordsByYear, members, asOfDate, season = {})
     const previousGames = playerAppearances.slice(WINDOW_SIZE)
     if (previousGames.some(({ date }) => date < cutoffDate)) continue
     const recentGames = playerAppearances.slice(0, WINDOW_SIZE)
+    const isGoalkeeper = memberInfo?.[name]?.goalKeeper === true || memberInfo?.[name]?.goalkeeper === true
+    if (isGoalkeeper && playerAppearances.some(({ cleanSheets }) => cleanSheets === null)) continue
     const recentAttackPoints = recentGames.reduce((sum, game) => sum + game.attackPoints, 0)
     const previousAttackPoints = previousGames.reduce((sum, game) => sum + game.attackPoints, 0)
+    const recentCleanSheets = recentGames.reduce((sum, game) => sum + (game.cleanSheets ?? 0), 0)
+    const previousCleanSheets = previousGames.reduce((sum, game) => sum + (game.cleanSheets ?? 0), 0)
     const recentWinPoints = recentGames.reduce((sum, game) => sum + game.winPoints, 0)
     const previousWinPoints = previousGames.reduce((sum, game) => sum + game.winPoints, 0)
     comparisons.push({
       name,
       previousAttackPoints,
       recentAttackPoints,
-      increase: recentAttackPoints - previousAttackPoints,
+      metric: isGoalkeeper ? 'cleanSheets' : 'attackPoints',
+      previousCleanSheets,
+      recentCleanSheets,
+      increase: isGoalkeeper ? recentCleanSheets - previousCleanSheets : recentAttackPoints - previousAttackPoints,
       previousWinPoints,
       recentWinPoints,
       winPointIncrease: recentWinPoints - previousWinPoints,

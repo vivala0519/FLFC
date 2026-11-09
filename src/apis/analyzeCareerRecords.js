@@ -32,7 +32,14 @@ const validRecordDate = (year, id) => {
 
 const emptyStats = () => ({ attendance: 0, goals: 0, assists: 0, points: 0, games: 0 })
 
-export const analyzeCareerRecords = (recordsByYear, fullName, asOfDate = null) => {
+const quarterOrderForDate = (dateKey) => {
+  if (typeof dateKey !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) return null
+  const [year, month, day] = dateKey.split('-')
+  const date = validRecordDate(year, `${month}${day}`)
+  return date ? Number(year) * 4 + Math.ceil(date.month / 3) : null
+}
+
+export const analyzeCareerRecords = (recordsByYear, fullName, asOfDate = null, startDate = null) => {
   const totals = emptyStats()
   let trackedPointGames = 0
   let trackedRatePoints = 0
@@ -122,8 +129,10 @@ export const analyzeCareerRecords = (recordsByYear, fullName, asOfDate = null) =
 
   const quarterOrders = [...quarterTotals.keys()].sort((a, b) => a - b)
   const quarters = []
-  if (quarterOrders.length > 0) {
-    for (let order = quarterOrders[0]; order <= quarterOrders[quarterOrders.length - 1]; order++) {
+  const firstQuarter = quarterOrderForDate(startDate) ?? quarterOrders[0]
+  const lastQuarter = quarterOrderForDate(asOfDate) ?? quarterOrders[quarterOrders.length - 1]
+  if (firstQuarter !== undefined && lastQuarter !== undefined) {
+    for (let order = firstQuarter; order <= lastQuarter; order++) {
       const year = Math.floor((order - 1) / 4)
       const quarter = (order - 1) % 4 + 1
       const stats = quarterTotals.get(order)
@@ -135,6 +144,7 @@ export const analyzeCareerRecords = (recordsByYear, fullName, asOfDate = null) =
         attendance: stats?.attendance ?? 0,
         goals: stats?.goals ?? null,
         assists: stats?.assists ?? null,
+        attackPoints: stats ? stats.goals + stats.assists : null,
         points: stats?.hasPointData ? stats.points : null,
       })
     }

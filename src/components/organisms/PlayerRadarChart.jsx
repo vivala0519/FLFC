@@ -115,9 +115,6 @@ const PlayerRadarChart = ({ name, comparison }) => {
       </svg>
       <figcaption id={`${id}-caption`} className="mt-1 text-center text-xs text-gray-500 dark:text-gray-400">
         분기 출석자 {players.size}명 기준
-        {cleanSheetPlayerCount !== undefined && (
-          <span className="block">클린시트: 분기 출석 골키퍼 {cleanSheetPlayerCount}명 기준</span>
-        )}
       </figcaption>
     </figure>
   )

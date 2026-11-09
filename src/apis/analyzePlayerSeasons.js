@@ -1,5 +1,6 @@
 const FIRST_POINT_DATE = '2026-01-01'
 const MINIMUM_ATTENDANCES = 2
+const SPECIALIST_MINIMUM_ATTENDANCES = 3
 const SEASONS = [
   { key: 'spring', label: '봄' },
   { key: 'summer', label: '여름' },
@@ -28,9 +29,7 @@ const seasonKeyForMonth = (month) => month >= 3 && month <= 5 ? 'spring'
   : month >= 6 && month <= 8 ? 'summer'
     : month >= 9 && month <= 11 ? 'autumn' : 'winter'
 
-export const analyzePlayerSeasons = (recordsByYear, fullName, asOfDate, startDate = null) => {
-  if (typeof fullName !== 'string' || !fullName.trim() || !parseDate(asOfDate)) return []
-  const name = fullName.trim()
+const collectPlayerSeasons = (recordsByYear, name, asOfDate) => {
   const totals = new Map(SEASONS.map((season) => [season.key, {
     ...season, attendance: 0, points: 0, games: 0,
   }]))
@@ -60,7 +59,12 @@ export const analyzePlayerSeasons = (recordsByYear, fullName, asOfDate, startDat
     season.games += games
   }
 
-  const eligible = [...totals.values()]
+  return [...totals.values()]
+}
+
+export const analyzePlayerSeasons = (recordsByYear, fullName, asOfDate, startDate = null) => {
+  if (typeof fullName !== 'string' || !fullName.trim() || !parseDate(asOfDate)) return []
+  const eligible = collectPlayerSeasons(recordsByYear, fullName.trim(), asOfDate)
     .filter(({ attendance, points, games }) => attendance >= MINIMUM_ATTENDANCES &&
       Number.isFinite(points) && Number.isFinite(games) && games > 0)
     .map((season) => ({ ...season, pointRate: season.points / season.games }))
@@ -76,6 +80,49 @@ export const analyzePlayerSeasons = (recordsByYear, fullName, asOfDate, startDat
     if (season.points * best.games > best.points * season.games) best = season
   }
   return eligible.filter((season) => season.points * best.games === best.points * season.games)
+}
+
+export const analyzeSeasonSpecialists = (recordsByYear, members, asOfDate) => {
+  const result = SEASONS.map((season) => ({ ...season, winners: [] }))
+  if (!Array.isArray(members) || !parseDate(asOfDate)) return result
+  const names = [...new Set(members.filter((name) => typeof name === 'string' && name.trim()).map((name) => name.trim()))]
+  const candidates = names.map((name) => ({
+    name,
+    seasons: collectPlayerSeasons(recordsByYear, name, asOfDate),
+  })).filter(({ seasons }) => seasons.every(({ attendance, points, games }) =>
+    attendance >= SPECIALIST_MINIMUM_ATTENDANCES && Number.isFinite(points) &&
+    Number.isFinite(games) && games > 0))
+
+  for (const [index, seasonResult] of result.entries()) {
+    const average = candidates.reduce((total, { seasons }) => ({
+      points: total.points + seasons[index].points,
+      games: total.games + seasons[index].games,
+    }), { points: 0, games: 0 })
+    let bestGap = null
+    for (const { name, seasons } of candidates) {
+      const season = seasons[index]
+      const runnerUp = seasons.filter((_, otherIndex) => otherIndex !== index)
+        .reduce((best, other) => other.points * best.games > best.points * other.games ? other : best)
+      const numerator = season.points * runnerUp.games - runnerUp.points * season.games
+      const denominator = season.games * runnerUp.games
+      // Compare fractions directly so exact ties survive rounding.
+      if (numerator <= 0 || season.points * average.games < average.points * season.games) continue
+      const difference = bestGap ? numerator * bestGap.denominator - bestGap.numerator * denominator : 1
+      if (difference < 0) continue
+      if (difference > 0) {
+        bestGap = { numerator, denominator }
+        seasonResult.winners = []
+      }
+      seasonResult.winners.push({
+        name,
+        pointRate: season.points / season.games,
+        runnerUpRate: runnerUp.points / runnerUp.games,
+        gap: numerator / denominator,
+      })
+    }
+    seasonResult.winners.sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+  }
+  return result
 }
 
 export default analyzePlayerSeasons

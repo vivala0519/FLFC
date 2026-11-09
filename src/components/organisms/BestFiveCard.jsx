@@ -18,18 +18,19 @@ const positionStats = [
   { key: 'goleiro', label: 'GK' },
 ]
 
-const cardFrameClass = 'relative h-[200px] shrink-0 p-1 text-left'
+const cardFrameClass = 'relative h-[200px] shrink-0 p-1 text-center'
 
 const BestFiveCard = ({ positions }) => (
-    <div className="flex w-full gap-2 overflow-x-auto desktop:justify-center">
+    <div className="w-full overflow-x-auto">
+      <div className="flex w-max min-w-full justify-center gap-2">
       <figure className={cardFrameClass}>
         <div className="relative flex h-full w-full flex-col justify-center gap-3 overflow-hidden rounded-md">
           {positionStats.map(({key, label}) => {
             const player = positions[key]
             return (
-                <span key={key} className="relative z-10 flex items-baseline gap-2 whitespace-nowrap text-sm font-bold">
+                <span key={key} className="relative z-10 flex items-baseline justify-center gap-2 whitespace-nowrap text-sm font-bold">
               <span className="w-6 shrink-0">{label}</span>
-              <span className="min-w-0 flex-1 truncate text-blueSignature dark:text-yellow-400 font-dnf-forged">{player?.name || '-'}</span>
+              <span className="min-w-0 flex-1 truncate text-zinc-700 dark:text-zinc-200 font-dnf-forged">{player?.name || '-'}</span>
                   {player && (
                       <span className="text-xs">
                   {key === 'pivo' ? `${player.골}골`
@@ -66,6 +67,7 @@ const BestFiveCard = ({ positions }) => (
           })}
         </div>
       </figure>
+      </div>
     </div>
 )
 
