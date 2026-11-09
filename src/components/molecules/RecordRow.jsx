@@ -6,17 +6,20 @@ import EditingBadge from '@/components/atoms/EditingBadge.jsx'
 import './RecordRow.css'
 import getRecords from '@/hooks/getRecords.js'
 import getTimes from '@/hooks/getTimes.js'
+import getMembers from '@/hooks/getMembers.js'
+import Swal from 'sweetalert2'
+import { createRecordMemberResolver, hasGoalAssistTeamMismatch } from '@/apis/recordMembers.js'
 import { getDatabase, ref, update } from 'firebase/database'
 import { doc, setDoc } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import {db} from "../../../firebase.js";
 
 const RecordRow = (props) => {
-  const { record, index, roundIndex, roundId, deleteRecord, useDelete, isLastRound, isFeverTime, isFeverGoal = false, formatRecordByName, getGoalTeam, editingRecordKey, setEditingRecordKey } = props
-  const {
-    time: { thisYear, today, thisDay, currentTime, gameStartTime, gameEndTime },
-  } = getTimes()
+  const { record, index, roundIndex, roundId, deleteRecord, useDelete, isLastRound, isFeverTime, isFeverGoal = false, formatRecordByName, getGoalTeam, editingRecordKey, setEditingRecordKey, weeklyTeamData } = props
+  const { time: { thisYear, today, thisDay, currentTime, gameStartTime, gameEndTime } } = getTimes()
   const { todaysRealtimeRound } = getRecords()
+  const { existingMembers, oneCharacterMembers, membersNickName } = getMembers()
+  const resolveMember = createRecordMemberResolver(existingMembers, oneCharacterMembers, membersNickName)
 
   const [randomInt, setRandomInt] = useState(1)
   const [goalRotation] = useState(() => Math.floor(Math.random() * 8) * 45)
@@ -82,6 +85,17 @@ const RecordRow = (props) => {
 
   const closeEditing = async () => {
     if (!useDelete) return
+    if (hasGoalAssistTeamMismatch(weeklyTeamData, goalText, assistText, resolveMember)) {
+      await Swal.fire({
+        icon: 'warning',
+        text: '골/어시가 서로 다른 팀입니다 확인해주세요',
+        confirmButtonText: '확인',
+        showCancelButton: false,
+        showDenyButton: false,
+        showCloseButton: false,
+      })
+      return
+    }
     const db = getDatabase();
     if (!roundId) return
     const targetId = record['id']

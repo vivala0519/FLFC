@@ -8,6 +8,18 @@ const validNonNegativeNumber = (value) => {
 
 const nonNegativeNumber = (value) => validNonNegativeNumber(value) ?? 0
 
+export const getCareerAttackStyle = (goals, assists) => {
+  const goalCount = nonNegativeNumber(goals)
+  const assistCount = nonNegativeNumber(assists)
+  if (goalCount === 0 && assistCount === 0) return null
+
+  // Compare goals with assists * 1.4, allowing a ratio of up to 1.2 for balance.
+  // Integer cross-products keep exact boundary values in the balanced category.
+  if (goalCount * 25 > assistCount * 42) return '득점선호'
+  if (assistCount * 7 > goalCount * 6) return '도움선호'
+  return '밸런스'
+}
+
 const validRecordDate = (year, id) => {
   if (!/^\d{4}$/.test(year) || !/^\d{4}$/.test(id)) return null
   const month = Number(id.slice(0, 2))

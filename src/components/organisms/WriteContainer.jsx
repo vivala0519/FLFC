@@ -10,7 +10,7 @@ import ShowRequestButton from '@/components/atoms/Button/ShowRequestButton.jsx'
 import RequestBox from '@/components/organisms/RequestBox.jsx'
 import Separator from '@/components/atoms/Separator.jsx'
 import { getRoundParticipants } from '@/apis/roundParticipants.js'
-import { createRecordMemberResolver, findWeeklyMemberTeam } from '@/apis/recordMembers.js'
+import { createRecordMemberResolver, findWeeklyMemberTeam, hasGoalAssistTeamMismatch } from '@/apis/recordMembers.js'
 import { isFeverRound } from '@/apis/roundFever.js'
 
 const ALL_TEAMS = ['1', '2', '3']
@@ -418,6 +418,20 @@ const WriteContainer = (props) => {
 
     if (!scorer.trim()) return
 
+    const scorerName = getRecordName(scorer)
+    const assistantName = getRecordName(assistant)
+    if (hasGoalAssistTeamMismatch(weeklyTeamData, scorerName, assistantName, resolveMember)) {
+      await Swal.fire({
+        icon: 'warning',
+        text: '골/어시가 서로 다른 팀입니다 확인해주세요',
+        confirmButtonText: '확인',
+        showCancelButton: false,
+        showDenyButton: false,
+        showCloseButton: false,
+      })
+      return
+    }
+
     setIsWriting(true)
 
     const time =
@@ -429,9 +443,6 @@ const WriteContainer = (props) => {
 
     const goalId = uid()
     const roundId = await createRound()
-
-    const scorerName = getRecordName(scorer)
-    const assistantName = getRecordName(assistant)
 
     const checkMemberHandler = (roundData) => {
       const roundTeamList = (roundData.teamList || []).map(String)
