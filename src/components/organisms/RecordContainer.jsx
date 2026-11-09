@@ -208,6 +208,7 @@ const RecordContainer = (props) => {
                   setEditingRecordKey={setEditingRecordKey}
                   getGoalTeam={goal.team ?? record.getGoalTeam?.[goalIndex]}
                   record={goal}
+                  weeklyTeamData={weeklyTeamData}
                   isFeverTime={isFeverTime}
                   isFeverGoal={goal.fever ?? record.goals.some((entry, entryIndex) =>
                     entry.id === 'fever-time-bar' && entryIndex < goalIndex
