@@ -10,6 +10,7 @@ const getMatchDate = (scheduleTime) => {
 
 const createWeeklyMatchFinalizer = ({ firestore, rtdb, timestamp }) => async (scheduleTime) => {
   const { finalizeRound, formatDailyRecordStats, createRecordMemberResolver } = await import('./matchStats.mjs')
+  const { selectDailyMvp } = await import('./dailyMvp.mjs')
   const { year, mmdd, id } = getMatchDate(scheduleTime)
   const completionRef = firestore.collection('_matchFinalizations').doc(id)
   if ((await completionRef.get()).data()?.status === 'completed') return { status: 'completed', id }
@@ -22,8 +23,11 @@ const createWeeklyMatchFinalizer = ({ firestore, rtdb, timestamp }) => async (sc
   }
   const members = (await firestore.collection('members').doc('members').get()).data()
   if (!Array.isArray(members?.total) || members.total.length === 0) throw new Error('Missing member information')
+  const memberInfo = (await firestore.collection('members').doc('info').get()).data()
+  if (!memberInfo || typeof memberInfo !== 'object') throw new Error('Missing goalkeeper information')
+  const activeMembers = members.total.filter((name) => !(members.retired || []).includes(name))
   const resolveMember = createRecordMemberResolver(
-    members.total.filter((name) => !(members.retired || []).includes(name)), members.oneCharacter, members.nickName,
+    activeMembers, members.oneCharacter, members.nickName,
   )
   const weeklyTeam = { id, data: roster }
   const roundRef = rtdb.ref(`${year}/${mmdd}_rounds`)
@@ -62,6 +66,10 @@ const createWeeklyMatchFinalizer = ({ firestore, rtdb, timestamp }) => async (sc
   const goals = rounds.flatMap((round) => Object.entries(round.goal || {}).map(([goalId, goal]) => ({ ...goal, id: goalId })))
   const stats = formatDailyRecordStats(weeklyTeam, goals, rounds, resolveMember)
   if (Object.keys(stats).length === 0) throw new Error('No registered members in the match roster')
+  const bestPlayers = selectDailyMvp({
+    weeklyTeam, rounds, memberInfo, members: activeMembers,
+    oneCharacterMembers: members.oneCharacter, nicknames: members.nickName, year, mmdd,
+  })
   const recordRef = firestore.collection(year).doc(mmdd)
   const mvpRef = firestore.collection('daily_mvp').doc(id)
   await firestore.runTransaction(async (transaction) => {
@@ -74,10 +82,7 @@ const createWeeklyMatchFinalizer = ({ firestore, rtdb, timestamp }) => async (sc
       name, { ...value, 출석: previous[name]?.['출석'] === 0.5 ? 0.5 : value['출석'] },
     ]))
     transaction.set(recordRef, finalStats)
-    const maxPoints = Math.max(...Object.values(finalStats).map((value) => value['골'] + value['어시']))
-    const bestPlayers = Object.entries(finalStats).filter(([, value]) => value['골'] + value['어시'] === maxPoints)
-      .map(([name, value]) => ({ name, goal: value['골'], assist: value['어시'] }))
-    if (!mvp.exists && bestPlayers.length > 0 && bestPlayers.length <= 5) transaction.set(mvpRef, { bestPlayers })
+    if (!mvp.exists && bestPlayers.length > 0) transaction.set(mvpRef, { bestPlayers })
     transaction.set(completionRef, { status: 'completed', completedAt: timestamp(), year, date: mmdd })
   })
   return { status: 'completed', id }

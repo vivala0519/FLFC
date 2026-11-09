@@ -53,3 +53,25 @@ export const analyzePlayerRadar = (records, members, month) => {
 
   return { players, axes }
 }
+
+export const analyzeGoalkeeperRadar = (comparison, memberInfo, cleanSheetCounts) => {
+  const goalkeeperNames = new Set([...comparison.players.keys()].filter((name) =>
+    memberInfo?.[name]?.goalKeeper === true || memberInfo?.[name]?.goalkeeper === true,
+  ))
+  const players = new Map([...comparison.players].map(([name, player]) => [name, {
+    ...player,
+    cleanSheetRate: goalkeeperNames.has(name) && player.attendance > 0
+      ? nonNegativeNumber(cleanSheetCounts?.get(name)) / player.attendance : 0,
+  }]))
+  const rates = [...goalkeeperNames].map((name) => players.get(name).cleanSheetRate)
+  const cleanSheetAxis = {
+    key: 'cleanSheetRate', label: '일평균 클린시트', unit: '회', averageLabel: '골키퍼 평균',
+    max: Math.max(0, ...rates),
+    average: rates.length > 0 ? rates.reduce((sum, rate) => sum + rate, 0) / rates.length : 0,
+  }
+  return {
+    players,
+    axes: comparison.axes.map((axis) => axis.key === 'goalRate' ? cleanSheetAxis : axis),
+    cleanSheetPlayerCount: goalkeeperNames.size,
+  }
+}

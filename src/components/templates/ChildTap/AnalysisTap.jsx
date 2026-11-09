@@ -4,6 +4,7 @@ import { collection, getDocsFromServer, onSnapshot } from 'firebase/firestore'
 import { get, getDatabase, ref } from 'firebase/database'
 
 import NewBadge from '@/components/atoms/NewBadge.jsx'
+import GoalkeeperBadge from '@/components/atoms/GoalkeeperBadge.jsx'
 import BestFiveCard from '@/components/organisms/BestFiveCard.jsx'
 import PlayerRadarChart from '@/components/organisms/PlayerRadarChart.jsx'
 import QuarterlyRecordChart from '@/components/organisms/QuarterlyRecordChart.jsx'
@@ -21,8 +22,9 @@ import { analyzeStarterPointRate } from '@/apis/analyzeStarterPointRate.js'
 import { analyzeWinningTrio } from '@/apis/analyzeWinningTrio.js'
 import { analyzeLowScoringDuo } from '@/apis/analyzeLowScoringDuo.js'
 import { analyzeSeasonGoalDuos } from '@/apis/analyzeSeasonGoalDuos.js'
-import { analyzePlayerRadar } from '@/apis/analyzePlayerRadar.js'
+import { analyzeGoalkeeperRadar, analyzePlayerRadar } from '@/apis/analyzePlayerRadar.js'
 import { analyzeCareerRecords } from '@/apis/analyzeCareerRecords.js'
+import { analyzeCleanSheets } from '@/apis/analyzeCleanSheets.js'
 import { analyzeCareerGoalDuos, analyzeCareerPartners } from '@/apis/analyzeCareerPartners.js'
 import { analyzeCareerAwards } from '@/apis/analyzeCareerAwards.js'
 import { getAnalysisHistoryRecords } from '@/apis/analysisHistoryRecords.js'
@@ -63,6 +65,15 @@ const formatCareerNumber = (value, unit) => `${careerNumberFormatter.format(valu
 const formatCareerHigh = (high, unit) => high?.season
   ? formatCareerNumber(high.value, unit)
   : '기록 없음'
+const formatCleanSheetRecord = (status, value) => status === 'ready' ? value
+  : status === 'error' ? '기록을 불러오지 못했습니다.' : '기록을 불러오는 중입니다.'
+const formatMostConceded = (counts) => {
+  const maximum = Math.max(0, ...[...(counts?.values() || [])])
+  if (maximum === 0) return '기록 없음'
+  const names = [...counts].filter(([, count]) => count === maximum)
+    .map(([name]) => name).sort((a, b) => a.localeCompare(b, 'ko'))
+  return `${names.join(', ')} · ${formatCareerNumber(maximum, '골')}`
+}
 
 const formatAttendanceStreak = ({ count, additionalCount, ...stats }, status) => ({
   ...stats,
@@ -72,7 +83,7 @@ const formatAttendanceStreak = ({ count, additionalCount, ...stats }, status) =>
   additionalCount: additionalCount > 0 ? `${additionalCount}일 연속` : '',
 })
 
-const rankCareerCounts = (counts, unit, includeChasers = false) => {
+const rankCareerCounts = (counts, unit, includeChasers = false, maxChasers = 2) => {
   const values = [...counts.values()]
   const maximum = Math.max(0, ...values)
   const nextCount = Math.max(0, ...values.filter((value) => value < maximum))
@@ -80,7 +91,7 @@ const rankCareerCounts = (counts, unit, includeChasers = false) => {
     .filter(([, count]) => count === value)
     .map(([name]) => name).sort((a, b) => a.localeCompare(b, 'ko')) : []
   const chasers = includeChasers ? namesAt(nextCount) : []
-  const additional = chasers.length <= 2 ? chasers : []
+  const additional = chasers.length <= maxChasers ? chasers : []
   return {
     name: namesAt(maximum),
     count: maximum > 0 ? formatCareerNumber(maximum, unit) : '',
@@ -217,7 +228,9 @@ const analysisIconPaths = {
   </>,
 }
 
-const AnalysisIcon = ({ name }) => (
+const AnalysisIcon = ({ name }) => name === 'goalkeeper' ? (
+  <GoalkeeperBadge memberInfo={{ goalKeeper: true }} className="h-5 w-5 shrink-0 text-blueSignature dark:text-yellow-400" />
+) : (
   <svg
     aria-hidden="true"
     focusable="false"
@@ -258,7 +271,7 @@ const bestFiveRoles = [
 
 const AnalysisTap = (props) => {
   const { test } = props
-  const { existingMembers, totalMembers, oneCharacterMembers } = getMembers()
+  const { existingMembers, totalMembers, oneCharacterMembers, membersNickName } = getMembers()
   const { time: { currentTime } } = getTimes()
   const cacheDay = getAnalysisCachePeriod(currentTime).dayKey
   const calendarYear = test ? '2024' : cacheDay.slice(0, 4)
@@ -350,6 +363,24 @@ const AnalysisTap = (props) => {
     })),
   } : {}
 
+  const seasonCleanSheets = useMemo(() => yearRoundData && bestFive.memberInfo &&
+    Array.isArray(totalWeeklyTeamData) && totalMembers.length > 0
+    ? analyzeCleanSheets({
+      roundYears: { [thisYear]: yearRoundData }, weeklyTeams: totalWeeklyTeamData,
+      memberInfo: bestFive.memberInfo, members: totalMembers, oneCharacterMembers,
+      nicknames: membersNickName, asOfDate,
+    }) : null,
+  [yearRoundData, thisYear, bestFive.memberInfo, totalWeeklyTeamData, totalMembers,
+    oneCharacterMembers, membersNickName, asOfDate])
+  const seasonCleanSheetCounts = seasonCleanSheets?.seasons.get(`${thisYear}-${quarter}`) || new Map()
+  const seasonCleanSheetStatus = roundLoadError || bestFive.status === 'error' ? 'error'
+    : seasonCleanSheets ? 'ready' : 'loading'
+  const goalkeeperComparison = useMemo(() => seasonCleanSheets
+    ? analyzeGoalkeeperRadar(playerComparison, bestFive.memberInfo,
+      seasonCleanSheets.seasons.get(`${thisYear}-${quarter}`))
+    : null,
+  [seasonCleanSheets, playerComparison, bestFive.memberInfo, thisYear, quarter])
+
   const analysisItems = [
     {
       type: 'best-five',
@@ -364,6 +395,10 @@ const AnalysisTap = (props) => {
       title: '최다 MVP',
       description: '데일리 MVP 최다 플레이어',
       data: mostMvpPlayer,
+    },
+    {
+      type: 'clean-sheet', icon: 'goalkeeper', title: '최다 클린시트',
+      data: { ...rankCareerCounts(seasonCleanSheetCounts, '회', true, Infinity), status: seasonCleanSheetStatus },
     },
     {
       icon: 'ten',
@@ -541,6 +576,8 @@ const AnalysisTap = (props) => {
   }, [selectedPlayerName, integratedData, thisQuarterMostPartners, mercenaryBring,
     starterPointRates, thisQuarterMVP, thisQuarterPlayersCombination])
   const playerName = playerDetail?.name
+  const selectedMemberInfo = bestFive.memberInfo?.[playerName]
+  const isGoalkeeper = selectedMemberInfo?.goalKeeper === true || selectedMemberInfo?.goalkeeper === true
   const [careerAwardHistory, setCareerAwardHistory] = useState({ status: 'idle', records: [] })
   const historyLoadedDay = useRef(null)
   const careerAwards = useMemo(() =>
@@ -563,6 +600,17 @@ const AnalysisTap = (props) => {
       ? { ...historicalRoundData, [thisYear]: yearRoundData, [calendarYear]: analysisSeason.calendarYearRoundData }
       : null,
   [historicalRoundData, yearRoundData, thisYear, calendarYear, analysisSeason.calendarYearRoundData])
+  const careerCleanSheets = useMemo(() => careerRoundRoots && bestFive.memberInfo &&
+    Array.isArray(totalWeeklyTeamData) && totalMembers.length > 0
+    ? analyzeCleanSheets({
+      roundYears: careerRoundRoots, weeklyTeams: totalWeeklyTeamData,
+      memberInfo: bestFive.memberInfo, members: totalMembers, oneCharacterMembers,
+      nicknames: membersNickName, asOfDate,
+    }) : null,
+  [careerRoundRoots, bestFive.memberInfo, totalWeeklyTeamData, totalMembers,
+    oneCharacterMembers, membersNickName, asOfDate])
+  const careerCleanSheetStatus = careerRoundStatus === 'error' || roundLoadError || bestFive.status === 'error' ? 'error'
+    : careerRoundStatus === 'ready' && careerCleanSheets ? 'ready' : 'loading'
   const careerPartners = useMemo(() =>
     playerName && Array.isArray(totalWeeklyTeamData)
       ? analyzeCareerPartners(totalWeeklyTeamData, careerRoundRoots || {}, playerName, totalMembers, asOfDate, oneCharacterMembers)
@@ -607,6 +655,14 @@ const AnalysisTap = (props) => {
       data: { ...dailyMaximums.totalPoints, status: scoringStreakResult.status },
     },
     {
+      type: 'career-clean-sheet', icon: 'goalkeeper', title: '최다 누적 클린시트',
+      titleNote: '라운드 기록이 도입된 2026년 이후',
+      data: {
+        ...rankCareerCounts(careerCleanSheets?.totals || new Map(), '회', true, Infinity),
+        status: careerCleanSheetStatus,
+      },
+    },
+    {
       type: 'career-total', icon: 'check', title: '최다 누적 출석',
       data: { ...dailyMaximums.totalAttendance, status: scoringStreakResult.status },
     },
@@ -620,9 +676,20 @@ const AnalysisTap = (props) => {
       description: '통산 합작 골이 가장 많은 듀오',
       data: careerDuo,
     },
-    ...careerTypes.flatMap((careerType) => analysisItems.filter(({ type }) => type === careerType)),
+    ...analysisItems.filter(({ type }) => type === 'daily-record'),
+    {
+      type: 'career-clean-sheet', icon: 'goalkeeper', title: '일일 최다 클린시트',
+      data: {
+        ...rankCareerCounts(careerCleanSheets?.dailyHigh || new Map(), '회', true, Infinity),
+        status: careerCleanSheetStatus,
+      },
+    },
+    ...careerTypes.filter((type) => type !== 'daily-record')
+      .flatMap((careerType) => analysisItems.filter(({ type }) => type === careerType)),
   ]
   const careerHighRows = careerRecord ? [
+    ...(isGoalkeeper ? [['클린시트', formatCleanSheetRecord(careerCleanSheetStatus,
+      formatCareerHigh(careerCleanSheets?.careerHigh.get(playerName), '회'))]] : []),
     ['골', formatCareerHigh(careerRecord.careerHigh.goals, '골')],
     ['어시', formatCareerHigh(careerRecord.careerHigh.assists, '어시')],
     ['승점', formatCareerHigh(careerRecord.careerHigh.points, '점')],
@@ -630,6 +697,12 @@ const AnalysisTap = (props) => {
   ] : []
   const careerTotalRows = careerRecord ? [
     ['출석', formatCareerNumber(careerRecord.totals.attendance, '회')],
+    ...(isGoalkeeper ? [
+      ['클린시트', formatCleanSheetRecord(careerCleanSheetStatus,
+        formatCareerNumber(careerCleanSheets?.totals.get(playerName) || 0, '회'))],
+      ['최다 실점 상대', formatCleanSheetRecord(careerCleanSheetStatus,
+        formatMostConceded(careerCleanSheets?.concededTotals.get(playerName)))],
+    ] : []),
     ['골', formatCareerNumber(careerRecord.totals.goals, '골')],
     ['어시', formatCareerNumber(careerRecord.totals.assists, '어시')],
     ['승점', careerRecord.careerHigh.points.season
@@ -646,7 +719,6 @@ const AnalysisTap = (props) => {
       : careerPartners?.goalCombination.partners.length
         ? `${careerPartners.goalCombination.partners.join(', ')} · 합작 ${careerPartners.goalCombination.goals}골`
         : '기록 없음'
-  const selectedMemberInfo = bestFive.memberInfo?.[playerDetail?.name]
   const selectedFoot = selectedMemberInfo?.preferredFoot
   const preferredFootLabel = selectedFoot === 'L' ? '왼발'
     : selectedFoot === 'R' ? '오른발'
@@ -1251,22 +1323,24 @@ const AnalysisTap = (props) => {
     mercenaryBring === null ||
     integratedData === null
 
-  const renderAnalysisItem = ({ type, isNew, icon, title, description, data }) => {
+  const renderAnalysisItem = ({ type, isNew, icon, title, titleNote, description, data }) => {
     const players = data.name?.filter(Boolean) ?? []
     const almostPlayers = data.additional?.filter(Boolean) ?? []
     const isChasingDuo = type === 'duo' || type === 'partners' || type === 'career-duo'
     const isAttendanceStreak = type === 'scoring-streak' || type === 'assist-streak'
-    const hasChaserCount = isChasingDuo || isAttendanceStreak || type === 'career-total' || type === 'career-mvp'
+    const isCleanSheet = type === 'clean-sheet' || type === 'career-clean-sheet'
+    const hasChaserCount = isChasingDuo || isAttendanceStreak || isCleanSheet || type === 'career-total' || type === 'career-mvp'
     const trendPlayers = type === 'recent-fall' ? recentForm.decliners : recentForm.leaders
 
     return (
       <div key={title} className="py-5 first:pt-0">
-        <dt className="flex items-center gap-2 font-bold">
+        <dt className="flex flex-wrap items-center gap-2 font-bold">
           <AnalysisIcon name={icon} />
           <span className="relative inline-block font-dnf-forged">
             {title}
             {isNew && <NewBadge />}
           </span>
+          {titleNote && <span className="text-[11px] font-normal text-gray-500 dark:text-gray-400">{titleNote}</span>}
           {type === 'best-five' && (
             <button
               type="button"
@@ -1305,20 +1379,24 @@ const AnalysisTap = (props) => {
               <p className="text-sm text-gray-500 dark:text-gray-400">이번 시즌 출석률 50% 이상인 플레이어가 없습니다.</p>
             )}
           </dd>
-        ) : (isAttendanceStreak || type === 'longest-absent' || type === 'daily-record' || type?.startsWith('career-')) &&
+        ) : (isCleanSheet || isAttendanceStreak || type === 'longest-absent' || type === 'daily-record' || type?.startsWith('career-')) &&
           data.status !== 'ready' ? (
           <dd className="mt-2 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
             {data.status === 'loading'
-              ? type === 'daily-record'
-                ? '일일 기록을 계산하는 중입니다.'
-                : type?.startsWith('career-')
-                  ? '통산 기록을 계산하는 중입니다.'
-                  : '전체 출석 기록을 불러오는 중입니다.'
-              : type === 'daily-record'
-                ? '일일 기록을 계산하지 못했습니다.'
-                : type?.startsWith('career-')
-                  ? '통산 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'
-                  : '전체 출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'}
+              ? isCleanSheet
+                ? '클린시트 기록을 계산하는 중입니다.'
+                : type === 'daily-record'
+                  ? '일일 기록을 계산하는 중입니다.'
+                  : type?.startsWith('career-')
+                    ? '통산 기록을 계산하는 중입니다.'
+                    : '전체 출석 기록을 불러오는 중입니다.'
+              : isCleanSheet
+                ? '클린시트 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'
+                : type === 'daily-record'
+                  ? '일일 기록을 계산하지 못했습니다.'
+                  : type?.startsWith('career-')
+                    ? '통산 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'
+                    : '전체 출석 기록을 불러오지 못했습니다. 잠시 후 다시 확인해 주세요.'}
           </dd>
         ) : type === 'recent-form' || type === 'recent-fall' ? (
           <>
@@ -1381,11 +1459,11 @@ const AnalysisTap = (props) => {
               {players.length > 0 && data.count && <span className="text-sm">{data.count}</span>}
             </dd>
             {almostPlayers.length > 0 && (
-              <dd className="flex pl-7 mt-2 gap-1 text-sm text-gray-500 dark:text-gray-400 animate-bounceUpDown">
+              <dd className="flex flex-wrap pl-7 mt-2 gap-1 text-sm text-gray-500 dark:text-gray-400 animate-bounceUpDown">
                 <p className="mr-2 font-medium text-goal dark:text-rose-400">
                   {isChasingDuo ? '추격 듀오' : hasChaserCount ? '추격자' : '달성 임박'}
                 </p>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1">
                   <span>{almostPlayers.join(!type ? ' ' : ' / ')}</span>
                   {hasChaserCount && data.additionalCount && <span>·</span>}
                   <span>
@@ -1463,6 +1541,7 @@ const AnalysisTap = (props) => {
                   <div className="min-w-0">
                     <h3 id="player-detail-title" className="flex flex-wrap items-center gap-2 break-words text-lg font-bold font-dnf-forged text-blue-700 dark:text-blue-400">
                       <span>{playerDetail.name}</span>
+                      <GoalkeeperBadge memberInfo={selectedMemberInfo} />
                       {selectedMemberInfo?.injured === true && (
                         <span className="shrink-0 rounded border border-red-200 bg-red-50 px-2 py-0.5 font-sans text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-900/40 dark:text-red-300">
                           부상중
@@ -1494,21 +1573,28 @@ const AnalysisTap = (props) => {
                       이번 시즌
                       <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">{thisYear}년 {quarter}분기</span>
                     </h4>
-                    {bestFive.status === 'ready' ? (
+                    {bestFive.status === 'ready' && (!isGoalkeeper || seasonCleanSheetStatus === 'ready') ? (
                       hasQuarterRecord ? (
-                        <PlayerRadarChart name={playerDetail.name} comparison={playerComparison} />
+                        <PlayerRadarChart name={playerDetail.name} comparison={isGoalkeeper ? goalkeeperComparison : playerComparison} />
                       ) : (
                         <p className="flex items-center justify-center mt-6 h-40 text-sm text-center text-gray-500 dark:text-gray-400">이번 시즌 기록이 없습니다</p>
                       )
                     ) : (
                       <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">
-                        {bestFive.status === 'error' ? '비교 기록을 불러오지 못했습니다.' : '비교 기록을 불러오는 중입니다.'}
+                        {bestFive.status === 'error' || (isGoalkeeper && seasonCleanSheetStatus === 'error')
+                          ? '비교 기록을 불러오지 못했습니다.' : '비교 기록을 불러오는 중입니다.'}
                       </p>
                     )}
                     <hr className="my-5 border-gray-100 dark:border-gray-700" />
                     {bestFive.status === 'ready' && hasQuarterRecord && (
                       <dl className="space-y-2 text-sm">
                         {[
+                          ...(isGoalkeeper ? [
+                            ['클린시트', formatCleanSheetRecord(seasonCleanSheetStatus,
+                              formatCareerNumber(seasonCleanSheetCounts.get(playerName) || 0, '회'))],
+                            ['최다 실점 상대', formatCleanSheetRecord(seasonCleanSheetStatus,
+                              formatMostConceded(seasonCleanSheets?.concededSeasons.get(`${thisYear}-${quarter}`)?.get(playerName)))],
+                          ] : []),
                           ['골', formatCareerNumber(quarterPlayerStats.goals, '골')],
                           ['어시', formatCareerNumber(quarterPlayerStats.assists, '어시')],
                           ['MVP', `${playerDetail.mvp}회`],

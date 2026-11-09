@@ -31,7 +31,7 @@ const PlayerRadarChart = ({ name, comparison }) => {
     return <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">비교할 출석 기록이 없습니다.</p>
   }
 
-  const { axes, players } = comparison
+  const { axes, players, cleanSheetPlayerCount } = comparison
   const playerRatios = axes.map(({ key, max }) => max > 0 ? player[key] / max : 0)
   const averageRatios = axes.map(({ average, max }) => max > 0 ? average / max : 0)
 
@@ -44,7 +44,7 @@ const PlayerRadarChart = ({ name, comparison }) => {
         </span>
         <span className="inline-flex items-center gap-2 text-amber-700 dark:text-amber-300">
           <span aria-hidden="true" className="h-0 w-5 border-t-2 border-dashed border-amber-600 dark:border-amber-400" />
-          전체 평균
+          {cleanSheetPlayerCount === undefined ? '전체 평균' : '평균'}
         </span>
       </div>
       <svg
@@ -55,8 +55,8 @@ const PlayerRadarChart = ({ name, comparison }) => {
       >
         <title id={`${id}-title`}>{name}의 분기 기록 비교</title>
         <desc id={`${id}-description`}>
-          {axes.map(({ key, label, unit, max, average }) =>
-            `${label}: ${formatValue(player[key], unit)}, 전체 평균 ${formatValue(average, unit)}, 최고 ${formatValue(max, unit)}`,
+          {axes.map(({ key, label, unit, max, average, averageLabel = '전체 평균' }) =>
+            `${label}: ${formatValue(player[key], unit)}, ${averageLabel} ${formatValue(average, unit)}, 최고 ${formatValue(max, unit)}`,
           ).join('. ')}
         </desc>
         {levels.map((level) => (
@@ -115,6 +115,9 @@ const PlayerRadarChart = ({ name, comparison }) => {
       </svg>
       <figcaption id={`${id}-caption`} className="mt-1 text-center text-xs text-gray-500 dark:text-gray-400">
         분기 출석자 {players.size}명 기준
+        {cleanSheetPlayerCount !== undefined && (
+          <span className="block">클린시트: 분기 출석 골키퍼 {cleanSheetPlayerCount}명 기준</span>
+        )}
       </figcaption>
     </figure>
   )
