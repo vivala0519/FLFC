@@ -14,9 +14,12 @@ const nonNegativeNumber = (value) => {
   return Number.isFinite(number) && number >= 0 ? number : null
 }
 
-export const analyzeCareerPointRate = (recordsByYear, asOfDate) => {
+export const analyzeCareerPointRate = (recordsByYear, asOfDate, eligibleMembers = null) => {
   const result = { name: [], pointRate: null, totalDays: 0, requiredDays: 0 }
   if (!validDate(asOfDate)) return result
+  const allowedMembers = eligibleMembers === null ? null : new Set(
+    (Array.isArray(eligibleMembers) || eligibleMembers instanceof Set ? [...eligibleMembers] : [])
+      .filter((name) => typeof name === 'string' && name.trim()).map((name) => name.trim()))
 
   const days = new Map()
   for (const [year, records] of Object.entries(recordsByYear || {})) {
@@ -39,6 +42,7 @@ export const analyzeCareerPointRate = (recordsByYear, asOfDate) => {
     result.totalDays++
 
     for (const [name, stats] of attendees) {
+      if (allowedMembers && !allowedMembers.has(name)) continue
       const player = players.get(name) || { name, attendanceDays: 0, points: 0, games: 0 }
       // A partial attendance still counts as one date, matching BEST FIVE eligibility.
       player.attendanceDays++

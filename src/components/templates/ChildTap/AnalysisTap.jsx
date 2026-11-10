@@ -4,6 +4,7 @@ import { collection, getDocsFromServer, onSnapshot } from 'firebase/firestore'
 import { get, getDatabase, ref } from 'firebase/database'
 
 import NewBadge from '@/components/atoms/NewBadge.jsx'
+import ReturnBadge from '@/components/atoms/ReturnBadge.jsx'
 import GoalkeeperBadge from '@/components/atoms/GoalkeeperBadge.jsx'
 import BestFiveCard from '@/components/organisms/BestFiveCard.jsx'
 import PlayerRadarChart from '@/components/organisms/PlayerRadarChart.jsx'
@@ -17,6 +18,7 @@ import useScoringStreak from '@/hooks/useScoringStreak.js'
 import useBestFive from '@/hooks/useBestFive.js'
 import useAnalysisSeason from '@/hooks/useAnalysisSeason.js'
 import { getQuarterRoundGoals } from '@/apis/roundGoals.js'
+import { createRecordMemberResolver } from '@/apis/recordMembers.js'
 import { analyzeStarterStats } from '@/apis/analyzeStarterStats.js'
 import { analyzeStarterPointRate, analyzeCareerStarterStyles } from '@/apis/analyzeStarterPointRate.js'
 import { analyzeWinningTrio } from '@/apis/analyzeWinningTrio.js'
@@ -117,10 +119,11 @@ const formatCareerHigh = (high, unit) => high?.season
   : '기록 없음'
 const formatCleanSheetRecord = (status, value) => status === 'ready' ? value
   : status === 'error' ? '기록을 불러오지 못했습니다.' : '기록을 불러오는 중입니다.'
-const formatMostConceded = (counts) => {
-  const maximum = Math.max(0, ...[...(counts?.values() || [])])
+const formatMostConceded = (counts, eligibleMembers) => {
+  const eligibleCounts = [...(counts || [])].filter(([name]) => eligibleMembers.has(name))
+  const maximum = Math.max(0, ...eligibleCounts.map(([, count]) => count))
   if (maximum === 0) return '기록 없음'
-  const names = [...counts].filter(([, count]) => count === maximum)
+  const names = eligibleCounts.filter(([, count]) => count === maximum)
     .map(([name]) => name).sort((a, b) => a.localeCompare(b, 'ko'))
   return `${names.join(', ')} · ${formatCareerNumber(maximum, '골')}`
 }
@@ -133,7 +136,8 @@ const formatAttendanceStreak = ({ count, additionalCount, ...stats }, status) =>
   additionalCount: additionalCount > 0 ? `${additionalCount}일 연속` : '',
 })
 
-const rankCareerCounts = (counts, unit, includeChasers = false, maxChasers = 2) => {
+const rankCareerCounts = (counts, unit, includeChasers = false, maxChasers = 2, eligibleMembers = null) => {
+  if (eligibleMembers) counts = new Map([...counts].filter(([name]) => eligibleMembers.has(name)))
   const values = [...counts.values()]
   const maximum = Math.max(0, ...values)
   const nextCount = Math.max(0, ...values.filter((value) => value < maximum))
@@ -150,7 +154,7 @@ const rankCareerCounts = (counts, unit, includeChasers = false, maxChasers = 2) 
   }
 }
 
-const analyzeScoringRecords = (recordsByYear, asOfDate) => {
+const analyzeScoringRecords = (recordsByYear, asOfDate, eligibleMembers) => {
   const totals = new Map()
   const pointTotals = new Map()
   const attendanceTotals = new Map()
@@ -172,7 +176,7 @@ const analyzeScoringRecords = (recordsByYear, asOfDate) => {
       if (dateKey > asOfDate) continue
 
       for (const [name, stats] of Object.entries(record.data || {})) {
-        if (!name.trim() || name.includes('용병')) continue
+        if (!name.trim() || name.includes('용병') || !eligibleMembers.has(name)) continue
         const points = Number(stats?.['승점'])
         if (Number.isFinite(points) && points > 0) {
           pointTotals.set(name, (pointTotals.get(name) || 0) + points)
@@ -303,7 +307,7 @@ const AnalysisIcon = ({ name }) => analysisImageIcons[name] ? (
 )
 
 const AnalysisSectionHeading = ({ id, controls, title, subtitle, expanded, onToggle, focused = false }) => (
-  <div className={`sticky top-0 z-20 w-full bg-white dark:bg-gray-900 ${expanded ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}>
+  <div className={`sticky top-0 z-20 w-full bg-gray-100 dark:bg-gray-900 ${expanded ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}>
     <h2 id={id} className="w-full">
       <button
         type="button"
@@ -311,7 +315,7 @@ const AnalysisSectionHeading = ({ id, controls, title, subtitle, expanded, onTog
         aria-controls={controls}
         title={focused ? '목록으로 돌아가기' : undefined}
         onClick={onToggle}
-        className="relative flex w-full items-center justify-center rounded-none border-0 bg-transparent px-10 py-4 text-center font-dnf-forged focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-700 dark:focus-visible:outline-blue-300"
+        className="relative flex h-20 w-full items-center justify-center rounded-none border-0 bg-transparent px-10 py-3 text-center font-dnf-forged focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-700 dark:focus-visible:outline-blue-300"
       >
         <span className="flex flex-col items-center">
           <span>{title}</span>
@@ -351,7 +355,20 @@ const bestFiveRoles = [
 
 const AnalysisTap = (props) => {
   const { test } = props
-  const { existingMembers, totalMembers, oneCharacterMembers, membersNickName } = getMembers()
+  const { existingMembers: listedExistingMembers, retiredMembers, totalMembers, oneCharacterMembers, membersNickName } = getMembers()
+  const existingMembers = useMemo(() => {
+    const retired = new Set(retiredMembers)
+    return [...new Set(listedExistingMembers)].filter((name) => !retired.has(name))
+  }, [listedExistingMembers, retiredMembers])
+  const eligibleMembers = useMemo(() => new Set(existingMembers), [existingMembers])
+  // Resolve historical short names against everyone before checking current eligibility.
+  const resolveRecordMember = useMemo(() => createRecordMemberResolver(
+    totalMembers, oneCharacterMembers, membersNickName,
+  ), [totalMembers, oneCharacterMembers, membersNickName])
+  const getFullName = useCallback((name) => {
+    const resolved = resolveRecordMember(name)
+    return eligibleMembers.has(resolved) ? resolved : null
+  }, [resolveRecordMember, eligibleMembers])
   const { time: { currentTime } } = getTimes()
   const cacheDay = getAnalysisCachePeriod(currentTime).dayKey
   const calendarYear = test ? '2024' : cacheDay.slice(0, 4)
@@ -369,7 +386,7 @@ const AnalysisTap = (props) => {
   const [careerRoundRequest, setCareerRoundRequest] = useState(1)
   const [historicalRoundData, setHistoricalRoundData] = useState(null)
   const [careerRoundStatus, setCareerRoundStatus] = useState('idle')
-  const scoringStreakResult = useScoringStreak(totalMembers, asOfDate, existingMembers, cacheDay)
+  const scoringStreakResult = useScoringStreak(existingMembers, asOfDate, existingMembers, cacheDay)
   const { recordsByYear, assistStreak: assistStreakStats, ...scoringStreakStats } = scoringStreakResult
   const scoringStreak = formatAttendanceStreak(scoringStreakStats, scoringStreakResult.status)
   const assistStreak = formatAttendanceStreak(assistStreakStats, scoringStreakResult.status)
@@ -380,18 +397,18 @@ const AnalysisTap = (props) => {
       ? `마지막 출석 ${scoringStreakResult.longestAbsent.lastDate.replaceAll('-', '.')}` : '',
   }
   const dailyMaximums = useMemo(
-    () => analyzeScoringRecords(recordsByYear, asOfDate),
-    [recordsByYear, asOfDate],
+    () => analyzeScoringRecords(recordsByYear, asOfDate, eligibleMembers),
+    [recordsByYear, asOfDate, eligibleMembers],
   )
   const careerPointRate = useMemo(
-    () => analyzeCareerPointRate(recordsByYear, asOfDate),
-    [recordsByYear, asOfDate],
+    () => analyzeCareerPointRate(recordsByYear, asOfDate, eligibleMembers),
+    [recordsByYear, asOfDate, eligibleMembers],
   )
   const dailyGoalRecord = { ...dailyMaximums.goals, status: scoringStreakResult.status }
   const dailyAssistRecord = { ...dailyMaximums.assists, status: scoringStreakResult.status }
   const bestFive = useBestFive(thisYear, thisMonth, cacheDay, analysisSeason.records, {
     yearRoundData, roundStatus: analysisSeason.status, weeklyTeams: totalWeeklyTeamData,
-    members: totalMembers, oneCharacterMembers, nicknames: membersNickName, asOfDate,
+    members: totalMembers, oneCharacterMembers, nicknames: membersNickName, asOfDate, eligibleMembers,
   })
   const careerRoundRoots = useMemo(() =>
     historicalRoundData && yearRoundData && analysisSeason.calendarYearRoundData
@@ -431,6 +448,20 @@ const AnalysisTap = (props) => {
     const monthsAgo = (Number(cacheDay.slice(0, 4)) - year) * 12 + currentMonth - month
     return monthsAgo >= 0 && monthsAgo <= 3
   })), [activePlayers, bestFive.memberInfo, cacheDay, currentMonth])
+  const returningPlayers = useMemo(() => {
+    const today = new Date(`${cacheDay}T00:00:00Z`)
+    const cutoff = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth() - 3, 1))
+    const lastDay = new Date(Date.UTC(cutoff.getUTCFullYear(), cutoff.getUTCMonth() + 1, 0)).getUTCDate()
+    cutoff.setUTCDate(Math.min(today.getUTCDate(), lastDay))
+    const earliestDate = cutoff.toISOString().slice(0, 10)
+    return new Set(activePlayers.filter((player) => {
+      const restartDate = bestFive.memberInfo?.[player]?.restartDate
+      if (typeof restartDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(restartDate) ||
+        restartDate < earliestDate || restartDate > cacheDay) return false
+      const date = new Date(`${restartDate}T00:00:00Z`)
+      return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === restartDate
+    }))
+  }, [activePlayers, bestFive.memberInfo, cacheDay])
   const [sonKaeDuo, setSonKaeDuo] = useState({})
   const [mostMvpPlayer, setMostMvpPlayer] = useState({})
   const [weeklyTeamData, setWeeklyTeamData] = useState(null)
@@ -505,7 +536,8 @@ const AnalysisTap = (props) => {
     totalMembers,
     thisYear,
     thisMonth,
-  ), [yearRoundData, totalWeeklyTeamData, totalMembers, thisYear, thisMonth])
+    eligibleMembers,
+  ), [yearRoundData, totalWeeklyTeamData, totalMembers, thisYear, thisMonth, eligibleMembers])
   const formatStarter = (players, period) => ({
     name: players.map((player) => {
       const { name } = player
@@ -517,10 +549,11 @@ const AnalysisTap = (props) => {
   const winningTrioStats = useMemo(() => analyzeWinningTrio(
     yearRoundData,
     totalWeeklyTeamData,
-    existingMembers,
+    totalMembers,
     thisYear,
     thisMonth,
-  ), [yearRoundData, totalWeeklyTeamData, existingMembers, thisYear, thisMonth])
+    eligibleMembers,
+  ), [yearRoundData, totalWeeklyTeamData, totalMembers, thisYear, thisMonth, eligibleMembers])
   const winningTrio = winningTrioStats ? {
     name: [winningTrioStats.players.join(' - ')],
     count: `승률 ${Math.round(winningTrioStats.winRate * 100)}%`,
@@ -532,7 +565,8 @@ const AnalysisTap = (props) => {
     thisYear,
     thisMonth,
     bestFive.memberInfo,
-  ), [thisQuarterData, totalWeeklyTeamData, totalMembers, thisYear, thisMonth, bestFive.memberInfo])
+    eligibleMembers,
+  ), [thisQuarterData, totalWeeklyTeamData, totalMembers, thisYear, thisMonth, bestFive.memberInfo, eligibleMembers])
   const lowScoringDuo = lowScoringDuoStats ? {
     name: lowScoringDuoStats.pairs.map(({ players }) => players.join(' - ')),
     count: `같은 팀 ${lowScoringDuoStats.pairs[0].sharedDays}회 · 합작 ${lowScoringDuoStats.pairs[0].goals}골`,
@@ -568,7 +602,7 @@ const AnalysisTap = (props) => {
     },
     {
       type: 'clean-sheet', icon: 'goldenGlove', title: '골든 글러브', description: '최다 클린시트',
-      data: { ...rankCareerCounts(seasonCleanSheetCounts, '회', true, Infinity), status: seasonCleanSheetStatus },
+      data: { ...rankCareerCounts(seasonCleanSheetCounts, '회', true, Infinity, eligibleMembers), status: seasonCleanSheetStatus },
     },
     {
       icon: 'ten',
@@ -708,11 +742,10 @@ const AnalysisTap = (props) => {
   }, [thisQuarterPointData, thisQuarterDataByTime, thisQuarterMostPartners, mercenaryBring])
   const [selectedPlayerName, setSelectedPlayerName] = useState(null)
   const playerDetail = useMemo(() => {
-    if (!selectedPlayerName) return null
-    const shortName = selectedPlayerName.slice(1, 3)
-    const detailMap = integratedData?.get(shortName) || {
-      ...thisQuarterMostPartners?.[shortName],
-      ...mercenaryBring?.get(shortName),
+    if (!eligibleMembers.has(selectedPlayerName)) return null
+    const detailMap = integratedData?.get(selectedPlayerName) || {
+      ...thisQuarterMostPartners?.[selectedPlayerName],
+      ...mercenaryBring?.get(selectedPlayerName),
     }
     const rates = starterPointRates.playerRates.get(selectedPlayerName)
     const style = rates?.early > rates?.late ? ['얼리스타터']
@@ -723,10 +756,11 @@ const AnalysisTap = (props) => {
     const combi = []
     let maxPoint = 0
     thisQuarterPlayersCombination?.forEach((value, key) => {
-      if (key.includes(shortName)) {
-        const temp = key.split('_')
-        if (temp[0] !== shortName) combi.push([temp[0], value])
-        if (temp[1] !== shortName) combi.push([temp[1], value])
+      const players = key.split('_').map(getFullName)
+      if (players.every(Boolean) && players.includes(selectedPlayerName)) {
+        for (const partner of players) {
+          if (partner !== selectedPlayerName) combi.push([partner, value])
+        }
         if (value > maxPoint) maxPoint = value
       }
     })
@@ -741,7 +775,7 @@ const AnalysisTap = (props) => {
       combiCount: maxPoint,
     }
   }, [selectedPlayerName, integratedData, thisQuarterMostPartners, mercenaryBring,
-    starterPointRates, thisQuarterMVP, thisQuarterPlayersCombination])
+    starterPointRates, thisQuarterMVP, thisQuarterPlayersCombination, eligibleMembers, getFullName])
   const playerName = playerDetail?.name
   const selectedMemberInfo = bestFive.memberInfo?.[playerName]
   const isGoalkeeper = selectedMemberInfo?.goalKeeper === true || selectedMemberInfo?.goalkeeper === true
@@ -754,11 +788,11 @@ const AnalysisTap = (props) => {
       : [],
   [careerAwardHistory, playerName, asOfDate])
   const careerAwardLeaders = useMemo(() =>
-    analyzeCareerAwardLeaders(careerAwardHistory.records, asOfDate),
-  [careerAwardHistory.records, asOfDate])
+    analyzeCareerAwardLeaders(careerAwardHistory.records, asOfDate, eligibleMembers),
+  [careerAwardHistory.records, asOfDate, eligibleMembers])
   const titleCollections = useMemo(() =>
-    analyzeTitleCollections(careerAwardHistory.records, asOfDate),
-  [careerAwardHistory.records, asOfDate])
+    analyzeTitleCollections(careerAwardHistory.records, asOfDate, eligibleMembers),
+  [careerAwardHistory.records, asOfDate, eligibleMembers])
   const quarterPlayerStats = playerName ? playerComparison.players.get(playerName) : null
   const hasQuarterRecord = Boolean(quarterPlayerStats)
   const playerStartDate = selectedMemberInfo?.startDate
@@ -783,26 +817,26 @@ const AnalysisTap = (props) => {
   }, [careerRecord, isGoalkeeper, careerCleanSheets, playerName])
   const careerStarterStyles = useMemo(() =>
     careerRoundStatus === 'ready' && careerRoundRoots && !roundLoadError
-      ? analyzeCareerStarterStyles(careerRoundRoots, totalWeeklyTeamData, totalMembers, asOfDate)
+      ? analyzeCareerStarterStyles(careerRoundRoots, totalWeeklyTeamData, totalMembers, asOfDate, eligibleMembers)
       : new Map(),
-  [careerRoundStatus, careerRoundRoots, roundLoadError, totalWeeklyTeamData, totalMembers, asOfDate])
+  [careerRoundStatus, careerRoundRoots, roundLoadError, totalWeeklyTeamData, totalMembers, asOfDate, eligibleMembers])
   const careerStyles = [careerStarterStyles.get(playerName), careerStyle].filter(Boolean)
   const careerPartners = useMemo(() =>
     playerName && Array.isArray(totalWeeklyTeamData)
-      ? analyzeCareerPartners(totalWeeklyTeamData, careerRoundRoots || {}, playerName, totalMembers, asOfDate, oneCharacterMembers)
+      ? analyzeCareerPartners(totalWeeklyTeamData, careerRoundRoots || {}, playerName, totalMembers, asOfDate, oneCharacterMembers, eligibleMembers)
       : null,
-  [totalWeeklyTeamData, careerRoundRoots, playerName, totalMembers, asOfDate, oneCharacterMembers])
+  [totalWeeklyTeamData, careerRoundRoots, playerName, totalMembers, asOfDate, oneCharacterMembers, eligibleMembers])
   const careerMVPCount = allTimeMVP.filter((name) => name === playerName).length
   const careerMostMVP = useMemo(() => {
     const counts = new Map()
     for (const name of allTimeMVP) {
-      if (typeof name !== 'string' || !name.trim() || name.includes('용병')) continue
+      if (!eligibleMembers.has(name)) continue
       counts.set(name, (counts.get(name) || 0) + 1)
     }
     return { ...rankCareerCounts(counts, '회', true), status: mvpStatus }
-  }, [allTimeMVP, mvpStatus])
+  }, [allTimeMVP, mvpStatus, eligibleMembers])
   const careerDuo = useMemo(() => {
-    const result = analyzeCareerGoalDuos(careerRoundRoots || {}, totalMembers, asOfDate, oneCharacterMembers)
+    const result = analyzeCareerGoalDuos(careerRoundRoots || {}, totalMembers, asOfDate, oneCharacterMembers, eligibleMembers)
     return {
       ...result,
       count: result.count > 0 ? formatCareerNumber(result.count, '골') : '',
@@ -810,7 +844,7 @@ const AnalysisTap = (props) => {
       status: careerRoundStatus === 'error' || roundLoadError ? 'error'
         : careerRoundStatus === 'ready' && careerRoundRoots ? 'ready' : 'loading',
     }
-  }, [careerRoundRoots, totalMembers, asOfDate, oneCharacterMembers, careerRoundStatus, roundLoadError])
+  }, [careerRoundRoots, totalMembers, asOfDate, oneCharacterMembers, careerRoundStatus, roundLoadError, eligibleMembers])
   const careerSeasonSpecialists = useMemo(() =>
     analyzeSeasonSpecialists(recordsByYear, existingMembers, asOfDate),
   [recordsByYear, existingMembers, asOfDate])
@@ -857,7 +891,7 @@ const AnalysisTap = (props) => {
       icon: 'goalkeeper',
       title: '클린시트 Top',
       data: {
-        ...rankCareerCounts(careerCleanSheets?.totals || new Map(), '회', true, Infinity),
+        ...rankCareerCounts(careerCleanSheets?.totals || new Map(), '회', true, Infinity, eligibleMembers),
         status: careerCleanSheetStatus,
       },
     },
@@ -887,7 +921,7 @@ const AnalysisTap = (props) => {
       icon: 'goalkeeper',
       title: '일일 최다 클린시트',
       data: {
-        ...rankCareerCounts(careerCleanSheets?.dailyHigh || new Map(), '회', true, Infinity),
+        ...rankCareerCounts(careerCleanSheets?.dailyHigh || new Map(), '회', true, Infinity, eligibleMembers),
         status: careerCleanSheetStatus,
       },
     },
@@ -935,7 +969,7 @@ const AnalysisTap = (props) => {
       ['클린시트', formatCleanSheetRecord(careerCleanSheetStatus,
         formatCareerNumber(careerCleanSheets?.totals.get(playerName) || 0, '회'))],
       ['최다 실점 상대', formatCleanSheetRecord(careerCleanSheetStatus,
-        formatMostConceded(careerCleanSheets?.concededTotals.get(playerName)))],
+        formatMostConceded(careerCleanSheets?.concededTotals.get(playerName), eligibleMembers))],
     ] : []),
     ['골', formatCareerNumber(careerRecord.totals.goals, '골')],
     ['어시', formatCareerNumber(careerRecord.totals.assists, '어시')],
@@ -973,6 +1007,12 @@ const AnalysisTap = (props) => {
     playerDetailDialogRef.current?.close()
     setSelectedPlayerName(null)
   }, [thisYear, quarter])
+  useEffect(() => {
+    if (selectedPlayerName && !eligibleMembers.has(selectedPlayerName)) {
+      playerDetailDialogRef.current?.close()
+      setSelectedPlayerName(null)
+    }
+  }, [selectedPlayerName, eligibleMembers])
 
   useEffect(() => {
     if (!needsAwardHistory || historyLoadedDay.current === cacheDay) return undefined
@@ -1027,6 +1067,118 @@ const AnalysisTap = (props) => {
     return () => { cancelled = true }
   }, [careerRoundRequest, calendarYear, cacheDay])
 
+  const getPointClub = useCallback((pointData) => {
+    const tenObject = {}
+    const twentyObject = {}
+    const almostTenTen = Object.entries(pointData).filter(
+      ([_, { goal, assist }]) =>
+        ((goal >= 10 || assist >= 10) &&
+          goal >= 7 &&
+          assist >= 7 &&
+          (goal < 10 || assist < 10)) ||
+        (goal < 10 && assist < 10 && goal + assist > 16),
+    )
+    const almostTwentyTwenty = Object.entries(pointData).filter(
+      ([_, { goal, assist }]) =>
+        (goal >= 20 || assist >= 20) &&
+        goal >= 17 &&
+        assist >= 17 &&
+        (goal < 20 || assist < 20),
+    )
+    const tenTen = Object.entries(pointData).filter(
+      ([_, value]) => value.goal >= 10 && value.assist >= 10,
+    )
+    const twentyTwenty = Object.entries(pointData).filter(
+      ([_, value]) => value.goal >= 20 && value.assist >= 20,
+    )
+
+    // setTenTenClub
+    if (tenTen.length > 0) {
+      const temp = []
+      tenTen.forEach((name) => {
+        const fullName = getFullName(name[0])
+        temp.push(fullName)
+      })
+      tenObject['name'] = temp
+    }
+
+    // setAlmostTenTenClub
+    if (almostTenTen.length > 0) {
+      const temp = []
+      almostTenTen.forEach((name) => {
+        const fullName = getFullName(name[0])
+        temp.push(fullName)
+      })
+      tenObject['additional'] = temp
+    }
+
+    // setTwentyTwentyClub
+    if (twentyTwenty.length > 0) {
+      const temp = []
+      twentyTwenty.forEach((name) => {
+        const fullName = getFullName(name[0])
+        temp.push(fullName)
+      })
+      twentyObject['name'] = temp
+    }
+
+    // setAlmostTwentyTwentyClub
+    if (almostTwentyTwenty.length > 0) {
+      const temp = []
+      almostTwentyTwenty.forEach((name) => {
+        const fullName = getFullName(name[0])
+        temp.push(fullName)
+      })
+      twentyObject['additional'] = temp
+    }
+
+    setTenTenClub(tenObject)
+    setTwentyTwentyClub(twentyObject)
+  }, [getFullName])
+
+  const getGreedyPlayer = useCallback((pointData) => {
+    const greedy = []
+    let maxGreedyRate = 0
+    const epsilon = 0.001
+    Object.values(pointData).forEach((value) => {
+      if (value.goalRate - maxGreedyRate > epsilon) {
+        maxGreedyRate = value.goalRate
+      }
+    })
+    Object.entries(pointData).forEach(([key, value]) => {
+      if (value.goalRate === maxGreedyRate) {
+        const fullName = getFullName(key)
+        if (fullName) {
+          greedy.push(fullName)
+        }
+      }
+    })
+    setGreedyPlayer({ name: greedy, count: Math.round(maxGreedyRate) + '%' })
+  }, [getFullName])
+
+  const getAltruisticPlayer = useCallback((pointData) => {
+    const altruistic = []
+    let maxAltruisticRate = 0
+    const epsilon = 0.001
+    Object.values(pointData).forEach((value) => {
+      if (value.assistRate - maxAltruisticRate > epsilon) {
+        maxAltruisticRate = value.assistRate
+      }
+    })
+    Object.entries(pointData).forEach(([key, value]) => {
+      if (value.assistRate === maxAltruisticRate) {
+        const fullName = getFullName(key)
+        if (fullName) {
+          altruistic.push(fullName)
+        }
+      }
+    })
+    setAltruisticPlayer({
+      name: altruistic,
+      count: Math.round(maxAltruisticRate) + '%',
+    })
+  }, [getFullName])
+
   useEffect(() => {
     // 이번 시즌 기록은 한 주 이상의 경기 데이터가 있을 때 계산한다.
     if (availableWeeks >= 1) {
@@ -1036,7 +1188,7 @@ const AnalysisTap = (props) => {
           totalData.push(value)
         })
       })
-      const { combinations, leaders, chasing } = analyzeSeasonGoalDuos(totalData)
+      const { combinations, leaders, chasing } = analyzeSeasonGoalDuos(totalData, resolveRecordMember, eligibleMembers)
       setThisQuarterPlayersCombination(combinations)
       const duoName = ({ key }) => key.split('_').map((name) => getFullName(name) || name).join(' - ')
       const duoRecord = ({ key, count }) => ({
@@ -1051,39 +1203,21 @@ const AnalysisTap = (props) => {
         additionalDuos: chasing.map(duoRecord),
       } : {})
 
-      // 시간에 따른 포인트 분석 데이터
-      const { dataByTime } = analyzeStarterStats(totalData)
-      // 플레이어당 골/어시 데이터
+      // Count each eligible scorer/assister independently, including goals with a retired partner.
+      const playerRecords = totalData.map((item) => ({
+        ...item, goal: getFullName(item?.goal), assist: getFullName(item?.assist),
+      }))
+      const { dataByTime } = analyzeStarterStats(playerRecords)
       const pointData = {}
       const pointDataMap = new Map()
-      totalData.forEach((item) => {
-        if (item.goal !== '용병') {
-          // pointData 데이터 넣기
-          if (!pointData[item.goal]) {
-            pointData[item.goal] = { goal: 1, assist: 0 }
-            pointDataMap.set(item.goal, { goal: 1, assist: 0 })
-          } else {
-            pointData[item.goal]['goal']++
-            pointDataMap.set(item.goal, {
-              goal: pointData[item.goal].goal + 1,
-              assist: pointData[item.goal].assist,
-            })
-          }
+      for (const item of playerRecords) {
+        for (const field of ['goal', 'assist']) {
+          const name = item[field]
+          if (!name) continue
+          pointData[name] ??= { goal: 0, assist: 0 }
+          pointData[name][field]++
         }
-        if (item.assist && item.assist !== '용병') {
-          // pointdata 데이터 넣기
-          if (!pointData[item.assist]) {
-            pointData[item.assist] = { goal: 0, assist: 1 }
-            pointDataMap.set(item.assist, { goal: 0, assist: 1 })
-          } else {
-            pointData[item.assist]['assist']++
-            pointDataMap.set(item.assist, {
-              goal: pointData[item.assist].goal,
-              assist: pointData[item.assist].assist + 1,
-            })
-          }
-        }
-      })
+      }
       // 골/어시 비율 계산
       Object.entries(pointData).forEach(([key, value]) => {
         const total = value.goal + value.assist
@@ -1107,114 +1241,29 @@ const AnalysisTap = (props) => {
       setThisQuarterPlayersCombination(new Map())
     }
     setProcessedQuarterSource({ data: thisQuarterData, members: existingMembers })
-  }, [thisQuarterData, existingMembers, availableWeeks])
-
-  const getFullName = (name) => {
-    for (let i = 0; i < existingMembers.length; i++) {
-      if (existingMembers[i].includes(name)) {
-        return existingMembers[i]
-      }
-    }
-  }
+  }, [thisQuarterData, existingMembers, availableWeeks, resolveRecordMember, eligibleMembers, getFullName,
+    getPointClub, getGreedyPlayer, getAltruisticPlayer])
 
   const applyDailyMVPData = useCallback((fetchedData) => {
     const lastDateId = asOfDate.slice(2).replaceAll('-', '')
-    setAllTimeMVP(fetchedData.flatMap(({ id, data }) => {
-      if (!/^\d{6}$/.test(id) || id > lastDateId) return []
-      return Array.isArray(data.bestPlayers)
-        ? data.bestPlayers.map((player) => player?.name).filter(Boolean)
-        : typeof data.name === 'string' ? [data.name] : []
-    }))
-
-    const filteredData = []
-    if (thisMonth < 4) {
-      fetchedData.forEach((data) => {
-        if (
-          thisYear.slice(2, 4) === data.id.slice(0, 2) &&
-          data.id.slice(2, 4) <= 3
-        ) {
-          if (Object.keys(data.data)[0] === 'bestPlayers') {
-            data.data['bestPlayers'].forEach((item) => {
-              filteredData.push(item.name)
-            })
-          } else {
-            filteredData.push(data.data.name)
-          }
-        }
-      })
-    } else if (thisMonth < 7) {
-      fetchedData.forEach((data) => {
-        if (
-          thisYear.slice(2, 4) === data.id.slice(0, 2) &&
-          data.id.slice(2, 4) > 3 &&
-          data.id.slice(2, 4) <= 6
-        ) {
-          if (Object.keys(data.data)[0] === 'bestPlayers') {
-            data.data['bestPlayers'].forEach((item) => {
-              filteredData.push(item.name)
-            })
-          } else {
-            filteredData.push(data.data.name)
-          }
-        }
-      })
-    } else if (thisMonth < 10) {
-      fetchedData.forEach((data) => {
-        if (
-          thisYear.slice(2, 4) === data.id.slice(0, 2) &&
-          data.id.slice(2, 4) > 6 &&
-          data.id.slice(2, 4) <= 9
-        ) {
-          if (Object.keys(data.data)[0] === 'bestPlayers') {
-            data.data['bestPlayers'].forEach((item) => {
-              filteredData.push(item.name)
-            })
-          } else {
-            filteredData.push(data.data.name)
-          }
-        }
-      })
-    } else {
-      fetchedData.filter((data) => {
-        if (
-          thisYear.slice(2, 4) === data.id.slice(0, 2) &&
-          data.id.slice(2, 4) > 9
-        ) {
-          if (Object.keys(data.data)[0] === 'bestPlayers') {
-            data.data['bestPlayers'].forEach((item) => {
-              filteredData.push(item.name)
-            })
-          } else {
-            filteredData.push(data.data.name)
-          }
-        }
-      })
-    }
-
+    const datedPlayers = fetchedData.filter(({ id }) => /^\d{6}$/.test(id) && id <= lastDateId)
+      .map(({ id, data }) => ({
+        id,
+        players: (Array.isArray(data.bestPlayers)
+          ? data.bestPlayers.map((player) => player?.name) : [data.name])
+          .map(getFullName).filter(Boolean),
+      }))
+    setAllTimeMVP(datedPlayers.flatMap(({ players }) => players))
+    const filteredData = datedPlayers.filter(({ id }) =>
+      id.slice(0, 2) === thisYear.slice(2, 4) &&
+      Math.ceil(Number(id.slice(2, 4)) / 3) === Math.ceil(thisMonth / 3),
+    ).flatMap(({ players }) => players)
     setThisQuarterMVP(filteredData)
-
-    const mvpCount = {}
-    filteredData.forEach((data) => {
-      if (!mvpCount[data]) {
-        mvpCount[data] = { name: data, count: 1 }
-      } else {
-        mvpCount[data].count += 1
-      }
-    })
-
-    let count = -1
-    let mostMVP = []
-    Object.values(mvpCount).forEach((entry) => {
-      if (entry.count > count) {
-        mostMVP = [entry.name]
-        count = entry.count
-      } else if (entry.count === count) {
-        mostMVP.push(entry.name)
-      }
-    })
-    setMostMvpPlayer({ name: mostMVP, count: count + '회' })
+    const counts = new Map()
+    for (const name of filteredData) counts.set(name, (counts.get(name) || 0) + 1)
+    setMostMvpPlayer(rankCareerCounts(counts, '회'))
     setMvpStatus('ready')
-  }, [asOfDate, thisMonth, thisYear])
+  }, [asOfDate, thisMonth, thisYear, getFullName])
 
   useEffect(() => {
     let active = true
@@ -1300,8 +1349,8 @@ const AnalysisTap = (props) => {
       row.forEach((player) => {
         if (typeof player !== 'string' || !player) return
         if (player.includes('용병') && player.length > 2) {
-          const bring = player.slice(0, 2)
-          if (bring !== '용병') {
+          const bring = getFullName(player.slice(0, 2))
+          if (bring) {
             if (!mercenary[bring]) {
               mercenary[bring] = 1
               mercenaryMap.set(bring, { mercenary: 1 })
@@ -1317,20 +1366,13 @@ const AnalysisTap = (props) => {
             }
           }
         }
-        if (player && !player.includes('용병')) {
-          if (!playerData[player]) {
-            playerData[player] = {}
+        const member = getFullName(player)
+        if (member) {
+          playerData[member] ??= {}
+          const partners = new Set(row.map(getFullName).filter((name) => name && name !== member))
+          for (const partner of partners) {
+            playerData[member][partner] = (playerData[member][partner] || 0) + 1
           }
-          const exceptSelf = row.filter(
-            (name) => typeof name === 'string' && ![player, ''].includes(name) && !name.includes('용병'),
-          )
-          exceptSelf.forEach((name) => {
-            if (!playerData[player][name]) {
-              playerData[player][name] = 1
-            } else {
-              playerData[player][name]++
-            }
-          })
         }
       })
     })
@@ -1347,7 +1389,7 @@ const AnalysisTap = (props) => {
       }
     })
     if (temp.length === 1) {
-      const fullName = existingMembers.find((member) => member.includes(temp[0]))
+      const fullName = temp[0]
       setMostMercenaryPlayer({
         name: [fullName],
         count: maxMercenaryCount + '회',
@@ -1356,7 +1398,7 @@ const AnalysisTap = (props) => {
       setMostMercenaryPlayer({})
     }
     setProcessedWeeklyTeamSource({ data: totalWeeklyTeamData, members: existingMembers, year: thisYear, month: thisMonth })
-  }, [totalWeeklyTeamData, thisYear, thisMonth, existingMembers])
+  }, [totalWeeklyTeamData, thisYear, thisMonth, existingMembers, getFullName])
 
   useEffect(() => {
     if (Array.isArray(totalWeeklyTeamData) && existingMembers.length > 0) {
@@ -1364,122 +1406,12 @@ const AnalysisTap = (props) => {
     }
   }, [totalWeeklyTeamData, existingMembers, getWeeklyTeamData])
 
-  const getPointClub = (pointData) => {
-    const tenObject = {}
-    const twentyObject = {}
-    const almostTenTen = Object.entries(pointData).filter(
-      ([_, { goal, assist }]) =>
-        ((goal >= 10 || assist >= 10) &&
-          goal >= 7 &&
-          assist >= 7 &&
-          (goal < 10 || assist < 10)) ||
-        (goal < 10 && assist < 10 && goal + assist > 16),
-    )
-    const almostTwentyTwenty = Object.entries(pointData).filter(
-      ([_, { goal, assist }]) =>
-        (goal >= 20 || assist >= 20) &&
-        goal >= 17 &&
-        assist >= 17 &&
-        (goal < 20 || assist < 20),
-    )
-    const tenTen = Object.entries(pointData).filter(
-      ([_, value]) => value.goal >= 10 && value.assist >= 10,
-    )
-    const twentyTwenty = Object.entries(pointData).filter(
-      ([_, value]) => value.goal >= 20 && value.assist >= 20,
-    )
-
-    // setTenTenClub
-    if (tenTen.length > 0) {
-      const temp = []
-      tenTen.forEach((name) => {
-        const fullName = getFullName(name[0])
-        temp.push(fullName)
-      })
-      tenObject['name'] = temp
-    }
-
-    // setAlmostTenTenClub
-    if (almostTenTen.length > 0) {
-      const temp = []
-      almostTenTen.forEach((name) => {
-        const fullName = getFullName(name[0])
-        temp.push(fullName)
-      })
-      tenObject['additional'] = temp
-    }
-
-    // setTwentyTwentyClub
-    if (twentyTwenty.length > 0) {
-      const temp = []
-      twentyTwenty.forEach((name) => {
-        const fullName = getFullName(name[0])
-        temp.push(fullName)
-      })
-      twentyObject['name'] = temp
-    }
-
-    // setAlmostTwentyTwentyClub
-    if (almostTwentyTwenty.length > 0) {
-      const temp = []
-      almostTwentyTwenty.forEach((name) => {
-        const fullName = getFullName(name[0])
-        temp.push(fullName)
-      })
-      twentyObject['additional'] = temp
-    }
-
-    setTenTenClub(tenObject)
-    setTwentyTwentyClub(twentyObject)
-  }
-
-  const getGreedyPlayer = (pointData) => {
-    const greedy = []
-    let maxGreedyRate = 0
-    const epsilon = 0.001
-    Object.values(pointData).forEach((value) => {
-      if (value.goalRate - maxGreedyRate > epsilon) {
-        maxGreedyRate = value.goalRate
-      }
-    })
-    Object.entries(pointData).forEach(([key, value]) => {
-      if (value.goalRate === maxGreedyRate) {
-        const fullName = getFullName(key)
-        if (fullName) {
-          greedy.push(fullName)
-        }
-      }
-    })
-    setGreedyPlayer({ name: greedy, count: Math.round(maxGreedyRate) + '%' })
-  }
-
-  const getAltruisticPlayer = (pointData) => {
-    const altruistic = []
-    let maxAltruisticRate = 0
-    const epsilon = 0.001
-    Object.values(pointData).forEach((value) => {
-      if (value.assistRate - maxAltruisticRate > epsilon) {
-        maxAltruisticRate = value.assistRate
-      }
-    })
-    Object.entries(pointData).forEach(([key, value]) => {
-      if (value.assistRate === maxAltruisticRate) {
-        const fullName = getFullName(key)
-        if (fullName) {
-          altruistic.push(fullName)
-        }
-      }
-    })
-    setAltruisticPlayer({
-      name: altruistic,
-      count: Math.round(maxAltruisticRate) + '%',
-    })
-  }
-
-  const getMostPartner = (data) => {
+  const getMostPartner = useCallback((data) => {
     const mostPartners = {}
-    Object.entries(data).forEach(([key, value]) => {
-      let count = -1
+    Object.entries(data).forEach(([key, rawPartners]) => {
+      if (!eligibleMembers.has(key)) return
+      const value = Object.fromEntries(Object.entries(rawPartners).filter(([name]) => eligibleMembers.has(name)))
+      let count = 0
       Object.values(value).forEach((num) => {
         if (count < num) {
           count = num
@@ -1517,15 +1449,16 @@ const AnalysisTap = (props) => {
       additional: additional.map(({ name }) => name),
       additionalCount: additional.length > 0 ? `${nextCount}회` : '',
     })
-  }
+  }, [eligibleMembers, getFullName])
 
   useEffect(() => {
     if (weeklyTeamData) {
       getMostPartner(weeklyTeamData)
     }
-  }, [weeklyTeamData])
+  }, [weeklyTeamData, getMostPartner])
 
   const playerDetailHandler = (name) => {
+    if (!eligibleMembers.has(name)) return
     setSelectedPlayerName(name)
     if (careerRoundStatus === 'idle' || careerRoundStatus === 'error') {
       setCareerRoundRequest((request) => request + 1)
@@ -1685,18 +1618,32 @@ const AnalysisTap = (props) => {
                     <span>{group.label}</span>
                   </h3>
                   {group.winners.length > 0 ? (
-                    <ul className="space-y-2">
-                      {group.winners.map((player) => (
-                        <li key={player.name} className="min-w-0">
-                          <span className="block break-words text-sm font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">{player.name}</span>
-                          {type !== 'career-title-collection' && (
-                            <span className="mt-0.5 block text-xs tabular-nums text-gray-500 dark:text-gray-400">
-                              {type === 'career-season-aces' ? `${player.pointRate.toFixed(2)}점` : `${player.count}회`}
-                            </span>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
+                    <>
+                      <ul className="space-y-2">
+                        {group.winners.map((player) => (
+                          <li key={player.name} className={type === 'career-title-collection' ? 'flex min-w-0 flex-wrap items-center justify-center gap-1' : 'min-w-0'}>
+                            <span className="block break-words text-sm font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">{player.name}</span>
+                            {type === 'career-title-collection' && (
+                              <span className="inline-flex shrink-0 items-center gap-0.5">
+                                {player.titles.map((title) => (
+                                  <img key={title} src={careerAwardIcons[title]} alt={title} title={title} className="h-3 w-3 object-contain sm:h-4 sm:w-4" />
+                                ))}
+                              </span>
+                            )}
+                            {type === 'career-season-aces' && (
+                              <span className="mt-0.5 block text-xs tabular-nums text-gray-500 dark:text-gray-400">
+                                {`${player.pointRate.toFixed(2)}점`}
+                              </span>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                      {type === 'career-award-leaders' && (
+                        <span className="mt-1.5 block text-xs tabular-nums text-gray-500 dark:text-gray-400">
+                          {`${group.winners[0].count}회`}
+                        </span>
+                      )}
+                    </>
                   ) : (
                     <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">-</span>
                   )}
@@ -1820,13 +1767,14 @@ const AnalysisTap = (props) => {
                     key={player}
                     className="min-w-0 bg-transparent px-0 py-1 text-zinc-700 dark:text-zinc-200 sm:px-2"
                     aria-label={player}
-                    title={newPlayers.has(player) ? '신규 회원' : undefined}
+                    title={returningPlayers.has(player) ? '복귀 회원' : newPlayers.has(player) ? '신규 회원' : undefined}
                     aria-haspopup="dialog"
                     aria-controls="player-detail-dialog"
                     onClick={() => playerDetailHandler(player)}
                   >
                     <span className="relative inline-block max-w-full align-middle">
-                      {newPlayers.has(player) && <NewBadge className="-left-1 -top-2" label="신규 회원" />}
+                      {returningPlayers.has(player) ? <ReturnBadge className="-left-1 -top-2" />
+                        : newPlayers.has(player) && <NewBadge className="-left-1 -top-2" label="신규 회원" />}
                       <span className="block truncate">{player}</span>
                     </span>
                   </button>
@@ -1922,7 +1870,7 @@ const AnalysisTap = (props) => {
                                 '최다 실점 상대',
                                 formatCleanSheetRecord(
                                   seasonCleanSheetStatus,
-                                  formatMostConceded(seasonCleanSheets?.concededSeasons.get(`${thisYear}-${quarter}`)?.get(playerName)),
+                                  formatMostConceded(seasonCleanSheets?.concededSeasons.get(`${thisYear}-${quarter}`)?.get(playerName), eligibleMembers),
                                 ),
                               ],
                             ]

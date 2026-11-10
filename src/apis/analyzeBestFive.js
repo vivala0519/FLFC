@@ -7,11 +7,12 @@ const byName = (a, b) => a.name.localeCompare(b.name, 'ko')
 const byPointRate = (a, b) => b.승점 * a.경기 - a.승점 * b.경기
 
 // Reserve GK for the highest-ranked eligible registered goalkeeper.
-export const analyzeBestFive = (records, memberInfo, month, cleanSheetCounts = new Map()) => {
+export const analyzeBestFive = (records, memberInfo, month, cleanSheetCounts = new Map(), eligibleMembers = null) => {
   if (!Number.isInteger(month) || month < 1 || month > 12) return null
   const quarter = Math.ceil(month / 3)
   const totals = new Map()
   const attendanceDays = new Set()
+  const eligibleNames = eligibleMembers === null ? null : new Set(eligibleMembers)
 
   for (const record of records || []) {
     if (!/^\d{4}$/.test(record?.id) ||
@@ -37,7 +38,8 @@ export const analyzeBestFive = (records, memberInfo, month, cleanSheetCounts = n
 
   const requiredDays = Math.ceil(attendanceDays.size / 2)
   const eligiblePlayers = [...totals.values()]
-    .filter((player) => player.출석일.size >= requiredDays)
+    .filter((player) => player.출석일.size >= requiredDays &&
+      (eligibleNames === null || eligibleNames.has(player.name)))
     .map((player) => ({
       ...player,
       GA: player.골 + player.어시,

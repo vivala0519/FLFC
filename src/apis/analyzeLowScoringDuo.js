@@ -1,9 +1,10 @@
-export const analyzeLowScoringDuo = (quarterGoals, weeklyTeams, members, year, month, memberInfo = {}) => {
+export const analyzeLowScoringDuo = (quarterGoals, weeklyTeams, members, year, month, memberInfo = {}, eligibleMembers = null) => {
   if (!Array.isArray(quarterGoals) || !Array.isArray(weeklyTeams) || !Array.isArray(members)) return null
   if (!Number.isInteger(month) || month < 1 || month > 12) return null
   if (!memberInfo) return null
 
   const quarter = Math.ceil(month / 3)
+  const eligibleNames = eligibleMembers === null ? null : new Set(eligibleMembers)
   const resolveMember = (name) => {
     if (typeof name !== 'string' || !name.trim() || name.includes('용병')) return null
     if (members.includes(name)) return name
@@ -37,6 +38,7 @@ export const analyzeLowScoringDuo = (quarterGoals, weeklyTeams, members, year, m
     for (const roster of Object.values(entry.data || {})) {
       if (!Array.isArray(roster)) continue
       const players = [...new Set(roster.map(resolveMember).filter((member) => member
+        && (eligibleNames === null || eligibleNames.has(member))
         && memberInfo[member]?.goalKeeper !== true && memberInfo[member]?.goalkeeper !== true))].sort()
       for (let i = 0; i < players.length; i++) {
         for (let j = i + 1; j < players.length; j++) {

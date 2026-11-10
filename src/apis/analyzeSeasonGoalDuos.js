@@ -1,7 +1,11 @@
-export const analyzeSeasonGoalDuos = (goals) => {
+export const analyzeSeasonGoalDuos = (goals, resolveMember = null, eligibleMembers = null) => {
+  const eligibleNames = eligibleMembers === null ? null : new Set(eligibleMembers)
+  const isEligible = (name) => eligibleNames === null ||
+    eligibleNames.has(resolveMember ? resolveMember(name) : name)
   const combinations = new Map()
   for (const goal of goals) {
     if (!goal.goal || !goal.assist || goal.goal === '용병' || goal.assist === '용병') continue
+    if (!isEligible(goal.goal) || !isEligible(goal.assist)) continue
     const key = [goal.goal, goal.assist].sort().join('_')
     combinations.set(key, (combinations.get(key) || 0) + 1)
   }

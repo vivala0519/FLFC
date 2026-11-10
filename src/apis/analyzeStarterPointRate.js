@@ -3,8 +3,10 @@ const validDate = (year, month, day) => {
   return date.getUTCFullYear() === year && date.getUTCMonth() + 1 === month && date.getUTCDate() === day
 }
 
-const collectStarterPoints = (yearData, weeklyTeams, members, year, playerStats, { quarter = null, asOfDate = null } = {}) => {
+const collectStarterPoints = (yearData, weeklyTeams, members, year, playerStats,
+  { quarter = null, asOfDate = null, eligibleMembers = null } = {}) => {
   const teamByDate = new Map(weeklyTeams.map(({ id, data }) => [id, data]))
+  const eligibleNames = eligibleMembers === null ? null : new Set(eligibleMembers)
   const resolveMember = (shortName) => {
     if (typeof shortName !== 'string' || !shortName.trim() || shortName.includes('용병')) return null
     if (members.includes(shortName)) return shortName
@@ -48,6 +50,7 @@ const collectStarterPoints = (yearData, weeklyTeams, members, year, playerStats,
       const winnerNames = new Set(winningMembers.map(resolveMember).filter(Boolean))
 
       for (const name of new Set(participants.map(resolveMember).filter(Boolean))) {
+        if (eligibleNames !== null && !eligibleNames.has(name)) continue
         const points = winners.length === 2 ? 1 : winnerNames.has(name) ? 3 : 0
         const stats = playerStats.get(name) || {
           name,
@@ -62,13 +65,14 @@ const collectStarterPoints = (yearData, weeklyTeams, members, year, playerStats,
   }
 }
 
-export const analyzeStarterPointRate = (yearData, weeklyTeams, members, year, month) => {
+export const analyzeStarterPointRate = (yearData, weeklyTeams, members, year, month, eligibleMembers = null) => {
   const empty = { early: [], late: [], playerRates: new Map() }
   if (!Number.isInteger(month) || month < 1 || month > 12) return empty
   if (!Array.isArray(weeklyTeams) || !Array.isArray(members)) return empty
 
   const playerStats = new Map()
-  collectStarterPoints(yearData, weeklyTeams, members, year, playerStats, { quarter: Math.ceil(month / 3) })
+  collectStarterPoints(yearData, weeklyTeams, members, year, playerStats,
+    { quarter: Math.ceil(month / 3), eligibleMembers })
 
   const leaders = (period) => {
     const other = period === 'early' ? 'late' : 'early'
@@ -95,7 +99,7 @@ export const analyzeStarterPointRate = (yearData, weeklyTeams, members, year, mo
   return { early: leaders('early'), late: leaders('late'), playerRates }
 }
 
-export const analyzeCareerStarterStyles = (roundYears, weeklyTeams, members, asOfDate) => {
+export const analyzeCareerStarterStyles = (roundYears, weeklyTeams, members, asOfDate, eligibleMembers = null) => {
   const styles = new Map()
   if (!Array.isArray(weeklyTeams) || !Array.isArray(members) ||
     typeof asOfDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(asOfDate)) return styles
@@ -106,7 +110,7 @@ export const analyzeCareerStarterStyles = (roundYears, weeklyTeams, members, asO
   for (const [year, yearData] of Object.entries(roundYears || {})) {
     // The points system began in January 2026.
     if (!/^\d{4}$/.test(year) || Number(year) < 2026 || Number(year) > cutoffYear) continue
-    collectStarterPoints(yearData, weeklyTeams, members, year, playerStats, { asOfDate })
+    collectStarterPoints(yearData, weeklyTeams, members, year, playerStats, { asOfDate, eligibleMembers })
   }
 
   for (const [name, { early, late }] of playerStats) {

@@ -6,7 +6,8 @@ import { analyzeCleanSheets } from '../apis/analyzeCleanSheets.js'
 import { subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
 
 export default function useBestFive(year, month, cacheDayKey, providedRecords, cleanSheetSource = {}) {
-  const { yearRoundData, roundStatus, weeklyTeams, members, oneCharacterMembers, nicknames, asOfDate } = cleanSheetSource
+  const { yearRoundData, roundStatus, weeklyTeams, members, oneCharacterMembers, nicknames, asOfDate,
+    eligibleMembers = null } = cleanSheetSource
   const yearKey = String(year)
   const requestKey = `${yearKey}:${cacheDayKey || ''}`
   const recordsProvided = providedRecords !== undefined
@@ -61,9 +62,9 @@ export default function useBestFive(year, month, cacheDayKey, providedRecords, c
       members, oneCharacterMembers, nicknames, asOfDate,
     })
     const counts = cleanSheets.seasons.get(`${yearKey}-${Math.ceil(month / 3)}`) || new Map()
-    return { status: 'ready', positions: analyzeBestFive(records, memberState.data, month, counts), records, cleanSheets }
+    return { status: 'ready', positions: analyzeBestFive(records, memberState.data, month, counts, eligibleMembers), records, cleanSheets }
   }, [records, recordsStatus, memberState, month, yearKey, yearRoundData, roundStatus,
-    weeklyTeams, members, oneCharacterMembers, nicknames, asOfDate])
+    weeklyTeams, members, oneCharacterMembers, nicknames, asOfDate, eligibleMembers])
 
   return { ...result, memberInfo: memberState.data }
 }

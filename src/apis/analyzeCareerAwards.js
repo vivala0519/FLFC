@@ -7,6 +7,10 @@ const AWARDS = [
 
 const QUARTERS = { '1st': 1, '2nd': 2, '3rd': 3, '4th': 4 }
 
+const createEligibleMemberSet = (eligibleMembers) => eligibleMembers === null ? null : new Set(
+  (Array.isArray(eligibleMembers) || eligibleMembers instanceof Set ? [...eligibleMembers] : [])
+    .filter((name) => typeof name === 'string' && name.trim()).map((name) => name.trim()))
+
 export const analyzeCareerAwards = (historyRecords, playerName, asOfDate = null) => {
   if (typeof playerName !== 'string' || !playerName.trim()) return []
 
@@ -33,7 +37,8 @@ export const analyzeCareerAwards = (historyRecords, playerName, asOfDate = null)
     .map(([key, label]) => `${label}x${counts[key]}`)
 }
 
-export const analyzeCareerAwardLeaders = (historyRecords, asOfDate = null) => {
+export const analyzeCareerAwardLeaders = (historyRecords, asOfDate = null, eligibleMembers = null) => {
+  const allowedMembers = createEligibleMemberSet(eligibleMembers)
   const asOfMatch = /^(\d{4})-(0[1-9]|1[0-2])-\d{2}$/.exec(asOfDate || '')
   const lastQuarter = asOfMatch
     ? Number(asOfMatch[1]) * 4 + Math.ceil(Number(asOfMatch[2]) / 3) : Infinity
@@ -47,7 +52,10 @@ export const analyzeCareerAwardLeaders = (historyRecords, asOfDate = null) => {
       const rawWinners = record.data?.[key]
       const names = new Set((Array.isArray(rawWinners) ? rawWinners : [rawWinners])
         .filter((name) => typeof name === 'string' && name.trim()).map((name) => name.trim()))
-      for (const name of names) counts.get(key).set(name, (counts.get(key).get(name) || 0) + 1)
+      for (const name of names) {
+        if (allowedMembers && !allowedMembers.has(name)) continue
+        counts.get(key).set(name, (counts.get(key).get(name) || 0) + 1)
+      }
     }
   }
 
@@ -63,7 +71,8 @@ export const analyzeCareerAwardLeaders = (historyRecords, asOfDate = null) => {
   })
 }
 
-export const analyzeTitleCollections = (historyRecords, asOfDate = null) => {
+export const analyzeTitleCollections = (historyRecords, asOfDate = null, eligibleMembers = null) => {
+  const allowedMembers = createEligibleMemberSet(eligibleMembers)
   const groups = [
     { key: 'double', label: '더블', titleCount: 2, winners: [] },
     { key: 'treble', label: '트레블', titleCount: 3, winners: [] },
@@ -83,6 +92,7 @@ export const analyzeTitleCollections = (historyRecords, asOfDate = null) => {
       const names = new Set((Array.isArray(rawWinners) ? rawWinners : [rawWinners])
         .filter((name) => typeof name === 'string' && name.trim()).map((name) => name.trim()))
       for (const name of names) {
+        if (allowedMembers && !allowedMembers.has(name)) continue
         const titles = titlesByPlayer.get(name) || new Set()
         titles.add(key)
         titlesByPlayer.set(name, titles)
@@ -91,7 +101,10 @@ export const analyzeTitleCollections = (historyRecords, asOfDate = null) => {
   }
 
   for (const [name, titles] of titlesByPlayer) {
-    groups.find(({ titleCount }) => titleCount === titles.size)?.winners.push({ name })
+    groups.find(({ titleCount }) => titleCount === titles.size)?.winners.push({
+      name,
+      titles: AWARDS.filter(([key]) => titles.has(key)).map(([, label]) => label),
+    })
   }
   for (const group of groups) group.winners.sort((a, b) => a.name.localeCompare(b.name, 'ko'))
   return groups

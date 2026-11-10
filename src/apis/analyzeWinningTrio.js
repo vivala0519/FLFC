@@ -1,9 +1,10 @@
 // A trio's win rate is its wins divided by all completed rounds played together.
-export const analyzeWinningTrio = (yearData, weeklyTeams, members, year, month) => {
+export const analyzeWinningTrio = (yearData, weeklyTeams, members, year, month, eligibleMembers = null) => {
   if (!Number.isInteger(month) || month < 1 || month > 12) return null
   if (!Array.isArray(weeklyTeams) || !Array.isArray(members)) return null
 
   const quarter = Math.ceil(month / 3)
+  const eligibleNames = eligibleMembers === null ? null : new Set(eligibleMembers)
   const teamByDate = new Map(weeklyTeams.map((entry) => [entry.id, entry.data]))
   const trioStats = new Map()
   const pairKey = (first, second) => [first, second].sort().join('\u0000')
@@ -36,7 +37,8 @@ export const analyzeWinningTrio = (yearData, weeklyTeams, members, year, month) 
       for (const team of playingTeams) {
         const roster = teams[team]
         if (!Array.isArray(roster)) continue
-        const players = [...new Set(roster.map(resolveMember).filter(Boolean))].sort()
+        const players = [...new Set(roster.map(resolveMember).filter((member) => member &&
+          (eligibleNames === null || eligibleNames.has(member))))].sort()
         const playerSet = new Set(players)
         const pairGoals = new Map()
         for (const [id, goal] of Object.entries(round.goal || {})) {

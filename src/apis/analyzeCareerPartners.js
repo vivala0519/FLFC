@@ -6,6 +6,10 @@ const emptyResult = () => ({
   goalCombination: { partners: [], goals: 0, attackPoints: 0 },
 })
 
+const createEligibleMemberSet = (eligibleMembers) => eligibleMembers === null ? null : new Set(
+  (Array.isArray(eligibleMembers) || eligibleMembers instanceof Set ? [...eligibleMembers] : [])
+    .filter((name) => typeof name === 'string' && name.trim()).map((name) => name.trim()))
+
 const validDate = (year, month, day) => {
   const date = new Date(Date.UTC(year, month - 1, day))
   return date.getUTCFullYear() === year &&
@@ -103,12 +107,15 @@ export const analyzeCareerPartners = (
   totalMembers,
   asOfDate,
   oneCharacterMembers = [],
+  eligibleMembers = null,
 ) => {
   if (typeof playerName !== 'string' || !playerName.trim() || playerName.includes('용병')) {
     return emptyResult()
   }
 
   const player = playerName.trim()
+  const allowedMembers = createEligibleMemberSet(eligibleMembers)
+  if (allowedMembers && !allowedMembers.has(player)) return emptyResult()
   const resolveMember = createMemberResolver(totalMembers, oneCharacterMembers, player)
 
   const cutoff = cutoffDate(asOfDate)
@@ -125,7 +132,7 @@ export const analyzeCareerPartners = (
       const teammates = new Set(roster.map(resolveMember).filter(Boolean))
       if (!teammates.has(player)) continue
       for (const partner of teammates) {
-        if (partner === player) continue
+        if (partner === player || (allowedMembers && !allowedMembers.has(partner))) continue
         const key = `${date}\u0000${partner}`
         if (seenTeamDays.has(key)) continue
         seenTeamDays.add(key)
@@ -137,7 +144,9 @@ export const analyzeCareerPartners = (
   const combinationCounts = new Map()
   for (const [scorer, assistant] of careerGoalPairs(roundYears, resolveMember, cutoff)) {
     const partner = scorer === player ? assistant : assistant === player ? scorer : null
-    if (partner) combinationCounts.set(partner, (combinationCounts.get(partner) || 0) + 1)
+    if (partner && (!allowedMembers || allowedMembers.has(partner))) {
+      combinationCounts.set(partner, (combinationCounts.get(partner) || 0) + 1)
+    }
   }
 
   const sameTeam = getLeaders(sameTeamCounts, 'count')
@@ -151,10 +160,12 @@ export const analyzeCareerPartners = (
   }
 }
 
-export const analyzeCareerGoalDuos = (roundYears, totalMembers, asOfDate, oneCharacterMembers = []) => {
+export const analyzeCareerGoalDuos = (roundYears, totalMembers, asOfDate, oneCharacterMembers = [], eligibleMembers = null) => {
+  const allowedMembers = createEligibleMemberSet(eligibleMembers)
   const resolveMember = createMemberResolver(totalMembers, oneCharacterMembers)
   const counts = new Map()
   for (const pair of careerGoalPairs(roundYears, resolveMember, cutoffDate(asOfDate))) {
+    if (allowedMembers && pair.some((name) => !allowedMembers.has(name))) continue
     const key = pair.sort((first, second) => first.localeCompare(second, 'ko')).join('\u0000')
     counts.set(key, (counts.get(key) || 0) + 1)
   }
