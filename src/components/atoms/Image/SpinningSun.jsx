@@ -1,5 +1,5 @@
 const SpinningSun = () => {
-  const sunStyle = 'relative bg-sun bg-[length:42%_37%] w-24 h-6 bg-no-repeat bg-center animate-spin'
+  const sunStyle = 'relative bg-spinningBallLight dark:bg-spinningBallDark bg-[length:42%_37%] w-24 h-6 bg-no-repeat bg-center animate-spin'
 
   return (
     <span className={sunStyle} />

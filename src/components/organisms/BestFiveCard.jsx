@@ -28,11 +28,11 @@ const BestFiveCard = ({ positions }) => (
           {positionStats.map(({key, label}) => {
             const player = positions[key]
             return (
-                <span key={key} className="relative z-10 flex items-baseline justify-center gap-2 whitespace-nowrap text-sm font-bold">
-              <span className="w-6 shrink-0">{label}</span>
-              <span className="min-w-0 flex-1 truncate text-zinc-700 dark:text-zinc-200 font-dnf-forged">{player?.name || '-'}</span>
+                <span key={key} className="relative z-10 grid grid-cols-[1.5rem_4em_minmax(0,1fr)] items-baseline gap-2 whitespace-nowrap text-left text-sm font-bold">
+              <span>{label}</span>
+              <span className="min-w-0 truncate text-zinc-700 dark:text-zinc-200 font-dnf-forged">{player?.name || '-'}</span>
                   {player && (
-                      <span className="text-xs">
+                      <span className="text-right text-xs tabular-nums">
                   {key === 'pivo' ? `${player.골}골`
                       : key === 'leftAla' || key === 'rightAla' ? `${player.어시}어시`
                           : key === 'goleiro' && player.cleanSheets !== undefined ? `${player.cleanSheets}회`

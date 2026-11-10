@@ -38,7 +38,6 @@ const RecordRow = (props) => {
   const winStyle = 'font-dnf-forged text-[12px] relative top-[1px] mr-1'
   const scoreStyle = 'font-dnf-forged text-[12px] relative top-[1px] shrink-0 whitespace-nowrap tabular-nums text-gray-700 dark:text-gray-200 ml-1'
   // const itemStyle = `w-[35px] h-[25px] bg-[length:100%_100%] ${!isOpen ? 'rotate-180' : 'rotate-0'} `
-  // const arrowIcon = 'bg-[url("@/assets/up2.png")] '
   const roundExitButtonStyle = 'text-goal dark:text-red-300 animate-pulse'
   const canWriteRound = () => canRegister && Date.now() < gameEndTime
 

@@ -6,6 +6,7 @@ import { get, getDatabase, ref } from 'firebase/database'
 import NewBadge from '@/components/atoms/NewBadge.jsx'
 import ReturnBadge from '@/components/atoms/ReturnBadge.jsx'
 import GoalkeeperBadge from '@/components/atoms/GoalkeeperBadge.jsx'
+import ScrollToTopButton from '@/components/atoms/ScrollToTopButton.jsx'
 import BestFiveCard from '@/components/organisms/BestFiveCard.jsx'
 import PlayerRadarChart from '@/components/organisms/PlayerRadarChart.jsx'
 import QuarterlyRecordChart from '@/components/organisms/QuarterlyRecordChart.jsx'
@@ -46,8 +47,23 @@ import bestFiveIcon from '@/assets/best5.png'
 import risingFormIcon from '@/assets/up-up.png'
 import earlyStarterIcon from '@/assets/early2.png'
 import slowStarterIcon from '@/assets/slow-starter.png'
-import trioIcon from '@/assets/trio.png'
-import seasonDuoIcon from '@/assets/sonkae.png'
+import trioIcon from '@/assets/trio-mosaic.png'
+import careerGoalTopIcon from '@/assets/career-goal-top.png'
+import careerAssistTopIcon from '@/assets/career-assist-top.png'
+import dailyGoalIcon from '@/assets/daily-goal-record.png'
+import dailyAssistIcon from '@/assets/daily-assist-record.png'
+import dailyCleanSheetIcon from '@/assets/daily-clean-sheet-record.png'
+import careerMvpTopIcon from '@/assets/career-mvp-top.png'
+import careerAttendanceTopIcon from '@/assets/career-attendance-top.png'
+import consistentFinisherIcon from '@/assets/consistent-finisher.png'
+import consistentPlaymakerIcon from '@/assets/consistent-playmaker.png'
+import careerPointsTopIcon from '@/assets/career-points-top.png'
+import careerPointRateTopIcon from '@/assets/career-point-rate-top.png'
+import careerAttackPointsTopIcon from '@/assets/career-attack-points-top.png'
+import titleCollectionIcon from '@/assets/all-collection.png'
+import seasonAcesIcon from '@/assets/season-ball.png'
+import careerAwardLeadersIcon from '@/assets/career-award-leaders.png'
+import sonKaeDuoIcon from '@/assets/sonkae-hug.png'
 import friendlyDuoIcon from '@/assets/friendly.png'
 import wakeUpIcon from '@/assets/wake-up.png'
 import springBallIcon from '@/assets/spring-ball.png'
@@ -62,6 +78,15 @@ import ChevronRightIcon from '@/assets/lucide/chevron-right.svg?react'
 import './AnalysisTap.css'
 
 const FIRST_RECORD_YEAR = 2021
+const groupAnalysisRows = (items) => items.reduce((rows, item) => {
+  const previousRow = rows[rows.length - 1]
+  if (item.layoutGroup && previousRow?.key === item.layoutGroup) {
+    previousRow.items.push(item)
+  } else {
+    rows.push({ key: item.layoutGroup || item.title, items: [item] })
+  }
+  return rows
+}, [])
 const playerSeasonIcons = { spring: springIcon, summer: summerIcon, autumn: autumnIcon, winter: winterIcon }
 const analysisImageIcons = {
   spring: springBallIcon,
@@ -77,7 +102,23 @@ const analysisImageIcons = {
   early: earlyStarterIcon,
   late: slowStarterIcon,
   trio: trioIcon,
-  seasonDuo: seasonDuoIcon,
+  careerGoalTop: careerGoalTopIcon,
+  careerAssistTop: careerAssistTopIcon,
+  dailyGoal: dailyGoalIcon,
+  dailyAssist: dailyAssistIcon,
+  dailyCleanSheet: dailyCleanSheetIcon,
+  careerMvpTop: careerMvpTopIcon,
+  careerAttendanceTop: careerAttendanceTopIcon,
+  streak: consistentFinisherIcon,
+  playmaker: consistentPlaymakerIcon,
+  careerPointsTop: careerPointsTopIcon,
+  careerPointRateTop: careerPointRateTopIcon,
+  careerAttackPointsTop: careerAttackPointsTopIcon,
+  titleCollection: titleCollectionIcon,
+  seasonAces: seasonAcesIcon,
+  careerAwardLeaders: careerAwardLeadersIcon,
+  seasonDuo: sonKaeDuoIcon,
+  duo: sonKaeDuoIcon,
   handshake: friendlyDuoIcon,
   alarm: wakeUpIcon,
 }
@@ -307,7 +348,7 @@ const AnalysisIcon = ({ name }) => analysisImageIcons[name] ? (
 )
 
 const AnalysisSectionHeading = ({ id, controls, title, subtitle, expanded, onToggle, focused = false }) => (
-  <div className={`sticky top-0 z-20 w-full bg-gray-100 dark:bg-gray-900 ${expanded ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}>
+  <div className={`sticky top-0 z-20 w-full bg-blue-50 dark:bg-gray-900 ${expanded ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}>
     <h2 id={id} className="w-full">
       <button
         type="button"
@@ -633,20 +674,6 @@ const AnalysisTap = (props) => {
     //   data: recentForm,
     // },
     {
-      type: 'starter',
-      icon: 'early',
-      title: '얼리 스타터',
-      description: '9시 이전 승점생산률 Top',
-      data: bestEarlyStarter,
-    },
-    {
-      type: 'starter',
-      icon: 'late',
-      title: '슬로우 스타터',
-      description: '9시 이후 승점생산률 Top',
-      data: bestSlowStarter,
-    },
-    {
       // isNew: true,
       icon: 'trio',
       title: '세 얼간이',
@@ -659,6 +686,22 @@ const AnalysisTap = (props) => {
       title: '손케 듀오',
       description: '합작 골이 가장 많은 듀오',
       data: sonKaeDuo,
+    },
+    {
+      type: 'starter',
+      icon: 'early',
+      layoutGroup: 'season-starters',
+      title: '얼리 스타터',
+      description: '9시 이전 승점생산률 Top',
+      data: bestEarlyStarter,
+    },
+    {
+      type: 'starter',
+      icon: 'late',
+      layoutGroup: 'season-starters',
+      title: '슬로우 스타터',
+      description: '9시 이후 승점생산률 Top',
+      data: bestSlowStarter,
     },
     {
       type: 'scoring-streak',
@@ -716,6 +759,7 @@ const AnalysisTap = (props) => {
 
   const careerTypes = ['daily-record', 'scoring-streak', 'assist-streak', 'longest-absent']
   const seasonAnalysisItems = analysisItems.filter(({ type }) => !careerTypes.includes(type))
+  const seasonAnalysisRows = groupAnalysisRows(seasonAnalysisItems)
 
   // 개인별 데이터
   const [thisQuarterMVP, setThisQuarterMVP] = useState([])
@@ -851,33 +895,33 @@ const AnalysisTap = (props) => {
   const careerAnalysisItems = [
     {
       type: 'career-total',
-      icon: 'dailyGoal',
+      icon: 'careerGoalTop',
       title: '골 Top',
       // description: '통산 최다 골',
       data: { ...dailyMaximums.totalGoals, status: scoringStreakResult.status },
     },
     {
       type: 'career-total',
-      icon: 'dailyAssist',
+      icon: 'careerAssistTop',
       title: '어시 Top',
       // description: '통산 최다 어시',
       data: { ...dailyMaximums.totalAssists, status: scoringStreakResult.status },
     },
     {
       type: 'career-total',
-      icon: 'rising',
+      icon: 'careerAttackPointsTop',
       title: '공격포인트 Top',
       data: { ...dailyMaximums.totalAttackPoints, status: scoringStreakResult.status },
     },
     {
       type: 'career-total',
-      icon: 'trophy',
+      icon: 'careerPointsTop',
       title: '승점 Top',
       data: { ...dailyMaximums.totalPoints, status: scoringStreakResult.status },
     },
     {
       type: 'career-point-rate',
-      icon: 'rising',
+      icon: 'careerPointRateTop',
       title: '승점생산률 Top',
       description: '70% 이상 출석한 플레이어 중',
       data: {
@@ -888,7 +932,7 @@ const AnalysisTap = (props) => {
     },
     {
       type: 'career-clean-sheet',
-      icon: 'goalkeeper',
+      icon: 'goldenGlove',
       title: '클린시트 Top',
       data: {
         ...rankCareerCounts(careerCleanSheets?.totals || new Map(), '회', true, Infinity, eligibleMembers),
@@ -897,16 +941,26 @@ const AnalysisTap = (props) => {
     },
     {
       type: 'career-total',
-      icon: 'check',
+      icon: 'careerAttendanceTop',
       title: '출석 Top',
       data: { ...dailyMaximums.totalAttendance, status: scoringStreakResult.status },
     },
     {
       type: 'career-mvp',
-      icon: 'trophy',
+      icon: 'careerMvpTop',
       title: 'MVP Top',
       // description: '통산 데일리 MVP 최다 플레이어',
       data: careerMostMVP,
+    },
+    ...analysisItems.filter(({ type }) => type === 'daily-record'),
+    {
+      type: 'career-clean-sheet',
+      icon: 'dailyCleanSheet',
+      title: '일일 최다 클린시트',
+      data: {
+        ...rankCareerCounts(careerCleanSheets?.dailyHigh || new Map(), '회', true, Infinity, eligibleMembers),
+        status: careerCleanSheetStatus,
+      },
     },
     {
       type: 'career-duo',
@@ -915,28 +969,18 @@ const AnalysisTap = (props) => {
       description: '통산 합작 골이 가장 많은 듀오',
       data: careerDuo,
     },
-    ...analysisItems.filter(({ type }) => type === 'daily-record'),
-    {
-      type: 'career-clean-sheet',
-      icon: 'goalkeeper',
-      title: '일일 최다 클린시트',
-      data: {
-        ...rankCareerCounts(careerCleanSheets?.dailyHigh || new Map(), '회', true, Infinity, eligibleMembers),
-        status: careerCleanSheetStatus,
-      },
-    },
     ...careerTypes
       .filter((type) => type !== 'daily-record' && type !== 'longest-absent')
       .flatMap((careerType) => analysisItems.filter(({ type }) => type === careerType)),
     {
       type: 'career-season-aces',
-      icon: 'trophy',
+      icon: 'seasonAces',
       title: '계절 에이스',
       data: { seasons: careerSeasonSpecialists, status: scoringStreakResult.status },
     },
     {
       type: 'career-award-leaders',
-      icon: 'trophy',
+      icon: 'careerAwardLeaders',
       title: '부문별 최다 수상자',
       data: {
         awards: careerAwardLeaders,
@@ -945,9 +989,9 @@ const AnalysisTap = (props) => {
     },
     {
       type: 'career-title-collection',
-      icon: 'trophy',
+      icon: 'titleCollection',
       title: '타이틀 수집',
-      description: '통산 서로 다른 부문의 타이틀을 획득한 플레이어',
+      // description: '통산 서로 다른 부문의 타이틀을 획득한 플레이어',
       data: {
         awards: titleCollections,
         status: careerAwardHistory.status === 'idle' ? 'loading' : careerAwardHistory.status,
@@ -1491,21 +1535,22 @@ const AnalysisTap = (props) => {
     mercenaryBring === null ||
     integratedData === null
 
-  const renderAnalysisItem = ({ type, isNew, icon, title, titleNote, description, data }) => {
+  const renderAnalysisItem = ({ type, isNew, icon, title, titleNote, description, data, compact = false }) => {
     const groupedItems = type === 'career-season-aces' ? data.seasons : data.awards
     const players = data.name?.filter(Boolean) ?? []
     const almostPlayers = data.additional?.filter(Boolean) ?? []
     const isChasingDuo = type === 'duo' || type === 'partners' || type === 'career-duo'
+    const separateTiedPlayers = players.length > 1 && !isChasingDuo && type !== 'low-scoring-duo' && icon !== 'trio'
     const isAttendanceStreak = type === 'scoring-streak' || type === 'assist-streak'
     const isCleanSheet = type === 'clean-sheet' || type === 'career-clean-sheet'
     const hasChaserCount = isChasingDuo || isAttendanceStreak || isCleanSheet || type === 'career-total' || type === 'career-mvp'
     const trendPlayers = type === 'recent-fall' ? recentForm.decliners : recentForm.leaders
 
     return (
-      <div key={title} className="py-5 first:pt-0">
-        <dt className="flex flex-wrap items-center justify-center gap-2 font-bold">
+      <div key={title} className={compact ? 'min-w-0 px-1 py-4' : 'py-5 first:pt-0'}>
+        <dt className={compact ? 'flex flex-col items-center justify-center gap-1 font-bold' : 'flex flex-wrap items-center justify-center gap-2 font-bold'}>
           <AnalysisIcon name={icon} />
-          <span className="relative inline-block font-dnf-forged text-[20px]">
+          <span className={compact ? 'relative flex min-h-10 w-full items-center justify-center break-keep leading-5 font-dnf-forged [overflow-wrap:anywhere]' : 'relative inline-block font-dnf-forged text-[20px]'}>
             {title}
             {isNew && <NewBadge />}
           </span>
@@ -1547,7 +1592,9 @@ const AnalysisTap = (props) => {
             </button>
           )}
         </dt>
-        {description && <dd className="mt-1 text-[12px] text-gray-500 dark:text-gray-400">{description}</dd>}
+        {description && (!compact || type === 'starter') && (
+          <dd className={`${type !== 'starter' && 'mt-1'} text-gray-500 dark:text-gray-400 ${compact ? 'break-keep text-[11px] leading-relaxed' : 'text-[12px]'}`}>{description}</dd>
+        )}
         {type === 'best-five' ? (
           <dd className="mt-4" aria-live="polite">
             {data.status === 'loading' ? (
@@ -1562,7 +1609,7 @@ const AnalysisTap = (props) => {
           </dd>
         ) : (isCleanSheet || isAttendanceStreak || type === 'longest-absent' || type === 'daily-record' || type?.startsWith('career-')) &&
           data.status !== 'ready' ? (
-          <dd className="mt-2 text-sm text-gray-500 dark:text-gray-400" aria-live="polite">
+          <dd className={`mt-2 break-words text-gray-500 dark:text-gray-400 ${compact ? 'text-xs leading-relaxed' : 'text-sm'}`} aria-live="polite">
             {data.status === 'loading'
               ? isCleanSheet
                 ? '클린시트 기록을 계산하는 중입니다.'
@@ -1583,11 +1630,11 @@ const AnalysisTap = (props) => {
           <>
             <dd className="mt-2" aria-live="polite">
               {recentForm.status === 'ready' && trendPlayers.length > 0 ? (
-                <ul className="space-y-1">
+                <ul className="mx-auto w-fit max-w-full space-y-1 text-left">
                   {trendPlayers.map((player) => (
-                    <li key={player.name} className="flex flex-wrap items-baseline justify-center gap-x-2">
-                      <span className="font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">{player.name}</span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <li key={player.name} className="grid grid-cols-[4em_minmax(0,1fr)] items-baseline gap-x-2">
+                      <span className="min-w-0 break-words font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">{player.name}</span>
+                      <span className="min-w-0 text-xs tabular-nums text-gray-500 dark:text-gray-400">
                         {player.metric === 'cleanSheets' ? '클린시트' : '공포'} {trendChangeFormatter.format(player.increase)} · 승점 {trendChangeFormatter.format(player.winPointIncrease)}
                       </span>
                     </li>
@@ -1615,11 +1662,11 @@ const AnalysisTap = (props) => {
                     {type === 'career-season-aces' ? <AnalysisIcon name={group.key} /> : type === 'career-award-leaders' ? (
                       <img src={careerAwardIcons[group.label]} alt="" className="h-7 w-7 shrink-0 object-contain" />
                     ) : null}
-                    <span>{group.label}</span>
+                    <span className={type === 'career-award-leaders' ? 'text-xs' : undefined}>{group.label}</span>
                   </h3>
                   {group.winners.length > 0 ? (
                     <>
-                      <ul className="space-y-2">
+                      <ul className={type === 'career-title-collection' && group.key === 'double' ? 'grid grid-cols-2 gap-x-1 gap-y-2' : 'space-y-2'}>
                         {group.winners.map((player) => (
                           <li key={player.name} className={type === 'career-title-collection' ? 'flex min-w-0 flex-wrap items-center justify-center gap-1' : 'min-w-0'}>
                             <span className="block break-words text-sm font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">{player.name}</span>
@@ -1669,10 +1716,14 @@ const AnalysisTap = (props) => {
           </>
         ) : (
           <>
-            <dd className="mx-auto mt-2 flex w-[90%] flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
-              <span className="min-w-0 break-words font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">
+            <dd className={compact ? 'mt-2 flex min-w-0 flex-col items-center gap-1' : 'mx-auto mt-2 flex w-[90%] flex-wrap items-baseline justify-center gap-x-2 gap-y-1'}>
+              <span className={`min-w-0 break-words font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged ${compact ? 'w-full text-sm' : ''} ${separateTiedPlayers ? compact ? 'flex flex-col items-center gap-2' : 'inline-flex max-w-full flex-wrap items-baseline justify-center gap-x-3 gap-y-2' : ''}`}>
                 {players.length > 0
-                  ? players.join(
+                  ? separateTiedPlayers
+                    ? players.map((name) => <span key={name} className="inline-block max-w-full break-keep">{name}</span>)
+                    : compact
+                      ? players.map((name) => <span key={name} className="block break-keep">{name}</span>)
+                      : players.join(
                       type === 'duo' || type === 'partners' || type === 'low-scoring-duo' || type === 'starter' || type === 'daily-record'
                         ? ' '
                         : ' ',
@@ -1681,17 +1732,25 @@ const AnalysisTap = (props) => {
                     ? '기록 없음'
                     : '-'}
               </span>
-              {players.length > 0 && data.count && <span>·</span>}
-              {players.length > 0 && data.count && <span className="text-sm">{data.count}</span>}
+              {players.length > 0 && data.count && (
+                <span className="inline-flex items-baseline gap-2 whitespace-nowrap">
+                  {!compact && <span>·</span>}
+                  <span className="text-sm tabular-nums">{data.count}</span>
+                </span>
+              )}
             </dd>
             {almostPlayers.length > 0 && (
-              <dd className="mt-2 flex flex-wrap justify-center gap-1 text-sm text-gray-500 dark:text-gray-400 animate-bounceUpDown">
+              <dd className={`mt-2 flex flex-wrap justify-center gap-1 text-gray-500 dark:text-gray-400 animate-bounceUpDown ${compact ? 'text-xs' : 'text-sm'}`}>
                 <p className="font-medium text-goal dark:text-rose-400">
                   {isChasingDuo ? '추격 듀오' : hasChaserCount ? '추격자' : '달성 임박'}
                 </p>
-                <div className="flex flex-wrap justify-center gap-1">
-                  <span>{almostPlayers.join(!type ? ' ' : ' / ')}</span>
-                  {hasChaserCount && data.additionalCount && <span>·</span>}
+                <div className={compact ? 'flex min-w-0 w-full flex-col items-center gap-1' : 'flex flex-wrap justify-center gap-1'}>
+                  <span className="min-w-0 break-words">
+                    {compact
+                      ? almostPlayers.map((name) => <span key={name} className="block">{name}</span>)
+                      : almostPlayers.join(!type ? ' ' : ' / ')}
+                  </span>
+                  {!compact && hasChaserCount && data.additionalCount && <span>·</span>}
                   <span>
                     {hasChaserCount && data.additionalCount && `${data.additionalCount}`}
                   </span>
@@ -1710,12 +1769,23 @@ const AnalysisTap = (props) => {
             )}
           </>
         )}
+        {compact && type !== 'starter' && description && <dd className="mt-2 break-keep text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">{description}</dd>}
       </div>
     )
   }
 
+  const renderAnalysisRows = (rows) => (
+    <div className="divide-y divide-gray-200 dark:divide-gray-700">
+      {rows.map((row) => (
+        <dl key={row.key} className={row.items.length > 1 ? `grid gap-x-2 ${row.items.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}` : 'py-5 first:pt-0 [&>div]:py-0'}>
+          {row.items.map((item) => renderAnalysisItem({ ...item, compact: row.items.length > 1 }))}
+        </dl>
+      ))}
+    </div>
+  )
+
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-2 pb-10 text-center">
+    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-2 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] text-center">
       <>
         <div ref={analysisToolbarRef} className="flex min-h-10 items-center justify-end gap-3 py-2">
           {analysisView !== 'overview' && (
@@ -2133,7 +2203,7 @@ const AnalysisTap = (props) => {
                 이번 시즌 데이터가 없습니다.
               </div>
             ) : (
-              <dl className="divide-y divide-gray-200 dark:divide-gray-700">{seasonAnalysisItems.map(renderAnalysisItem)}</dl>
+              renderAnalysisRows(seasonAnalysisRows)
             )}
           </div>
         </section>
@@ -2239,6 +2309,7 @@ const AnalysisTap = (props) => {
             <p className="text-gray-600 dark:text-gray-400">이번 시즌 2회 이상, 8주 이내에 총 4회 이상 출석해야 합니다.</p>
           </div>
         </dialog>
+        <ScrollToTopButton />
       </>
     </div>
   )

@@ -15,7 +15,8 @@ export default {
         hahmlet: ['Hahmlet', 'serif'],
       },
       backgroundImage: {
-        sun: "url('@/assets/sun2.png')",
+        spinningBallLight: "url('@/assets/futsal-ball.png')",
+        spinningBallDark: "url('@/assets/futsal-ball-yellow.png')",
         request: "url('@/assets/request.png')",
         laurel: "url('@/assets/laurel.png')",
         left: "url('@/assets/left.png')",
