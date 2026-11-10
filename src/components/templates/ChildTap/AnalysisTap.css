@@ -24,3 +24,46 @@ html.dark .player-detail-scroll {
   --scrollbar-track: #1f2937;
   --scrollbar-thumb: #6b7280;
 }
+
+.analysis-section-stage {
+  --analysis-section-divider: #e5e7eb;
+  --analysis-section-offset: 12px;
+}
+
+html.dark .analysis-section-stage {
+  --analysis-section-divider: #374151;
+}
+
+.analysis-section-stage > section:not([hidden]) ~ section:not([hidden]) {
+  border-top: 1px solid var(--analysis-section-divider);
+}
+
+.analysis-section-stage[data-phase='leaving'] {
+  animation: analysis-section-leave 140ms ease-in both;
+  pointer-events: none;
+}
+
+.analysis-section-stage[data-phase='entering'] {
+  animation: analysis-section-enter 200ms ease-out both;
+}
+
+@keyframes analysis-section-leave {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(calc(-1 * var(--analysis-section-offset))); }
+}
+
+@keyframes analysis-section-enter {
+  from { opacity: 0; transform: translateX(var(--analysis-section-offset)); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analysis-section-stage {
+    --analysis-section-offset: 0px;
+  }
+
+  .analysis-section-stage[data-phase='leaving'],
+  .analysis-section-stage[data-phase='entering'] {
+    animation-duration: 1ms;
+  }
+}

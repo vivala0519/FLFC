@@ -24,10 +24,11 @@ import { analyzeLowScoringDuo } from '@/apis/analyzeLowScoringDuo.js'
 import { analyzeSeasonGoalDuos } from '@/apis/analyzeSeasonGoalDuos.js'
 import { analyzeGoalkeeperRadar, analyzePlayerRadar } from '@/apis/analyzePlayerRadar.js'
 import { analyzeCareerRecords, getCareerAttackStyle } from '@/apis/analyzeCareerRecords.js'
+import { analyzeCareerPointRate } from '@/apis/analyzeCareerPointRate.js'
 import { analyzeCleanSheets } from '@/apis/analyzeCleanSheets.js'
 import { analyzePlayerSeasons, analyzeSeasonSpecialists } from '@/apis/analyzePlayerSeasons.js'
 import { analyzeCareerGoalDuos, analyzeCareerPartners } from '@/apis/analyzeCareerPartners.js'
-import { analyzeCareerAwards } from '@/apis/analyzeCareerAwards.js'
+import { analyzeCareerAwards, analyzeCareerAwardLeaders, analyzeTitleCollections } from '@/apis/analyzeCareerAwards.js'
 import { getAnalysisHistoryRecords } from '@/apis/analysisHistoryRecords.js'
 import { getAnalysisCachePeriod, getCachedAnalysisData, setCachedAnalysisData } from '@/apis/analysisDataCache.js'
 import goldenBoot from '@/assets/golden-boot.png'
@@ -88,6 +89,7 @@ const careerAwardIcons = {
   득점왕: goldenBoot,
   승점왕: ballonDor,
   어시왕: ligueOne,
+  도움왕: ligueOne,
   출석왕: coppaItalia,
 }
 const AwardIconStack = ({ title, count }) => {
@@ -300,13 +302,14 @@ const AnalysisIcon = ({ name }) => analysisImageIcons[name] ? (
   </svg>
 )
 
-const AnalysisSectionHeading = ({ id, controls, title, subtitle, expanded, onToggle, borderTop = false }) => (
-  <div className={`sticky top-0 z-20 w-full border-b-2 border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 ${borderTop ? 'border-t-2' : ''}`}>
+const AnalysisSectionHeading = ({ id, controls, title, subtitle, expanded, onToggle, focused = false }) => (
+  <div className={`sticky top-0 z-20 w-full bg-white dark:bg-gray-900 ${expanded ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}>
     <h2 id={id} className="w-full">
       <button
         type="button"
         aria-expanded={expanded}
         aria-controls={controls}
+        title={focused ? '목록으로 돌아가기' : undefined}
         onClick={onToggle}
         className="relative flex w-full items-center justify-center rounded-none border-0 bg-transparent px-10 py-4 text-center font-dnf-forged focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-700 dark:focus-visible:outline-blue-300"
       >
@@ -316,7 +319,7 @@ const AnalysisSectionHeading = ({ id, controls, title, subtitle, expanded, onTog
         </span>
         <ChevronRightIcon
           aria-hidden="true"
-          className={`absolute right-3 h-4 w-4 text-gray-500 transition-transform motion-reduce:transition-none dark:text-gray-400 ${expanded ? 'rotate-90' : ''}`}
+          className={`absolute h-4 w-4 text-gray-500 transition-transform motion-reduce:transition-none dark:text-gray-400 ${focused ? 'left-3 rotate-180' : `right-3 ${expanded ? 'rotate-90' : ''}`}`}
         />
       </button>
     </h2>
@@ -343,7 +346,7 @@ const bestFiveRoles = [
   { key: 'leftAla', label: 'LM', description: '왼쪽 미드필더', metric: 'assists' },
   { key: 'rightAla', label: 'RM', description: '오른쪽 미드필더', metric: 'assists' },
   { key: 'fixo', label: 'DF', description: '수비수', metric: 'points' },
-  { key: 'goleiro', label: 'GK', description: '골키퍼', metric: 'points' },
+  { key: 'goleiro', label: 'GK', description: '골키퍼', metric: 'cleanSheets' },
 ]
 
 const AnalysisTap = (props) => {
@@ -380,9 +383,16 @@ const AnalysisTap = (props) => {
     () => analyzeScoringRecords(recordsByYear, asOfDate),
     [recordsByYear, asOfDate],
   )
+  const careerPointRate = useMemo(
+    () => analyzeCareerPointRate(recordsByYear, asOfDate),
+    [recordsByYear, asOfDate],
+  )
   const dailyGoalRecord = { ...dailyMaximums.goals, status: scoringStreakResult.status }
   const dailyAssistRecord = { ...dailyMaximums.assists, status: scoringStreakResult.status }
-  const bestFive = useBestFive(thisYear, thisMonth, cacheDay, analysisSeason.records)
+  const bestFive = useBestFive(thisYear, thisMonth, cacheDay, analysisSeason.records, {
+    yearRoundData, roundStatus: analysisSeason.status, weeklyTeams: totalWeeklyTeamData,
+    members: totalMembers, oneCharacterMembers, nicknames: membersNickName, asOfDate,
+  })
   const careerRoundRoots = useMemo(() =>
     historicalRoundData && yearRoundData && analysisSeason.calendarYearRoundData
       ? { ...historicalRoundData, [thisYear]: yearRoundData, [calendarYear]: analysisSeason.calendarYearRoundData }
@@ -430,9 +440,65 @@ const AnalysisTap = (props) => {
   const [twentyTwentyClub, setTwentyTwentyClub] = useState({})
   const [greedyPlayer, setGreedyPlayer] = useState({})
   const [altruisticPlayer, setAltruisticPlayer] = useState({})
-  const [showIndividual, setShowIndividual] = useState(true)
-  const [showSeason, setShowSeason] = useState(true)
-  const [showCareer, setShowCareer] = useState(true)
+  const [analysisView, setAnalysisView] = useState('overview')
+  const [analysisTransition, setAnalysisTransition] = useState('idle')
+  const analysisStageRef = useRef(null)
+  const analysisToolbarRef = useRef(null)
+  const pendingAnalysisView = useRef('overview')
+  const lastAnalysisSection = useRef(null)
+  const analysisNavigationStarted = useRef(false)
+  const restoreAnalysisFocus = useRef(false)
+  const allSectionsExpanded = analysisView === 'all'
+  const showIndividual = allSectionsExpanded || analysisView === 'individual'
+  const showSeason = allSectionsExpanded || analysisView === 'season'
+  const showCareer = allSectionsExpanded || analysisView === 'career'
+  const isSectionVisible = (section) => analysisView === 'overview' || allSectionsExpanded || analysisView === section
+  const changeAnalysisView = (view, restoreFocus = false) => {
+    analysisNavigationStarted.current = true
+    restoreAnalysisFocus.current = restoreFocus
+    pendingAnalysisView.current = view
+    if (view === analysisView && analysisTransition === 'idle') return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setAnalysisView(view)
+      setAnalysisTransition('idle')
+    } else {
+      setAnalysisTransition('leaving')
+    }
+  }
+  const selectAnalysisSection = (section) => {
+    lastAnalysisSection.current = section
+    changeAnalysisView(analysisView === section ? 'overview' : section, analysisView === section)
+  }
+  const advanceAnalysisTransition = useCallback(() => {
+    if (analysisTransition === 'leaving') {
+      setAnalysisView(pendingAnalysisView.current)
+      setAnalysisTransition('entering')
+    } else if (analysisTransition === 'entering') {
+      setAnalysisTransition('idle')
+    }
+  }, [analysisTransition])
+  const handleAnalysisAnimationEnd = (event) => {
+    if (event.target !== event.currentTarget) return
+    if ((event.animationName === 'analysis-section-leave' && analysisTransition === 'leaving') ||
+      (event.animationName === 'analysis-section-enter' && analysisTransition === 'entering')) {
+      advanceAnalysisTransition()
+    }
+  }
+  useEffect(() => {
+    if (analysisTransition === 'idle') return undefined
+    // Finish even if an animation is interrupted; cleanup also cancels stale transitions.
+    const timer = window.setTimeout(advanceAnalysisTransition, analysisTransition === 'leaving' ? 180 : 240)
+    return () => window.clearTimeout(timer)
+  }, [analysisTransition, advanceAnalysisTransition])
+  useEffect(() => {
+    if (!analysisNavigationStarted.current) return
+    analysisToolbarRef.current?.scrollIntoView({ block: 'nearest', behavior: 'auto' })
+    if (analysisView === 'overview' && restoreAnalysisFocus.current) {
+      restoreAnalysisFocus.current = false
+      analysisStageRef.current?.querySelector(`#analysis-${lastAnalysisSection.current || 'individual'}-title button`)
+        ?.focus({ preventScroll: true })
+    }
+  }, [analysisView])
   const starterPointRates = useMemo(() => analyzeStarterPointRate(
     yearRoundData,
     totalWeeklyTeamData,
@@ -475,15 +541,7 @@ const AnalysisTap = (props) => {
     })),
   } : {}
 
-  const seasonCleanSheets = useMemo(() => yearRoundData && bestFive.memberInfo &&
-    Array.isArray(totalWeeklyTeamData) && totalMembers.length > 0
-    ? analyzeCleanSheets({
-      roundYears: { [thisYear]: yearRoundData }, weeklyTeams: totalWeeklyTeamData,
-      memberInfo: bestFive.memberInfo, members: totalMembers, oneCharacterMembers,
-      nicknames: membersNickName, asOfDate,
-    }) : null,
-  [yearRoundData, thisYear, bestFive.memberInfo, totalWeeklyTeamData, totalMembers,
-    oneCharacterMembers, membersNickName, asOfDate])
+  const seasonCleanSheets = bestFive.cleanSheets
   const seasonCleanSheetCounts = seasonCleanSheets?.seasons.get(`${thisYear}-${quarter}`) || new Map()
   const seasonCleanSheetStatus = roundLoadError || bestFive.status === 'error' ? 'error'
     : seasonCleanSheets ? 'ready' : 'loading'
@@ -689,11 +747,18 @@ const AnalysisTap = (props) => {
   const isGoalkeeper = selectedMemberInfo?.goalKeeper === true || selectedMemberInfo?.goalkeeper === true
   const [careerAwardHistory, setCareerAwardHistory] = useState({ status: 'idle', records: [] })
   const historyLoadedDay = useRef(null)
+  const needsAwardHistory = Boolean(playerName) || showCareer
   const careerAwards = useMemo(() =>
     careerAwardHistory.status === 'ready' && playerName
       ? analyzeCareerAwards(careerAwardHistory.records, playerName, asOfDate)
       : [],
   [careerAwardHistory, playerName, asOfDate])
+  const careerAwardLeaders = useMemo(() =>
+    analyzeCareerAwardLeaders(careerAwardHistory.records, asOfDate),
+  [careerAwardHistory.records, asOfDate])
+  const titleCollections = useMemo(() =>
+    analyzeTitleCollections(careerAwardHistory.records, asOfDate),
+  [careerAwardHistory.records, asOfDate])
   const quarterPlayerStats = playerName ? playerComparison.players.get(playerName) : null
   const hasQuarterRecord = Boolean(quarterPlayerStats)
   const playerStartDate = selectedMemberInfo?.startDate
@@ -751,58 +816,109 @@ const AnalysisTap = (props) => {
   [recordsByYear, existingMembers, asOfDate])
   const careerAnalysisItems = [
     {
-      type: 'career-total', icon: 'dailyGoal', title: '통산 골',
+      type: 'career-total',
+      icon: 'dailyGoal',
+      title: '골 Top',
       // description: '통산 최다 골',
       data: { ...dailyMaximums.totalGoals, status: scoringStreakResult.status },
     },
     {
-      type: 'career-total', icon: 'dailyAssist', title: '통산 어시',
+      type: 'career-total',
+      icon: 'dailyAssist',
+      title: '어시 Top',
       // description: '통산 최다 어시',
       data: { ...dailyMaximums.totalAssists, status: scoringStreakResult.status },
     },
     {
-      type: 'career-total', icon: 'rising', title: '통산 공격포인트',
+      type: 'career-total',
+      icon: 'rising',
+      title: '공격포인트 Top',
       data: { ...dailyMaximums.totalAttackPoints, status: scoringStreakResult.status },
     },
     {
-      type: 'career-total', icon: 'trophy', title: '통산 승점',
+      type: 'career-total',
+      icon: 'trophy',
+      title: '승점 Top',
       data: { ...dailyMaximums.totalPoints, status: scoringStreakResult.status },
     },
     {
-      type: 'career-clean-sheet', icon: 'goalkeeper', title: '통산 클린시트',
+      type: 'career-point-rate',
+      icon: 'rising',
+      title: '승점생산률 Top',
+      description: '70% 이상 출석한 플레이어 중',
+      data: {
+        ...careerPointRate,
+        count: careerPointRate.pointRate === null ? '' : `${careerPointRate.pointRate.toFixed(2)}점`,
+        status: scoringStreakResult.status,
+      },
+    },
+    {
+      type: 'career-clean-sheet',
+      icon: 'goalkeeper',
+      title: '클린시트 Top',
       data: {
         ...rankCareerCounts(careerCleanSheets?.totals || new Map(), '회', true, Infinity),
         status: careerCleanSheetStatus,
       },
     },
     {
-      type: 'career-total', icon: 'check', title: '통산 출석',
+      type: 'career-total',
+      icon: 'check',
+      title: '출석 Top',
       data: { ...dailyMaximums.totalAttendance, status: scoringStreakResult.status },
     },
     {
-      type: 'career-mvp', icon: 'trophy', title: '통산 MVP',
+      type: 'career-mvp',
+      icon: 'trophy',
+      title: 'MVP Top',
       // description: '통산 데일리 MVP 최다 플레이어',
       data: careerMostMVP,
     },
     {
-      type: 'career-duo', icon: 'duo', title: '손케 듀오',
+      type: 'career-duo',
+      icon: 'duo',
+      title: '손케 듀오',
       description: '통산 합작 골이 가장 많은 듀오',
       data: careerDuo,
     },
     ...analysisItems.filter(({ type }) => type === 'daily-record'),
     {
-      type: 'career-clean-sheet', icon: 'goalkeeper', title: '일일 최다 클린시트',
+      type: 'career-clean-sheet',
+      icon: 'goalkeeper',
+      title: '일일 최다 클린시트',
       data: {
         ...rankCareerCounts(careerCleanSheets?.dailyHigh || new Map(), '회', true, Infinity),
         status: careerCleanSheetStatus,
       },
     },
-    ...careerTypes.filter((type) => type !== 'daily-record' && type !== 'longest-absent')
+    ...careerTypes
+      .filter((type) => type !== 'daily-record' && type !== 'longest-absent')
       .flatMap((careerType) => analysisItems.filter(({ type }) => type === careerType)),
-    ...careerSeasonSpecialists.map((season) => ({
-      type: 'career-season-specialist', icon: season.key, title: `${season.label} 남자`,
-      data: { ...season, status: scoringStreakResult.status },
-    })),
+    {
+      type: 'career-season-aces',
+      icon: 'trophy',
+      title: '계절 에이스',
+      data: { seasons: careerSeasonSpecialists, status: scoringStreakResult.status },
+    },
+    {
+      type: 'career-award-leaders',
+      icon: 'trophy',
+      title: '부문별 최다 수상자',
+      data: {
+        awards: careerAwardLeaders,
+        status: careerAwardHistory.status === 'idle' ? 'loading' : careerAwardHistory.status,
+      },
+    },
+    {
+      type: 'career-title-collection',
+      icon: 'trophy',
+      title: '타이틀 수집',
+      description: '통산 서로 다른 부문의 타이틀을 획득한 플레이어',
+      data: {
+        awards: titleCollections,
+        status: careerAwardHistory.status === 'idle' ? 'loading' : careerAwardHistory.status,
+      },
+    },
     ...analysisItems.filter(({ type }) => type === 'longest-absent'),
   ]
   const careerHighRows = careerRecord ? [
@@ -859,8 +975,9 @@ const AnalysisTap = (props) => {
   }, [thisYear, quarter])
 
   useEffect(() => {
-    if (!playerName || historyLoadedDay.current === cacheDay) return undefined
+    if (!needsAwardHistory || historyLoadedDay.current === cacheDay) return undefined
     historyLoadedDay.current = cacheDay
+    setCareerAwardHistory({ status: 'idle', records: [] })
     let cancelled = false
     let completed = false
     getAnalysisHistoryRecords().then((records) => {
@@ -879,7 +996,7 @@ const AnalysisTap = (props) => {
       cancelled = true
       if (!completed) historyLoadedDay.current = null
     }
-  }, [playerName, cacheDay])
+  }, [needsAwardHistory, cacheDay])
 
   useEffect(() => {
     if (careerRoundRequest === 0) return undefined
@@ -1442,6 +1559,7 @@ const AnalysisTap = (props) => {
     integratedData === null
 
   const renderAnalysisItem = ({ type, isNew, icon, title, titleNote, description, data }) => {
+    const groupedItems = type === 'career-season-aces' ? data.seasons : data.awards
     const players = data.name?.filter(Boolean) ?? []
     const almostPlayers = data.additional?.filter(Boolean) ?? []
     const isChasingDuo = type === 'duo' || type === 'partners' || type === 'career-duo'
@@ -1483,7 +1601,7 @@ const AnalysisTap = (props) => {
               자세히 보기
             </button>
           )}
-          {type === 'career-season-specialist' && (
+          {type === 'career-season-aces' && (
             <button
               type="button"
               className={detailsButtonClass}
@@ -1555,20 +1673,36 @@ const AnalysisTap = (props) => {
               )}
             </dd>
           </>
-        ) : type === 'career-season-specialist' ? (
-          <dd className="mt-2" aria-live="polite">
-            {data.winners.length > 0 ? (
-              <ul className="space-y-2">
-                {data.winners.map((player) => (
-                  <li key={player.name} className="flex flex-wrap items-baseline justify-center gap-x-2 gap-y-1">
-                    <span className="min-w-0 break-words font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">{player.name}</span>
-                    <span className="text-sm tabular-nums"> · {player.pointRate.toFixed(2)}점</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <span className="font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">-</span>
-            )}
+        ) : type === 'career-season-aces' || type === 'career-award-leaders' || type === 'career-title-collection' ? (
+          <dd className="mt-4" aria-live="polite">
+            <div className={`grid gap-2 ${type === 'career-title-collection' ? 'grid-cols-3' : 'grid-cols-4'}`}>
+              {groupedItems.map((group) => (
+                <section key={group.key} className="min-w-0 text-center" aria-labelledby={`${type}-${group.key}`}>
+                  <h3 id={`${type}-${group.key}`} className={`mb-3 flex items-center justify-center gap-1 text-sm font-semibold font-dnf-forged ${type === 'career-award-leaders' ? 'flex-col' : ''}`}>
+                    {type === 'career-season-aces' ? <AnalysisIcon name={group.key} /> : type === 'career-award-leaders' ? (
+                      <img src={careerAwardIcons[group.label]} alt="" className="h-7 w-7 shrink-0 object-contain" />
+                    ) : null}
+                    <span>{group.label}</span>
+                  </h3>
+                  {group.winners.length > 0 ? (
+                    <ul className="space-y-2">
+                      {group.winners.map((player) => (
+                        <li key={player.name} className="min-w-0">
+                          <span className="block break-words text-sm font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">{player.name}</span>
+                          {type !== 'career-title-collection' && (
+                            <span className="mt-0.5 block text-xs tabular-nums text-gray-500 dark:text-gray-400">
+                              {type === 'career-season-aces' ? `${player.pointRate.toFixed(2)}점` : `${player.count}회`}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">-</span>
+                  )}
+                </section>
+              ))}
+            </div>
           </dd>
         ) : type === 'duo' || type === 'low-scoring-duo' ? (
           <>
@@ -1636,8 +1770,37 @@ const AnalysisTap = (props) => {
   return (
     <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-2 pb-10 text-center">
       <>
+        <div ref={analysisToolbarRef} className="flex min-h-10 items-center justify-end gap-3 py-2">
+          {analysisView !== 'overview' && (
+            <button
+              type="button"
+              className={`${detailsButtonClass} mr-auto inline-flex items-center gap-1 !text-sm`}
+              onClick={() => changeAnalysisView('overview', true)}
+            >
+              <ChevronRightIcon aria-hidden="true" className="h-4 w-4 rotate-180" />
+              목록으로
+            </button>
+          )}
+          <button
+            type="button"
+            className={`${detailsButtonClass} !text-sm`}
+            aria-controls="individual-analysis season-analysis career-analysis"
+            aria-expanded={allSectionsExpanded}
+            onClick={() => changeAnalysisView(allSectionsExpanded ? 'overview' : 'all')}
+          >
+            {allSectionsExpanded ? '모두 접기' : '모두 펼치기'}
+          </button>
+        </div>
+        <div
+          ref={analysisStageRef}
+          className="analysis-section-stage border-y border-gray-200 dark:border-gray-700"
+          data-phase={analysisTransition}
+          aria-busy={analysisTransition !== 'idle'}
+          onAnimationEnd={handleAnalysisAnimationEnd}
+        >
         <section
-          className={`border-y-2 border-gray-200 dark:border-gray-700 ${showIndividual ? 'pb-4' : ''}`}
+          className={showIndividual ? 'pb-4' : ''}
+          hidden={!isSectionVisible('individual')}
           aria-labelledby="analysis-individual-title"
         >
           <AnalysisSectionHeading
@@ -1645,7 +1808,8 @@ const AnalysisTap = (props) => {
             controls="individual-analysis"
             title="개인별 기록"
             expanded={showIndividual}
-            onToggle={() => setShowIndividual((current) => !current)}
+            focused={analysisView === 'individual'}
+            onToggle={() => selectAnalysisSection('individual')}
           />
           <div id="individual-analysis" hidden={!showIndividual}>
             <div className="mt-3 grid grid-cols-4 items-center gap-x-1 gap-y-2">
@@ -1740,19 +1904,29 @@ const AnalysisTap = (props) => {
                   ) : (
                     <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">
                       {bestFive.status === 'error' || (isGoalkeeper && seasonCleanSheetStatus === 'error')
-                        ? '비교 기록을 불러오지 못했습니다.' : '비교 기록을 불러오는 중입니다.'}
+                        ? '비교 기록을 불러오지 못했습니다.'
+                        : '비교 기록을 불러오는 중입니다.'}
                     </p>
                   )}
                   <hr className="my-5 border-gray-100 dark:border-gray-700" />
                   {bestFive.status === 'ready' && hasQuarterRecord && (
                     <dl className="space-y-2 text-sm">
                       {[
-                        ...(isGoalkeeper ? [
-                          ['클린시트', formatCleanSheetRecord(seasonCleanSheetStatus,
-                            formatCareerNumber(seasonCleanSheetCounts.get(playerName) || 0, '회'))],
-                          ['최다 실점 상대', formatCleanSheetRecord(seasonCleanSheetStatus,
-                            formatMostConceded(seasonCleanSheets?.concededSeasons.get(`${thisYear}-${quarter}`)?.get(playerName)))],
-                        ] : []),
+                        ...(isGoalkeeper
+                          ? [
+                              [
+                                '클린시트',
+                                formatCleanSheetRecord(seasonCleanSheetStatus, formatCareerNumber(seasonCleanSheetCounts.get(playerName) || 0, '회')),
+                              ],
+                              [
+                                '최다 실점 상대',
+                                formatCleanSheetRecord(
+                                  seasonCleanSheetStatus,
+                                  formatMostConceded(seasonCleanSheets?.concededSeasons.get(`${thisYear}-${quarter}`)?.get(playerName)),
+                                ),
+                              ],
+                            ]
+                          : []),
                         ['골', formatCareerNumber(quarterPlayerStats.goals, '골')],
                         ['어시', formatCareerNumber(quarterPlayerStats.assists, '어시')],
                         ['MVP', `${playerDetail.mvp}회`],
@@ -1775,10 +1949,14 @@ const AnalysisTap = (props) => {
                               {label === '스타일' && playerDetail.style.length > 0 ? (
                                 <span className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
                                   {playerDetail.style.map((style) => (
-                                    <span key={style} className="whitespace-nowrap">#{style}</span>
+                                    <span key={style} className="whitespace-nowrap">
+                                      #{style}
+                                    </span>
                                   ))}
                                 </span>
-                              ) : value}
+                              ) : (
+                                value
+                              )}
                             </dd>
                           </div>
                           <hr className="border-gray-100 dark:border-gray-700" />
@@ -1829,10 +2007,7 @@ const AnalysisTap = (props) => {
                                       {careerAwards.map((award) => {
                                         const [title, count] = award.split('x')
                                         return (
-                                          <li
-                                            key={award}
-                                            className="relative flex items-center justify-center gap-1 whitespace-nowrap"
-                                          >
+                                          <li key={award} className="relative flex items-center justify-center gap-1 whitespace-nowrap">
                                             <AwardIconStack title={title} count={count} />
                                             <span>
                                               {title}
@@ -1860,47 +2035,46 @@ const AnalysisTap = (props) => {
                                   {strongestSeasons.length > 0 && (
                                     <span className="inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1">
                                       {strongestSeasons.map((season) => (
-                                          <span
-                                              key={season.key}
-                                              title={`${season.label} · 승점생산률 ${careerNumberFormatter.format(season.pointRate)}점 (${careerNumberFormatter.format(season.points)}승점 / ${careerNumberFormatter.format(season.games)}경기 · 출석 ${season.attendance}회, 2026년부터 누적)`}
-                                              className={`inline-flex items-center gap-1 whitespace-nowrap font-sans text-sm font-medium ${playerSeasonTextColors[season.key]}`}
-                                          >
+                                        <span
+                                          key={season.key}
+                                          title={`${season.label} · 승점생산률 ${careerNumberFormatter.format(season.pointRate)}점 (${careerNumberFormatter.format(season.points)}승점 / ${careerNumberFormatter.format(season.games)}경기 · 출석 ${season.attendance}회, 2026년부터 누적)`}
+                                          className={`inline-flex items-center gap-1 whitespace-nowrap font-sans text-sm font-medium ${playerSeasonTextColors[season.key]}`}
+                                        >
                                           <span>#</span>
                                           <img
-                                              src={playerSeasonIcons[season.key]}
-                                              alt=""
-                                              width="28"
-                                              height="28"
-                                              className="h-7 w-7 shrink-0 object-contain"
+                                            src={playerSeasonIcons[season.key]}
+                                            alt=""
+                                            width="28"
+                                            height="28"
+                                            className="h-7 w-7 shrink-0 object-contain"
                                           />
-                                            {/*<span>사나이</span>*/}
-                                            <button
-                                                type="button"
-                                                className={`${detailsButtonClass} !ml-0 !text-[8px] shrink-0 whitespace-nowrap font-sans ${playerSeasonTextColors[season.key]}`}
-                                                aria-label="개인 최고 계절 선정 기준 자세히 보기"
-                                                aria-haspopup="dialog"
-                                                aria-controls="player-season-method-dialog"
-                                                onClick={() => playerSeasonDialogRef.current?.showModal()}
-                                            >
-                                        자세히
-                                      </button>
+                                          {/*<span>사나이</span>*/}
+                                          <button
+                                            type="button"
+                                            className={`${detailsButtonClass} !ml-0 !text-[8px] shrink-0 whitespace-nowrap font-sans ${playerSeasonTextColors[season.key]}`}
+                                            aria-label="개인 최고 계절 선정 기준 자세히 보기"
+                                            aria-haspopup="dialog"
+                                            aria-controls="player-season-method-dialog"
+                                            onClick={() => playerSeasonDialogRef.current?.showModal()}
+                                          >
+                                            자세히
+                                          </button>
                                         </span>
                                       ))}
                                     </span>
                                   )}
                                 </span>
                               ) : (
-                                  '기록 없음'
+                                '기록 없음'
                               )}
                             </dd>
                           </div>
-                          <hr className="border-gray-100 dark:border-gray-700"/>
+                          <hr className="border-gray-100 dark:border-gray-700" />
                         </dl>
                       </div>
-                      <hr className="my-5 border-gray-700 dark:border-gray-200"/>
+                      <hr className="my-5 border-gray-700 dark:border-gray-200" />
                       <div>
-                        <div
-                            className="sticky top-0 z-10 -mx-7 mb-4 flex flex-row items-center justify-center gap-2 border-b border-gray-100 bg-white px-7 py-2 dark:border-gray-700 dark:bg-gray-900">
+                        <div className="sticky top-0 z-10 -mx-7 mb-4 flex flex-row items-center justify-center gap-2 border-b border-gray-100 bg-white px-7 py-2 dark:border-gray-700 dark:bg-gray-900">
                           <h4 id="career-high-title" className="font-semibold font-dnf-forged">
                             커리어 하이
                           </h4>
@@ -1933,11 +2107,14 @@ const AnalysisTap = (props) => {
                       </h4>
                       <span className="relative top-1 text-[11px] text-gray-500 dark:text-gray-400">항목별 최고 분기 대비</span>
                     </div>
-                    {(bestFive.memberInfo === null && bestFive.status === 'error') ||
-                      (isGoalkeeper && careerCleanSheetStatus === 'error') ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400" role="status">분기별 기록을 불러오지 못했습니다.</p>
+                    {(bestFive.memberInfo === null && bestFive.status === 'error') || (isGoalkeeper && careerCleanSheetStatus === 'error') ? (
+                      <p className="text-sm text-gray-500 dark:text-gray-400" role="status">
+                        분기별 기록을 불러오지 못했습니다.
+                      </p>
                     ) : bestFive.memberInfo === null || (isGoalkeeper && careerCleanSheetStatus !== 'ready') ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400" role="status">분기별 기록을 불러오는 중입니다.</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400" role="status">
+                        분기별 기록을 불러오는 중입니다.
+                      </p>
                     ) : chartQuarters.length > 0 ? (
                       <QuarterlyRecordChart
                         quarters={chartQuarters}
@@ -1984,14 +2161,15 @@ const AnalysisTap = (props) => {
             </div>
           </div>
         </dialog>
-        <section aria-labelledby="analysis-season-title">
+        <section aria-labelledby="analysis-season-title" hidden={!isSectionVisible('season')}>
           <AnalysisSectionHeading
             id="analysis-season-title"
             controls="season-analysis"
             title="이번 시즌"
             subtitle={`${thisYear} - 제 ${quarter} 시즌`}
             expanded={showSeason}
-            onToggle={() => setShowSeason((current) => !current)}
+            focused={analysisView === 'season'}
+            onToggle={() => selectAnalysisSection('season')}
           />
           <div id="season-analysis" hidden={!showSeason} className="pt-4">
             {hasLoadError ? (
@@ -2011,19 +2189,20 @@ const AnalysisTap = (props) => {
             )}
           </div>
         </section>
-        <section aria-labelledby="analysis-career-title">
+        <section aria-labelledby="analysis-career-title" hidden={!isSectionVisible('career')}>
           <AnalysisSectionHeading
             id="analysis-career-title"
             controls="career-analysis"
             title="통산 기록"
             expanded={showCareer}
-            onToggle={() => setShowCareer((current) => !current)}
-            borderTop
+            focused={analysisView === 'career'}
+            onToggle={() => selectAnalysisSection('career')}
           />
           <div id="career-analysis" hidden={!showCareer} className="pt-4">
             <dl className="divide-y divide-gray-200 dark:divide-gray-700">{careerAnalysisItems.map(renderAnalysisItem)}</dl>
           </div>
         </section>
+        </div>
 
         <dialog
           ref={seasonSpecialistDialogRef}
@@ -2033,9 +2212,13 @@ const AnalysisTap = (props) => {
           className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-y-auto rounded-xl border border-gray-200 bg-white p-5 text-center text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
         >
           <div className="relative flex items-center justify-center gap-4 px-8">
-            <h3 id="season-specialist-method-title" className="text-lg font-bold">계절별 대표 선정 기준</h3>
+            <h3 id="season-specialist-method-title" className="text-lg font-bold">
+              계절 에이스 선정 기준
+            </h3>
             <form method="dialog" className="absolute right-0 top-0">
-              <button type="submit" aria-label="선정 기준 닫기" className="rounded px-2 py-1 text-xl">X</button>
+              <button type="submit" aria-label="선정 기준 닫기" className="rounded px-2 py-1 text-xl">
+                X
+              </button>
             </form>
           </div>
           <ul className="mt-4 list-inside list-disc space-y-3 text-sm leading-relaxed">
@@ -2068,12 +2251,14 @@ const AnalysisTap = (props) => {
           </div>
           <div className="mt-4 space-y-3 text-sm leading-relaxed">
             <p>이번 시즌 출석일의 50% 이상 참석한 플레이어 중</p>
-            <ul className="list-inside list-disc space-y-2">
+            <ul className="list-inside list-disc space-y-2 text-left">
               <li>ST: 골이 가장 많은 플레이어</li>
               <li>LM: 왼발잡이 중 어시가 가장 많은 플레이어</li>
               <li>RM: 오른발잡이 중 어시가 가장 많은 플레이어</li>
               <li>DF: 승점생산률이 가장 높은 플레이어</li>
-              <li>GK: 키퍼만 참여 플레이어 중 승점생산률 가장 높은 플레이어 (없을 시 승점생산률 2위)</li>
+              <li>
+                GK: 클린시트가 가장 많은 플레이어<p className="pl-12">(없으면 승점생산률 최상위)</p>
+              </li>
             </ul>
           </div>
         </dialog>

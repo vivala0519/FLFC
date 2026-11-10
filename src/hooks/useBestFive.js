@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { doc, onSnapshot } from 'firebase/firestore'
 import { db } from '../../firebase.js'
 import { analyzeBestFive } from '../apis/analyzeBestFive.js'
+import { analyzeCleanSheets } from '../apis/analyzeCleanSheets.js'
 import { subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
 
-export default function useBestFive(year, month, cacheDayKey, providedRecords) {
+export default function useBestFive(year, month, cacheDayKey, providedRecords, cleanSheetSource = {}) {
+  const { yearRoundData, roundStatus, weeklyTeams, members, oneCharacterMembers, nicknames, asOfDate } = cleanSheetSource
   const yearKey = String(year)
   const requestKey = `${yearKey}:${cacheDayKey || ''}`
   const recordsProvided = providedRecords !== undefined
@@ -47,14 +49,21 @@ export default function useBestFive(year, month, cacheDayKey, providedRecords) {
   const recordsStatus = recordsProvided ? (records === null ? 'loading' : 'ready')
     : recordState.requestKey === requestKey ? recordState.status : 'loading'
   const result = useMemo(() => {
-    if (recordsStatus === 'error' || memberState.status === 'error') {
-      return { status: 'error', positions: null, records: null }
+    if (recordsStatus === 'error' || memberState.status === 'error' || roundStatus === 'error') {
+      return { status: 'error', positions: null, records: null, cleanSheets: null }
     }
-    if (recordsStatus !== 'ready' || memberState.status !== 'ready') {
-      return { status: 'loading', positions: null, records: null }
+    if (recordsStatus !== 'ready' || memberState.status !== 'ready' || roundStatus !== 'ready' ||
+      !yearRoundData || !Array.isArray(weeklyTeams) || !Array.isArray(members) || members.length === 0) {
+      return { status: 'loading', positions: null, records: null, cleanSheets: null }
     }
-    return { status: 'ready', positions: analyzeBestFive(records, memberState.data, month), records }
-  }, [records, recordsStatus, memberState, month])
+    const cleanSheets = analyzeCleanSheets({
+      roundYears: { [yearKey]: yearRoundData }, weeklyTeams, memberInfo: memberState.data,
+      members, oneCharacterMembers, nicknames, asOfDate,
+    })
+    const counts = cleanSheets.seasons.get(`${yearKey}-${Math.ceil(month / 3)}`) || new Map()
+    return { status: 'ready', positions: analyzeBestFive(records, memberState.data, month, counts), records, cleanSheets }
+  }, [records, recordsStatus, memberState, month, yearKey, yearRoundData, roundStatus,
+    weeklyTeams, members, oneCharacterMembers, nicknames, asOfDate])
 
   return { ...result, memberInfo: memberState.data }
 }

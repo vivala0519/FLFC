@@ -35,6 +35,7 @@ const BestFiveCard = ({ positions }) => (
                       <span className="text-xs">
                   {key === 'pivo' ? `${player.골}골`
                       : key === 'leftAla' || key === 'rightAla' ? `${player.어시}어시`
+                          : key === 'goleiro' && player.cleanSheets !== undefined ? `${player.cleanSheets}회`
                           : `${player.승점률.toFixed(2)}점`}
                 </span>
                   )}

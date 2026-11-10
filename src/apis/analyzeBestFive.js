@@ -7,7 +7,7 @@ const byName = (a, b) => a.name.localeCompare(b.name, 'ko')
 const byPointRate = (a, b) => b.승점 * a.경기 - a.승점 * b.경기
 
 // Reserve GK for the highest-ranked eligible registered goalkeeper.
-export const analyzeBestFive = (records, memberInfo, month) => {
+export const analyzeBestFive = (records, memberInfo, month, cleanSheetCounts = new Map()) => {
   if (!Number.isInteger(month) || month < 1 || month > 12) return null
   const quarter = Math.ceil(month / 3)
   const totals = new Map()
@@ -66,13 +66,20 @@ export const analyzeBestFive = (records, memberInfo, month) => {
     if (player) used.add(player.name)
     return player
   }
-  const registeredGoalkeeper = take(rankedByRate.filter(isGoalkeeper))
+  const cleanSheetsFor = (player) => Math.max(0, numberOrZero(cleanSheetCounts.get(player.name)))
+  const registeredGoalkeeper = take(eligiblePlayers.filter(isGoalkeeper).sort((a, b) =>
+    cleanSheetsFor(b) - cleanSheetsFor(a) ||
+    (a.경기 > 0 && b.경기 > 0 ? byPointRate(a, b) : Number(b.경기 > 0) - Number(a.경기 > 0)) ||
+    b.GA - a.GA || b.골 - a.골 || b.어시 - a.어시 || byName(a, b),
+  ))
   const byAssists = (a, b) => b.어시 - a.어시 || b.골 - a.골 || byName(a, b)
   const leftAla = take(eligiblePlayers.filter((player) => player.preferredFoot === 'L').sort(byAssists))
   const rightAla = take(eligiblePlayers.filter((player) => player.preferredFoot === 'R').sort(byAssists))
   const fixo = take(rankedByRate)
   // Without an eligible registered goalkeeper, use the best remaining rate.
-  const goleiro = registeredGoalkeeper || take(rankedByRate)
+  const goleiro = registeredGoalkeeper
+    ? { ...registeredGoalkeeper, cleanSheets: cleanSheetsFor(registeredGoalkeeper) }
+    : take(rankedByRate)
 
   return { pivo, leftAla, rightAla, fixo, goleiro }
 }
