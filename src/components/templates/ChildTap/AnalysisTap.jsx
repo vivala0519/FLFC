@@ -356,7 +356,7 @@ const AnalysisSectionHeading = ({ id, controls, title, subtitle, expanded, onTog
         aria-controls={controls}
         title={focused ? '목록으로 돌아가기' : undefined}
         onClick={onToggle}
-        className="relative flex h-20 w-full items-center justify-center rounded-none border-0 bg-transparent px-10 py-3 text-center font-dnf-forged focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-700 dark:focus-visible:outline-blue-300"
+        className="relative flex h-[var(--analysis-section-heading-height)] w-full items-center justify-center rounded-none border-0 bg-transparent px-10 py-3 text-center font-dnf-forged focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-700 dark:focus-visible:outline-blue-300"
       >
         <span className="flex flex-col items-center">
           <span>{title}</span>
@@ -744,14 +744,14 @@ const AnalysisTap = (props) => {
     {
       type: 'daily-record',
       icon: 'dailyGoal',
-      title: '일일 최다 골',
+      title: '골',
       // description: '통산 한 날짜 최다 득점 기록',
       data: dailyGoalRecord,
     },
     {
       type: 'daily-record',
       icon: 'dailyAssist',
-      title: '일일 최다 어시',
+      title: '어시',
       // description: '통산 한 날짜 최다 도움 기록',
       data: dailyAssistRecord,
     },
@@ -892,37 +892,37 @@ const AnalysisTap = (props) => {
   const careerSeasonSpecialists = useMemo(() =>
     analyzeSeasonSpecialists(recordsByYear, existingMembers, asOfDate),
   [recordsByYear, existingMembers, asOfDate])
-  const careerAnalysisItems = [
+  const careerCumulativeItems = [
     {
       type: 'career-total',
       icon: 'careerGoalTop',
-      title: '골 Top',
+      title: '골',
       // description: '통산 최다 골',
       data: { ...dailyMaximums.totalGoals, status: scoringStreakResult.status },
     },
     {
       type: 'career-total',
       icon: 'careerAssistTop',
-      title: '어시 Top',
+      title: '어시',
       // description: '통산 최다 어시',
       data: { ...dailyMaximums.totalAssists, status: scoringStreakResult.status },
     },
     {
       type: 'career-total',
       icon: 'careerAttackPointsTop',
-      title: '공격포인트 Top',
+      title: '공격포인트',
       data: { ...dailyMaximums.totalAttackPoints, status: scoringStreakResult.status },
     },
     {
       type: 'career-total',
       icon: 'careerPointsTop',
-      title: '승점 Top',
+      title: '승점',
       data: { ...dailyMaximums.totalPoints, status: scoringStreakResult.status },
     },
     {
       type: 'career-point-rate',
       icon: 'careerPointRateTop',
-      title: '승점생산률 Top',
+      title: '승점생산률',
       description: '70% 이상 출석한 플레이어 중',
       data: {
         ...careerPointRate,
@@ -933,7 +933,7 @@ const AnalysisTap = (props) => {
     {
       type: 'career-clean-sheet',
       icon: 'goldenGlove',
-      title: '클린시트 Top',
+      title: '클린시트',
       data: {
         ...rankCareerCounts(careerCleanSheets?.totals || new Map(), '회', true, Infinity, eligibleMembers),
         status: careerCleanSheetStatus,
@@ -942,26 +942,30 @@ const AnalysisTap = (props) => {
     {
       type: 'career-total',
       icon: 'careerAttendanceTop',
-      title: '출석 Top',
+      title: '출석',
       data: { ...dailyMaximums.totalAttendance, status: scoringStreakResult.status },
     },
     {
       type: 'career-mvp',
       icon: 'careerMvpTop',
-      title: 'MVP Top',
+      title: 'MVP',
       // description: '통산 데일리 MVP 최다 플레이어',
       data: careerMostMVP,
     },
+  ]
+  const careerDailyItems = [
     ...analysisItems.filter(({ type }) => type === 'daily-record'),
     {
       type: 'career-clean-sheet',
       icon: 'dailyCleanSheet',
-      title: '일일 최다 클린시트',
+      title: '클린시트',
       data: {
         ...rankCareerCounts(careerCleanSheets?.dailyHigh || new Map(), '회', true, Infinity, eligibleMembers),
         status: careerCleanSheetStatus,
       },
     },
+  ]
+  const careerOtherItems = [
     {
       type: 'career-duo',
       icon: 'duo',
@@ -2216,8 +2220,20 @@ const AnalysisTap = (props) => {
             focused={analysisView === 'career'}
             onToggle={() => selectAnalysisSection('career')}
           />
-          <div id="career-analysis" hidden={!showCareer} className="pt-4">
-            <dl className="divide-y divide-gray-200 dark:divide-gray-700">{careerAnalysisItems.map(renderAnalysisItem)}</dl>
+          <div id="career-analysis" hidden={!showCareer}>
+            <section aria-labelledby="career-cumulative-title">
+              <h3 id="career-cumulative-title" className="analysis-career-subheading border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-zinc-700 font-dnf-forged dark:border-gray-700 dark:bg-gray-800 dark:text-zinc-200">
+                최다 누적
+              </h3>
+              <dl className="divide-y divide-gray-200 pt-4 dark:divide-gray-700">{careerCumulativeItems.map(renderAnalysisItem)}</dl>
+            </section>
+            <section aria-labelledby="career-daily-title">
+              <h3 id="career-daily-title" className="analysis-career-subheading border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-zinc-700 font-dnf-forged dark:border-gray-700 dark:bg-gray-800 dark:text-zinc-200">
+                일일 최다
+              </h3>
+              <dl className="divide-y divide-gray-200 pt-4 dark:divide-gray-700">{careerDailyItems.map(renderAnalysisItem)}</dl>
+            </section>
+            <dl className="divide-y divide-gray-200 border-t border-gray-200 pt-5 dark:divide-gray-700 dark:border-gray-700">{careerOtherItems.map(renderAnalysisItem)}</dl>
           </div>
         </section>
         </div>
@@ -2240,13 +2256,9 @@ const AnalysisTap = (props) => {
             </form>
           </div>
           <ul className="mt-4 list-inside list-disc space-y-3 text-sm leading-relaxed">
-            <li>승점제가 도입된 2026년 이후 기록으로 현재 활동 중인 플레이어를 비교합니다.</li>
-            <li>봄 3~5월, 여름 6~8월, 가을 9~11월, 겨울 12~2월로 구분합니다.</li>
-            <li>네 계절 각각 3회 이상 출석하고 승점과 경기 수가 기록된 플레이어가 후보입니다.</li>
-            <li>계절별 승점생산률은 해당 계절의 승점 합계를 경기 수 합계로 나눕니다.</li>
-            <li>해당 계절 승점생산률이 나머지 세 계절 중 최고 수치보다 높아야 합니다. 최소 격차 제한은 없습니다.</li>
-            <li>해당 계절의 후보 전체 승점 합계를 전체 경기 수로 나눈 평균 이상이어야 합니다.</li>
-            <li>차선 계절과의 격차가 가장 큰 플레이어를 선정하며, 동률은 공동 선정합니다.</li>
+            <li>승점제가 도입된 2026년 이후 기록으로 비교합니다.</li>
+            <li>네 계절 각각 3회 이상 출석한 플레이어 중</li>
+            <li>해당 계절 승점생산률이 가장 높고 차선 계절과의 격차가 가장 큰 플레이어를 선정합니다.</li>
           </ul>
         </dialog>
 

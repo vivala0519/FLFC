@@ -26,12 +26,19 @@ html.dark .player-detail-scroll {
 }
 
 .analysis-section-stage {
+  --analysis-section-heading-height: 5rem;
   --analysis-section-divider: #e5e7eb;
   --analysis-section-offset: 12px;
 }
 
 html.dark .analysis-section-stage {
   --analysis-section-divider: #374151;
+}
+
+.analysis-career-subheading {
+  position: sticky;
+  top: calc(var(--analysis-section-heading-height) + 1px);
+  z-index: 10;
 }
 
 .analysis-section-stage > section:not([hidden]) ~ section:not([hidden]) {
