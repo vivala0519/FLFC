@@ -1,5 +1,4 @@
 import Swal from 'sweetalert2'
-import styled from 'styled-components'
 import { useEffect, useState } from 'react'
 import { db } from '../../../../firebase.js'
 import getTimes from '../../../hooks/getTimes.js'
@@ -14,9 +13,15 @@ import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
 
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
-import write from '@/assets/write.png'
-import check from '@/assets/check.png'
-import './WeeklyTeam.css'
+import PlusIcon from '@/assets/lucide/plus.svg?react'
+import PencilIcon from '@/assets/lucide/pencil.svg?react'
+import CheckIcon from '@/assets/lucide/check.svg?react'
+
+const teamActionClass = 'inline-flex h-11 items-center justify-center gap-2 rounded-lg border-0 px-4 font-dnf-forged text-sm !outline-none focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-blue-600 dark:focus-visible:!outline-blue-300'
+const primaryTeamActionClass = `${teamActionClass} bg-blue-700 text-white hover:bg-blue-800`
+const secondaryTeamActionClass = `${teamActionClass} bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700`
+const playerInputClass = 'h-11 w-full min-w-0 appearance-none rounded-lg border border-[#dbe3ed] bg-white px-1.5 py-0 text-center [font-family:inherit] text-base font-normal leading-normal text-slate-700 outline-none transition-[border-color,box-shadow] duration-[160ms] ease-[ease] placeholder:text-[13px] placeholder:text-slate-500 placeholder:opacity-75 focus:border-blue-600 focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] dark:border-slate-700 dark:bg-[#101827] dark:text-slate-200 dark:placeholder:text-slate-400 dark:focus:border-blue-300 dark:focus:shadow-[0_0_0_3px_rgba(147,197,253,0.12)] motion-reduce:transition-none'
+const weekNavigationClass = 'h-[25px] w-[25px] shrink-0 cursor-pointer rounded-none border-0 bg-transparent p-0 !outline-none focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-blue-600 dark:focus-visible:!outline-blue-300 [@media(max-width:812px)]:h-[15px] [@media(max-width:812px)]:w-[15px]'
 
 function WeeklyTeam(props) {
   const { time: { currentTime }} = getTimes()
@@ -237,9 +242,27 @@ function WeeklyTeam(props) {
       {/*</div>*/}
       {/*)}*/}
       <div className={dayTitleContainerStyle}>
-        {!editMode && <LeftButton onClick={() => pageMoveHandler(true)} $show={page > 0} />}
+        {!editMode && (
+          <button
+            type="button"
+            aria-label="이전 주 팀 보기"
+            className={`${weekNavigationClass} ${page > 0 ? 'visible' : 'invisible'}`}
+            onClick={() => pageMoveHandler(true)}
+          >
+            <img src={left} alt="" className="h-full w-full dark:invert" draggable={false} />
+          </button>
+        )}
         <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder} title={displayDateText(weeklyTeamData[page]?.id)} />
-        {!editMode && <RightButton onClick={() => pageMoveHandler(false)} $show={page < weeklyTeamData.length - 1} />}
+        {!editMode && (
+          <button
+            type="button"
+            aria-label="다음 주 팀 보기"
+            className={`${weekNavigationClass} ${page < weeklyTeamData.length - 1 ? 'visible' : 'invisible'}`}
+            onClick={() => pageMoveHandler(false)}
+          >
+            <img src={right} alt="" className="h-full w-full dark:invert" draggable={false} />
+          </button>
+        )}
       </div>
       <div className="flex flex-col">
         {!editMode && (
@@ -252,18 +275,18 @@ function WeeklyTeam(props) {
           <p role="status" className="py-8 text-gray-500 dark:text-gray-400">등록된 주간 팀이 없습니다.</p>
         ) : isOffDay ? (
           <p role="status" className="mb-5 flex min-h-32 items-center justify-center text-sm font-medium text-blue-700 dark:text-yellow-400">
-            이번주는 경기가 없습니다🍃
+            경기 없는 날🍃
           </p>
         ) : (
           <div className="w-full flex justify-center mb-5">
             <div
-              className={`w-fit flex justify-center ${page === weeklyTeamData.length - 1 && activeBorder && 'border-2 rounded-md border-[#bb2649] animate-pulse p-2'}`}
+              className={`flex justify-center ${editMode ? 'w-full max-w-[30rem]' : 'w-fit'} ${!editMode && page === weeklyTeamData.length - 1 && activeBorder ? 'border-2 rounded-md border-[#bb2649] animate-pulse p-2' : ''}`}
             >
-              <div className="flex flex-col gap-5 items-start p-1 rounded-md">
+              <div className={editMode ? 'w-full min-w-0' : 'flex flex-col gap-5 items-start p-1 rounded-md'}>
                 {!editMode ? (
                   [1, 2, 3].map((team, index) => (
                     <div key={index} className="flex gap-5">
-                      <span style={{ width: '25px' }} className="relative left-1 flex items-center">
+                      <span className="relative left-1 flex w-[25px] items-center">
                         {team}팀
                       </span>
                       <div className="flex gap-[10px]">
@@ -277,25 +300,29 @@ function WeeklyTeam(props) {
                   ))
                 ) : (
                   // 팀 생성 모드
-                  <div className="flex flex-col gap-4">
-                    <div className="flex flex-col gap-3 items-center">
+                  <div className="w-full pt-2 text-left">
+                    <div className="flex flex-col gap-[18px]">
                       {inputTeamData?.map((team, index) => (
-                        <div key={index} className="flex flex-col gap-2">
-                          <span style={{ width: '25px' }} className="w-full text-left text-black relative left-1">
-                            {index + 1}팀
-                          </span>
-                          <div className="flex gap-1">
+                        <fieldset key={index} className="m-0 min-w-0 rounded-xl border border-[#dbe3ed] bg-slate-50 px-3 pb-[14px] pt-1 shadow-[0_2px_8px_rgba(15,23,42,0.03)] dark:border-slate-700 dark:bg-[#172235] [@media(min-width:640px)]:px-[14px]">
+                          <legend className="mb-2.5 flex items-center gap-[7px] px-1.5 font-dnf-forged text-sm font-semibold text-slate-700 dark:text-slate-200">
+                            <span className="inline-flex h-7 w-11 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-[13px] font-bold text-blue-700 dark:border-[#3b557c] dark:bg-[#1c2c46] dark:text-blue-300">{index + 1}팀</span>
+                          </legend>
+                          <div className="grid grid-cols-3 gap-2 [@media(min-width:640px)]:grid-cols-6">
                             {team.map((player, idx) => (
                               <input
                                 key={idx}
                                 type="text"
                                 value={player}
-                                className="w-12 border-blue-600 border-2 outline-none text-center"
+                                aria-label={`${index + 1}팀 ${idx + 1}번째 선수`}
+                                placeholder={`플레이어 ${idx + 1}`}
+                                autoComplete="off"
+                                spellCheck={false}
+                                className={playerInputClass}
                                 onChange={(event) => teamMakerInputHandler(event, index, idx)}
                               />
                             ))}
                           </div>
-                        </div>
+                        </fieldset>
                       ))}
                     </div>
                   </div>
@@ -309,84 +336,61 @@ function WeeklyTeam(props) {
             !editMode ? (
               (!weeklyTeamData.length || page === weeklyTeamData.length - 1) && (
                 <div>
-                  <div
-                    className="flex block-border bg-gray-50 cursor-pointer justify-center items-center"
+                  <button
+                    type="button"
+                    className={primaryTeamActionClass}
                     onClick={() => createWeeklyTeamHandler(true)}
-                    style={{
-                      fontFamily: 'DNFForgedBlade',
-                      width: '188px',
-                      height: '45px',
-                      borderRadius: '3px',
-                    }}
                   >
-                    <span className="animate-bounceUpDown text-black">이번 주 팀 생성하기</span>
-                    <Write />
-                  </div>
+                    <PlusIcon className="h-4 w-4" aria-hidden="true" />
+                    <span>이번 주 팀 생성하기</span>
+                  </button>
                 </div>
               )
             ) : (
-              <div
-                className="flex block-border bg-gray-50 cursor-pointer justify-center items-center"
+              <button
+                type="button"
+                className={primaryTeamActionClass}
                 onClick={registerTeamHandler}
-                style={{
-                  fontFamily: 'DNFForgedBlade',
-                  width: '188px',
-                  height: '45px',
-                  borderRadius: '3px',
-                }}
               >
-                <span className="text-black">등록하기</span>
-                <Register />
-              </div>
+                <CheckIcon className="h-4 w-4" aria-hidden="true" />
+                <span>등록하기</span>
+              </button>
             )
           ) : !activeBorder ? (
             currentDay !== 0 && (
               <div className="flex flex-col mt-3">
                 <p
-                  className="mb-1 text-gray-400"
-                  style={{
-                    filter: 'drop-shadow(2px 4px 7px grey)',
-                    fontFamily: 'DNFForgedBlade',
-                  }}
+                  className="mb-1 font-dnf-forged text-gray-400 drop-shadow-[2px_4px_7px_grey]"
                 >
                   팀 생성하기
                 </p>
-                <p className="text-xs" style={{ fontFamily: 'DNFForgedBlade' }}>
+                <p className="font-dnf-forged text-xs">
                   Open : 참여투표 종료 후
                 </p>
               </div>
             )
           ) : editMode ? (
-            <div
-              className="flex block-border bg-gray-50 cursor-pointer justify-center items-center"
-              style={{
-                fontFamily: 'DNFForgedBlade',
-                width: '188px',
-                height: '45px',
-                borderRadius: '3px',
-              }}
+            <button
+              type="button"
+              className={primaryTeamActionClass}
               onClick={registerTeamHandler}
             >
-              <span className="text-black">등록하기</span>
-              <Register />
-            </div>
+              <CheckIcon className="h-4 w-4" aria-hidden="true" />
+              <span>등록하기</span>
+            </button>
           ) : (
             !isOffDay &&
             !latestTeamIsOffDay &&
             [0, 4, 5, 6, 7].includes(currentDay) && (
               <div>
-                <div
-                  className="flex block-border bg-gray-50 cursor-pointer justify-center items-center"
-                  style={{
-                    fontFamily: 'DNFForgedBlade',
-                    width: '188px',
-                    height: '45px',
-                    borderRadius: '3px',
-                  }}
+                <button
+                  type="button"
+                  className={secondaryTeamActionClass}
                   onClick={() => createWeeklyTeamHandler(false)}
                 >
-                  <span className="text-black">수정</span>
-                </div>
+                  <PencilIcon className="h-4 w-4" aria-hidden="true" />
+                  <span>수정</span>
+                </button>
                 <div className={kakaoButtonDivStyle} onClick={shareKakao}>
                   <p>카톡에 공유하기</p>
                   <button className={kakaoButtonStyle} />
@@ -418,56 +422,3 @@ function WeeklyTeam(props) {
 
 export default WeeklyTeam
 
-const LeftButton = styled.div`
-  visibility: ${(props) => (props.$show ? 'visible' : 'hidden')};
-  background: url(${left}) no-repeat center center;
-  background-size: 100% 100%;
-  width: 25px;
-  height: 25px;
-  cursor: pointer;
-  @media (max-width: 812px) {
-    width: 15px;
-    height: 15px;
-  }
-  html.dark & {
-    filter: invert(1);
-  }
-`
-
-const Week = styled.span`
-  ${(props) => props.$thisWeek && 'color: #bb2649;'}
-`
-
-const RightButton = styled.div`
-  visibility: ${(props) => (props.$show ? 'visible' : 'hidden')};
-  background: url(${right}) no-repeat center center;
-  background-size: 100% 100%;
-  width: 25px;
-  height: 25px;
-  cursor: pointer;
-  @media (max-width: 812px) {
-    width: 15px;
-    height: 15px;
-  }
-  html.dark & {
-    filter: invert(1);
-  }
-`
-
-const Write = styled.div`
-  background: url(${write}) no-repeat center center;
-  background-size: 100% 100%;
-  width: 20px;
-  height: 20px;
-  position: relative;
-  left: 7px;
-`
-
-const Register = styled.div`
-  background: url(${check}) no-repeat center center;
-  background-size: 100% 100%;
-  width: 20px;
-  height: 20px;
-  position: relative;
-  left: 7px;
-`

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import LetsRecord from './ParentTap/LetsRecord.jsx'
 import RecordEntryPreview from './ParentTap/RecordEntryPreview.jsx'
 import { recordUiTestMode } from '@/config/recordUiTestMode.js'
@@ -8,6 +8,62 @@ import WeeklyTeam from './ParentTap/WeeklyTeam.jsx'
 
 const TapTemplate = (props) => {
   const { test, open, setOpen, tap, setTap, setRegisteredTeam, headerHeight, setSelectedYear, recordRoomLoadingFlag } = props
+  const [transition, setTransition] = useState({ tap, phase: 'idle' })
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  const latestTap = useRef(tap)
+  const displayedTap = transition.tap
+  const phase = transition.phase
+
+  useEffect(() => {
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const updatePreference = () => setReducedMotion(preference.matches)
+    updatePreference()
+    preference.addEventListener('change', updatePreference)
+    return () => preference.removeEventListener('change', updatePreference)
+  }, [])
+
+  useEffect(() => {
+    latestTap.current = tap
+    setTransition((current) => {
+      if (reducedMotion) {
+        return current.tap === tap && current.phase === 'idle' ? current : { tap, phase: 'idle' }
+      }
+      if (tap === current.tap) {
+        return current.phase === 'leaving' ? { tap, phase: 'idle' } : current
+      }
+      // Keep only the latest request; a new selection during entry replaces it immediately.
+      if (current.phase === 'entering') return { tap, phase: 'entering' }
+      return current.phase === 'leaving' ? current : { ...current, phase: 'leaving' }
+    })
+  }, [tap, reducedMotion])
+
+  const finishTransition = useCallback((expectedPhase, expectedTap) => {
+    setTransition((current) => {
+      if (current.phase !== expectedPhase || current.tap !== expectedTap) return current
+      if (current.phase === 'leaving') {
+        const nextTap = latestTap.current
+        return { tap: nextTap, phase: nextTap === current.tap ? 'idle' : 'entering' }
+      }
+      return current.phase === 'entering' ? { ...current, phase: 'idle' } : current
+    })
+  }, [])
+
+  useEffect(() => {
+    if (phase === 'idle') return undefined
+    // Complete even if the browser cancels an animation or the page is backgrounded.
+    const timer = window.setTimeout(() => finishTransition(phase, displayedTap), phase === 'leaving' ? 120 : 200)
+    return () => window.clearTimeout(timer)
+  }, [phase, displayedTap, finishTransition])
+
+  const handleAnimationEnd = (event) => {
+    if (event.target !== event.currentTarget) return
+    if ((phase === 'leaving' && event.animationName === 'parent-tab-leave') ||
+      (phase === 'entering' && event.animationName === 'parent-tab-enter')) {
+      finishTransition(phase, displayedTap)
+    }
+  }
+  const animationClass = phase === 'leaving' ? 'motion-safe:animate-parent-tab-leave'
+    : phase === 'entering' ? 'motion-safe:animate-parent-tab-enter' : ''
   const [startX, setStartX] = useState(null)
   const [moveX, setMoveX] = useState(null)
   const [isLastElementInViewport, setIsLastElementInViewport] = useState(false)
@@ -64,13 +120,20 @@ const TapTemplate = (props) => {
 
   return (
     <div
-      className="w-full h-full"
+      key={displayedTap}
+      className={`relative h-full w-full ${animationClass} ${phase !== 'idle' ? 'pointer-events-none' : ''}`}
+      data-parent-tab={displayedTap}
+      data-transition={phase}
+      aria-busy={phase !== 'idle'}
+      aria-hidden={phase === 'leaving' ? true : undefined}
+      inert={phase !== 'idle' ? '' : undefined}
+      onAnimationEnd={handleAnimationEnd}
       // onTouchStart={handleTouchStart}
       // onTouchMove={handleTouchMove}
       // onTouchEnd={handleTouchEnd}
     >
-      {tap === 0 && recordUiTestMode && <RecordEntryPreview />}
-      {tap === 0 && !recordUiTestMode && (
+      {displayedTap === 0 && recordUiTestMode && <RecordEntryPreview />}
+      {displayedTap === 0 && !recordUiTestMode && (
         <LetsRecord
           headerHeight={headerHeight}
           setOpen={setOpen}
@@ -79,15 +142,15 @@ const TapTemplate = (props) => {
           setRegisteredTeam={setRegisteredTeam}
         />
       )}
-      {tap === 1 && <StatusBoard />}
-      {tap === 2 && (
+      {displayedTap === 1 && <StatusBoard />}
+      {displayedTap === 2 && (
         <RecordRoom
           test={test}
           setSelectedYear={setSelectedYear}
           recordRoomLoadingFlag={recordRoomLoadingFlag}
         />
       )}
-      {tap === 3 && (
+      {displayedTap === 3 && (
         <WeeklyTeam
           test={test}
           setRegisteredTeam={setRegisteredTeam}

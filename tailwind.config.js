@@ -55,6 +55,14 @@ export default {
         custom: '0 0 10px rgba(0, 0, 0, 0.5)',
       },
       keyframes: {
+        'parent-tab-leave': {
+          from: { opacity: '1', top: '0px' },
+          to: { opacity: '0', top: '-4px' },
+        },
+        'parent-tab-enter': {
+          from: { opacity: '0', top: '6px' },
+          to: { opacity: '1', top: '0px' },
+        },
         flipX: {
           '0%': { transform: 'rotateX(0deg)' },
           '100%': { transform: 'rotateX(180deg)' },
@@ -113,6 +121,8 @@ export default {
         },
       },
       animation: {
+        'parent-tab-leave': 'parent-tab-leave 80ms ease-in forwards',
+        'parent-tab-enter': 'parent-tab-enter 160ms ease-out both',
         spinFast: 'spinSlow 0.2s linear infinite',
         spinNormal: 'spinSlow 0.5s linear infinite',
         shineEffect: 'shineEffect 2s infinite',
