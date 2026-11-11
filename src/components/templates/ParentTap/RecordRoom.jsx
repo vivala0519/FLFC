@@ -80,7 +80,7 @@ const RecordRoom = (props) => {
           {tapName.map((name) => (
             <div
               key={name}
-              className={`underline decoration-2 decoration-solid decoration-blue-700 dark:decoration-blue-300 cursor-pointer ${tap === name && 'text-goal dark:text-yellow-400'}`}
+              className={`cursor-pointer ${tap === name && 'text-goal dark:text-yellow-400'}`}
               style={{ width: 'fit-content' }}
               onClick={() => setTapHandler(name)}
             >

@@ -1,3 +1,5 @@
+import { rankCareerEntries } from './rankCareerEntries.js'
+
 const FIRST_RECORD_YEAR = 2021
 const VALID_GOAL_TIME = /^([01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/
 
@@ -169,6 +171,12 @@ export const analyzeCareerGoalDuos = (roundYears, totalMembers, asOfDate, oneCha
     const key = pair.sort((first, second) => first.localeCompare(second, 'ko')).join('\u0000')
     counts.set(key, (counts.get(key) || 0) + 1)
   }
+  const rankings = rankCareerEntries([...counts].map(([pair, count]) => ({
+    name: pair.split('\u0000').join(' - '),
+    players: pair.split('\u0000'),
+    value: count,
+    count: `${count}골`,
+  })))
   const maximum = Math.max(0, ...counts.values())
   const nextCount = Math.max(0, ...[...counts.values()].filter((count) => count < maximum))
   const pairsAt = (value) => value > 0 ? [...counts].filter(([, count]) => count === value)
@@ -181,6 +189,7 @@ export const analyzeCareerGoalDuos = (roundYears, totalMembers, asOfDate, oneCha
     count: maximum,
     additional,
     additionalCount: additional.length > 0 ? nextCount : 0,
+    rankings,
   }
 }
 

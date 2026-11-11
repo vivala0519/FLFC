@@ -29,7 +29,8 @@ const RecordRow = (props) => {
   const [editTeamMode, setEditTeamMode] = useState(false)
   const [teamA, setTeamA] = useState("");
   const [teamB, setTeamB] = useState("");
-  const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 mobile:gap-2 py-1 border-y-2 border-y-blue-400 dark:border-b-blue-400 py-[10px]`
+  // const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 mobile:gap-2 py-1 border-y-2 border-y-blue-400 dark:border-b-blue-400 py-[10px]`
+  const rawStyle = `relative flex items-center justify-between mobile:justify-normal w-[85%] gap-5 mobile:gap-2 py-1 border-y rounded border-y-blue-400 dark:border-b-blue-400 bg-blue-50 dark:bg-gray-800 py-[10px]`
   const recordAreaStyle = 'flex flex-wrap min-w-0 items-center font-dnf-forged gap-x-2 gap-y-1 w-full pl-3 relative top-[1px]'
   const roundTextStyle = 'whitespace-nowrap text-[10px] text-black dark:text-gray-100'
   const winnerDivStyle = 'flex flex-wrap min-w-0 items-center relative bottom-[2px]'

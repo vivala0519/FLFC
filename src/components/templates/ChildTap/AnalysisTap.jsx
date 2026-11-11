@@ -8,6 +8,7 @@ import ReturnBadge from '@/components/atoms/ReturnBadge.jsx'
 import GoalkeeperBadge from '@/components/atoms/GoalkeeperBadge.jsx'
 import ScrollToTopButton from '@/components/atoms/ScrollToTopButton.jsx'
 import BestFiveCard from '@/components/organisms/BestFiveCard.jsx'
+import CareerRankingDialog from '@/components/organisms/CareerRankingDialog.jsx'
 import PlayerRadarChart from '@/components/organisms/PlayerRadarChart.jsx'
 import QuarterlyRecordChart from '@/components/organisms/QuarterlyRecordChart.jsx'
 import DuoRecordList from '@/components/molecules/DuoRecordList.jsx'
@@ -18,6 +19,7 @@ import useRecentForm from '@/hooks/useRecentForm.js'
 import useScoringStreak from '@/hooks/useScoringStreak.js'
 import useBestFive from '@/hooks/useBestFive.js'
 import useAnalysisSeason from '@/hooks/useAnalysisSeason.js'
+import useCareerClickHint from '@/hooks/useCareerClickHint.js'
 import { getQuarterRoundGoals } from '@/apis/roundGoals.js'
 import { createRecordMemberResolver } from '@/apis/recordMembers.js'
 import { analyzeStarterStats } from '@/apis/analyzeStarterStats.js'
@@ -28,6 +30,7 @@ import { analyzeSeasonGoalDuos } from '@/apis/analyzeSeasonGoalDuos.js'
 import { analyzeGoalkeeperRadar, analyzePlayerRadar } from '@/apis/analyzePlayerRadar.js'
 import { analyzeCareerRecords, getCareerAttackStyle } from '@/apis/analyzeCareerRecords.js'
 import { analyzeCareerPointRate } from '@/apis/analyzeCareerPointRate.js'
+import { analyzeCareerRankings } from '@/apis/analyzeCareerRankings.js'
 import { analyzeCleanSheets } from '@/apis/analyzeCleanSheets.js'
 import { analyzePlayerSeasons, analyzeSeasonSpecialists } from '@/apis/analyzePlayerSeasons.js'
 import { analyzeCareerGoalDuos, analyzeCareerPartners } from '@/apis/analyzeCareerPartners.js'
@@ -53,6 +56,7 @@ import careerAssistTopIcon from '@/assets/career-assist-top.png'
 import dailyGoalIcon from '@/assets/daily-goal-record.png'
 import dailyAssistIcon from '@/assets/daily-assist-record.png'
 import dailyCleanSheetIcon from '@/assets/daily-clean-sheet-record.png'
+import dailyAttackPointsIcon from '@/assets/daily-attack-points-record.png'
 import careerMvpTopIcon from '@/assets/career-mvp-top.png'
 import careerAttendanceTopIcon from '@/assets/career-attendance-top.png'
 import consistentFinisherIcon from '@/assets/consistent-finisher.png'
@@ -61,6 +65,9 @@ import careerPointsTopIcon from '@/assets/career-points-top.png'
 import careerPointRateTopIcon from '@/assets/career-point-rate-top.png'
 import careerAttackPointsTopIcon from '@/assets/career-attack-points-top.png'
 import titleCollectionIcon from '@/assets/all-collection.png'
+import titleDoubleIcon from '@/assets/title-double.png'
+import titleTrebleIcon from '@/assets/title-treble.png'
+import titleQuadrupleIcon from '@/assets/title-quadruple.png'
 import seasonAcesIcon from '@/assets/season-ball.png'
 import careerAwardLeadersIcon from '@/assets/career-award-leaders.png'
 import sonKaeDuoIcon from '@/assets/sonkae-hug.png'
@@ -78,6 +85,36 @@ import ChevronRightIcon from '@/assets/lucide/chevron-right.svg?react'
 import './AnalysisTap.css'
 
 const FIRST_RECORD_YEAR = 2021
+const careerRankingKeys = {
+  careerGoalTop: 'goals',
+  careerAssistTop: 'assists',
+  careerAttackPointsTop: 'attackPoints',
+  careerPointsTop: 'points',
+  careerPointRateTop: 'pointRate',
+  goldenGlove: 'cleanSheets',
+  careerAttendanceTop: 'attendance',
+  careerMvpTop: 'mvp',
+  duo: 'duos',
+  streak: 'scoringStreak',
+  playmaker: 'assistStreak',
+  point_king: 'award-point_king',
+  goal_king: 'award-goal_king',
+  assist_king: 'award-assist_king',
+  attendance_king: 'award-attendance_king',
+}
+const careerRankingDescriptions = {
+  // goals: '전체 기간의 누적 골 순위입니다.',
+  // assists: '전체 기간의 누적 어시 순위입니다.',
+  // attackPoints: '전체 기간의 골과 어시를 합산한 순위입니다.',
+  // points: '승점제가 시작된 2026년 이후의 누적 승점 순위입니다.',
+  pointRate: '승점제 도입 2026년부터 70% 이상 출석한 선수 대상',
+  // cleanSheets: '2026년 이후 기록된 라운드의 누적 클린시트 순위입니다.',
+  // attendance: '부분 출석을 포함한 전체 출석 기록의 합계입니다.',
+  // mvp: '전체 기간의 데일리 MVP 수상 횟수입니다.',
+  // duos: '전체 기간에 두 선수가 골과 어시로 합작한 골의 수입니다.',
+  // scoringStreak: '현재 이어지는 연속 출석 득점 횟수입니다. 불참은 유지되며, 출석한 날 골이 없으면 끊깁니다.',
+  // assistStreak: '현재 이어지는 연속 출석 어시 횟수입니다. 불참은 유지되며, 출석한 날 어시가 없으면 끊깁니다.',
+}
 const groupAnalysisRows = (items) => items.reduce((rows, item) => {
   const previousRow = rows[rows.length - 1]
   if (item.layoutGroup && previousRow?.key === item.layoutGroup) {
@@ -107,6 +144,7 @@ const analysisImageIcons = {
   dailyGoal: dailyGoalIcon,
   dailyAssist: dailyAssistIcon,
   dailyCleanSheet: dailyCleanSheetIcon,
+  dailyAttackPoints: dailyAttackPointsIcon,
   careerMvpTop: careerMvpTopIcon,
   careerAttendanceTop: careerAttendanceTopIcon,
   streak: consistentFinisherIcon,
@@ -115,8 +153,15 @@ const analysisImageIcons = {
   careerPointRateTop: careerPointRateTopIcon,
   careerAttackPointsTop: careerAttackPointsTopIcon,
   titleCollection: titleCollectionIcon,
+  double: titleDoubleIcon,
+  treble: titleTrebleIcon,
+  quadruple: titleQuadrupleIcon,
   seasonAces: seasonAcesIcon,
   careerAwardLeaders: careerAwardLeadersIcon,
+  point_king: ballonDor,
+  goal_king: goldenBoot,
+  assist_king: ligueOne,
+  attendance_king: coppaItalia,
   seasonDuo: sonKaeDuoIcon,
   duo: sonKaeDuoIcon,
   handshake: friendlyDuoIcon,
@@ -153,6 +198,16 @@ const AwardIconStack = ({ title, count }) => {
     </span>
   )
 }
+const InlinePlayerRecords = ({ names, count, muted = false }) => (
+  <span className="flex w-full min-w-0 flex-col items-center gap-1">
+    {names.map((name) => (
+      <span key={name} className="inline-flex max-w-full items-baseline justify-center gap-x-0.5 whitespace-nowrap text-[clamp(11px,3.4vw,14px)] tracking-tight">
+        <span className={`font-dnf-forged ${muted ? '' : 'font-semibold text-zinc-700 dark:text-zinc-200'}`}>{name}</span>
+        {count && <span className="tabular-nums">{count}</span>}
+      </span>
+    ))}
+  </span>
+)
 const careerNumberFormatter = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 })
 const formatCareerNumber = (value, unit) => `${careerNumberFormatter.format(value)}${unit}`
 const formatCareerHigh = (high, unit) => high?.season
@@ -203,6 +258,16 @@ const analyzeScoringRecords = (recordsByYear, asOfDate, eligibleMembers) => {
     goals: { field: '골', unit: '골', value: 0, names: new Set() },
     assists: { field: '어시', unit: '어시', value: 0, names: new Set() },
   }
+  const attackPointMaximum = { unit: '점', value: 0, names: new Set() }
+  const updateMaximum = (maximum, name, value) => {
+    if (!Number.isFinite(value) || value <= 0) return
+    if (value > maximum.value) {
+      maximum.value = value
+      maximum.names = new Set([name])
+    } else if (value === maximum.value) {
+      maximum.names.add(name)
+    }
+  }
 
   for (const [year, records] of Object.entries(recordsByYear || {})) {
     if (!/^\d{4}$/.test(year) || !Array.isArray(records)) continue
@@ -222,6 +287,11 @@ const analyzeScoringRecords = (recordsByYear, asOfDate, eligibleMembers) => {
         if (Number.isFinite(points) && points > 0) {
           pointTotals.set(name, (pointTotals.get(name) || 0) + points)
         }
+        const attackPoints = ['골', '어시'].reduce((sum, field) => {
+          const value = Number(stats?.[field])
+          return sum + (Number.isFinite(value) && value > 0 ? value : 0)
+        }, 0)
+        updateMaximum(attackPointMaximum, name, attackPoints)
         const attendance = Number(stats?.['출석'])
         if (Number.isFinite(attendance) && attendance > 0) {
           attendanceTotals.set(name, (attendanceTotals.get(name) || 0) + attendance)
@@ -235,18 +305,15 @@ const analyzeScoringRecords = (recordsByYear, asOfDate, eligibleMembers) => {
           const playerTotals = totals.get(name) || { 골: 0, 어시: 0 }
           playerTotals[maximum.field] += value
           totals.set(name, playerTotals)
-          if (value > maximum.value) {
-            maximum.value = value
-            maximum.names = new Set([name])
-          } else if (value === maximum.value) {
-            maximum.names.add(name)
-          }
+          updateMaximum(maximum, name, value)
         }
       }
     }
   }
 
-  const daily = Object.fromEntries(Object.entries(maxima).map(([key, maximum]) => [key, {
+  const daily = Object.fromEntries(Object.entries({
+    ...maxima, attackPoints: attackPointMaximum,
+  }).map(([key, maximum]) => [key, {
     name: [...maximum.names].sort((a, b) => a.localeCompare(b, 'ko')),
     count: maximum.value > 0 ? `${careerNumberFormatter.format(maximum.value)}${maximum.unit}` : '',
   }]))
@@ -348,7 +415,7 @@ const AnalysisIcon = ({ name }) => analysisImageIcons[name] ? (
 )
 
 const AnalysisSectionHeading = ({ id, controls, title, subtitle, expanded, onToggle, focused = false }) => (
-  <div className={`sticky top-0 z-20 w-full bg-blue-50 dark:bg-gray-900 ${expanded ? 'border-b border-gray-200 dark:border-gray-700' : ''}`}>
+  <div className="analysis-section-heading sticky top-0 z-20 w-full">
     <h2 id={id} className="w-full">
       <button
         type="button"
@@ -356,16 +423,15 @@ const AnalysisSectionHeading = ({ id, controls, title, subtitle, expanded, onTog
         aria-controls={controls}
         title={focused ? '목록으로 돌아가기' : undefined}
         onClick={onToggle}
-        className="relative flex h-[var(--analysis-section-heading-height)] w-full items-center justify-center rounded-none border-0 bg-transparent px-10 py-3 text-center font-dnf-forged focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-700 dark:focus-visible:outline-blue-300"
+        className="analysis-section-toggle relative flex h-[var(--analysis-section-heading-height)] w-full items-center justify-center px-12 py-3 text-center font-dnf-forged"
       >
-        <span className="flex flex-col items-center">
-          <span>{title}</span>
+        <span className="flex flex-col items-center gap-0.5">
+          <span className="text-base font-semibold">{title}</span>
           {subtitle && <span className="text-xs font-normal text-gray-500 dark:text-gray-400">{subtitle}</span>}
         </span>
-        <ChevronRightIcon
-          aria-hidden="true"
-          className={`absolute h-4 w-4 text-gray-500 transition-transform motion-reduce:transition-none dark:text-gray-400 ${focused ? 'left-3 rotate-180' : `right-3 ${expanded ? 'rotate-90' : ''}`}`}
-        />
+        <span aria-hidden="true" className={`analysis-section-toggle__chevron absolute flex h-7 w-7 items-center justify-center rounded-full ${focused ? 'left-4' : 'right-4'}`}>
+          <ChevronRightIcon className={`h-4 w-4 transition-transform motion-reduce:transition-none ${focused ? 'rotate-180' : expanded ? 'rotate-90' : ''}`} />
+        </span>
       </button>
     </h2>
   </div>
@@ -396,6 +462,22 @@ const bestFiveRoles = [
 
 const AnalysisTap = (props) => {
   const { test } = props
+  const { showHint: showCareerClickHint, recordClick: recordCareerCardClick } = useCareerClickHint()
+  const [keyboardNavigation, setKeyboardNavigation] = useState(false)
+  useEffect(() => {
+    const onPointerDown = () => setKeyboardNavigation(false)
+    const onKeyDown = (event) => {
+      if (['Tab', 'Enter', ' ', 'Escape', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageUp', 'PageDown'].includes(event.key)) {
+        setKeyboardNavigation(true)
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    document.addEventListener('keydown', onKeyDown, true)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown, true)
+      document.removeEventListener('keydown', onKeyDown, true)
+    }
+  }, [])
   const { existingMembers: listedExistingMembers, retiredMembers, totalMembers, oneCharacterMembers, membersNickName } = getMembers()
   const existingMembers = useMemo(() => {
     const retired = new Set(retiredMembers)
@@ -420,6 +502,13 @@ const AnalysisTap = (props) => {
   const playerDetailDialogRef = useRef(null)
   const playerSeasonDialogRef = useRef(null)
   const seasonSpecialistDialogRef = useRef(null)
+  const careerRankingDialogRef = useRef(null)
+  const [selectedCareerRanking, setSelectedCareerRanking] = useState(null)
+  useEffect(() => {
+    if (selectedCareerRanking && !careerRankingDialogRef.current?.open) {
+      careerRankingDialogRef.current?.showModal()
+    }
+  }, [selectedCareerRanking])
   const asOfDate = test ? '2024-12-31' : cacheDay
   const analysisSeason = useAnalysisSeason(calendarYear, test ? 12 : currentMonth, cacheDay)
   const { year: thisYear, month: thisMonth, quarter, yearRoundData, availableWeeks } = analysisSeason
@@ -447,6 +536,7 @@ const AnalysisTap = (props) => {
   )
   const dailyGoalRecord = { ...dailyMaximums.goals, status: scoringStreakResult.status }
   const dailyAssistRecord = { ...dailyMaximums.assists, status: scoringStreakResult.status }
+  const dailyAttackPointRecord = { ...dailyMaximums.attackPoints, status: scoringStreakResult.status }
   const bestFive = useBestFive(thisYear, thisMonth, cacheDay, analysisSeason.records, {
     yearRoundData, roundStatus: analysisSeason.status, weeklyTeams: totalWeeklyTeamData,
     members: totalMembers, oneCharacterMembers, nicknames: membersNickName, asOfDate, eligibleMembers,
@@ -889,11 +979,26 @@ const AnalysisTap = (props) => {
         : careerRoundStatus === 'ready' && careerRoundRoots ? 'ready' : 'loading',
     }
   }, [careerRoundRoots, totalMembers, asOfDate, oneCharacterMembers, careerRoundStatus, roundLoadError, eligibleMembers])
+  const careerRankings = useMemo(() => analyzeCareerRankings({
+    recordsByYear, members: existingMembers, asOfDate,
+    mvpNames: allTimeMVP, cleanSheetTotals: careerCleanSheets?.totals,
+  }), [recordsByYear, existingMembers, asOfDate, allTimeMVP, careerCleanSheets])
+  const selectedRankingKey = selectedCareerRanking?.key
+  const selectedAwardRanking = careerAwardLeaders.find(({ key }) => selectedRankingKey === `award-${key}`)
+  const selectedRankingEntries = selectedRankingKey === 'pointRate' ? careerPointRate.rankings
+    : selectedRankingKey === 'duos' ? careerDuo.rankings
+      : selectedAwardRanking ? selectedAwardRanking.rankings : careerRankings[selectedRankingKey] || []
+  const selectedRankingStatus = selectedAwardRanking
+    ? careerAwardHistory.status === 'idle' ? 'loading' : careerAwardHistory.status
+    : selectedRankingKey === 'cleanSheets' ? careerCleanSheetStatus
+      : selectedRankingKey === 'duos' ? careerDuo.status
+        : selectedRankingKey === 'mvp' ? mvpStatus : scoringStreakResult.status
   const careerSeasonSpecialists = useMemo(() =>
     analyzeSeasonSpecialists(recordsByYear, existingMembers, asOfDate),
   [recordsByYear, existingMembers, asOfDate])
   const careerCumulativeItems = [
     {
+      layoutGroup: 'career-attack',
       type: 'career-total',
       icon: 'careerGoalTop',
       title: '골',
@@ -901,6 +1006,7 @@ const AnalysisTap = (props) => {
       data: { ...dailyMaximums.totalGoals, status: scoringStreakResult.status },
     },
     {
+      layoutGroup: 'career-attack',
       type: 'career-total',
       icon: 'careerAssistTop',
       title: '어시',
@@ -908,29 +1014,14 @@ const AnalysisTap = (props) => {
       data: { ...dailyMaximums.totalAssists, status: scoringStreakResult.status },
     },
     {
+      layoutGroup: 'career-attack',
       type: 'career-total',
       icon: 'careerAttackPointsTop',
       title: '공격포인트',
       data: { ...dailyMaximums.totalAttackPoints, status: scoringStreakResult.status },
     },
     {
-      type: 'career-total',
-      icon: 'careerPointsTop',
-      title: '승점',
-      data: { ...dailyMaximums.totalPoints, status: scoringStreakResult.status },
-    },
-    {
-      type: 'career-point-rate',
-      icon: 'careerPointRateTop',
-      title: '승점생산률',
-      description: '70% 이상 출석한 플레이어 중',
-      data: {
-        ...careerPointRate,
-        count: careerPointRate.pointRate === null ? '' : `${careerPointRate.pointRate.toFixed(2)}점`,
-        status: scoringStreakResult.status,
-      },
-    },
-    {
+      layoutGroup: 'career-participation',
       type: 'career-clean-sheet',
       icon: 'goldenGlove',
       title: '클린시트',
@@ -940,27 +1031,58 @@ const AnalysisTap = (props) => {
       },
     },
     {
+      layoutGroup: 'career-participation',
       type: 'career-total',
       icon: 'careerAttendanceTop',
       title: '출석',
       data: { ...dailyMaximums.totalAttendance, status: scoringStreakResult.status },
     },
     {
+      layoutGroup: 'career-participation',
       type: 'career-mvp',
       icon: 'careerMvpTop',
       title: 'MVP',
       // description: '통산 데일리 MVP 최다 플레이어',
       data: careerMostMVP,
     },
+    {
+      layoutGroup: 'career-points',
+      type: 'career-total',
+      icon: 'careerPointsTop',
+      title: '승점',
+      data: { ...dailyMaximums.totalPoints, status: scoringStreakResult.status },
+    },
+    {
+      layoutGroup: 'career-points',
+      type: 'career-point-rate',
+      icon: 'careerPointRateTop',
+      title: '승점생산률',
+      description: '70% 이상 출석한 플레이어 중',
+      data: {
+        ...careerPointRate,
+        count: careerPointRate.pointRate === null ? '' : `${careerPointRate.pointRate.toFixed(2)}점`,
+        additionalCount: careerPointRate.additionalPointRate === null ? '' : `${careerPointRate.additionalPointRate.toFixed(2)}점`,
+        status: scoringStreakResult.status,
+      },
+    },
   ]
   const careerDailyItems = [
-    ...analysisItems.filter(({ type }) => type === 'daily-record'),
+    ...analysisItems.filter(({ type }) => type === 'daily-record')
+      .map((item) => ({ ...item, layoutGroup: 'career-daily' })),
     {
+      layoutGroup: 'career-daily-impact',
+      type: 'daily-record',
+      icon: 'dailyAttackPoints',
+      title: '공격포인트',
+      data: dailyAttackPointRecord,
+    },
+    {
+      layoutGroup: 'career-daily-impact',
       type: 'career-clean-sheet',
       icon: 'dailyCleanSheet',
       title: '클린시트',
       data: {
-        ...rankCareerCounts(careerCleanSheets?.dailyHigh || new Map(), '회', true, Infinity, eligibleMembers),
+        ...rankCareerCounts(careerCleanSheets?.dailyHigh || new Map(), '회', false, Infinity, eligibleMembers),
         status: careerCleanSheetStatus,
       },
     },
@@ -985,7 +1107,7 @@ const AnalysisTap = (props) => {
     {
       type: 'career-award-leaders',
       icon: 'careerAwardLeaders',
-      title: '부문별 최다 수상자',
+      title: '부문별 최다',
       data: {
         awards: careerAwardLeaders,
         status: careerAwardHistory.status === 'idle' ? 'loading' : careerAwardHistory.status,
@@ -1539,7 +1661,14 @@ const AnalysisTap = (props) => {
     mercenaryBring === null ||
     integratedData === null
 
-  const renderAnalysisItem = ({ type, isNew, icon, title, titleNote, description, data, compact = false }) => {
+  const renderAnalysisItem = ({ type, isNew, icon, title, titleNote, description, data, compact = false, career = false, clickHint = false }) => {
+    const rankingKey = career ? careerRankingKeys[icon] : null
+    const openRanking = () => {
+      recordCareerCardClick()
+      setSelectedCareerRanking({ key: rankingKey, title })
+    }
+    const inlineRecords = compact && type !== 'career-award' && (type === 'daily-record' || type?.startsWith('career-'))
+    const descriptionBelowTitle = !compact || type === 'starter' || type === 'career-point-rate'
     const groupedItems = type === 'career-season-aces' ? data.seasons : data.awards
     const players = data.name?.filter(Boolean) ?? []
     const almostPlayers = data.additional?.filter(Boolean) ?? []
@@ -1547,12 +1676,39 @@ const AnalysisTap = (props) => {
     const separateTiedPlayers = players.length > 1 && !isChasingDuo && type !== 'low-scoring-duo' && icon !== 'trio'
     const isAttendanceStreak = type === 'scoring-streak' || type === 'assist-streak'
     const isCleanSheet = type === 'clean-sheet' || type === 'career-clean-sheet'
-    const hasChaserCount = isChasingDuo || isAttendanceStreak || isCleanSheet || type === 'career-total' || type === 'career-mvp'
+    const hasChaserCount = isChasingDuo || isAttendanceStreak || isCleanSheet || type === 'career-total' || type === 'career-mvp' || type === 'career-point-rate' || type === 'career-award'
     const trendPlayers = type === 'recent-fall' ? recentForm.decliners : recentForm.leaders
 
     return (
-      <div key={title} className={compact ? 'min-w-0 px-1 py-4' : 'py-5 first:pt-0'}>
+      <div
+        key={title}
+        className={rankingKey
+          ? `analysis-career-card relative min-w-0 cursor-pointer rounded-lg border border-gray-200 bg-white hover:border-blue-400 hover:shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-blue-400 dark:focus-visible:outline-blue-300 ${compact ? 'px-0.5 py-4' : 'px-4 py-5'}`
+          : `${compact ? 'min-w-0 px-1 py-4' : 'py-5 first:pt-0'} ${career ? 'border-t border-gray-200 dark:border-gray-700' : ''}`}
+        role={rankingKey ? 'button' : undefined}
+        tabIndex={rankingKey ? 0 : undefined}
+        aria-label={rankingKey ? `${title} 통산 TOP 10 보기` : undefined}
+        aria-haspopup={rankingKey ? 'dialog' : undefined}
+        aria-controls={rankingKey ? 'career-ranking-dialog' : undefined}
+        onClick={rankingKey ? openRanking : undefined}
+        onKeyDown={rankingKey ? (event) => {
+          if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault()
+            openRanking()
+          }
+        } : undefined}
+      >
         <dt className={compact ? 'flex flex-col items-center justify-center gap-1 font-bold' : 'flex flex-wrap items-center justify-center gap-2 font-bold'}>
+          {rankingKey && clickHint && showCareerClickHint && (
+            <span aria-hidden="true" className="analysis-card-click-hint">
+              <span className="analysis-card-click-glow">
+                <i className="analysis-card-click-ring" />
+                <i className="analysis-card-click-ring" />
+                <i className="analysis-card-click-ring" />
+              </span>
+              <span className="analysis-card-click-label font-sans font-bold italic">클릭!</span>
+            </span>
+          )}
           <AnalysisIcon name={icon} />
           <span className={compact ? 'relative flex min-h-10 w-full items-center justify-center break-keep leading-5 font-dnf-forged [overflow-wrap:anywhere]' : 'relative inline-block font-dnf-forged text-[20px]'}>
             {title}
@@ -1568,7 +1724,7 @@ const AnalysisTap = (props) => {
               aria-controls="best-five-method-dialog"
               onClick={() => bestFiveDialogRef.current?.showModal()}
             >
-              자세히 보기
+              자세히
             </button>
           )}
           {(type === 'recent-form' || type === 'recent-fall') && (
@@ -1580,7 +1736,7 @@ const AnalysisTap = (props) => {
               aria-controls="recent-form-method-dialog"
               onClick={() => recentFormDialogRef.current?.showModal()}
             >
-              자세히 보기
+              자세히
             </button>
           )}
           {type === 'career-season-aces' && (
@@ -1592,11 +1748,11 @@ const AnalysisTap = (props) => {
               aria-controls="season-specialist-method-dialog"
               onClick={() => seasonSpecialistDialogRef.current?.showModal()}
             >
-              자세히 보기
+              자세히
             </button>
           )}
         </dt>
-        {description && (!compact || type === 'starter') && (
+        {description && descriptionBelowTitle && (
           <dd className={`${type !== 'starter' && 'mt-1'} text-gray-500 dark:text-gray-400 ${compact ? 'break-keep text-[11px] leading-relaxed' : 'text-[12px]'}`}>{description}</dd>
         )}
         {type === 'best-five' ? (
@@ -1657,16 +1813,33 @@ const AnalysisTap = (props) => {
               )}
             </dd>
           </>
-        ) : type === 'career-season-aces' || type === 'career-award-leaders' || type === 'career-title-collection' ? (
+        ) : type === 'career-award-leaders' ? (
+          <dd className="mt-4" aria-live="polite">
+            <dl className="grid grid-cols-4 gap-2">
+              {data.awards.map((group) => renderAnalysisItem({
+                type: 'career-award',
+                icon: group.key,
+                title: group.label,
+                compact: true,
+                career: true,
+                data: {
+                  status: data.status,
+                  name: group.winners.map(({ name }) => name),
+                  count: group.winners.length > 0 ? `${group.winners[0].count}회` : '',
+                  additional: group.chasers.map(({ name }) => name),
+                  additionalCount: group.chasers.length > 0 ? `${group.chasers[0].count}회` : '',
+                },
+              }))}
+            </dl>
+          </dd>
+        ) : type === 'career-season-aces' || type === 'career-title-collection' ? (
           <dd className="mt-4" aria-live="polite">
             <div className={`grid gap-2 ${type === 'career-title-collection' ? 'grid-cols-3' : 'grid-cols-4'}`}>
               {groupedItems.map((group) => (
                 <section key={group.key} className="min-w-0 text-center" aria-labelledby={`${type}-${group.key}`}>
-                  <h3 id={`${type}-${group.key}`} className={`mb-3 flex items-center justify-center gap-1 text-sm font-semibold font-dnf-forged ${type === 'career-award-leaders' ? 'flex-col' : ''}`}>
-                    {type === 'career-season-aces' ? <AnalysisIcon name={group.key} /> : type === 'career-award-leaders' ? (
-                      <img src={careerAwardIcons[group.label]} alt="" className="h-7 w-7 shrink-0 object-contain" />
-                    ) : null}
-                    <span className={type === 'career-award-leaders' ? 'text-xs' : undefined}>{group.label}</span>
+                  <h3 id={`${type}-${group.key}`} className={`mb-3 flex items-center justify-center gap-1 text-sm font-semibold font-dnf-forged ${type === 'career-title-collection' ? 'flex-col' : ''}`}>
+                    <AnalysisIcon name={group.key} />
+                    <span>{group.label}</span>
                   </h3>
                   {group.winners.length > 0 ? (
                     <>
@@ -1689,11 +1862,6 @@ const AnalysisTap = (props) => {
                           </li>
                         ))}
                       </ul>
-                      {type === 'career-award-leaders' && (
-                        <span className="mt-1.5 block text-xs tabular-nums text-gray-500 dark:text-gray-400">
-                          {`${group.winners[0].count}회`}
-                        </span>
-                      )}
                     </>
                   ) : (
                     <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged">-</span>
@@ -1721,6 +1889,11 @@ const AnalysisTap = (props) => {
         ) : (
           <>
             <dd className={compact ? 'mt-2 flex min-w-0 flex-col items-center gap-1' : 'mx-auto mt-2 flex w-[90%] flex-wrap items-baseline justify-center gap-x-2 gap-y-1'}>
+              {inlineRecords ? (
+                players.length > 0 ? <InlinePlayerRecords names={players} count={data.count} />
+                  : <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-200">기록 없음</span>
+              ) : (
+              <>
               <span className={`min-w-0 break-words font-semibold text-zinc-700 dark:text-zinc-200 font-dnf-forged ${compact ? 'w-full text-sm' : ''} ${separateTiedPlayers ? compact ? 'flex flex-col items-center gap-2' : 'inline-flex max-w-full flex-wrap items-baseline justify-center gap-x-3 gap-y-2' : ''}`}>
                 {players.length > 0
                   ? separateTiedPlayers
@@ -1742,6 +1915,8 @@ const AnalysisTap = (props) => {
                   <span className="text-sm tabular-nums">{data.count}</span>
                 </span>
               )}
+              </>
+              )}
             </dd>
             {almostPlayers.length > 0 && (
               <dd className={`mt-2 flex flex-wrap justify-center gap-1 text-gray-500 dark:text-gray-400 animate-bounceUpDown ${compact ? 'text-xs' : 'text-sm'}`}>
@@ -1749,6 +1924,10 @@ const AnalysisTap = (props) => {
                   {isChasingDuo ? '추격 듀오' : hasChaserCount ? '추격자' : '달성 임박'}
                 </p>
                 <div className={compact ? 'flex min-w-0 w-full flex-col items-center gap-1' : 'flex flex-wrap justify-center gap-1'}>
+                  {inlineRecords ? (
+                    <InlinePlayerRecords names={almostPlayers} count={hasChaserCount ? data.additionalCount : undefined} muted />
+                  ) : (
+                  <>
                   <span className="min-w-0 break-words">
                     {compact
                       ? almostPlayers.map((name) => <span key={name} className="block">{name}</span>)
@@ -1758,6 +1937,8 @@ const AnalysisTap = (props) => {
                   <span>
                     {hasChaserCount && data.additionalCount && `${data.additionalCount}`}
                   </span>
+                  </>
+                  )}
                 </div>
               </dd>
             )}
@@ -1773,23 +1954,28 @@ const AnalysisTap = (props) => {
             )}
           </>
         )}
-        {compact && type !== 'starter' && description && <dd className="mt-2 break-keep text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">{description}</dd>}
+        {description && !descriptionBelowTitle && <dd className="mt-2 break-keep text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">{description}</dd>}
       </div>
     )
   }
 
-  const renderAnalysisRows = (rows) => (
-    <div className="divide-y divide-gray-200 dark:divide-gray-700">
-      {rows.map((row) => (
-        <dl key={row.key} className={row.items.length > 1 ? `grid gap-x-2 ${row.items.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}` : 'py-5 first:pt-0 [&>div]:py-0'}>
-          {row.items.map((item) => renderAnalysisItem({ ...item, compact: row.items.length > 1 }))}
+  const renderAnalysisRows = (rows, career = false) => (
+    <div className={career ? 'space-y-2' : 'divide-y divide-gray-200 dark:divide-gray-700'}>
+      {rows.map((row, rowIndex) => (
+        <dl key={row.key} className={career
+          ? `grid gap-2 ${row.items.length === 1 ? 'grid-cols-1' : row.items.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`
+          : row.items.length > 1 ? `grid gap-x-2 ${row.items.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}` : 'py-5 first:pt-0 [&>div]:py-0'}>
+          {row.items.map((item, itemIndex) => renderAnalysisItem({ ...item, compact: row.items.length > 1, career, clickHint: career && rowIndex === 0 && itemIndex === 0 }))}
         </dl>
       ))}
     </div>
   )
 
   return (
-    <div className="mx-auto flex w-full min-w-0 max-w-3xl flex-col px-2 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] text-center">
+    <div
+      className="analysis-tab mx-auto flex w-full min-w-0 max-w-3xl flex-col px-2 pb-[calc(6rem+env(safe-area-inset-bottom,0px))] text-center"
+      data-keyboard-navigation={keyboardNavigation}
+    >
       <>
         <div ref={analysisToolbarRef} className="flex min-h-10 items-center justify-end gap-3 py-2">
           {analysisView !== 'overview' && (
@@ -1814,430 +2000,451 @@ const AnalysisTap = (props) => {
         </div>
         <div
           ref={analysisStageRef}
-          className="analysis-section-stage border-y border-gray-200 dark:border-gray-700"
+          className="analysis-section-stage"
           data-phase={analysisTransition}
           aria-busy={analysisTransition !== 'idle'}
           onAnimationEnd={handleAnalysisAnimationEnd}
         >
-        <section
-          className={showIndividual ? 'pb-4' : ''}
-          hidden={!isSectionVisible('individual')}
-          aria-labelledby="analysis-individual-title"
-        >
-          <AnalysisSectionHeading
-            id="analysis-individual-title"
-            controls="individual-analysis"
-            title="개인별 기록"
-            expanded={showIndividual}
-            focused={analysisView === 'individual'}
-            onToggle={() => selectAnalysisSection('individual')}
-          />
-          <div id="individual-analysis" hidden={!showIndividual}>
-            <div className="mt-3 grid grid-cols-4 items-center gap-x-1 gap-y-2">
-              {activePlayers.length > 0 ? (
-                activePlayers.map((player) => (
-                  <button
-                    type="button"
-                    key={player}
-                    className="min-w-0 bg-transparent px-0 py-1 text-zinc-700 dark:text-zinc-200 sm:px-2"
-                    aria-label={player}
-                    title={returningPlayers.has(player) ? '복귀 회원' : newPlayers.has(player) ? '신규 회원' : undefined}
-                    aria-haspopup="dialog"
-                    aria-controls="player-detail-dialog"
-                    onClick={() => playerDetailHandler(player)}
-                  >
-                    <span className="relative inline-block max-w-full align-middle">
-                      {returningPlayers.has(player) ? <ReturnBadge className="-left-1 -top-2" />
-                        : newPlayers.has(player) && <NewBadge className="-left-1 -top-2" label="신규 회원" />}
-                      <span className="block truncate">{player}</span>
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <p className="col-span-full text-sm text-gray-500 dark:text-gray-400">등록된 플레이어가 없습니다.</p>
-              )}
-            </div>
-          </div>
-        </section>
-        <dialog
-          ref={playerDetailDialogRef}
-          id="player-detail-dialog"
-          aria-labelledby="player-detail-title"
-          onClick={closeDialogOnBackdropClick}
-          onClose={() => {
-            playerSeasonDialogRef.current?.close()
-            setSelectedPlayerName(null)
-          }}
-          className="m-auto max-h-[85vh] w-[min(92vw,36rem)] overflow-hidden rounded-xl border border-gray-200 bg-white p-0 text-center text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        >
-          {playerDetail && (
-            <div className="flex max-h-[85vh] flex-col">
-              <div className="relative flex shrink-0 items-center justify-center gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-500">
-                <div className="min-w-0 px-8">
-                  <h3
-                    id="player-detail-title"
-                    className="flex flex-wrap items-center justify-center gap-2 break-words text-lg font-bold font-dnf-forged text-zinc-700 dark:text-zinc-200"
-                  >
-                    <span>{playerDetail.name}</span>
-                    <GoalkeeperBadge memberInfo={selectedMemberInfo} imageSrc={goalkeeperGloves} />
-                    {selectedMemberInfo?.injured === true && (
-                      <span className="shrink-0 rounded border border-red-200 bg-red-50 px-2 py-0.5 font-sans text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-900/40 dark:text-red-300">
-                        부상중
+          <section className={showIndividual ? 'pb-4' : ''} hidden={!isSectionVisible('individual')} aria-labelledby="analysis-individual-title">
+            <AnalysisSectionHeading
+              id="analysis-individual-title"
+              controls="individual-analysis"
+              title="개인별 기록"
+              expanded={showIndividual}
+              focused={analysisView === 'individual'}
+              onToggle={() => selectAnalysisSection('individual')}
+            />
+            <div id="individual-analysis" hidden={!showIndividual}>
+              <div className="mt-3 grid grid-cols-4 items-center gap-x-1 gap-y-2">
+                {activePlayers.length > 0 ? (
+                  activePlayers.map((player) => (
+                    <button
+                      type="button"
+                      key={player}
+                      className="min-w-0 bg-transparent px-0 py-1 text-zinc-700 dark:text-zinc-200 sm:px-2"
+                      aria-label={player}
+                      title={returningPlayers.has(player) ? '복귀 회원' : newPlayers.has(player) ? '신규 회원' : undefined}
+                      aria-haspopup="dialog"
+                      aria-controls="player-detail-dialog"
+                      onClick={() => playerDetailHandler(player)}
+                    >
+                      <span className="relative inline-block max-w-full align-middle">
+                        {returningPlayers.has(player) ? (
+                          <ReturnBadge className="-left-1 -top-2" />
+                        ) : (
+                          newPlayers.has(player) && <NewBadge className="-left-1 -top-2" label="신규 회원" />
+                        )}
+                        <span className="block truncate">{player}</span>
                       </span>
-                    )}
-                  </h3>
-                  <div className="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
-                    <span>{preferredFootLabel}</span>
-                    {startDateLabel && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <span className="whitespace-nowrap">
-                          <span className="sr-only">가입일 </span>
-                          <time dateTime={startDate} title="가입일">
-                            {startDateLabel}
-                          </time>
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <form method="dialog" className="absolute right-3 top-3">
-                  <button type="submit" className="rounded px-2 py-1 text-xl">
-                    X
-                  </button>
-                </form>
-              </div>
-              <div className="player-detail-scroll min-h-0 px-7 pb-5">
-                <div className="mt-4">
-                  <h4 className="sticky top-0 z-10 -mx-7 mb-3 border-b border-gray-100 bg-white px-7 py-2 font-semibold font-dnf-forged dark:border-gray-700 dark:bg-gray-900">
-                    이번 시즌
-                    <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
-                      {thisYear}년 {quarter}분기
-                    </span>
-                  </h4>
-                  {bestFive.status === 'ready' && (!isGoalkeeper || seasonCleanSheetStatus === 'ready') ? (
-                    hasQuarterRecord ? (
-                      <PlayerRadarChart name={playerDetail.name} comparison={isGoalkeeper ? goalkeeperComparison : playerComparison} />
-                    ) : (
-                      <p className="flex items-center justify-center mt-6 h-40 text-sm text-center text-gray-500 dark:text-gray-400">
-                        이번 시즌 기록이 없습니다
-                      </p>
-                    )
-                  ) : (
-                    <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">
-                      {bestFive.status === 'error' || (isGoalkeeper && seasonCleanSheetStatus === 'error')
-                        ? '비교 기록을 불러오지 못했습니다.'
-                        : '비교 기록을 불러오는 중입니다.'}
-                    </p>
-                  )}
-                  <hr className="my-5 border-gray-100 dark:border-gray-700" />
-                  {bestFive.status === 'ready' && hasQuarterRecord && (
-                    <dl className="space-y-2 text-sm">
-                      {[
-                        ...(isGoalkeeper
-                          ? [
-                              [
-                                '클린시트',
-                                formatCleanSheetRecord(seasonCleanSheetStatus, formatCareerNumber(seasonCleanSheetCounts.get(playerName) || 0, '회')),
-                              ],
-                              [
-                                '최다 실점 상대',
-                                formatCleanSheetRecord(
-                                  seasonCleanSheetStatus,
-                                  formatMostConceded(seasonCleanSheets?.concededSeasons.get(`${thisYear}-${quarter}`)?.get(playerName), eligibleMembers),
-                                ),
-                              ],
-                            ]
-                          : []),
-                        ['골', formatCareerNumber(quarterPlayerStats.goals, '골')],
-                        ['어시', formatCareerNumber(quarterPlayerStats.assists, '어시')],
-                        ['MVP', `${playerDetail.mvp}회`],
-                        [
-                          '최다 골 합작',
-                          playerDetail.combi.length > 0 ? `${playerDetail.combi.join(', ')} · ${playerDetail.combiCount}골` : '기록 없음',
-                        ],
-                        [
-                          '최다 같은 팀',
-                          playerDetail.mostPartner.length > 0
-                            ? `${playerDetail.mostPartner.join(', ')} · ${playerDetail.mostPartnerCount}회`
-                            : '기록 없음',
-                        ],
-                        ['스타일', playerDetail.style.length > 0 ? playerDetail.style.map((style) => `#${style}`).join(' ') : '기록 없음'],
-                      ].map(([label, value]) => (
-                        <Fragment key={label}>
-                          <div className={`grid items-center ${label === '스타일' ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-4'}`}>
-                            {label !== '스타일' && <dt className="text-gray-500 dark:text-gray-400">{label}</dt>}
-                            <dd className="min-w-0 break-words">
-                              {label === '스타일' && playerDetail.style.length > 0 ? (
-                                <span className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
-                                  {playerDetail.style.map((style) => (
-                                    <span key={style} className="whitespace-nowrap">
-                                      #{style}
-                                    </span>
-                                  ))}
-                                </span>
-                              ) : (
-                                value
-                              )}
-                            </dd>
-                          </div>
-                          <hr className="border-gray-100 dark:border-gray-700" />
-                        </Fragment>
-                      ))}
-                    </dl>
-                  )}
-                </div>
-                <hr className="my-5 border-gray-700 dark:border-gray-200" />
-                <section aria-labelledby="career-record-title">
-                  {careerRecord ? (
-                    <>
-                      <div>
-                        <h4
-                          id="career-record-title"
-                          className="sticky top-0 z-10 -mx-7 mb-4 flex flex-wrap items-center justify-center gap-2 border-b border-gray-100 bg-white px-7 py-2 font-semibold font-dnf-forged dark:border-gray-700 dark:bg-gray-900"
-                        >
-                          <span>통산 기록</span>
-                        </h4>
-                        <dl className="space-y-2 text-sm">
-                          {careerTotalRows.map(([label, value]) => (
-                            <Fragment key={label}>
-                              <div className="grid grid-cols-2 items-center gap-4">
-                                <dt className="text-gray-500 dark:text-gray-400">{label}</dt>
-                                <dd className="min-w-0 break-words">{value}</dd>
-                              </div>
-                              <hr className="border-gray-100 dark:border-gray-700" />
-                            </Fragment>
-                          ))}
-                          <div className="grid grid-cols-2 items-center gap-4">
-                            <dt className="text-gray-500 dark:text-gray-400">최다 골 합작</dt>
-                            <dd className="min-w-0 break-words" role={careerRoundStatus === 'loading' ? 'status' : undefined}>
-                              {careerGoalPartner}
-                            </dd>
-                          </div>
-                          <hr className="border-gray-100 dark:border-gray-700" />
-                          {(careerAwardHistory.status !== 'ready' || careerAwards.length > 0) && (
-                            <>
-                              <div className="grid grid-cols-2 items-center gap-4">
-                                <dt className="text-gray-500 dark:text-gray-400">개인 수상</dt>
-                                <dd className="min-w-0 break-words" role={careerAwardHistory.status === 'idle' ? 'status' : undefined}>
-                                  {careerAwardHistory.status === 'error' ? (
-                                    '수상 기록을 불러오지 못했습니다.'
-                                  ) : careerAwardHistory.status === 'idle' ? (
-                                    '수상 기록을 불러오는 중입니다.'
-                                  ) : (
-                                    <ul className="flex flex-col items-center gap-1">
-                                      {careerAwards.map((award) => {
-                                        const [title, count] = award.split('x')
-                                        return (
-                                          <li key={award} className="relative flex items-center justify-center gap-1 whitespace-nowrap">
-                                            <AwardIconStack title={title} count={count} />
-                                            <span>
-                                              {title}
-                                              <span className="ml-0.5 text-[10px]">x{count}</span>
-                                            </span>
-                                          </li>
-                                        )
-                                      })}
-                                    </ul>
-                                  )}
-                                </dd>
-                              </div>
-                              <hr className="border-gray-100 dark:border-gray-700" />
-                            </>
-                          )}
-                          <div className="grid grid-cols-1 items-center gap-2">
-                            <dd className="min-w-0 break-words">
-                              {careerStyles.length > 0 || strongestSeasons.length > 0 ? (
-                                <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-                                  {careerStyles.map((style) => (
-                                    <span key={style} className="whitespace-nowrap">
-                                      #{style}
-                                    </span>
-                                  ))}
-                                  {strongestSeasons.length > 0 && (
-                                    <span className="inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1">
-                                      {strongestSeasons.map((season) => (
-                                        <span
-                                          key={season.key}
-                                          title={`${season.label} · 승점생산률 ${careerNumberFormatter.format(season.pointRate)}점 (${careerNumberFormatter.format(season.points)}승점 / ${careerNumberFormatter.format(season.games)}경기 · 출석 ${season.attendance}회, 2026년부터 누적)`}
-                                          className={`inline-flex items-center gap-1 whitespace-nowrap font-sans text-sm font-medium ${playerSeasonTextColors[season.key]}`}
-                                        >
-                                          <span>#</span>
-                                          <img
-                                            src={playerSeasonIcons[season.key]}
-                                            alt=""
-                                            width="28"
-                                            height="28"
-                                            className="h-7 w-7 shrink-0 object-contain"
-                                          />
-                                          {/*<span>사나이</span>*/}
-                                          <button
-                                            type="button"
-                                            className={`${detailsButtonClass} !ml-0 !text-[8px] shrink-0 whitespace-nowrap font-sans ${playerSeasonTextColors[season.key]}`}
-                                            aria-label="개인 최고 계절 선정 기준 자세히 보기"
-                                            aria-haspopup="dialog"
-                                            aria-controls="player-season-method-dialog"
-                                            onClick={() => playerSeasonDialogRef.current?.showModal()}
-                                          >
-                                            자세히
-                                          </button>
-                                        </span>
-                                      ))}
-                                    </span>
-                                  )}
-                                </span>
-                              ) : (
-                                '기록 없음'
-                              )}
-                            </dd>
-                          </div>
-                          <hr className="border-gray-100 dark:border-gray-700" />
-                        </dl>
-                      </div>
-                      <hr className="my-5 border-gray-700 dark:border-gray-200" />
-                      <div>
-                        <div className="sticky top-0 z-10 -mx-7 mb-4 flex flex-row items-center justify-center gap-2 border-b border-gray-100 bg-white px-7 py-2 dark:border-gray-700 dark:bg-gray-900">
-                          <h4 id="career-high-title" className="font-semibold font-dnf-forged">
-                            커리어 하이
-                          </h4>
-                          <span className="relative top-1 text-[11px] text-gray-500 dark:text-gray-400">항목별</span>
-                        </div>
-                        <dl className="space-y-2 text-sm">
-                          {careerHighRows.map(([label, value]) => (
-                            <Fragment key={label}>
-                              <div className="grid grid-cols-2 items-center gap-4">
-                                <dt className="text-gray-500 dark:text-gray-400">{label}</dt>
-                                <dd className="min-w-0 break-words">{value}</dd>
-                              </div>
-                              <hr className="border-gray-100 dark:border-gray-700" />
-                            </Fragment>
-                          ))}
-                        </dl>
-                      </div>
-                    </>
-                  ) : (
-                    <p className="mt-3 text-sm text-gray-500 dark:text-gray-400" role="status">
-                      {scoringStreakResult.status === 'error' ? '통산 기록을 불러오지 못했습니다.' : '통산 기록을 불러오는 중입니다.'}
-                    </p>
-                  )}
-                </section>
-                {careerRecord && (
-                  <section className="mt-5 border-t border-gray-700 pt-5 dark:border-gray-200" aria-labelledby="quarterly-record-title">
-                    <div className="sticky top-0 z-10 -mx-7 mb-3 flex flex-wrap items-center justify-center gap-2 border-b border-gray-100 bg-white px-7 py-2 dark:border-gray-700 dark:bg-gray-900">
-                      <h4 id="quarterly-record-title" className="shrink-0 font-semibold font-dnf-forged">
-                        분기 추세
-                      </h4>
-                      <span className="relative top-1 text-[11px] text-gray-500 dark:text-gray-400">항목별 최고 분기 대비</span>
-                    </div>
-                    {(bestFive.memberInfo === null && bestFive.status === 'error') || (isGoalkeeper && careerCleanSheetStatus === 'error') ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400" role="status">
-                        분기별 기록을 불러오지 못했습니다.
-                      </p>
-                    ) : bestFive.memberInfo === null || (isGoalkeeper && careerCleanSheetStatus !== 'ready') ? (
-                      <p className="text-sm text-gray-500 dark:text-gray-400" role="status">
-                        분기별 기록을 불러오는 중입니다.
-                      </p>
-                    ) : chartQuarters.length > 0 ? (
-                      <QuarterlyRecordChart
-                        quarters={chartQuarters}
-                        isGoalkeeper={isGoalkeeper}
-                        currentQuarterKey={`${asOfDate.slice(0, 4)}-${Math.ceil(Number(asOfDate.slice(5, 7)) / 3)}`}
-                      />
-                    ) : (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">분기별 기록이 없습니다.</p>
-                    )}
-                  </section>
+                    </button>
+                  ))
+                ) : (
+                  <p className="col-span-full text-sm text-gray-500 dark:text-gray-400">등록된 플레이어가 없습니다.</p>
                 )}
               </div>
             </div>
-          )}
-        </dialog>
-        <dialog
-          ref={playerSeasonDialogRef}
-          id="player-season-method-dialog"
-          aria-labelledby="player-season-method-title"
-          onClick={closeDialogOnBackdropClick}
-          className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-hidden rounded-xl border border-gray-200 bg-white p-0 text-center text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
-        >
-          <div className="flex max-h-[85vh] flex-col">
-            <div className="relative flex shrink-0 items-center justify-center gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-700">
-              <h3 id="player-season-method-title" className="min-w-0 px-8 text-lg font-bold">
-                개인 최고 계절 선정 기준
-              </h3>
-              <form method="dialog" className="absolute right-3 top-3">
-                <button type="submit" className="rounded px-2 py-1 text-sm text-zinc-700 hover:underline dark:text-zinc-200">
-                  닫기
-                </button>
-              </form>
-            </div>
-            <div className="min-h-0 overflow-y-auto px-5 py-4 text-sm leading-relaxed">
-              <p>본인의 승점 생산률이 가장 높은 계절을 표시합니다.</p>
-              <dl className="mt-4 space-y-4">
-                <div>
-                  <dt className="font-semibold">표시 조건</dt>
-                  <dd className="mt-1 space-y-1 text-gray-600 dark:text-gray-300">
-                    <p>계절 마다 2회 이상 출석해야 합니다.</p>
-                  </dd>
+          </section>
+          <dialog
+            ref={playerDetailDialogRef}
+            id="player-detail-dialog"
+            aria-labelledby="player-detail-title"
+            onClick={closeDialogOnBackdropClick}
+            onClose={() => {
+              playerSeasonDialogRef.current?.close()
+              setSelectedPlayerName(null)
+            }}
+            className="m-auto max-h-[85vh] w-[min(92vw,36rem)] overflow-hidden rounded-xl border border-gray-200 bg-white p-0 text-center text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          >
+            {playerDetail && (
+              <div className="flex max-h-[85vh] flex-col">
+                <div className="relative flex shrink-0 items-center justify-center gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-500">
+                  <div className="min-w-0 px-8">
+                    <h3
+                      id="player-detail-title"
+                      className="flex flex-wrap items-center justify-center gap-2 break-words text-lg font-bold font-dnf-forged text-zinc-700 dark:text-zinc-200"
+                    >
+                      <span>{playerDetail.name}</span>
+                      <GoalkeeperBadge memberInfo={selectedMemberInfo} imageSrc={goalkeeperGloves} />
+                      {selectedMemberInfo?.injured === true && (
+                        <span className="shrink-0 rounded border border-red-200 bg-red-50 px-2 py-0.5 font-sans text-xs font-medium text-red-700 dark:border-red-800 dark:bg-red-900/40 dark:text-red-300">
+                          부상중
+                        </span>
+                      )}
+                    </h3>
+                    <div className="mt-1 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                      <span>{preferredFootLabel}</span>
+                      {startDateLabel && (
+                        <>
+                          <span aria-hidden="true">·</span>
+                          <span className="whitespace-nowrap">
+                            <span className="sr-only">가입일 </span>
+                            <time dateTime={startDate} title="가입일">
+                              {startDateLabel}
+                            </time>
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <form method="dialog" className="absolute right-3 top-3">
+                    <button type="submit" className="rounded px-2 py-1 text-xl">
+                      X
+                    </button>
+                  </form>
                 </div>
+                <div className="player-detail-scroll min-h-0 px-7 pb-5">
+                  <div className="mt-4">
+                    <h4 className="sticky top-0 z-10 -mx-7 mb-3 border-b border-gray-100 bg-white px-7 py-2 font-semibold font-dnf-forged dark:border-gray-700 dark:bg-gray-900">
+                      이번 시즌
+                      <span className="ml-2 text-xs font-normal text-gray-500 dark:text-gray-400">
+                        {thisYear}년 {quarter}분기
+                      </span>
+                    </h4>
+                    {bestFive.status === 'ready' && (!isGoalkeeper || seasonCleanSheetStatus === 'ready') ? (
+                      hasQuarterRecord ? (
+                        <PlayerRadarChart name={playerDetail.name} comparison={isGoalkeeper ? goalkeeperComparison : playerComparison} />
+                      ) : (
+                        <p className="flex items-center justify-center mt-6 h-40 text-sm text-center text-gray-500 dark:text-gray-400">
+                          이번 시즌 기록이 없습니다
+                        </p>
+                      )
+                    ) : (
+                      <p className="mb-5 text-sm text-gray-500 dark:text-gray-400" role="status">
+                        {bestFive.status === 'error' || (isGoalkeeper && seasonCleanSheetStatus === 'error')
+                          ? '비교 기록을 불러오지 못했습니다.'
+                          : '비교 기록을 불러오는 중입니다.'}
+                      </p>
+                    )}
+                    <hr className="my-5 border-gray-100 dark:border-gray-700" />
+                    {bestFive.status === 'ready' && hasQuarterRecord && (
+                      <dl className="space-y-2 text-sm">
+                        {[
+                          ...(isGoalkeeper
+                            ? [
+                                [
+                                  '클린시트',
+                                  formatCleanSheetRecord(
+                                    seasonCleanSheetStatus,
+                                    formatCareerNumber(seasonCleanSheetCounts.get(playerName) || 0, '회'),
+                                  ),
+                                ],
+                                [
+                                  '최다 실점 상대',
+                                  formatCleanSheetRecord(
+                                    seasonCleanSheetStatus,
+                                    formatMostConceded(
+                                      seasonCleanSheets?.concededSeasons.get(`${thisYear}-${quarter}`)?.get(playerName),
+                                      eligibleMembers,
+                                    ),
+                                  ),
+                                ],
+                              ]
+                            : []),
+                          ['골', formatCareerNumber(quarterPlayerStats.goals, '골')],
+                          ['어시', formatCareerNumber(quarterPlayerStats.assists, '어시')],
+                          ['MVP', `${playerDetail.mvp}회`],
+                          [
+                            '최다 골 합작',
+                            playerDetail.combi.length > 0 ? `${playerDetail.combi.join(', ')} · ${playerDetail.combiCount}골` : '기록 없음',
+                          ],
+                          [
+                            '최다 같은 팀',
+                            playerDetail.mostPartner.length > 0
+                              ? `${playerDetail.mostPartner.join(', ')} · ${playerDetail.mostPartnerCount}회`
+                              : '기록 없음',
+                          ],
+                          ['스타일', playerDetail.style.length > 0 ? playerDetail.style.map((style) => `#${style}`).join(' ') : '기록 없음'],
+                        ].map(([label, value]) => (
+                          <Fragment key={label}>
+                            <div className={`grid items-center ${label === '스타일' ? 'grid-cols-1 gap-2' : 'grid-cols-2 gap-4'}`}>
+                              {label !== '스타일' && <dt className="text-gray-500 dark:text-gray-400">{label}</dt>}
+                              <dd className="min-w-0 break-words">
+                                {label === '스타일' && playerDetail.style.length > 0 ? (
+                                  <span className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+                                    {playerDetail.style.map((style) => (
+                                      <span key={style} className="whitespace-nowrap">
+                                        #{style}
+                                      </span>
+                                    ))}
+                                  </span>
+                                ) : (
+                                  value
+                                )}
+                              </dd>
+                            </div>
+                            <hr className="border-gray-100 dark:border-gray-700" />
+                          </Fragment>
+                        ))}
+                      </dl>
+                    )}
+                  </div>
+                  <hr className="my-5 border-gray-700 dark:border-gray-200" />
+                  <section aria-labelledby="career-record-title">
+                    {careerRecord ? (
+                      <>
+                        <div>
+                          <h4
+                            id="career-record-title"
+                            className="sticky top-0 z-10 -mx-7 mb-4 flex flex-wrap items-center justify-center gap-2 border-b border-gray-100 bg-white px-7 py-2 font-semibold font-dnf-forged dark:border-gray-700 dark:bg-gray-900"
+                          >
+                            <span>통산 기록</span>
+                          </h4>
+                          <dl className="space-y-2 text-sm">
+                            {careerTotalRows.map(([label, value]) => (
+                              <Fragment key={label}>
+                                <div className="grid grid-cols-2 items-center gap-4">
+                                  <dt className="text-gray-500 dark:text-gray-400">{label}</dt>
+                                  <dd className="min-w-0 break-words">{value}</dd>
+                                </div>
+                                <hr className="border-gray-100 dark:border-gray-700" />
+                              </Fragment>
+                            ))}
+                            <div className="grid grid-cols-2 items-center gap-4">
+                              <dt className="text-gray-500 dark:text-gray-400">최다 골 합작</dt>
+                              <dd className="min-w-0 break-words" role={careerRoundStatus === 'loading' ? 'status' : undefined}>
+                                {careerGoalPartner}
+                              </dd>
+                            </div>
+                            <hr className="border-gray-100 dark:border-gray-700" />
+                            {(careerAwardHistory.status !== 'ready' || careerAwards.length > 0) && (
+                              <>
+                                <div className="grid grid-cols-2 items-center gap-4">
+                                  <dt className="text-gray-500 dark:text-gray-400">개인 수상</dt>
+                                  <dd className="min-w-0 break-words" role={careerAwardHistory.status === 'idle' ? 'status' : undefined}>
+                                    {careerAwardHistory.status === 'error' ? (
+                                      '수상 기록을 불러오지 못했습니다.'
+                                    ) : careerAwardHistory.status === 'idle' ? (
+                                      '수상 기록을 불러오는 중입니다.'
+                                    ) : (
+                                      <ul className="flex flex-col items-center gap-1">
+                                        {careerAwards.map((award) => {
+                                          const [title, count] = award.split('x')
+                                          return (
+                                            <li key={award} className="relative flex items-center justify-center gap-1 whitespace-nowrap">
+                                              <AwardIconStack title={title} count={count} />
+                                              <span>
+                                                {title}
+                                                <span className="ml-0.5 text-[10px]">x{count}</span>
+                                              </span>
+                                            </li>
+                                          )
+                                        })}
+                                      </ul>
+                                    )}
+                                  </dd>
+                                </div>
+                                <hr className="border-gray-100 dark:border-gray-700" />
+                              </>
+                            )}
+                            <div className="grid grid-cols-1 items-center gap-2">
+                              <dd className="min-w-0 break-words">
+                                {careerStyles.length > 0 || strongestSeasons.length > 0 ? (
+                                  <span className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+                                    {careerStyles.map((style) => (
+                                      <span key={style} className="whitespace-nowrap">
+                                        #{style}
+                                      </span>
+                                    ))}
+                                    {strongestSeasons.length > 0 && (
+                                      <span className="inline-flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1">
+                                        {strongestSeasons.map((season) => (
+                                          <span
+                                            key={season.key}
+                                            title={`${season.label} · 승점생산률 ${careerNumberFormatter.format(season.pointRate)}점 (${careerNumberFormatter.format(season.points)}승점 / ${careerNumberFormatter.format(season.games)}경기 · 출석 ${season.attendance}회, 2026년부터 누적)`}
+                                            className={`inline-flex items-center gap-1 whitespace-nowrap font-sans text-sm font-medium ${playerSeasonTextColors[season.key]}`}
+                                          >
+                                            <span>#</span>
+                                            <img
+                                              src={playerSeasonIcons[season.key]}
+                                              alt=""
+                                              width="28"
+                                              height="28"
+                                              className="h-7 w-7 shrink-0 object-contain"
+                                            />
+                                            {/*<span>사나이</span>*/}
+                                            <button
+                                              type="button"
+                                              className={`${detailsButtonClass} !ml-0 !text-[8px] shrink-0 whitespace-nowrap font-sans ${playerSeasonTextColors[season.key]}`}
+                                              aria-label="개인 최고 계절 선정 기준 자세히 보기"
+                                              aria-haspopup="dialog"
+                                              aria-controls="player-season-method-dialog"
+                                              onClick={() => playerSeasonDialogRef.current?.showModal()}
+                                            >
+                                              자세히
+                                            </button>
+                                          </span>
+                                        ))}
+                                      </span>
+                                    )}
+                                  </span>
+                                ) : (
+                                  '기록 없음'
+                                )}
+                              </dd>
+                            </div>
+                            <hr className="border-gray-100 dark:border-gray-700" />
+                          </dl>
+                        </div>
+                        <hr className="my-5 border-gray-700 dark:border-gray-200" />
+                        <div>
+                          <div className="sticky top-0 z-10 -mx-7 mb-4 flex flex-row items-center justify-center gap-2 border-b border-gray-100 bg-white px-7 py-2 dark:border-gray-700 dark:bg-gray-900">
+                            <h4 id="career-high-title" className="font-semibold font-dnf-forged">
+                              커리어 하이
+                            </h4>
+                            <span className="relative top-1 text-[11px] text-gray-500 dark:text-gray-400">항목별</span>
+                          </div>
+                          <dl className="space-y-2 text-sm">
+                            {careerHighRows.map(([label, value]) => (
+                              <Fragment key={label}>
+                                <div className="grid grid-cols-2 items-center gap-4">
+                                  <dt className="text-gray-500 dark:text-gray-400">{label}</dt>
+                                  <dd className="min-w-0 break-words">{value}</dd>
+                                </div>
+                                <hr className="border-gray-100 dark:border-gray-700" />
+                              </Fragment>
+                            ))}
+                          </dl>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="mt-3 text-sm text-gray-500 dark:text-gray-400" role="status">
+                        {scoringStreakResult.status === 'error' ? '통산 기록을 불러오지 못했습니다.' : '통산 기록을 불러오는 중입니다.'}
+                      </p>
+                    )}
+                  </section>
+                  {careerRecord && (
+                    <section className="mt-5 border-t border-gray-700 pt-5 dark:border-gray-200" aria-labelledby="quarterly-record-title">
+                      <div className="sticky top-0 z-10 -mx-7 mb-3 flex flex-wrap items-center justify-center gap-2 border-b border-gray-100 bg-white px-7 py-2 dark:border-gray-700 dark:bg-gray-900">
+                        <h4 id="quarterly-record-title" className="shrink-0 font-semibold font-dnf-forged">
+                          분기 추세
+                        </h4>
+                        <span className="relative top-1 text-[11px] text-gray-500 dark:text-gray-400">항목별 최고 분기 대비</span>
+                      </div>
+                      {(bestFive.memberInfo === null && bestFive.status === 'error') || (isGoalkeeper && careerCleanSheetStatus === 'error') ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400" role="status">
+                          분기별 기록을 불러오지 못했습니다.
+                        </p>
+                      ) : bestFive.memberInfo === null || (isGoalkeeper && careerCleanSheetStatus !== 'ready') ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400" role="status">
+                          분기별 기록을 불러오는 중입니다.
+                        </p>
+                      ) : chartQuarters.length > 0 ? (
+                        <QuarterlyRecordChart
+                          quarters={chartQuarters}
+                          isGoalkeeper={isGoalkeeper}
+                          currentQuarterKey={`${asOfDate.slice(0, 4)}-${Math.ceil(Number(asOfDate.slice(5, 7)) / 3)}`}
+                        />
+                      ) : (
+                        <p className="text-sm text-gray-500 dark:text-gray-400">분기별 기록이 없습니다.</p>
+                      )}
+                    </section>
+                  )}
+                </div>
+              </div>
+            )}
+          </dialog>
+          <dialog
+            ref={playerSeasonDialogRef}
+            id="player-season-method-dialog"
+            aria-labelledby="player-season-method-title"
+            onClick={closeDialogOnBackdropClick}
+            className="m-auto max-h-[85vh] w-[min(92vw,32rem)] overflow-hidden rounded-xl border border-gray-200 bg-white p-0 text-center text-gray-900 shadow-2xl backdrop:bg-black/60 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+          >
+            <div className="flex max-h-[85vh] flex-col">
+              <div className="relative flex shrink-0 items-center justify-center gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-700">
+                <h3 id="player-season-method-title" className="min-w-0 px-8 text-lg font-bold">
+                  개인 최고 계절 선정 기준
+                </h3>
+                <form method="dialog" className="absolute right-3 top-3">
+                  <button type="submit" className="rounded px-2 py-1 text-sm text-zinc-700 hover:underline dark:text-zinc-200">
+                    닫기
+                  </button>
+                </form>
+              </div>
+              <div className="min-h-0 overflow-y-auto px-5 py-4 text-sm leading-relaxed">
+                <p>본인의 승점 생산률이 가장 높은 계절을 표시합니다.</p>
+                <dl className="mt-4 space-y-4">
+                  <div>
+                    <dt className="font-semibold">표시 조건</dt>
+                    <dd className="mt-1 space-y-1 text-gray-600 dark:text-gray-300">
+                      <p>계절 마다 2회 이상 출석해야 합니다.</p>
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          </dialog>
+          <section aria-labelledby="analysis-season-title" hidden={!isSectionVisible('season')}>
+            <AnalysisSectionHeading
+              id="analysis-season-title"
+              controls="season-analysis"
+              title="이번 시즌"
+              subtitle={`${thisYear} - 제 ${quarter} 시즌`}
+              expanded={showSeason}
+              focused={analysisView === 'season'}
+              onToggle={() => selectAnalysisSection('season')}
+            />
+            <div id="season-analysis" hidden={!showSeason} className="pt-4">
+              {hasLoadError ? (
+                <div className="py-8 text-center" role="alert">
+                  이번 시즌 데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.
+                </div>
+              ) : isQuarterDataLoading || (availableWeeks >= 1 && isDataLoading) ? (
+                <div className="py-8 text-center" role="status">
+                  이번 시즌 데이터를 불러오는 중입니다.
+                </div>
+              ) : availableWeeks === 0 ? (
+                <div className="pb-8 pt-4 h-40 flex items-center justify-center text-center text-sm text-gray-500 dark:text-gray-400" role="status">
+                  이번 시즌 데이터가 없습니다.
+                </div>
+              ) : (
+                renderAnalysisRows(seasonAnalysisRows)
+              )}
+            </div>
+          </section>
+          <section aria-labelledby="analysis-career-title" hidden={!isSectionVisible('career')}>
+            <AnalysisSectionHeading
+              id="analysis-career-title"
+              controls="career-analysis"
+              title="통산 기록"
+              expanded={showCareer}
+              focused={analysisView === 'career'}
+              onToggle={() => selectAnalysisSection('career')}
+            />
+            <div id="career-analysis" hidden={!showCareer}>
+              <section aria-labelledby="career-cumulative-title">
+                <h3
+                  id="career-cumulative-title"
+                  className="mt-4 analysis-career-subheading border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-zinc-700 font-dnf-forged dark:border-gray-700 dark:bg-gray-800 dark:text-zinc-200"
+                >
+                  최다 누적 TOP
+                </h3>
+                <div className="pt-4">{renderAnalysisRows(groupAnalysisRows(careerCumulativeItems), true)}</div>
+              </section>
+              <section aria-labelledby="career-daily-title">
+                <h3
+                  id="career-daily-title"
+                  className="mt-8 analysis-career-subheading border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-zinc-700 font-dnf-forged dark:border-gray-700 dark:bg-gray-800 dark:text-zinc-200"
+                >
+                  일일 최다
+                </h3>
+                <div className="pt-4">{renderAnalysisRows(groupAnalysisRows(careerDailyItems))}</div>
+              </section>
+              <dl className="space-y-3 border-t border-gray-200 pt-5 dark:border-gray-700">
+                {careerOtherItems.map((item) => renderAnalysisItem({ ...item, career: true }))}
               </dl>
             </div>
-          </div>
-        </dialog>
-        <section aria-labelledby="analysis-season-title" hidden={!isSectionVisible('season')}>
-          <AnalysisSectionHeading
-            id="analysis-season-title"
-            controls="season-analysis"
-            title="이번 시즌"
-            subtitle={`${thisYear} - 제 ${quarter} 시즌`}
-            expanded={showSeason}
-            focused={analysisView === 'season'}
-            onToggle={() => selectAnalysisSection('season')}
-          />
-          <div id="season-analysis" hidden={!showSeason} className="pt-4">
-            {hasLoadError ? (
-              <div className="py-8 text-center" role="alert">
-                이번 시즌 데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주세요.
-              </div>
-            ) : isQuarterDataLoading || (availableWeeks >= 1 && isDataLoading) ? (
-              <div className="py-8 text-center" role="status">
-                이번 시즌 데이터를 불러오는 중입니다.
-              </div>
-            ) : availableWeeks === 0 ? (
-              <div className="pb-8 pt-4 h-40 flex items-center justify-center text-center text-sm text-gray-500 dark:text-gray-400" role="status">
-                이번 시즌 데이터가 없습니다.
-              </div>
-            ) : (
-              renderAnalysisRows(seasonAnalysisRows)
-            )}
-          </div>
-        </section>
-        <section aria-labelledby="analysis-career-title" hidden={!isSectionVisible('career')}>
-          <AnalysisSectionHeading
-            id="analysis-career-title"
-            controls="career-analysis"
-            title="통산 기록"
-            expanded={showCareer}
-            focused={analysisView === 'career'}
-            onToggle={() => selectAnalysisSection('career')}
-          />
-          <div id="career-analysis" hidden={!showCareer}>
-            <section aria-labelledby="career-cumulative-title">
-              <h3 id="career-cumulative-title" className="analysis-career-subheading border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-zinc-700 font-dnf-forged dark:border-gray-700 dark:bg-gray-800 dark:text-zinc-200">
-                최다 누적
-              </h3>
-              <dl className="divide-y divide-gray-200 pt-4 dark:divide-gray-700">{careerCumulativeItems.map(renderAnalysisItem)}</dl>
-            </section>
-            <section aria-labelledby="career-daily-title">
-              <h3 id="career-daily-title" className="analysis-career-subheading border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-zinc-700 font-dnf-forged dark:border-gray-700 dark:bg-gray-800 dark:text-zinc-200">
-                일일 최다
-              </h3>
-              <dl className="divide-y divide-gray-200 pt-4 dark:divide-gray-700">{careerDailyItems.map(renderAnalysisItem)}</dl>
-            </section>
-            <dl className="divide-y divide-gray-200 border-t border-gray-200 pt-5 dark:divide-gray-700 dark:border-gray-700">{careerOtherItems.map(renderAnalysisItem)}</dl>
-          </div>
-        </section>
+          </section>
         </div>
 
+        <CareerRankingDialog
+          dialogRef={careerRankingDialogRef}
+          title={selectedCareerRanking?.title || ''}
+          description={careerRankingDescriptions[selectedRankingKey]}
+          entries={selectedRankingEntries}
+          status={selectedRankingStatus}
+          onClose={() => setSelectedCareerRanking(null)}
+        />
         <dialog
           ref={seasonSpecialistDialogRef}
           id="season-specialist-method-dialog"

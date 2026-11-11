@@ -25,6 +25,156 @@ html.dark .player-detail-scroll {
   --scrollbar-thumb: #6b7280;
 }
 
+.analysis-tab {
+  --analysis-surface: #ffffff;
+  --analysis-focus-color: #2563eb;
+}
+
+html.dark .analysis-tab {
+  --analysis-surface: #242424;
+  --analysis-focus-color: #93c5fd;
+}
+
+/* Pointer focus must not inherit the global button's thick native outline. */
+.analysis-tab button:focus,
+.analysis-tab button:focus-visible,
+.analysis-tab [role='button']:focus,
+.analysis-tab [role='button']:focus-visible {
+  outline: none;
+}
+
+.analysis-tab[data-keyboard-navigation='true'] button:focus-visible,
+.analysis-tab[data-keyboard-navigation='true'] [role='button']:focus-visible {
+  outline: 2px solid var(--analysis-focus-color);
+  outline-offset: 2px;
+}
+
+.analysis-section-heading {
+  background: var(--analysis-surface);
+}
+
+.analysis-card-click-hint {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.analysis-card-click-glow,
+.analysis-card-click-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.analysis-card-click-ring {
+  border: 1px solid rgb(250 204 21 / 45%);
+  background: radial-gradient(circle, rgb(253 224 71 / 55%), rgb(250 204 21 / 18%));
+  box-shadow: 0 0 6px rgb(250 204 21 / 25%);
+  transform-origin: center;
+  animation: analysis-click-gather 1.8s cubic-bezier(0.4, 0, 1, 1) infinite;
+}
+
+.analysis-card-click-ring:nth-child(2) {
+  animation-delay: -0.6s;
+}
+
+.analysis-card-click-ring:nth-child(3) {
+  animation-delay: -1.2s;
+}
+
+.analysis-card-click-glow::after {
+  content: '';
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #facc15;
+  box-shadow: 0 0 7px rgb(250 204 21 / 65%);
+}
+
+.analysis-card-click-label {
+  position: absolute;
+  top: -7px;
+  left: 7px;
+  color: #a16207;
+  font-size: 9px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+html.dark .analysis-card-click-label {
+  color: #fde68a;
+}
+
+@keyframes analysis-click-gather {
+  0% { opacity: 0; transform: scale(1.1); }
+  18% { opacity: 0.45; }
+  76% { opacity: 0.8; transform: scale(0.2); }
+  92%, 100% { opacity: 0; transform: scale(0.06); }
+}
+
+.analysis-tab .analysis-section-toggle {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  color: #334155;
+  box-shadow: 0 2px 8px rgb(15 23 42 / 3%);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.analysis-tab .analysis-section-toggle:hover {
+  border-color: #cbd5e1;
+}
+
+.analysis-tab .analysis-section-toggle[aria-expanded='true'] {
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #f8fbff, #eff6ff);
+}
+
+.analysis-tab .analysis-section-toggle__chevron {
+  background: rgb(37 99 235 / 7%);
+  color: #64748b;
+}
+
+.analysis-tab .analysis-section-toggle[aria-expanded='true'] .analysis-section-toggle__chevron {
+  background: rgb(37 99 235 / 10%);
+  color: #2563eb;
+}
+
+html.dark .analysis-tab .analysis-section-toggle {
+  border-color: #334155;
+  background: linear-gradient(135deg, #172235, #101827);
+  color: #e2e8f0;
+  box-shadow: 0 3px 12px rgb(0 0 0 / 10%);
+}
+
+html.dark .analysis-tab .analysis-section-toggle:hover {
+  border-color: #475569;
+}
+
+html.dark .analysis-tab .analysis-section-toggle[aria-expanded='true'] {
+  border-color: #3b557c;
+  background: linear-gradient(135deg, #1c2c46, #142036);
+}
+
+html.dark .analysis-tab .analysis-section-toggle__chevron {
+  background: rgb(148 163 184 / 10%);
+  color: #94a3b8;
+}
+
+html.dark .analysis-tab .analysis-section-toggle[aria-expanded='true'] .analysis-section-toggle__chevron {
+  background: rgb(96 165 250 / 12%);
+  color: #93c5fd;
+}
+
 .analysis-section-stage {
   --analysis-section-heading-height: 5rem;
   --analysis-section-divider: #e5e7eb;
@@ -37,12 +187,12 @@ html.dark .analysis-section-stage {
 
 .analysis-career-subheading {
   position: sticky;
-  top: calc(var(--analysis-section-heading-height) + 1px);
+  top: var(--analysis-section-heading-height);
   z-index: 10;
 }
 
 .analysis-section-stage > section:not([hidden]) ~ section:not([hidden]) {
-  border-top: 1px solid var(--analysis-section-divider);
+  margin-top: 12px;
 }
 
 .analysis-section-stage[data-phase='leaving'] {
@@ -65,6 +215,24 @@ html.dark .analysis-section-stage {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .analysis-card-click-ring {
+    animation: none;
+    opacity: 0.3;
+    transform: scale(1);
+  }
+
+  .analysis-card-click-ring:nth-child(2) {
+    transform: scale(0.65);
+  }
+
+  .analysis-card-click-ring:nth-child(3) {
+    transform: scale(0.3);
+  }
+
+  .analysis-tab .analysis-section-toggle {
+    transition: none;
+  }
+
   .analysis-section-stage {
     --analysis-section-offset: 0px;
   }

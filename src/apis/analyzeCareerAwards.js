@@ -1,3 +1,5 @@
+import { rankCareerEntries } from './rankCareerEntries.js'
+
 const AWARDS = [
   ['point_king', '승점왕'],
   ['goal_king', '득점왕'],
@@ -62,11 +64,16 @@ export const analyzeCareerAwardLeaders = (historyRecords, asOfDate = null, eligi
   return AWARDS.map(([key, label]) => {
     const entries = [...counts.get(key)]
     const maximum = Math.max(0, ...entries.map(([, count]) => count))
+    const nextCount = Math.max(0, ...entries.filter(([, count]) => count < maximum).map(([, count]) => count))
+    const chasers = entries.filter(([, count]) => nextCount > 0 && count === nextCount)
+      .map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name, 'ko'))
     return {
       key,
       label: key === 'assist_king' ? '도움왕' : label,
       winners: entries.filter(([, count]) => count === maximum)
         .map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name, 'ko')),
+      chasers: chasers.length <= 2 ? chasers : [],
+      rankings: rankCareerEntries(entries.map(([name, count]) => ({ name, value: count, count: `${count}회` }))),
     }
   })
 }

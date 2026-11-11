@@ -1,3 +1,5 @@
+import { rankCareerEntries } from './rankCareerEntries.js'
+
 const FIRST_POINT_YEAR = 2026
 
 const validDate = (dateKey) => {
@@ -15,7 +17,10 @@ const nonNegativeNumber = (value) => {
 }
 
 export const analyzeCareerPointRate = (recordsByYear, asOfDate, eligibleMembers = null) => {
-  const result = { name: [], pointRate: null, totalDays: 0, requiredDays: 0 }
+  const result = {
+    name: [], pointRate: null, additional: [], additionalPointRate: null, totalDays: 0, requiredDays: 0,
+    rankings: [],
+  }
   if (!validDate(asOfDate)) return result
   const allowedMembers = eligibleMembers === null ? null : new Set(
     (Array.isArray(eligibleMembers) || eligibleMembers instanceof Set ? [...eligibleMembers] : [])
@@ -60,6 +65,17 @@ export const analyzeCareerPointRate = (recordsByYear, asOfDate, eligibleMembers 
   const eligible = [...players.values()].filter(({ attendanceDays, games }) =>
     attendanceDays * 10 >= result.totalDays * 7 && games > 0)
   if (eligible.length === 0) return result
+  const playersByName = new Map(eligible.map((player) => [player.name, player]))
+  result.rankings = rankCareerEntries(eligible.map(({ name, attendanceDays, points, games }) => ({
+    name,
+    value: points / games,
+    count: `${(points / games).toFixed(2)}점`,
+    detail: `출석 ${attendanceDays}일 · 승점 ${points}점 / ${games}경기`,
+  })), (first, second) => {
+    const a = playersByName.get(first.name)
+    const b = playersByName.get(second.name)
+    return b.points * a.games - a.points * b.games
+  })
 
   // Rank cumulative fractions before rounding and preserve every exact tie.
   let best = eligible[0]
@@ -69,6 +85,19 @@ export const analyzeCareerPointRate = (recordsByYear, asOfDate, eligibleMembers 
   result.name = eligible.filter((player) => player.points * best.games === best.points * player.games)
     .map(({ name }) => name).sort((a, b) => a.localeCompare(b, 'ko'))
   result.pointRate = best.points / best.games
+
+  const lowerPlayers = eligible.filter((player) => player.points * best.games < best.points * player.games)
+  if (lowerPlayers.length > 0) {
+    let next = lowerPlayers[0]
+    for (const player of lowerPlayers) {
+      if (player.points * next.games > next.points * player.games) next = player
+    }
+    const chasers = lowerPlayers.filter((player) => player.points * next.games === next.points * player.games)
+    if (chasers.length <= 2) {
+      result.additional = chasers.map(({ name }) => name).sort((a, b) => a.localeCompare(b, 'ko'))
+      result.additionalPointRate = next.points / next.games
+    }
+  }
   return result
 }
 

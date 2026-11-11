@@ -611,7 +611,7 @@ const WriteContainer = (props) => {
       ) : (
         <div className="relative flex justify-center">
           {isOffDay || !requestUpdateMode ? (
-            <div className={'w-[98%]'}>
+            <div className={'w-[98%] flex justify-center'}>
               <InfoMessageBox open={open} isOffDay={isOffDay} />
               {/*{showRequestUpdateButton && (*/}
               {/*  <ShowRequestButton setRequestUpdateMode={setRequestUpdateMode} />*/}
