@@ -303,200 +303,196 @@ function WeeklyTeam(props) {
   return (
     <div className={tapContainerStyle}>
       <div className={createPhase !== 'idle' ? 'overflow-hidden' : ''}>
-      <div
-        key={editMode ? 'editor' : 'roster'}
-        className={`${createAnimationClass} ${createPhase !== 'idle' ? 'pointer-events-none' : ''}`}
-        data-weekly-team-transition={createPhase}
-        aria-busy={createPhase !== 'idle'}
-        inert={createPhase !== 'idle' ? '' : undefined}
-        onAnimationEnd={handleCreateAnimationEnd}
-      >
-      {/*{editMode && (*/}
-      {/*  <div className="relative">*/}
-      {/*<TestingMark locationStyle="absolute top-2 right-0 text-[30px]" />*/}
-      {/*<ThisWeekVoteStatisticsBox*/}
-      {/*  nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}*/}
-      {/*/>*/}
-      {/*</div>*/}
-      {/*)}*/}
-      <div className={dayTitleContainerStyle}>
-        {!editMode && (
-          <button
-            type="button"
-            aria-label="이전 주 팀 보기"
-            className={`${weekNavigationClass} ${page > 0 ? 'visible' : 'invisible'}`}
-            onClick={() => pageMoveHandler(true)}
-          >
-            <img src={left} alt="" className="h-full w-full dark:invert" draggable={false} />
-          </button>
-        )}
-        <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder} title={displayDateText(weeklyTeamData[page]?.id)} />
-        {!editMode && (
-          <button
-            type="button"
-            aria-label="다음 주 팀 보기"
-            className={`${weekNavigationClass} ${page < weeklyTeamData.length - 1 ? 'visible' : 'invisible'}`}
-            onClick={() => pageMoveHandler(false)}
-          >
-            <img src={right} alt="" className="h-full w-full dark:invert" draggable={false} />
-          </button>
-        )}
-      </div>
-      <div className="flex flex-col">
-        {!editMode && (
-          <div className="flex flex-col items-end mb-5">
-            <hr className="w-full border-blue-700" />
-          </div>
-        )}
-        {page === weeklyTeamData.length - 1 && <div className={`${editMode ? 'mb-1' : 'mb-4'}`}>이번 달 황밸 요정🧚 : {balancer}</div>}
-        {!weeklyTeamData.length ? (
-          <p role="status" className="py-8 text-gray-500 dark:text-gray-400">등록된 주간 팀이 없습니다.</p>
-        ) : isOffDay ? (
-          <p role="status" className="mb-5 flex min-h-32 items-center justify-center text-sm font-medium text-blue-700 dark:text-yellow-400">
-            경기 없는 날🍃
-          </p>
-        ) : (
-          <div className="w-full flex justify-center mb-5">
-            <div
-              className={`flex w-full justify-center ${editMode ? 'max-w-[30rem]' : 'max-w-[38rem]'} ${!editMode && page === weeklyTeamData.length - 1 && activeBorder ? 'border-2 rounded-md border-[#bb2649] animate-pulse p-2' : ''}`}
-            >
-              <div className={editMode ? 'w-full min-w-0' : 'flex w-full min-w-0 flex-col gap-5 p-1 rounded-md'}>
-                {!editMode ? (
-                  [1, 2, 3].map((team, index) => (
-                    <div key={index} className="flex w-full min-w-0 items-center gap-2">
-                      <img src={teamIcons[team]} alt={`${team}팀`} className="h-7 w-7 shrink-0 self-center object-contain" />
-                      <div className="grid min-w-0 flex-1 grid-cols-6 gap-1">
-                        {weeklyTeamData[page]?.data[team]?.filter((player) => typeof player === 'string' && player.trim()).map((player, idx) => (
-                          <span key={idx} className={`flex aspect-[3/2] min-w-0 items-center justify-center bg-contain bg-center bg-no-repeat pt-2 ${teamJerseys[team]}`}>
-                            <span className="max-w-full break-words rounded-sm bg-white/80 px-0.5 text-center text-[clamp(11px,3.1vw,14px)] font-semibold leading-tight text-slate-900">
-                              {player}
-                            </span>
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  // 팀 생성 모드
-                  <div className="w-full text-left">
-                    <div className="flex flex-col gap-[18px]">
-                      {inputTeamData?.map((team, index) => (
-                        <fieldset key={index} className="m-0 min-w-0 rounded-xl border border-[#dbe3ed] bg-slate-50 px-3 pb-[14px] pt-1 shadow-[0_2px_8px_rgba(15,23,42,0.03)] dark:border-slate-700 dark:bg-[#172235] [@media(min-width:640px)]:px-[14px]">
-                          <legend className="px-1.5">
-                            <img src={teamIcons[index + 1]} alt={`${index + 1}팀`} className="h-8 w-8 object-contain" />
-                          </legend>
-                          <div className="grid grid-cols-3 gap-2 [@media(min-width:640px)]:grid-cols-6">
-                            {team.map((player, idx) => (
-                              <input
-                                key={idx}
-                                ref={index === 0 && idx === 0 ? firstPlayerInputRef : undefined}
-                                type="text"
-                                value={player}
-                                aria-label={`${index + 1}팀 ${idx + 1}번째 선수`}
-                                placeholder={`플레이어 ${idx + 1}`}
-                                autoComplete="off"
-                                spellCheck={false}
-                                className={playerInputClass}
-                                onChange={(event) => teamMakerInputHandler(event, index, idx)}
-                              />
-                            ))}
-                          </div>
-                        </fieldset>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="w-full flex justify-center">
-          {canCreate ? (
-            !editMode ? (
-              (!weeklyTeamData.length || page === weeklyTeamData.length - 1) && (
-                <div>
-                  <button
-                    type="button"
-                    className={primaryTeamActionClass}
-                    disabled={createPhase !== 'idle'}
-                    onClick={() => createWeeklyTeamHandler(true)}
-                  >
-                    <PlusIcon className="h-4 w-4" aria-hidden="true" />
-                    <span>이번주 팀 생성하기</span>
-                  </button>
-                </div>
-              )
-            ) : (
+        <div
+          key={editMode ? 'editor' : 'roster'}
+          className={`${createAnimationClass} ${createPhase !== 'idle' ? 'pointer-events-none' : ''}`}
+          data-weekly-team-transition={createPhase}
+          aria-busy={createPhase !== 'idle'}
+          inert={createPhase !== 'idle' ? '' : undefined}
+          onAnimationEnd={handleCreateAnimationEnd}
+        >
+          {/*{editMode && (*/}
+          {/*  <div className="relative">*/}
+          {/*<TestingMark locationStyle="absolute top-2 right-0 text-[30px]" />*/}
+          {/*<ThisWeekVoteStatisticsBox*/}
+          {/*  nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}*/}
+          {/*/>*/}
+          {/*</div>*/}
+          {/*)}*/}
+          <div className={dayTitleContainerStyle}>
+            {!editMode && (
               <button
                 type="button"
-                className={primaryTeamActionClass}
-                onClick={registerTeamHandler}
+                aria-label="이전 주 팀 보기"
+                className={`${weekNavigationClass} ${page > 0 ? 'visible' : 'invisible'}`}
+                onClick={() => pageMoveHandler(true)}
               >
-                <CheckIcon className="h-4 w-4" aria-hidden="true" />
-                <span>등록하기</span>
+                <img src={left} alt="" className="h-full w-full dark:invert" draggable={false} />
               </button>
-            )
-          ) : !activeBorder ? (
-            currentDay !== 0 && (
-              <div className="flex flex-col mt-3">
-                <p
-                  className="mb-1 font-dnf-forged text-gray-400 drop-shadow-[2px_4px_7px_grey]"
-                >
-                  팀 생성하기
-                </p>
-                <p className="font-dnf-forged text-xs">
-                  Open : 참여투표 종료 후
-                </p>
+            )}
+            <TapTitleText active={page === weeklyTeamData.length - 1 && activeBorder} title={displayDateText(weeklyTeamData[page]?.id)} />
+            {!editMode && (
+              <button
+                type="button"
+                aria-label="다음 주 팀 보기"
+                className={`${weekNavigationClass} ${page < weeklyTeamData.length - 1 ? 'visible' : 'invisible'}`}
+                onClick={() => pageMoveHandler(false)}
+              >
+                <img src={right} alt="" className="h-full w-full dark:invert" draggable={false} />
+              </button>
+            )}
+          </div>
+          <div className="flex flex-col">
+            {!editMode && (
+              <div className="flex flex-col items-end mb-5">
+                <hr className="w-full border-blue-700" />
               </div>
-            )
-          ) : editMode ? (
-            <button
-              type="button"
-              className={primaryTeamActionClass}
-              onClick={registerTeamHandler}
-            >
-              <CheckIcon className="h-4 w-4" aria-hidden="true" />
-              <span>등록하기</span>
-            </button>
-          ) : (
-            !isOffDay &&
-            !latestTeamIsOffDay &&
-            [0, 4, 5, 6, 7].includes(currentDay) && (
-              <div>
-                <button
-                  type="button"
-                  className={secondaryTeamActionClass}
-                  onClick={() => createWeeklyTeamHandler(false)}
+            )}
+            {page === weeklyTeamData.length - 1 && <div className={`${editMode ? 'mb-1' : 'mb-4'}`}>이번 달 황밸 요정🧚 : {balancer}</div>}
+            {!weeklyTeamData.length ? (
+              <p role="status" className="py-8 text-gray-500 dark:text-gray-400">
+                등록된 주간 팀이 없습니다.
+              </p>
+            ) : isOffDay ? (
+              <p role="status" className="mb-5 flex min-h-32 items-center justify-center text-sm font-medium text-blue-700 dark:text-yellow-400">
+                경기 없는 날🍃
+              </p>
+            ) : (
+              <div className="w-full flex justify-center mb-5">
+                <div
+                  className={`flex w-full justify-center ${editMode ? 'max-w-[30rem]' : 'max-w-[16rem]'} ${!editMode && page === weeklyTeamData.length - 1 && activeBorder ? 'border-2 rounded-md border-[#bb2649] animate-pulse p-2' : ''}`}
                 >
-                  <PencilIcon className="h-4 w-4" aria-hidden="true" />
-                  <span>수정</span>
-                </button>
-                <div className={kakaoButtonDivStyle} onClick={shareKakao}>
-                  <p>카톡에 공유하기</p>
-                  <button className={kakaoButtonStyle} />
+                  <div className={editMode ? 'w-full min-w-0' : 'flex w-full min-w-0 flex-col gap-3 p-1 rounded-md'}>
+                    {!editMode ? (
+                      [1, 2, 3].map((team, index) => (
+                        <div key={index} className="flex w-full min-w-0 items-center gap-2">
+                          <img src={teamIcons[team]} alt={`${team}팀`} className="h-7 w-7 shrink-0 self-center object-contain" />
+                          <div className="grid min-w-0 flex-1 grid-cols-3 gap-1">
+                            {weeklyTeamData[page]?.data[team]
+                              ?.filter((player) => typeof player === 'string' && player.trim())
+                              .map((player, idx) => (
+                                <span
+                                  key={idx}
+                                  className="relative flex aspect-[3/2] min-w-0 items-center justify-center pt-2"
+                                >
+                                  <span
+                                    aria-hidden="true"
+                                    className={`pointer-events-none absolute inset-0 bg-contain bg-center bg-no-repeat opacity-60 ${teamJerseys[team]}`}
+                                  />
+                                  <span className="relative z-10 max-w-full font-dnf-forged break-words rounded-sm bg-white/10 px-0.5 text-center text-[clamp(11px,3.1vw,14px)] leading-tight text-slate-900">
+                                    {player}
+                                  </span>
+                                </span>
+                              ))}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      // 팀 생성 모드
+                      <div className="w-full text-left">
+                        <div className="flex flex-col gap-[18px]">
+                          {inputTeamData?.map((team, index) => (
+                            <fieldset
+                              key={index}
+                              className="m-0 min-w-0 rounded-xl border border-[#dbe3ed] bg-slate-50 px-3 pb-[14px] pt-1 shadow-[0_2px_8px_rgba(15,23,42,0.03)] dark:border-slate-700 dark:bg-[#172235] [@media(min-width:640px)]:px-[14px]"
+                            >
+                              <legend className="px-1.5">
+                                <img src={teamIcons[index + 1]} alt={`${index + 1}팀`} className="h-8 w-8 object-contain" />
+                              </legend>
+                              <div className="grid grid-cols-3 gap-2 [@media(min-width:640px)]:grid-cols-6">
+                                {team.map((player, idx) => (
+                                  <input
+                                    key={idx}
+                                    ref={index === 0 && idx === 0 ? firstPlayerInputRef : undefined}
+                                    type="text"
+                                    value={player}
+                                    aria-label={`${index + 1}팀 ${idx + 1}번째 선수`}
+                                    placeholder={`플레이어 ${idx + 1}`}
+                                    autoComplete="off"
+                                    spellCheck={false}
+                                    className={playerInputClass}
+                                    onChange={(event) => teamMakerInputHandler(event, index, idx)}
+                                  />
+                                ))}
+                              </div>
+                            </fieldset>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            )
-          )}
+            )}
+            <div className="w-full flex justify-center">
+              {canCreate ? (
+                !editMode ? (
+                  (!weeklyTeamData.length || page === weeklyTeamData.length - 1) && (
+                    <div>
+                      <button
+                        type="button"
+                        className={primaryTeamActionClass}
+                        disabled={createPhase !== 'idle'}
+                        onClick={() => createWeeklyTeamHandler(true)}
+                      >
+                        <PlusIcon className="h-4 w-4" aria-hidden="true" />
+                        <span>이번주 팀 생성하기</span>
+                      </button>
+                    </div>
+                  )
+                ) : (
+                  <button type="button" className={primaryTeamActionClass} onClick={registerTeamHandler}>
+                    <CheckIcon className="h-4 w-4" aria-hidden="true" />
+                    <span>등록하기</span>
+                  </button>
+                )
+              ) : !activeBorder ? (
+                currentDay !== 0 && (
+                  <div className="flex flex-col mt-3">
+                    <p className="mb-1 font-dnf-forged text-gray-400 drop-shadow-[2px_4px_7px_grey]">팀 생성하기</p>
+                    <p className="font-dnf-forged text-xs">Open : 참여투표 종료 후</p>
+                  </div>
+                )
+              ) : editMode ? (
+                <button type="button" className={primaryTeamActionClass} onClick={registerTeamHandler}>
+                  <CheckIcon className="h-4 w-4" aria-hidden="true" />
+                  <span>등록하기</span>
+                </button>
+              ) : (
+                !isOffDay &&
+                !latestTeamIsOffDay &&
+                [0, 4, 5, 6, 7].includes(currentDay) && (
+                  <div>
+                    <button type="button" className={secondaryTeamActionClass} onClick={() => createWeeklyTeamHandler(false)}>
+                      <PencilIcon className="h-4 w-4" aria-hidden="true" />
+                      <span>수정</span>
+                    </button>
+                    <div className={kakaoButtonDivStyle} onClick={shareKakao}>
+                      <p>카톡에 공유하기</p>
+                      <button className={kakaoButtonStyle} />
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+            {/*{!editMode && (*/}
+            {/*  <div className="relative">*/}
+            {/*    <div className="mb-10" />*/}
+            {/*    {page === weeklyTeamData.length - 1 && (*/}
+            {/*      <Separator fullWidth={true} />*/}
+            {/*    )}*/}
+            {/*<TestingMark locationStyle="absolute top-14 right-0 text-[30px]" />*/}
+            {/*<div className="mt-4">*/}
+            {/*  {!editMode && page === weeklyTeamData.length - 1 && (*/}
+            {/*    <ThisWeekVoteStatisticsBox*/}
+            {/*      nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}*/}
+            {/*    />*/}
+            {/*  )}*/}
+            {/*</div>*/}
+            {/*</div>*/}
+            {/*)}*/}
+          </div>
         </div>
-        {/*{!editMode && (*/}
-        {/*  <div className="relative">*/}
-        {/*    <div className="mb-10" />*/}
-        {/*    {page === weeklyTeamData.length - 1 && (*/}
-        {/*      <Separator fullWidth={true} />*/}
-        {/*    )}*/}
-        {/*<TestingMark locationStyle="absolute top-14 right-0 text-[30px]" />*/}
-        {/*<div className="mt-4">*/}
-        {/*  {!editMode && page === weeklyTeamData.length - 1 && (*/}
-        {/*    <ThisWeekVoteStatisticsBox*/}
-        {/*      nextSunday={`${sundayMonth < 10 ? '0' + sundayMonth : sundayMonth}${sundayDate < 10 ? '0' + sundayDate : sundayDate}`}*/}
-        {/*    />*/}
-        {/*  )}*/}
-        {/*</div>*/}
-        {/*</div>*/}
-        {/*)}*/}
-      </div>
-      </div>
       </div>
     </div>
   )
