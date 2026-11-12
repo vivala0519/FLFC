@@ -423,7 +423,7 @@ const AnalysisSectionHeading = ({ id, controls, title, subtitle, expanded, onTog
         aria-controls={controls}
         title={focused ? '목록으로 돌아가기' : undefined}
         onClick={onToggle}
-        className="analysis-section-toggle relative flex h-[var(--analysis-section-heading-height)] w-full items-center justify-center px-12 py-3 text-center font-dnf-forged"
+        className="analysis-section-toggle bg-blue-50 relative flex h-[var(--analysis-section-heading-height)] w-full items-center justify-center px-12 py-3 text-center font-dnf-forged"
       >
         <span className="flex flex-col items-center gap-0.5">
           <span className="text-base font-semibold">{title}</span>
@@ -2430,9 +2430,17 @@ const AnalysisTap = (props) => {
                 </h3>
                 <div className="pt-4">{renderAnalysisRows(groupAnalysisRows(careerDailyItems))}</div>
               </section>
-              <dl className="space-y-3 border-t border-gray-200 pt-5 dark:border-gray-700">
-                {careerOtherItems.map((item) => renderAnalysisItem({ ...item, career: true }))}
-              </dl>
+              <section aria-labelledby="career-special-title">
+                <h3
+                  id="career-special-title"
+                  className="mt-8 analysis-career-subheading border-b border-gray-200 bg-gray-50 px-4 py-2 text-sm font-semibold text-zinc-700 font-dnf-forged dark:border-gray-700 dark:bg-gray-800 dark:text-zinc-200"
+                >
+                  스페셜
+                </h3>
+                <dl className="space-y-3 pt-4">
+                  {careerOtherItems.map((item) => renderAnalysisItem({ ...item, career: true }))}
+                </dl>
+              </section>
             </div>
           </section>
         </div>

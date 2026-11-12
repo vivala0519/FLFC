@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { db } from '../../../../firebase.js'
 import getTimes from '../../../hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
@@ -13,12 +13,22 @@ import TapTitleText from '@/components/atoms/Text/TapTitleText.jsx'
 
 import left from '@/assets/left.png'
 import right from '@/assets/right.png'
+import teamOneIcon from '@/assets/team-ball-1.png'
+import teamTwoIcon from '@/assets/team-ball-2.png'
+import teamThreeIcon from '@/assets/team-ball-3.png'
 import PlusIcon from '@/assets/lucide/plus.svg?react'
 import PencilIcon from '@/assets/lucide/pencil.svg?react'
 import CheckIcon from '@/assets/lucide/check.svg?react'
 
+const teamIcons = { 1: teamOneIcon, 2: teamTwoIcon, 3: teamThreeIcon }
+const teamJerseys = {
+  1: 'bg-[url("@/assets/team-jersey-1.png")]',
+  2: 'bg-[url("@/assets/team-jersey-2.png")]',
+  3: 'bg-[url("@/assets/team-jersey-3.png")]',
+}
+
 const teamActionClass = 'inline-flex h-11 items-center justify-center gap-2 rounded-lg border-0 px-4 font-dnf-forged text-sm !outline-none focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-blue-600 dark:focus-visible:!outline-blue-300'
-const primaryTeamActionClass = `${teamActionClass} bg-blue-700 text-white hover:bg-blue-800`
+const primaryTeamActionClass = `${teamActionClass} bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-800`
 const secondaryTeamActionClass = `${teamActionClass} bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700`
 const playerInputClass = 'h-11 w-full min-w-0 appearance-none rounded-lg border border-[#dbe3ed] bg-white px-1.5 py-0 text-center [font-family:inherit] text-base font-normal leading-normal text-slate-700 outline-none transition-[border-color,box-shadow] duration-[160ms] ease-[ease] placeholder:text-[13px] placeholder:text-slate-500 placeholder:opacity-75 focus:border-blue-600 focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] dark:border-slate-700 dark:bg-[#101827] dark:text-slate-200 dark:placeholder:text-slate-400 dark:focus:border-blue-300 dark:focus:shadow-[0_0_0_3px_rgba(147,197,253,0.12)] motion-reduce:transition-none'
 const weekNavigationClass = 'h-[25px] w-[25px] shrink-0 cursor-pointer rounded-none border-0 bg-transparent p-0 !outline-none focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-blue-600 dark:focus-visible:!outline-blue-300 [@media(max-width:812px)]:h-[15px] [@media(max-width:812px)]:w-[15px]'
@@ -32,6 +42,11 @@ function WeeklyTeam(props) {
   const [lastDate, setLastDate] = useState('')
   const [page, setPage] = useState(null)
   const [editMode, setEditMode] = useState(false)
+  const [createPhase, setCreatePhase] = useState('idle')
+  const createPhaseRef = useRef('idle')
+  const pendingTeamRef = useRef(null)
+  const firstPlayerInputRef = useRef(null)
+  const focusNewTeamRef = useRef(false)
   const [canCreate, setCanCreate] = useState(true)
   const [activeBorder, setActiveBorder] = useState(false)
   const [inputTeamData, setInputTeamData] = useState([
@@ -64,13 +79,62 @@ function WeeklyTeam(props) {
   const sundayDate = nextSunday.getDate()
   const sundayMonth = nextSunday.getMonth() + 1
 
+  const finishCreateTransition = useCallback((expectedPhase, skipAnimation = false) => {
+    if (createPhaseRef.current !== expectedPhase) return
+    if (expectedPhase === 'leaving') {
+      const pending = pendingTeamRef.current
+      if (!pending) return
+      pendingTeamRef.current = null
+      setWeeklyTeamData([...pending.records, pending.team])
+      setPage(pending.records.length)
+      setEditMode(true)
+      focusNewTeamRef.current = true
+      createPhaseRef.current = skipAnimation ? 'idle' : 'entering'
+      setCreatePhase(createPhaseRef.current)
+    } else if (expectedPhase === 'entering') {
+      createPhaseRef.current = 'idle'
+      setCreatePhase('idle')
+    }
+  }, [])
+
   useEffect(() => {
-    if (editMode || !Array.isArray(totalWeeklyTeamData)) return
+    if (createPhase === 'idle') return undefined
+    const timer = window.setTimeout(() => finishCreateTransition(createPhase), createPhase === 'leaving' ? 220 : 260)
+    return () => window.clearTimeout(timer)
+  }, [createPhase, finishCreateTransition])
+
+  useEffect(() => {
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const stopAnimation = () => {
+      if (preference.matches) finishCreateTransition(createPhaseRef.current, true)
+    }
+    preference.addEventListener('change', stopAnimation)
+    return () => preference.removeEventListener('change', stopAnimation)
+  }, [finishCreateTransition])
+
+  useEffect(() => {
+    if (!editMode || createPhase !== 'idle' || !focusNewTeamRef.current) return
+    focusNewTeamRef.current = false
+    firstPlayerInputRef.current?.focus({ preventScroll: true })
+  }, [editMode, createPhase])
+
+  const handleCreateAnimationEnd = (event) => {
+    if (event.target !== event.currentTarget) return
+    if ((createPhase === 'leaving' && event.animationName === 'weekly-team-leave') ||
+      (createPhase === 'entering' && event.animationName === 'weekly-team-enter')) {
+      finishCreateTransition(createPhase)
+    }
+  }
+  const createAnimationClass = createPhase === 'leaving' ? 'motion-safe:animate-weekly-team-leave'
+    : createPhase === 'entering' ? 'motion-safe:animate-weekly-team-enter' : ''
+
+  useEffect(() => {
+    if (editMode || createPhase === 'leaving' || !Array.isArray(totalWeeklyTeamData)) return
     setWeeklyTeamData(totalWeeklyTeamData)
     const lastPage = Math.max(0, totalWeeklyTeamData.length - 1)
     setPage((currentPage) => currentPage === null ? lastPage : Math.min(currentPage, lastPage))
     setLastDate(totalWeeklyTeamData[totalWeeklyTeamData.length - 1]?.id ?? '')
-  }, [totalWeeklyTeamData, editMode])
+  }, [totalWeeklyTeamData, editMode, createPhase])
 
   useEffect(() => {
     let active = true
@@ -160,6 +224,7 @@ function WeeklyTeam(props) {
   }
 
   const createWeeklyTeamHandler = (isNew) => {
+    if (createPhaseRef.current !== 'idle') return
     if (!isNew && (isOffDay || latestTeamIsOffDay)) return
     // 첫 생성
     if (isNew) {
@@ -172,9 +237,13 @@ function WeeklyTeam(props) {
         },
       }
       if (newWeeklyTeam.id !== latestWeeklyTeam?.id) {
-        setWeeklyTeamData([...weeklyTeamData, newWeeklyTeam])
-        setPage(weeklyTeamData.length)
-        setEditMode(true)
+        pendingTeamRef.current = { team: newWeeklyTeam, records: weeklyTeamData }
+        createPhaseRef.current = 'leaving'
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          finishCreateTransition('leaving', true)
+        } else {
+          setCreatePhase('leaving')
+        }
       } else {
         Swal.fire({
           icon: 'error',
@@ -233,6 +302,15 @@ function WeeklyTeam(props) {
 
   return (
     <div className={tapContainerStyle}>
+      <div className={createPhase !== 'idle' ? 'overflow-hidden' : ''}>
+      <div
+        key={editMode ? 'editor' : 'roster'}
+        className={`${createAnimationClass} ${createPhase !== 'idle' ? 'pointer-events-none' : ''}`}
+        data-weekly-team-transition={createPhase}
+        aria-busy={createPhase !== 'idle'}
+        inert={createPhase !== 'idle' ? '' : undefined}
+        onAnimationEnd={handleCreateAnimationEnd}
+      >
       {/*{editMode && (*/}
       {/*  <div className="relative">*/}
       {/*<TestingMark locationStyle="absolute top-2 right-0 text-[30px]" />*/}
@@ -270,7 +348,7 @@ function WeeklyTeam(props) {
             <hr className="w-full border-blue-700" />
           </div>
         )}
-        {page === weeklyTeamData.length - 1 && <div className="mb-4">이번 달 황밸 요정🧚 : {balancer}</div>}
+        {page === weeklyTeamData.length - 1 && <div className={`${editMode ? 'mb-1' : 'mb-4'}`}>이번 달 황밸 요정🧚 : {balancer}</div>}
         {!weeklyTeamData.length ? (
           <p role="status" className="py-8 text-gray-500 dark:text-gray-400">등록된 주간 팀이 없습니다.</p>
         ) : isOffDay ? (
@@ -280,19 +358,19 @@ function WeeklyTeam(props) {
         ) : (
           <div className="w-full flex justify-center mb-5">
             <div
-              className={`flex justify-center ${editMode ? 'w-full max-w-[30rem]' : 'w-fit'} ${!editMode && page === weeklyTeamData.length - 1 && activeBorder ? 'border-2 rounded-md border-[#bb2649] animate-pulse p-2' : ''}`}
+              className={`flex w-full justify-center ${editMode ? 'max-w-[30rem]' : 'max-w-[38rem]'} ${!editMode && page === weeklyTeamData.length - 1 && activeBorder ? 'border-2 rounded-md border-[#bb2649] animate-pulse p-2' : ''}`}
             >
-              <div className={editMode ? 'w-full min-w-0' : 'flex flex-col gap-5 items-start p-1 rounded-md'}>
+              <div className={editMode ? 'w-full min-w-0' : 'flex w-full min-w-0 flex-col gap-5 p-1 rounded-md'}>
                 {!editMode ? (
                   [1, 2, 3].map((team, index) => (
-                    <div key={index} className="flex gap-5">
-                      <span className="relative left-1 flex w-[25px] items-center">
-                        {team}팀
-                      </span>
-                      <div className="flex gap-[10px]">
-                        {weeklyTeamData[page]?.data[team]?.map((player, idx) => (
-                          <span key={idx} className="whitespace-pre flex items-center">
-                            {player}
+                    <div key={index} className="flex w-full min-w-0 items-center gap-2">
+                      <img src={teamIcons[team]} alt={`${team}팀`} className="h-7 w-7 shrink-0 self-center object-contain" />
+                      <div className="grid min-w-0 flex-1 grid-cols-6 gap-1">
+                        {weeklyTeamData[page]?.data[team]?.filter((player) => typeof player === 'string' && player.trim()).map((player, idx) => (
+                          <span key={idx} className={`flex aspect-[3/2] min-w-0 items-center justify-center bg-contain bg-center bg-no-repeat pt-2 ${teamJerseys[team]}`}>
+                            <span className="max-w-full break-words rounded-sm bg-white/80 px-0.5 text-center text-[clamp(11px,3.1vw,14px)] font-semibold leading-tight text-slate-900">
+                              {player}
+                            </span>
                           </span>
                         ))}
                       </div>
@@ -300,17 +378,18 @@ function WeeklyTeam(props) {
                   ))
                 ) : (
                   // 팀 생성 모드
-                  <div className="w-full pt-2 text-left">
+                  <div className="w-full text-left">
                     <div className="flex flex-col gap-[18px]">
                       {inputTeamData?.map((team, index) => (
                         <fieldset key={index} className="m-0 min-w-0 rounded-xl border border-[#dbe3ed] bg-slate-50 px-3 pb-[14px] pt-1 shadow-[0_2px_8px_rgba(15,23,42,0.03)] dark:border-slate-700 dark:bg-[#172235] [@media(min-width:640px)]:px-[14px]">
-                          <legend className="mb-2.5 flex items-center gap-[7px] px-1.5 font-dnf-forged text-sm font-semibold text-slate-700 dark:text-slate-200">
-                            <span className="inline-flex h-7 w-11 items-center justify-center rounded-lg border border-blue-200 bg-blue-50 text-[13px] font-bold text-blue-700 dark:border-[#3b557c] dark:bg-[#1c2c46] dark:text-blue-300">{index + 1}팀</span>
+                          <legend className="px-1.5">
+                            <img src={teamIcons[index + 1]} alt={`${index + 1}팀`} className="h-8 w-8 object-contain" />
                           </legend>
                           <div className="grid grid-cols-3 gap-2 [@media(min-width:640px)]:grid-cols-6">
                             {team.map((player, idx) => (
                               <input
                                 key={idx}
+                                ref={index === 0 && idx === 0 ? firstPlayerInputRef : undefined}
                                 type="text"
                                 value={player}
                                 aria-label={`${index + 1}팀 ${idx + 1}번째 선수`}
@@ -339,10 +418,11 @@ function WeeklyTeam(props) {
                   <button
                     type="button"
                     className={primaryTeamActionClass}
+                    disabled={createPhase !== 'idle'}
                     onClick={() => createWeeklyTeamHandler(true)}
                   >
                     <PlusIcon className="h-4 w-4" aria-hidden="true" />
-                    <span>이번 주 팀 생성하기</span>
+                    <span>이번주 팀 생성하기</span>
                   </button>
                 </div>
               )
@@ -415,6 +495,8 @@ function WeeklyTeam(props) {
         {/*</div>*/}
         {/*</div>*/}
         {/*)}*/}
+      </div>
+      </div>
       </div>
     </div>
   )

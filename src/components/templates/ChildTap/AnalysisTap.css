@@ -123,7 +123,7 @@ html.dark .analysis-card-click-label {
 .analysis-tab .analysis-section-toggle {
   border: 1px solid #e2e8f0;
   border-radius: 12px;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  /*background: linear-gradient(135deg, #f8fafc, #f1f5f9);*/
   color: #334155;
   box-shadow: 0 2px 8px rgb(15 23 42 / 3%);
   transition: border-color 180ms ease, box-shadow 180ms ease;

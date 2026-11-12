@@ -55,6 +55,14 @@ export default {
         custom: '0 0 10px rgba(0, 0, 0, 0.5)',
       },
       keyframes: {
+        'weekly-team-leave': {
+          from: { opacity: '1', transform: 'translateY(0)' },
+          to: { opacity: '0', transform: 'translateY(-100%)' },
+        },
+        'weekly-team-enter': {
+          from: { opacity: '0', transform: 'translateY(48px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
         'parent-tab-leave': {
           from: { opacity: '1', top: '0px' },
           to: { opacity: '0', top: '-4px' },
@@ -121,6 +129,8 @@ export default {
         },
       },
       animation: {
+        'weekly-team-leave': 'weekly-team-leave 180ms ease-in forwards',
+        'weekly-team-enter': 'weekly-team-enter 220ms ease-out both',
         'parent-tab-leave': 'parent-tab-leave 80ms ease-in forwards',
         'parent-tab-enter': 'parent-tab-enter 160ms ease-out both',
         spinFast: 'spinSlow 0.2s linear infinite',
