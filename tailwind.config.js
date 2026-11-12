@@ -16,7 +16,7 @@ export default {
       },
       backgroundImage: {
         spinningBallLight: "url('@/assets/futsal-ball.png')",
-        spinningBallDark: "url('@/assets/futsal-ball-yellow.png')",
+        spinningBallDark: "url('@/assets/futsal-ball-yellow-front.png')",
         request: "url('@/assets/request.png')",
         laurel: "url('@/assets/laurel.png')",
         left: "url('@/assets/left.png')",

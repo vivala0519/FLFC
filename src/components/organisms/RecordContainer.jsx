@@ -182,6 +182,7 @@ const RecordContainer = (props) => {
             key={index}
             index={index}
             fakeRow={false}
+            isLastRound={recordsLoaded && index === displayRecord.length - 1}
             record={record}
             setPopupType={setPopupType}
             setPlayingTeams={setPlayingTeams}

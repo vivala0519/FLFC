@@ -28,7 +28,7 @@ const teamJerseys = {
 }
 
 const teamActionClass = 'inline-flex h-11 items-center justify-center gap-2 rounded-lg border-0 px-4 font-dnf-forged text-sm !outline-none focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-blue-600 dark:focus-visible:!outline-blue-300'
-const primaryTeamActionClass = `${teamActionClass} bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-800`
+const primaryTeamActionClass = `${teamActionClass} bg-gray-700 dark:bg-white text-white dark:text-black hover:bg-blue-800`
 const secondaryTeamActionClass = `${teamActionClass} bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700`
 const playerInputClass = 'h-11 w-full min-w-0 appearance-none rounded-lg border border-[#dbe3ed] bg-white px-1.5 py-0 text-center [font-family:inherit] text-base font-normal leading-normal text-slate-700 outline-none transition-[border-color,box-shadow] duration-[160ms] ease-[ease] placeholder:text-[13px] placeholder:text-slate-500 placeholder:opacity-75 focus:border-blue-600 focus:outline-none focus:shadow-[0_0_0_3px_rgba(37,99,235,0.12)] dark:border-slate-700 dark:bg-[#101827] dark:text-slate-200 dark:placeholder:text-slate-400 dark:focus:border-blue-300 dark:focus:shadow-[0_0_0_3px_rgba(147,197,253,0.12)] motion-reduce:transition-none'
 const weekNavigationClass = 'h-[25px] w-[25px] shrink-0 cursor-pointer rounded-none border-0 bg-transparent p-0 !outline-none focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-blue-600 dark:focus-visible:!outline-blue-300 [@media(max-width:812px)]:h-[15px] [@media(max-width:812px)]:w-[15px]'

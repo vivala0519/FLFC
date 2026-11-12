@@ -1,4 +1,5 @@
 import TimeText from '@/components/atoms/Text/TimeText.jsx'
+import LiveBadge from '@/components/atoms/LiveBadge.jsx'
 import Swal from 'sweetalert2'
 import { get, getDatabase, ref, set, update } from 'firebase/database'
 import getTimes from '@/hooks/getTimes.js'
@@ -8,23 +9,14 @@ import { getRegularRoundGoals, isFeverRound } from '@/apis/roundFever.js'
 
 const RecordRow = (props) => {
   const { time: { today, thisYear, currentTime, gameEndTime } } = getTimes()
-  const {
-    record,
-    canRegister = false,
-    index,
-    // fakeRow,
-    isOpen,
-    // roundShowHandler,
-    weeklyTeamData,
-    setShowSelectTeamPopup,
-    setPendingRoundId,
-    setSelectTeamPopupMessage,
-    setShowSelectScorerTeamPopup,
-    setSelectScorerTeamPopupMessage,
-    setPopupType,
-    setPlayingTeams,
-  } = props
+  const { record, canRegister = false, isLastRound = false, index, isOpen, weeklyTeamData, setShowSelectTeamPopup, setPendingRoundId, setSelectTeamPopupMessage, setShowSelectScorerTeamPopup, setSelectScorerTeamPopupMessage, setPopupType, setPlayingTeams } = props
   const ALL_TEAMS = ['1', '2', '3']
+  const roundTeams = Array.isArray(record.teamList) ? record.teamList.map(String) : []
+  const hasPlayingTeams = roundTeams.length === 2 && new Set(roundTeams).size === 2
+    && roundTeams.every((team) => ALL_TEAMS.includes(team))
+  const isLiveRound = canRegister && isLastRound
+    && (isFeverRound(record) || (!record.winnerTeam && hasPlayingTeams))
+  const liveBadge = isLiveRound && <LiveBadge positionClassName="-top-1 left-1" />
   const [showTeamMembers, setShowTeamMembers] = useState(false)
   const [editTeamMode, setEditTeamMode] = useState(false)
   const [teamA, setTeamA] = useState("");
@@ -336,6 +328,7 @@ const RecordRow = (props) => {
     <>
       {showTeamMembers && record.winnerTeam ? (
         <div className={rawStyle} onClick={() => setShowTeamMembers(false)}>
+          {liveBadge}
           <div className={recordAreaStyle + ' justify-center'}>
             {/*<span className={roundTextStyle}>{index + 1} Round</span>*/}
             <span className={teamStyle}>{renderMembers(record.winnerTeam?.member)}</span>
@@ -347,6 +340,7 @@ const RecordRow = (props) => {
         <div className={rawStyle} key={index} onClick={() => {
           if (record.winnerTeam) setShowTeamMembers(true)
         }}>
+          {liveBadge}
           <div className={recordAreaStyle}>
             {!editTeamMode && (
               <div className={'flex gap-2'}>
