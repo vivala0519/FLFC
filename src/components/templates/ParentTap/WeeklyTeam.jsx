@@ -22,9 +22,9 @@ import CheckIcon from '@/assets/lucide/check.svg?react'
 
 const teamIcons = { 1: teamOneIcon, 2: teamTwoIcon, 3: teamThreeIcon }
 const teamJerseys = {
-  1: 'bg-[url("@/assets/team-jersey-1.png")]',
-  2: 'bg-[url("@/assets/team-jersey-2.png")]',
-  3: 'bg-[url("@/assets/team-jersey-3.png")]',
+  1: 'bg-[url("@/assets/team-jersey-1.png")] dark:bg-[url("@/assets/team-jersey-1-dark.png")]',
+  2: 'bg-[url("@/assets/team-jersey-2.png")] dark:bg-[url("@/assets/team-jersey-2-dark.png")]',
+  3: 'bg-[url("@/assets/team-jersey-3.png")] dark:bg-[url("@/assets/team-jersey-3-dark.png")]',
 }
 
 const teamActionClass = 'inline-flex h-11 items-center justify-center gap-2 rounded-lg border-0 px-4 font-dnf-forged text-sm !outline-none focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-2 focus-visible:!outline-blue-600 dark:focus-visible:!outline-blue-300'
@@ -360,26 +360,23 @@ function WeeklyTeam(props) {
             ) : (
               <div className="w-full flex justify-center mb-5">
                 <div
-                  className={`flex w-full justify-center ${editMode ? 'max-w-[30rem]' : 'max-w-[16rem]'} ${!editMode && page === weeklyTeamData.length - 1 && activeBorder ? 'border-2 rounded-md border-[#bb2649] animate-pulse p-2' : ''}`}
+                  className={`relative flex w-full justify-center ${editMode ? 'max-w-[30rem]' : '-left-5 max-w-[16rem]'} ${!editMode && page === weeklyTeamData.length - 1 && activeBorder ? 'border-2 rounded-md border-[#bb2649] animate-pulse p-2' : ''}`}
                 >
                   <div className={editMode ? 'w-full min-w-0' : 'flex w-full min-w-0 flex-col gap-3 p-1 rounded-md'}>
                     {!editMode ? (
                       [1, 2, 3].map((team, index) => (
                         <div key={index} className="flex w-full min-w-0 items-center gap-2">
-                          <img src={teamIcons[team]} alt={`${team}팀`} className="h-7 w-7 shrink-0 self-center object-contain" />
+                          <img src={teamIcons[team]} alt={`${team}팀`} className="h-8 w-8 shrink-0 self-center object-contain" />
                           <div className="grid min-w-0 flex-1 grid-cols-3 gap-1">
                             {weeklyTeamData[page]?.data[team]
                               ?.filter((player) => typeof player === 'string' && player.trim())
                               .map((player, idx) => (
-                                <span
-                                  key={idx}
-                                  className="relative flex aspect-[3/2] min-w-0 items-center justify-center pt-2"
-                                >
+                                <span key={idx} className="relative flex aspect-[3/2] min-w-0 items-center justify-center pt-2">
                                   <span
                                     aria-hidden="true"
                                     className={`pointer-events-none absolute inset-0 bg-contain bg-center bg-no-repeat opacity-60 ${teamJerseys[team]}`}
                                   />
-                                  <span className="relative z-10 max-w-full font-dnf-forged break-words rounded-sm bg-white/10 px-0.5 text-center text-[clamp(11px,3.1vw,14px)] leading-tight text-slate-900">
+                                  <span className="relative z-10 max-w-full font-dnf-forged break-words rounded-sm bg-white/10 px-0.5 text-center text-[clamp(11px,3.1vw,14px)] leading-tight text-slate-900 dark:text-white">
                                     {player}
                                   </span>
                                 </span>
