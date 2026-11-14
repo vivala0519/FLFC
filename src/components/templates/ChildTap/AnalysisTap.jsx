@@ -12,6 +12,7 @@ import CareerRankingDialog from '@/components/organisms/CareerRankingDialog.jsx'
 import PlayerRadarChart from '@/components/organisms/PlayerRadarChart.jsx'
 import QuarterlyRecordChart from '@/components/organisms/QuarterlyRecordChart.jsx'
 import DuoRecordList from '@/components/molecules/DuoRecordList.jsx'
+import AnalysisLoadingProgress from '@/components/molecules/AnalysisLoadingProgress.jsx'
 import getTimes from '@/hooks/getTimes.js'
 import getMembers from '@/hooks/getMembers.js'
 import getRecords from '@/hooks/getRecords.js'
@@ -603,6 +604,7 @@ const AnalysisTap = (props) => {
   const [greedyPlayer, setGreedyPlayer] = useState({})
   const [altruisticPlayer, setAltruisticPlayer] = useState({})
   const [analysisView, setAnalysisView] = useState('overview')
+  const [showAnalysisLoading, setShowAnalysisLoading] = useState(true)
   const [analysisTransition, setAnalysisTransition] = useState('idle')
   const analysisStageRef = useRef(null)
   const analysisToolbarRef = useRef(null)
@@ -915,7 +917,6 @@ const AnalysisTap = (props) => {
   const isGoalkeeper = selectedMemberInfo?.goalKeeper === true || selectedMemberInfo?.goalkeeper === true
   const [careerAwardHistory, setCareerAwardHistory] = useState({ status: 'idle', records: [] })
   const historyLoadedDay = useRef(null)
-  const needsAwardHistory = Boolean(playerName) || showCareer
   const careerAwards = useMemo(() =>
     careerAwardHistory.status === 'ready' && playerName
       ? analyzeCareerAwards(careerAwardHistory.records, playerName, asOfDate)
@@ -1185,7 +1186,7 @@ const AnalysisTap = (props) => {
   }, [selectedPlayerName, eligibleMembers])
 
   useEffect(() => {
-    if (!needsAwardHistory || historyLoadedDay.current === cacheDay) return undefined
+    if (historyLoadedDay.current === cacheDay) return undefined
     historyLoadedDay.current = cacheDay
     setCareerAwardHistory({ status: 'idle', records: [] })
     let cancelled = false
@@ -1206,7 +1207,7 @@ const AnalysisTap = (props) => {
       cancelled = true
       if (!completed) historyLoadedDay.current = null
     }
-  }, [needsAwardHistory, cacheDay])
+  }, [cacheDay])
 
   useEffect(() => {
     if (careerRoundRequest === 0) return undefined
@@ -1661,6 +1662,32 @@ const AnalysisTap = (props) => {
     mercenaryBring === null ||
     integratedData === null
 
+  const quarterStatsReady = processedQuarterSource?.data === thisQuarterData &&
+    processedQuarterSource?.members === existingMembers && thisQuarterPointData !== null &&
+    thisQuarterDataByTime !== null && thisQuarterPlayersCombination !== null
+  const weeklyStatsReady = processedWeeklyTeamSource?.data === totalWeeklyTeamData &&
+    processedWeeklyTeamSource?.members === existingMembers && processedWeeklyTeamSource?.year === thisYear &&
+    processedWeeklyTeamSource?.month === thisMonth && weeklyTeamData !== null && mercenaryBring !== null
+  const partnerStatsReady = weeklyTeamData !== null && processedPartnerData === weeklyTeamData && thisQuarterMostPartners !== null
+  const analysisLoadTasks = [
+    { label: '회원 정보', ready: totalMembers.length > 0 && existingMembers.length > 0 },
+    { label: '주간 팀 명단', ready: Array.isArray(totalWeeklyTeamData) },
+    { label: '이번 시즌 경기 기록', ready: analysisSeason.status === 'ready', error: analysisSeason.status === 'error' },
+    { label: '선수 상세 정보', ready: bestFive.memberInfo !== null, error: bestFive.memberInfo === null && bestFive.status === 'error' },
+    { label: '이번 시즌 선수 통계', ready: bestFive.status === 'ready', error: bestFive.status === 'error' },
+    { label: '통산 출석·골·어시 기록', ready: scoringStreakResult.status === 'ready', error: scoringStreakResult.status === 'error' },
+    { label: '과거 라운드 기록', ready: careerRoundStatus === 'ready', error: careerRoundStatus === 'error' },
+    { label: '클린시트 통계', ready: careerCleanSheetStatus === 'ready', error: careerCleanSheetStatus === 'error' },
+    { label: 'MVP 기록', ready: mvpStatus === 'ready', error: mvpStatus === 'error' },
+    { label: '최근 상승세', ready: recentForm.status === 'ready', error: recentForm.status === 'error' },
+    { label: '이번 시즌 골·어시 집계', ready: quarterStatsReady },
+    { label: '주간 팀 통계', ready: weeklyStatsReady },
+    { label: '같은 팀 기록', ready: partnerStatsReady },
+    { label: '개인 기록 집계', ready: integratedData !== null && quarterStatsReady && weeklyStatsReady && partnerStatsReady },
+    { label: '개인 수상 기록', ready: careerAwardHistory.status === 'ready', error: careerAwardHistory.status === 'error' },
+  ]
+  const showAnalysisRecords = !showAnalysisLoading && analysisLoadTasks.every((task) => task.ready && !task.error)
+
   const renderAnalysisItem = ({ type, isNew, icon, title, titleNote, description, data, compact = false, career = false, clickHint = false }) => {
     const rankingKey = career ? careerRankingKeys[icon] : null
     const openRanking = () => {
@@ -1977,7 +2004,7 @@ const AnalysisTap = (props) => {
       data-keyboard-navigation={keyboardNavigation}
     >
       <>
-        <div ref={analysisToolbarRef} className="flex min-h-10 items-center justify-end gap-3 py-2">
+        <div ref={analysisToolbarRef} hidden={!showAnalysisRecords} className={`${showAnalysisRecords ? 'flex' : 'hidden'} min-h-10 items-center justify-end gap-3 py-2`}>
           {analysisView !== 'overview' && (
             <button
               type="button"
@@ -1998,14 +2025,15 @@ const AnalysisTap = (props) => {
             {allSectionsExpanded ? '모두 접기' : '모두 펼치기'}
           </button>
         </div>
+        <AnalysisLoadingProgress tasks={analysisLoadTasks} onVisibilityChange={setShowAnalysisLoading} />
         <div
           ref={analysisStageRef}
           className="analysis-section-stage"
           data-phase={analysisTransition}
-          aria-busy={analysisTransition !== 'idle'}
+          aria-busy={!showAnalysisRecords || analysisTransition !== 'idle'}
           onAnimationEnd={handleAnalysisAnimationEnd}
         >
-          <section className={showIndividual ? 'pb-4' : ''} hidden={!isSectionVisible('individual')} aria-labelledby="analysis-individual-title">
+          <section className={showIndividual ? 'pb-4' : ''} hidden={!showAnalysisRecords || !isSectionVisible('individual')} aria-labelledby="analysis-individual-title">
             <AnalysisSectionHeading
               id="analysis-individual-title"
               controls="individual-analysis"
@@ -2374,7 +2402,7 @@ const AnalysisTap = (props) => {
               </div>
             </div>
           </dialog>
-          <section aria-labelledby="analysis-season-title" hidden={!isSectionVisible('season')}>
+          <section aria-labelledby="analysis-season-title" hidden={!showAnalysisRecords || !isSectionVisible('season')}>
             <AnalysisSectionHeading
               id="analysis-season-title"
               controls="season-analysis"
@@ -2402,7 +2430,7 @@ const AnalysisTap = (props) => {
               )}
             </div>
           </section>
-          <section aria-labelledby="analysis-career-title" hidden={!isSectionVisible('career')}>
+          <section aria-labelledby="analysis-career-title" hidden={!showAnalysisRecords || !isSectionVisible('career')}>
             <AnalysisSectionHeading
               id="analysis-career-title"
               controls="career-analysis"
@@ -2536,7 +2564,7 @@ const AnalysisTap = (props) => {
             <p className="text-gray-600 dark:text-gray-400">이번 시즌 2회 이상, 8주 이내에 총 4회 이상 출석해야 합니다.</p>
           </div>
         </dialog>
-        <ScrollToTopButton />
+        {showAnalysisRecords && <ScrollToTopButton />}
       </>
     </div>
   )

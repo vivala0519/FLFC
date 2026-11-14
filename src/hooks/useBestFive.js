@@ -5,6 +5,12 @@ import { analyzeBestFive } from '../apis/analyzeBestFive.js'
 import { analyzeCleanSheets } from '../apis/analyzeCleanSheets.js'
 import { subscribeAnalysisYearRecords } from '../apis/analysisYearRecords.js'
 
+let cachedMemberState = null
+
+const getMemberState = (cacheDayKey) => cachedMemberState?.cacheDayKey === cacheDayKey
+  ? cachedMemberState
+  : { cacheDayKey, status: 'loading', data: null }
+
 export default function useBestFive(year, month, cacheDayKey, providedRecords, cleanSheetSource = {}) {
   const { yearRoundData, roundStatus, weeklyTeams, members, oneCharacterMembers, nicknames, asOfDate,
     eligibleMembers = null } = cleanSheetSource
@@ -12,15 +18,20 @@ export default function useBestFive(year, month, cacheDayKey, providedRecords, c
   const requestKey = `${yearKey}:${cacheDayKey || ''}`
   const recordsProvided = providedRecords !== undefined
   const [recordState, setRecordState] = useState({ requestKey: null, status: 'loading', records: null })
-  const [memberState, setMemberState] = useState({ status: 'loading', data: null })
+  const [memberState, setMemberState] = useState(() => getMemberState(cacheDayKey))
+  const currentMemberState = memberState.cacheDayKey === cacheDayKey ? memberState : getMemberState(cacheDayKey)
 
   useEffect(() => {
     let cancelled = false
-    setMemberState({ status: 'loading', data: null })
+    setMemberState(getMemberState(cacheDayKey))
     const unsubscribeInfo = onSnapshot(doc(db, 'members', 'info'), (snapshot) => {
-      if (!cancelled) setMemberState({ status: 'ready', data: snapshot.data() || {} })
+      if (cancelled) return
+      cachedMemberState = { cacheDayKey, status: 'ready', data: snapshot.data() || {} }
+      setMemberState(cachedMemberState)
     }, () => {
-      if (!cancelled) setMemberState({ status: 'error', data: null })
+      if (!cancelled && getMemberState(cacheDayKey).data === null) {
+        setMemberState({ cacheDayKey, status: 'error', data: null })
+      }
     })
 
     return () => {
@@ -50,21 +61,21 @@ export default function useBestFive(year, month, cacheDayKey, providedRecords, c
   const recordsStatus = recordsProvided ? (records === null ? 'loading' : 'ready')
     : recordState.requestKey === requestKey ? recordState.status : 'loading'
   const result = useMemo(() => {
-    if (recordsStatus === 'error' || memberState.status === 'error' || roundStatus === 'error') {
+    if (recordsStatus === 'error' || currentMemberState.status === 'error' || roundStatus === 'error') {
       return { status: 'error', positions: null, records: null, cleanSheets: null }
     }
-    if (recordsStatus !== 'ready' || memberState.status !== 'ready' || roundStatus !== 'ready' ||
+    if (recordsStatus !== 'ready' || currentMemberState.status !== 'ready' || roundStatus !== 'ready' ||
       !yearRoundData || !Array.isArray(weeklyTeams) || !Array.isArray(members) || members.length === 0) {
       return { status: 'loading', positions: null, records: null, cleanSheets: null }
     }
     const cleanSheets = analyzeCleanSheets({
-      roundYears: { [yearKey]: yearRoundData }, weeklyTeams, memberInfo: memberState.data,
+      roundYears: { [yearKey]: yearRoundData }, weeklyTeams, memberInfo: currentMemberState.data,
       members, oneCharacterMembers, nicknames, asOfDate,
     })
     const counts = cleanSheets.seasons.get(`${yearKey}-${Math.ceil(month / 3)}`) || new Map()
-    return { status: 'ready', positions: analyzeBestFive(records, memberState.data, month, counts, eligibleMembers), records, cleanSheets }
-  }, [records, recordsStatus, memberState, month, yearKey, yearRoundData, roundStatus,
+    return { status: 'ready', positions: analyzeBestFive(records, currentMemberState.data, month, counts, eligibleMembers), records, cleanSheets }
+  }, [records, recordsStatus, currentMemberState, month, yearKey, yearRoundData, roundStatus,
     weeklyTeams, members, oneCharacterMembers, nicknames, asOfDate, eligibleMembers])
 
-  return { ...result, memberInfo: memberState.data }
+  return { ...result, memberInfo: currentMemberState.data }
 }
