@@ -1,6 +1,6 @@
 import ground from '@/assets/ground4.png'
-import leftFoot from '@/assets/left_foot.png'
-import rightFoot from '@/assets/right_foot.png'
+import leftFoot from '@/assets/optimized/analysis/left_foot.webp'
+import rightFoot from '@/assets/optimized/analysis/right_foot.webp'
 
 const positionsOnField = [
   { key: 'pivo', className: 'left-1/2 top-[35px] -translate-x-1/2' },
