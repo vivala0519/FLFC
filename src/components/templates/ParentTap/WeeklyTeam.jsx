@@ -66,7 +66,7 @@ function WeeklyTeam(props) {
   const tapContainerStyle = 'relative w-full h-[80vh]'
   const dayTitleContainerStyle = 'flex gap-5 justify-center items-center'
   const kakaoButtonDivStyle =
-    'flex gap-[5px] items-center justify-center mt-[20px] cursor-pointer'
+    'flex gap-[5px] items-center justify-center cursor-pointer'
   const kakaoButtonStyle = 'bg-kakao bg-[length:100%_100%] w-[40px] h-[40px]'
 
   const today = currentTime
@@ -360,7 +360,7 @@ function WeeklyTeam(props) {
             ) : (
               <div className="w-full flex justify-center mb-5">
                 <div
-                  className={`relative flex w-full justify-center ${editMode ? 'max-w-[30rem]' : '-left-5 max-w-[16rem]'} ${!editMode && page === weeklyTeamData.length - 1 && activeBorder ? 'border-2 rounded-md border-[#bb2649] animate-pulse p-2' : ''}`}
+                  className={`relative flex w-full justify-center ${editMode ? 'max-w-[30rem]' : activeBorder ? 'max-w-[16rem]' : '-left-5 max-w-[16rem]'} ${!editMode && page === weeklyTeamData.length - 1 && activeBorder ? 'border-2 rounded-md border-[#bb2649] animate-pulse p-2' : ''}`}
                 >
                   <div className={editMode ? 'w-full min-w-0' : 'flex w-full min-w-0 flex-col gap-3 p-1 rounded-md'}>
                     {!editMode ? (
@@ -459,13 +459,13 @@ function WeeklyTeam(props) {
                 !isOffDay &&
                 !latestTeamIsOffDay &&
                 [0, 4, 5, 6, 7].includes(currentDay) && (
-                  <div>
+                  <div className='flex justify-center items-center gap-4'>
                     <button type="button" className={secondaryTeamActionClass} onClick={() => createWeeklyTeamHandler(false)}>
                       <PencilIcon className="h-4 w-4" aria-hidden="true" />
                       <span>수정</span>
                     </button>
                     <div className={kakaoButtonDivStyle} onClick={shareKakao}>
-                      <p>카톡에 공유하기</p>
+                      {/*<p>카톡에 공유하기</p>*/}
                       <button className={kakaoButtonStyle} />
                     </div>
                   </div>
